@@ -1,0 +1,86 @@
+import { z } from "zod";
+
+const EXPENSE_CATEGORIES = [
+  "transport",
+  "accommodation",
+  "food",
+  "activities",
+  "shopping",
+  "health",
+  "other",
+] as const;
+
+const SPLIT_MODES = ["equal", "percentage", "fixed"] as const;
+
+const CHECKLIST_CATEGORIES = [
+  "documents",
+  "clothes",
+  "electronics",
+  "health",
+  "toiletries",
+  "other",
+] as const;
+
+export const participantSplitSchema = z.object({
+  participantId: z.string(),
+  excluded: z.boolean(),
+  percentage: z.number().min(0).max(100).optional(),
+  fixedAmount: z.number().min(0).optional(),
+  share: z.number().optional(),
+});
+
+export const expenseSchema = z
+  .object({
+    title: z.string().min(1, "Le titre est requis"),
+    amount: z.number({ message: "Montant invalide" }).positive("Le montant doit être positif"),
+    currency: z.string().min(1),
+    exchangeRate: z.number().positive(),
+    category: z.enum(EXPENSE_CATEGORIES),
+    paidById: z.string().min(1, "Sélectionne qui a payé"),
+    date: z.string().min(1, "La date est requise"),
+    splitMode: z.enum(SPLIT_MODES),
+    splits: z.array(participantSplitSchema),
+    notes: z.string().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.splitMode !== "percentage") return;
+    const active = data.splits.filter((s) => !s.excluded);
+    const total = active.reduce((acc, s) => acc + (s.percentage ?? 0), 0);
+    if (Math.abs(total - 100) > 0.01) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Les pourcentages doivent totaliser 100% (actuel: ${Math.round(total)}%)`,
+        path: ["splits"],
+      });
+    }
+  });
+
+export type ExpenseFormValues = z.infer<typeof expenseSchema>;
+
+export const tripSchema = z.object({
+  name: z.string().min(1, "Le nom du voyage est requis"),
+  destination: z.string().min(1, "La destination est requise"),
+  emoji: z.string().min(1),
+  currency: z.string().min(1),
+  startDate: z.string().min(1, "La date de départ est requise"),
+  endDate: z.string().min(1, "La date de retour est requise"),
+  participants: z
+    .array(
+      z.object({
+        id: z.string(),
+        name: z.string().min(1, "Nom requis"),
+        color: z.string(),
+      })
+    )
+    .min(1, "Au moins un participant est requis"),
+  totalBudget: z.number().positive().optional(),
+});
+
+export type TripFormValues = z.infer<typeof tripSchema>;
+
+export const checklistItemSchema = z.object({
+  text: z.string().min(1, "L'item ne peut pas être vide"),
+  category: z.enum(CHECKLIST_CATEGORIES),
+});
+
+export type ChecklistItemFormValues = z.infer<typeof checklistItemSchema>;

@@ -1,0 +1,20 @@
+{
+  "name": "Time to Go",
+  "short_name": "Time to Go",
+  "description": "L'application de voyage ultime — Budget, Planning, Checklist",
+  "start_url": "/trips",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#020617",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["travel", "finance", "productivity"],
+  "lang": "fr"
+}

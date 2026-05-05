@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs wc *)",
+      "Bash(npm install *)",
+      "Bash(npm uninstall *)",
+      "PowerShell($env:PATH = \"C:\\\\Program Files\\\\nodejs;\" + $env:PATH; Set-Location \"C:\\\\Users\\\\asus\\\\OneDrive\\\\Bureau\\\\time-to-go\"; node --version; npm --version)",
+      "PowerShell(Set-Location \"C:\\\\Users\\\\asus\\\\OneDrive\\\\Bureau\\\\time-to-go\"; git init -b main; git config user.name \"Cocolegeek\"; git config user.email \"corentin.nicolas03@gmail.com\"; git add .; git status --short | Select-Object -First 5; Write-Output \"---\"; \\(git status --short | Measure-Object -Line\\).Lines)"
+    ]
+  }
+}
