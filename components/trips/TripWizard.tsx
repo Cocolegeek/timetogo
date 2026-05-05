@@ -10,6 +10,7 @@ import { GlassCard } from "@/components/layout/GlassCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { LocationAutocomplete } from "@/components/shared/LocationAutocomplete";
 import { tripSchema, type TripFormValues } from "@/lib/budget/schemas";
 import { useTrips } from "@/hooks/useTrip";
 
@@ -50,6 +51,7 @@ export function TripWizard() {
 
   const selectedEmoji = watch("emoji");
   const selectedCurrency = watch("currency");
+  const destination = watch("destination") ?? "";
 
   const addParticipant = () => {
     const name = newParticipantName.trim();
@@ -125,8 +127,14 @@ export function TripWizard() {
 
           <div className="space-y-1.5">
             <Label className="text-slate-300 text-xs">Destination</Label>
-            <Input
-              {...register("destination")}
+            <LocationAutocomplete
+              value={destination}
+              onChange={(v) =>
+                setValue("destination", v, {
+                  shouldValidate: true,
+                  shouldDirty: true,
+                })
+              }
               placeholder="Rome, Italie"
               className="bg-white/8 border-white/10 text-slate-100 placeholder:text-slate-500 focus-visible:ring-indigo-500/50"
             />

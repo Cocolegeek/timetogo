@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { useTrip } from "@/hooks/useTrip";
 import { useItinerary } from "@/hooks/useItinerary";
+import { LocationAutocomplete } from "@/components/shared/LocationAutocomplete";
 import { cn } from "@/lib/utils";
 import type { ItineraryType } from "@/types";
 
@@ -234,9 +235,9 @@ export default function PlanningPage({ params }: PlanningPageProps) {
             </div>
             <div className="space-y-1.5">
               <Label className="text-slate-300 text-xs">Lieu (optionnel)</Label>
-              <Input
+              <LocationAutocomplete
                 value={location}
-                onChange={(e) => setLocation(e.target.value)}
+                onChange={setLocation}
                 placeholder="Aéroport CDG"
                 className="bg-white/8 border-white/10 text-slate-100 placeholder:text-slate-500"
               />
