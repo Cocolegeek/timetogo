@@ -112,7 +112,17 @@ export function useTrips() {
 
     if (tripError || !trip) throw tripError;
 
-    // Insert participants
+    // 1. Add owner as trip member FIRST (without participant_id yet).
+    //    This is required for RLS to allow inserting participants below.
+    const { error: memberError } = await supabase.from("trip_members").insert({
+      trip_id: trip.id,
+      user_id: user.id,
+      participant_id: null,
+      role: "owner",
+    });
+    if (memberError) throw memberError;
+
+    // 2. Insert participants (now allowed because user is a trip_member)
     const participantRows = data.participants.map((p) => ({
       trip_id: trip.id,
       name: p.name,
@@ -120,12 +130,13 @@ export function useTrips() {
       avatar: p.avatar ?? null,
     }));
 
-    const { data: insertedParticipants } = await supabase
+    const { data: insertedParticipants, error: participantsError } = await supabase
       .from("participants")
       .insert(participantRows)
       .select();
+    if (participantsError) throw participantsError;
 
-    // Add owner as trip member — try to link to a participant matching their profile name
+    // 3. Link the owner to a matching participant if the name matches
     const { data: profile } = await supabase
       .from("profiles")
       .select("name")
@@ -136,12 +147,13 @@ export function useTrips() {
       (p) => p.name.toLowerCase() === (profile?.name ?? "").toLowerCase()
     );
 
-    await supabase.from("trip_members").insert({
-      trip_id: trip.id,
-      user_id: user.id,
-      participant_id: matchedParticipant?.id ?? null,
-      role: "owner",
-    });
+    if (matchedParticipant) {
+      await supabase
+        .from("trip_members")
+        .update({ participant_id: matchedParticipant.id })
+        .eq("trip_id", trip.id)
+        .eq("user_id", user.id);
+    }
 
     await fetchTrips();
     return trip.id;
