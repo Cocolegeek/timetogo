@@ -13,10 +13,13 @@ export default async function TripLayout({ children, params }: TripLayoutProps) 
     <>
       <MeshGradientBackground />
       <div className="min-h-screen flex flex-col">
-        <TripNav tripId={tripId} />
-        <main className="flex-1 max-w-3xl w-full mx-auto px-4 py-6">
+        <main
+          className="flex-1 max-w-3xl w-full mx-auto px-4 pt-5 pb-28"
+          style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 6rem)" }}
+        >
           {children}
         </main>
+        <TripNav tripId={tripId} />
       </div>
     </>
   );
