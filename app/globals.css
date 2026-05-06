@@ -129,10 +129,45 @@
   html {
     @apply h-full font-sans;
     color-scheme: dark;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
 
   body {
     @apply bg-background text-foreground min-h-full;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Prevent the rubber-band effect from bleeding past the layout */
+    overscroll-behavior-y: none;
+  }
+
+  /* Mobile UX defaults */
+  button,
+  a,
+  [role="button"] {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  /* Disable text selection on interactive UI for native-like feel */
+  button,
+  [role="button"] {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* Prevent iOS auto-zoom on focus (font-size must be >= 16px on inputs) */
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+  }
+  @media (min-width: 768px) {
+    input,
+    textarea,
+    select {
+      font-size: 0.875rem;
+    }
   }
 
   /* Custom scrollbar */

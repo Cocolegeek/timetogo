@@ -224,8 +224,11 @@ export default function JoinPage() {
     <>
       <MeshGradientBackground />
       <div className="min-h-screen">
-        <header className="glass-strong border-b border-white/8">
-          <div className="max-w-md mx-auto px-4 py-4 flex items-center gap-3">
+        <header className="glass-strong border-b border-white/8 sticky top-0 z-40">
+          <div
+            className="max-w-md mx-auto px-4 py-4 flex items-center gap-3"
+            style={{ paddingTop: "calc(env(safe-area-inset-top) + 1rem)" }}
+          >
             <span className="text-2xl">✈️</span>
             <div>
               <h1 className="font-bold text-slate-100">Time to Go</h1>

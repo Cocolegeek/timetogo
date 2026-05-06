@@ -14,8 +14,11 @@ export default async function TripLayout({ children, params }: TripLayoutProps) 
       <MeshGradientBackground />
       <div className="min-h-screen flex flex-col">
         <main
-          className="flex-1 max-w-3xl w-full mx-auto px-4 pt-5 pb-28"
-          style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 6rem)" }}
+          className="flex-1 max-w-3xl w-full mx-auto px-4"
+          style={{
+            paddingTop: "calc(env(safe-area-inset-top) + 1.25rem)",
+            paddingBottom: "calc(env(safe-area-inset-bottom) + 6rem)",
+          }}
         >
           {children}
         </main>

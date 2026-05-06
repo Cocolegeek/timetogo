@@ -37,18 +37,24 @@ export default function ProfilePage() {
       <div className="min-h-screen">
         {/* Header */}
         <header className="glass-strong border-b border-white/8 sticky top-0 z-40">
-          <div className="max-w-lg mx-auto px-4 py-4 flex items-center gap-3">
+          <div
+            className="max-w-lg mx-auto px-4 py-4 flex items-center gap-3"
+            style={{ paddingTop: "calc(env(safe-area-inset-top) + 1rem)" }}
+          >
             <Link
               href="/trips"
               className="p-2 rounded-xl hover:bg-white/8 text-slate-400 hover:text-slate-200 transition-all"
             >
               <ArrowLeft size={18} />
             </Link>
-            <h1 className="text-lg font-bold text-slate-100">Mon profil</h1>
+            <h1 className="text-xl font-bold text-slate-100">Mon profil</h1>
           </div>
         </header>
 
-        <main className="max-w-lg mx-auto px-4 py-6 space-y-5">
+        <main
+          className="max-w-lg mx-auto px-4 py-6 space-y-5"
+          style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 1.5rem)" }}
+        >
           {loading ? (
             <div className="flex items-center justify-center py-20">
               <div className="w-8 h-8 rounded-full border-2 border-indigo-500/50 border-t-indigo-400 animate-spin" />
