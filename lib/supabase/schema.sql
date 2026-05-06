@@ -117,9 +117,9 @@ CREATE POLICY "Authenticated users can insert trips"
   ON public.trips FOR INSERT
   WITH CHECK (auth.uid() = owner_id);
 
-CREATE POLICY "Owner can delete trip"
+CREATE POLICY "Trip members can delete trip"
   ON public.trips FOR DELETE
-  USING (auth.uid() = owner_id);
+  USING (public.is_trip_member(id));
 
 -- Allow reading trip by share_code for the join flow (pre-auth check)
 CREATE POLICY "Anyone can read trip by share_code"
@@ -223,15 +223,16 @@ CREATE POLICY "Trip members can CRUD checklist_items"
 
 -- ─── Itinerary Items ─────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS public.itinerary_items (
-  id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  trip_id     uuid NOT NULL REFERENCES public.trips(id) ON DELETE CASCADE,
-  date        date NOT NULL,
-  time        text,
-  title       text NOT NULL,
-  description text,
-  location    text,
-  type        text NOT NULL DEFAULT 'activity',
-  created_at  timestamptz DEFAULT now() NOT NULL
+  id               uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  trip_id          uuid NOT NULL REFERENCES public.trips(id) ON DELETE CASCADE,
+  date             date NOT NULL,
+  time             text,
+  title            text NOT NULL,
+  description      text,
+  location         text,
+  type             text NOT NULL DEFAULT 'activity',
+  duration_minutes integer,
+  created_at       timestamptz DEFAULT now() NOT NULL
 );
 
 ALTER TABLE public.itinerary_items ENABLE ROW LEVEL SECURITY;

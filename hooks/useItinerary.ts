@@ -14,6 +14,7 @@ function rowToItem(row: Record<string, unknown>): ItineraryItem {
     description: row.description as string | undefined,
     location: row.location as string | undefined,
     type: row.type as ItineraryType,
+    durationMinutes: (row.duration_minutes as number | null) ?? undefined,
     createdAt: row.created_at as string,
   };
 }
@@ -49,6 +50,7 @@ export function useItinerary(tripId: string) {
       description: data.description ?? null,
       location: data.location ?? null,
       type: data.type,
+      duration_minutes: data.durationMinutes ?? null,
     });
     await fetchItems();
   };

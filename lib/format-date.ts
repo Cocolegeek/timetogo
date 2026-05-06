@@ -47,6 +47,16 @@ export function tripDuration(startISO: string, endISO: string): number {
   );
 }
 
+/** Format a duration (in minutes) into a compact French label: "30 min", "1 h", "1 h 30". */
+export function formatDuration(minutes: number | null | undefined): string {
+  if (!minutes || minutes <= 0) return "";
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  if (h > 0 && m > 0) return `${h} h ${m.toString().padStart(2, "0")}`;
+  if (h > 0) return `${h} h`;
+  return `${m} min`;
+}
+
 /** Days from now until the start date. Negative if past. */
 export function daysUntil(startISO: string): number {
   const s = new Date(startISO);

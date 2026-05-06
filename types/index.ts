@@ -153,5 +153,7 @@ export interface ItineraryItem {
   description?: string;
   location?: string;
   type: ItineraryType;
+  /** Duration in minutes (optional). */
+  durationMinutes?: number;
   createdAt: string;
 }
