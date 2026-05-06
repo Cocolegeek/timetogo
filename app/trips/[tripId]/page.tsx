@@ -101,18 +101,18 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
       <motion.div
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="space-y-1"
+        className="space-y-1.5"
       >
         <div className="flex items-center gap-3">
-          <span className="text-4xl">{trip.emoji}</span>
+          <span className="text-5xl">{trip.emoji}</span>
           <div className="min-w-0 flex-1">
-            <h1 className="text-2xl font-bold text-slate-100 leading-tight truncate">
+            <h1 className="text-3xl font-bold text-slate-100 leading-tight truncate">
               {trip.name}
             </h1>
-            <p className="text-sm text-slate-400 truncate">{trip.destination}</p>
+            <p className="text-base text-slate-400 truncate">{trip.destination}</p>
           </div>
         </div>
-        <p className="text-xs text-slate-500 pt-1">
+        <p className="text-sm text-slate-500 pt-1">
           {tripDuration} jour{tripDuration !== 1 ? "s" : ""} · {trip.participants.length} voyageur
           {trip.participants.length !== 1 ? "s" : ""}
         </p>
@@ -127,26 +127,26 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
       >
         {currentParticipant ? (
           <>
-            <ParticipantAvatar participant={currentParticipant} size="sm" />
+            <ParticipantAvatar participant={currentParticipant} size="md" />
             <div className="flex-1 min-w-0">
-              <p className="text-[11px] text-slate-500 uppercase tracking-wider">
+              <p className="text-xs text-slate-500 uppercase tracking-wider">
                 Connecté en tant que
               </p>
-              <p className="text-sm font-medium text-slate-200 truncate">
+              <p className="text-base font-medium text-slate-200 truncate">
                 {currentParticipant.name}
               </p>
             </div>
           </>
         ) : (
           <>
-            <div className="w-8 h-8 rounded-full bg-white/8 flex items-center justify-center shrink-0">
-              <UserCircle2 size={18} className="text-slate-500" />
+            <div className="w-9 h-9 rounded-full bg-white/8 flex items-center justify-center shrink-0">
+              <UserCircle2 size={20} className="text-slate-500" />
             </div>
             <div className="flex-1">
-              <p className="text-[11px] text-slate-500 uppercase tracking-wider">
+              <p className="text-xs text-slate-500 uppercase tracking-wider">
                 Identité
               </p>
-              <p className="text-sm font-medium text-indigo-400">
+              <p className="text-base font-medium text-indigo-400">
                 Sélectionner mon identité
               </p>
             </div>
@@ -168,13 +168,13 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
           <GlassCard className="h-full" padding={false}>
             <div className="p-4 flex flex-col gap-2.5">
               <div className="flex items-center gap-2">
-                <div className="w-9 h-9 rounded-xl bg-indigo-500/15 flex items-center justify-center">
-                  <Wallet size={17} className="text-indigo-400" />
+                <div className="w-10 h-10 rounded-xl bg-indigo-500/15 flex items-center justify-center">
+                  <Wallet size={19} className="text-indigo-400" />
                 </div>
-                <span className="text-xs text-slate-400 font-medium">Budget</span>
+                <span className="text-sm text-slate-300 font-medium">Budget</span>
               </div>
               <div>
-                <p className="text-2xl font-bold text-slate-100 leading-none">
+                <p className="text-3xl font-bold text-slate-100 leading-none tabular-nums">
                   {new Intl.NumberFormat("fr-FR", {
                     style: "currency",
                     currency: trip.currency,
@@ -182,7 +182,7 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
                   }).format(totalSpent)}
                 </p>
                 {trip.totalBudget && (
-                  <p className="text-[11px] text-slate-500 mt-1">
+                  <p className="text-xs text-slate-500 mt-1.5">
                     /{" "}
                     {new Intl.NumberFormat("fr-FR", {
                       style: "currency",
@@ -195,10 +195,10 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
               {trip.totalBudget && (
                 <Progress
                   value={budgetProgress}
-                  className="h-1 bg-white/8 [&>div]:bg-indigo-500"
+                  className="h-1.5 bg-white/8 [&>div]:bg-indigo-500"
                 />
               )}
-              <p className="text-[11px] text-slate-500">
+              <p className="text-xs text-slate-500">
                 {expenses.length} dépense{expenses.length !== 1 ? "s" : ""}
               </p>
             </div>
@@ -213,29 +213,29 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
           <GlassCard className="h-full" padding={false}>
             <div className="p-4 flex flex-col gap-2.5">
               <div className="flex items-center gap-2">
-                <div className="w-9 h-9 rounded-xl bg-emerald-500/15 flex items-center justify-center">
-                  <CheckSquare size={17} className="text-emerald-400" />
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/15 flex items-center justify-center">
+                  <CheckSquare size={19} className="text-emerald-400" />
                 </div>
-                <span className="text-xs text-slate-400 font-medium">Checklist</span>
+                <span className="text-sm text-slate-300 font-medium">Checklist</span>
               </div>
               <div>
-                <p className="text-2xl font-bold text-slate-100 leading-none">
+                <p className="text-3xl font-bold text-slate-100 leading-none tabular-nums">
                   {checkedCount}
-                  <span className="text-base text-slate-500 font-medium">
+                  <span className="text-lg text-slate-500 font-medium">
                     /{totalCount}
                   </span>
                 </p>
-                <p className="text-[11px] text-slate-500 mt-1">items cochés</p>
+                <p className="text-xs text-slate-500 mt-1.5">items cochés</p>
               </div>
               {totalCount > 0 ? (
                 <Progress
                   value={checklistProgress}
-                  className="h-1 bg-white/8 [&>div]:bg-emerald-500"
+                  className="h-1.5 bg-white/8 [&>div]:bg-emerald-500"
                 />
               ) : (
-                <div className="h-1" />
+                <div className="h-1.5" />
               )}
-              <p className="text-[11px] text-slate-500">
+              <p className="text-xs text-slate-500">
                 {totalCount > 0 ? `${Math.round(checklistProgress)}% prêt` : "Vide"}
               </p>
             </div>
@@ -251,9 +251,9 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
       >
         <GlassCard>
           <div className="flex items-center gap-2 mb-3">
-            <h2 className="text-sm font-semibold text-slate-200">Voyageurs</h2>
-            <span className="text-xs text-slate-600 ml-auto">
-              Code <span className="font-mono text-slate-400">{trip.shareCode}</span>
+            <h2 className="text-base font-semibold text-slate-200">Voyageurs</h2>
+            <span className="text-xs text-slate-500 ml-auto">
+              Code <span className="font-mono text-slate-300">{trip.shareCode}</span>
             </span>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -262,7 +262,7 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
               return (
                 <div
                   key={p.id}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-all ${
+                  className={`flex items-center gap-2 px-3 py-2 rounded-full transition-all ${
                     isMe ? "glass-subtle ring-1 ring-indigo-500/30" : "glass-subtle"
                   }`}
                 >
@@ -270,8 +270,8 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
                     className="w-5 h-5 rounded-full shrink-0"
                     style={{ backgroundColor: p.color }}
                   />
-                  <span className="text-sm text-slate-300">{p.name}</span>
-                  {isMe && <span className="text-[10px] text-indigo-400">moi</span>}
+                  <span className="text-sm font-medium text-slate-200">{p.name}</span>
+                  {isMe && <span className="text-[11px] text-indigo-400 font-semibold">moi</span>}
                 </div>
               );
             })}

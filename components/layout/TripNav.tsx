@@ -39,19 +39,19 @@ export function TripNav({ tripId }: TripNavProps) {
                 key={href}
                 href={fullHref}
                 className={cn(
-                  "flex-1 flex flex-col items-center justify-center gap-1 py-2.5 transition-all relative active:scale-95",
+                  "flex-1 flex flex-col items-center justify-center gap-1.5 py-3 transition-all relative active:scale-95",
                   isActive
                     ? "text-indigo-400"
-                    : "text-slate-500 hover:text-slate-300"
+                    : "text-slate-400 hover:text-slate-200"
                 )}
               >
                 {isActive && (
-                  <span className="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-0.5 bg-indigo-400 rounded-b-full" />
+                  <span className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-0.5 bg-indigo-400 rounded-b-full" />
                 )}
-                <Icon size={24} strokeWidth={isActive ? 2.4 : 2} />
+                <Icon size={26} strokeWidth={isActive ? 2.4 : 2} />
                 <span
                   className={cn(
-                    "text-[11px] tracking-tight transition-all",
+                    "text-[13px] leading-none tracking-tight transition-all",
                     isActive ? "font-semibold" : "font-medium"
                   )}
                 >

@@ -97,7 +97,7 @@ export function ExpenseCard({
           if (!isDragging) onEdit(expense);
         }}
         className={cn(
-          "glass-subtle rounded-xl p-3.5 cursor-pointer touch-pan-y select-none",
+          "glass-subtle rounded-xl p-4 cursor-pointer touch-pan-y select-none",
           "active:bg-white/8 transition-colors"
         )}
       >
@@ -105,35 +105,35 @@ export function ExpenseCard({
           {/* Category icon */}
           <div
             className={cn(
-              "w-11 h-11 rounded-xl flex items-center justify-center shrink-0",
+              "w-12 h-12 rounded-xl flex items-center justify-center shrink-0",
               cfg.bg
             )}
           >
-            <Icon size={20} className={cfg.color} />
+            <Icon size={22} className={cfg.color} />
           </div>
 
           {/* Content */}
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
-              <p className="font-semibold text-slate-100 text-[15px] truncate leading-tight">
+              <p className="font-semibold text-slate-100 text-base truncate leading-tight">
                 {expense.title}
               </p>
-              <span className="font-bold text-slate-100 text-[15px] shrink-0 tabular-nums">
+              <span className="font-bold text-slate-100 text-base shrink-0 tabular-nums">
                 {formatAmount(expense.amountInTripCurrency, currency)}
               </span>
             </div>
 
-            <div className="flex items-center gap-2 mt-1">
+            <div className="flex items-center gap-2 mt-1.5">
               {payer && (
                 <div className="flex items-center gap-1.5">
                   <ParticipantAvatar participant={payer} size="xs" />
-                  <span className="text-xs text-slate-400 truncate">
+                  <span className="text-sm text-slate-400 truncate">
                     {payer.name}
                   </span>
                 </div>
               )}
               <span className="text-xs text-slate-600">·</span>
-              <span className="text-xs text-slate-500 shrink-0">
+              <span className="text-sm text-slate-500 shrink-0">
                 {new Date(expense.date).toLocaleDateString("fr-FR", {
                   day: "numeric",
                   month: "short",

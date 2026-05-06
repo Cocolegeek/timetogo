@@ -46,7 +46,7 @@ export function ExpenseList({
     <div className="space-y-5">
       {sortedDates.map((date) => (
         <div key={date}>
-          <p className="text-xs text-slate-500 font-medium mb-2 uppercase tracking-wider">
+          <p className="text-sm text-slate-400 font-semibold mb-2.5 uppercase tracking-wider">
             {new Date(date).toLocaleDateString("fr-FR", {
               weekday: "long",
               day: "numeric",

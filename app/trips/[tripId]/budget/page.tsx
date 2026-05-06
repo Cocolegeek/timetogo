@@ -92,8 +92,8 @@ export default function BudgetPage({ params }: BudgetPageProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="min-w-0">
-          <h1 className="text-xl font-bold text-slate-100">Budget</h1>
-          <p className="text-xs text-slate-500 mt-0.5 truncate">{trip.name}</p>
+          <h1 className="text-2xl font-bold text-slate-100">Budget</h1>
+          <p className="text-sm text-slate-500 mt-0.5 truncate">{trip.name}</p>
         </div>
         <button
           onClick={handleRefresh}
@@ -116,13 +116,13 @@ export default function BudgetPage({ params }: BudgetPageProps) {
             }}
           />
           <div className="relative p-5">
-            <div className="flex items-center gap-2 mb-1">
-              <Wallet size={14} className="text-slate-400" />
-              <span className="text-[11px] text-slate-400 uppercase tracking-wider font-medium">
+            <div className="flex items-center gap-2 mb-2">
+              <Wallet size={15} className="text-slate-300" />
+              <span className="text-xs text-slate-300 uppercase tracking-wider font-semibold">
                 Total dépensé
               </span>
             </div>
-            <p className="text-3xl font-bold text-slate-100 tabular-nums">
+            <p className="text-4xl font-bold text-slate-100 tabular-nums">
               {new Intl.NumberFormat("fr-FR", {
                 style: "currency",
                 currency,
@@ -130,7 +130,7 @@ export default function BudgetPage({ params }: BudgetPageProps) {
               }).format(totalSpent)}
             </p>
             {trip.totalBudget && (
-              <p className="text-xs text-slate-500 mt-1">
+              <p className="text-sm text-slate-400 mt-1.5">
                 sur{" "}
                 {new Intl.NumberFormat("fr-FR", {
                   style: "currency",
@@ -145,22 +145,22 @@ export default function BudgetPage({ params }: BudgetPageProps) {
 
       {/* Tabs */}
       <Tabs defaultValue="expenses">
-        <TabsList className="grid grid-cols-3 w-full bg-white/4 border border-white/8">
+        <TabsList className="grid grid-cols-3 w-full bg-white/4 border border-white/8 h-11">
           <TabsTrigger
             value="expenses"
-            className="data-[state=active]:bg-indigo-500/20 data-[state=active]:text-indigo-300"
+            className="text-sm data-[state=active]:bg-indigo-500/20 data-[state=active]:text-indigo-300"
           >
             Dépenses
           </TabsTrigger>
           <TabsTrigger
             value="balances"
-            className="data-[state=active]:bg-indigo-500/20 data-[state=active]:text-indigo-300"
+            className="text-sm data-[state=active]:bg-indigo-500/20 data-[state=active]:text-indigo-300"
           >
             Soldes
           </TabsTrigger>
           <TabsTrigger
             value="settlements"
-            className="data-[state=active]:bg-indigo-500/20 data-[state=active]:text-indigo-300"
+            className="text-sm data-[state=active]:bg-indigo-500/20 data-[state=active]:text-indigo-300"
           >
             Régler
           </TabsTrigger>

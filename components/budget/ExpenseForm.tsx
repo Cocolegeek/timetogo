@@ -219,7 +219,7 @@ export function ExpenseForm({
         showCloseButton={false}
       >
         <DialogHeader className="px-5 pt-5 pb-3 border-b border-white/8">
-          <DialogTitle className="text-slate-100 text-lg">
+          <DialogTitle className="text-slate-100 text-xl">
             {isEdit ? "Modifier la dépense" : "Nouvelle dépense"}
           </DialogTitle>
         </DialogHeader>
@@ -235,15 +235,15 @@ export function ExpenseForm({
                 setAmountStr(e.target.value.replace(/[^0-9.,]/g, ""))
               }
               placeholder="0,00"
-              className="w-full text-center bg-transparent text-5xl font-bold text-slate-100 placeholder:text-slate-700 focus:outline-none tabular-nums"
+              className="w-full text-center bg-transparent text-6xl font-bold text-slate-100 placeholder:text-slate-700 focus:outline-none tabular-nums"
               autoFocus={!isEdit}
             />
-            <p className="text-xs text-slate-500 mt-1">{currency}</p>
+            <p className="text-sm text-slate-500 mt-1">{currency}</p>
           </div>
 
           {/* Title */}
           <div className="space-y-1.5">
-            <Label className="text-slate-300 text-xs">Description</Label>
+            <Label className="text-slate-300 text-sm font-medium">Description</Label>
             <Input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -254,7 +254,7 @@ export function ExpenseForm({
 
           {/* Categories */}
           <div className="space-y-2">
-            <Label className="text-slate-300 text-xs">Catégorie</Label>
+            <Label className="text-slate-300 text-sm font-medium">Catégorie</Label>
             <div className="grid grid-cols-3 gap-2">
               {CATEGORY_ORDER.map((cat) => {
                 const cfg = CATEGORIES[cat];
@@ -272,8 +272,8 @@ export function ExpenseForm({
                         : "bg-white/4 border-white/8 text-slate-400 hover:bg-white/8"
                     )}
                   >
-                    <Icon size={20} />
-                    <span className="text-[11px] font-medium">{cfg.label}</span>
+                    <Icon size={22} />
+                    <span className="text-xs font-medium">{cfg.label}</span>
                   </button>
                 );
               })}
@@ -282,7 +282,7 @@ export function ExpenseForm({
 
           {/* Date */}
           <div className="space-y-1.5">
-            <Label className="text-slate-300 text-xs">Date</Label>
+            <Label className="text-slate-300 text-sm font-medium">Date</Label>
             <Input
               type="date"
               value={date}
@@ -293,7 +293,7 @@ export function ExpenseForm({
 
           {/* Paid by */}
           <div className="space-y-2">
-            <Label className="text-slate-300 text-xs">Payé par</Label>
+            <Label className="text-slate-300 text-sm font-medium">Payé par</Label>
             <div className="flex gap-2 flex-wrap">
               {participants.map((p) => {
                 const selected = p.id === paidById;
@@ -319,7 +319,7 @@ export function ExpenseForm({
 
           {/* Split mode */}
           <div className="space-y-3">
-            <Label className="text-slate-300 text-xs">Pour qui ?</Label>
+            <Label className="text-slate-300 text-sm font-medium">Pour qui ?</Label>
             <Tabs value={splitMode} onValueChange={handleSplitModeChange}>
               <TabsList className="grid grid-cols-3 w-full bg-white/4 border border-white/8">
                 <TabsTrigger

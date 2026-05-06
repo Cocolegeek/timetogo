@@ -39,10 +39,10 @@ export default function TripsPage() {
             style={{ paddingTop: "calc(env(safe-area-inset-top) + 0.75rem)" }}
           >
             <div>
-              <h1 className="text-lg font-bold gradient-text leading-none">
+              <h1 className="text-xl font-bold gradient-text leading-none">
                 Time to Go
               </h1>
-              <p className="text-[11px] text-slate-500 mt-0.5">
+              <p className="text-xs text-slate-500 mt-1">
                 {loading
                   ? "…"
                   : `${trips.length} voyage${trips.length !== 1 ? "s" : ""}`}
