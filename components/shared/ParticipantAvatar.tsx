@@ -3,11 +3,12 @@ import type { Participant } from "@/types";
 
 interface ParticipantAvatarProps {
   participant: Participant;
-  size?: "sm" | "md" | "lg";
+  size?: "xs" | "sm" | "md" | "lg";
   className?: string;
 }
 
 const SIZES = {
+  xs: "w-6 h-6 text-[10px]",
   sm: "w-7 h-7 text-xs",
   md: "w-9 h-9 text-sm",
   lg: "w-12 h-12 text-base",

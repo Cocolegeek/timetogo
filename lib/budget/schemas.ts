@@ -1,12 +1,11 @@
 import { z } from "zod";
 
 const EXPENSE_CATEGORIES = [
+  "courses",
+  "restaurant",
+  "activities",
   "transport",
   "accommodation",
-  "food",
-  "activities",
-  "shopping",
-  "health",
   "other",
 ] as const;
 
@@ -32,26 +31,44 @@ export const participantSplitSchema = z.object({
 export const expenseSchema = z
   .object({
     title: z.string().min(1, "Le titre est requis"),
-    amount: z.number({ message: "Montant invalide" }).positive("Le montant doit être positif"),
-    currency: z.string().min(1),
-    exchangeRate: z.number().positive(),
+    amount: z
+      .number({ message: "Montant invalide" })
+      .positive("Le montant doit être positif"),
     category: z.enum(EXPENSE_CATEGORIES),
     paidById: z.string().min(1, "Sélectionne qui a payé"),
     date: z.string().min(1, "La date est requise"),
     splitMode: z.enum(SPLIT_MODES),
     splits: z.array(participantSplitSchema),
-    notes: z.string().optional(),
   })
   .superRefine((data, ctx) => {
-    if (data.splitMode !== "percentage") return;
     const active = data.splits.filter((s) => !s.excluded);
-    const total = active.reduce((acc, s) => acc + (s.percentage ?? 0), 0);
-    if (Math.abs(total - 100) > 0.01) {
+    if (active.length === 0) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: `Les pourcentages doivent totaliser 100% (actuel: ${Math.round(total)}%)`,
+        message: "Sélectionne au moins un bénéficiaire",
         path: ["splits"],
       });
+      return;
+    }
+    if (data.splitMode === "percentage") {
+      const total = active.reduce((acc, s) => acc + (s.percentage ?? 0), 0);
+      if (Math.abs(total - 100) > 0.01) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `Les pourcentages doivent totaliser 100% (actuel : ${Math.round(total)}%)`,
+          path: ["splits"],
+        });
+      }
+    }
+    if (data.splitMode === "fixed") {
+      const total = active.reduce((acc, s) => acc + (s.fixedAmount ?? 0), 0);
+      if (Math.abs(total - data.amount) > 0.01) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `La somme des montants doit égaler le total (${data.amount.toFixed(2)})`,
+          path: ["splits"],
+        });
+      }
     }
   });
 

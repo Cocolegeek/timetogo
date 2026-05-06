@@ -68,12 +68,11 @@ export interface TripRow {
 export type SplitMode = "equal" | "percentage" | "fixed";
 
 export type ExpenseCategory =
+  | "courses"
+  | "restaurant"
+  | "activities"
   | "transport"
   | "accommodation"
-  | "food"
-  | "activities"
-  | "shopping"
-  | "health"
   | "other";
 
 export interface ParticipantSplit {

@@ -1,10 +1,9 @@
 "use client";
 
 import { use, useState } from "react";
-import { Plus, Wallet, ArrowRightLeft } from "lucide-react";
+import { Plus, Wallet, ArrowRightLeft, RefreshCw } from "lucide-react";
 import { motion } from "framer-motion";
 import { GlassCard } from "@/components/layout/GlassCard";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ExpenseForm } from "@/components/budget/ExpenseForm";
 import { ExpenseList } from "@/components/budget/ExpenseList";
@@ -13,7 +12,6 @@ import { DebtSettlements } from "@/components/budget/DebtSettlements";
 import { useTrip } from "@/hooks/useTrip";
 import { useBudget } from "@/hooks/useBudget";
 import { useDebts } from "@/hooks/useDebts";
-import type { ExpenseFormValues } from "@/lib/budget/schemas";
 import type { Expense } from "@/types";
 
 interface BudgetPageProps {
@@ -22,19 +20,36 @@ interface BudgetPageProps {
 
 export default function BudgetPage({ params }: BudgetPageProps) {
   const { tripId } = use(params);
-  const { trip } = useTrip(tripId);
-  const { expenses, addExpense, updateExpense, deleteExpense, totalSpent } =
-    useBudget(tripId);
+  const { trip, refetch: refetchTrip } = useTrip(tripId);
+  const {
+    expenses,
+    addExpense,
+    updateExpense,
+    deleteExpense,
+    totalSpent,
+    refetch: refetchBudget,
+  } = useBudget(tripId);
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | undefined>();
+  const [refreshing, setRefreshing] = useState(false);
 
   const participants = trip?.participants ?? [];
   const currency = trip?.currency ?? "EUR";
 
   const { balances, settlements } = useDebts(expenses, participants);
 
-  const handleSubmit = async (data: ExpenseFormValues) => {
+  const handleSubmit = async (data: {
+    title: string;
+    amount: number;
+    currency: string;
+    exchangeRate: number;
+    category: Expense["category"];
+    paidById: string;
+    date: string;
+    splitMode: Expense["splitMode"];
+    splits: Expense["splits"];
+  }) => {
     if (editingExpense) {
       await updateExpense(editingExpense.id, data);
       setEditingExpense(undefined);
@@ -49,14 +64,19 @@ export default function BudgetPage({ params }: BudgetPageProps) {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm("Supprimer cette dépense ?")) {
-      await deleteExpense(id);
-    }
+    // Swipe gesture is the confirmation, no extra prompt
+    await deleteExpense(id);
   };
 
   const handleOpenForm = () => {
     setEditingExpense(undefined);
     setFormOpen(true);
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await Promise.all([refetchTrip(), refetchBudget()]);
+    setTimeout(() => setRefreshing(false), 400);
   };
 
   if (!trip) {
@@ -71,24 +91,22 @@ export default function BudgetPage({ params }: BudgetPageProps) {
     <div className="space-y-5">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
+        <div className="min-w-0">
           <h1 className="text-xl font-bold text-slate-100">Budget</h1>
-          <p className="text-sm text-slate-400 mt-0.5">{trip.name}</p>
+          <p className="text-xs text-slate-500 mt-0.5 truncate">{trip.name}</p>
         </div>
-        <Button
-          onClick={handleOpenForm}
-          className="gradient-primary text-white border-0"
+        <button
+          onClick={handleRefresh}
+          disabled={refreshing}
+          className="p-2 -mr-2 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/8 active:bg-white/12 transition-all"
+          title="Actualiser"
         >
-          <Plus size={16} />
-          Dépense
-        </Button>
+          <RefreshCw size={18} className={refreshing ? "animate-spin" : ""} />
+        </button>
       </div>
 
       {/* Total spent */}
-      <motion.div
-        initial={{ opacity: 0, y: -8 }}
-        animate={{ opacity: 1, y: 0 }}
-      >
+      <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}>
         <GlassCard className="relative overflow-hidden" padding={false}>
           <div
             className="absolute inset-0 opacity-20"
@@ -99,12 +117,12 @@ export default function BudgetPage({ params }: BudgetPageProps) {
           />
           <div className="relative p-5">
             <div className="flex items-center gap-2 mb-1">
-              <Wallet size={15} className="text-slate-400" />
-              <span className="text-xs text-slate-400 uppercase tracking-wider font-medium">
+              <Wallet size={14} className="text-slate-400" />
+              <span className="text-[11px] text-slate-400 uppercase tracking-wider font-medium">
                 Total dépensé
               </span>
             </div>
-            <p className="text-3xl font-bold text-slate-100">
+            <p className="text-3xl font-bold text-slate-100 tabular-nums">
               {new Intl.NumberFormat("fr-FR", {
                 style: "currency",
                 currency,
@@ -112,14 +130,13 @@ export default function BudgetPage({ params }: BudgetPageProps) {
               }).format(totalSpent)}
             </p>
             {trip.totalBudget && (
-              <p className="text-sm text-slate-500 mt-1">
+              <p className="text-xs text-slate-500 mt-1">
                 sur{" "}
                 {new Intl.NumberFormat("fr-FR", {
                   style: "currency",
                   currency,
                   minimumFractionDigits: 0,
-                }).format(trip.totalBudget)}{" "}
-                budgétisés
+                }).format(trip.totalBudget)}
               </p>
             )}
           </div>
@@ -128,25 +145,24 @@ export default function BudgetPage({ params }: BudgetPageProps) {
 
       {/* Tabs */}
       <Tabs defaultValue="expenses">
-        <TabsList className="glass w-full border border-white/8 bg-transparent">
+        <TabsList className="grid grid-cols-3 w-full bg-white/4 border border-white/8">
           <TabsTrigger
             value="expenses"
-            className="flex-1 data-[state=active]:bg-indigo-500/20 data-[state=active]:text-indigo-300"
+            className="data-[state=active]:bg-indigo-500/20 data-[state=active]:text-indigo-300"
           >
-            Dépenses ({expenses.length})
+            Dépenses
           </TabsTrigger>
           <TabsTrigger
             value="balances"
-            className="flex-1 data-[state=active]:bg-indigo-500/20 data-[state=active]:text-indigo-300"
+            className="data-[state=active]:bg-indigo-500/20 data-[state=active]:text-indigo-300"
           >
             Soldes
           </TabsTrigger>
           <TabsTrigger
             value="settlements"
-            className="flex-1 data-[state=active]:bg-indigo-500/20 data-[state=active]:text-indigo-300"
+            className="data-[state=active]:bg-indigo-500/20 data-[state=active]:text-indigo-300"
           >
-            <ArrowRightLeft size={13} className="mr-1" />
-            Remboursements
+            Régler
           </TabsTrigger>
         </TabsList>
 
@@ -197,6 +213,19 @@ export default function BudgetPage({ params }: BudgetPageProps) {
         onSubmit={handleSubmit}
         initialValues={editingExpense}
       />
+
+      {/* FAB — Add expense (sits above bottom nav) */}
+      <button
+        onClick={handleOpenForm}
+        className="fixed right-4 z-30 w-14 h-14 rounded-full gradient-primary text-white shadow-lg shadow-indigo-500/30 flex items-center justify-center active:scale-95 hover:scale-105 transition-all"
+        style={{
+          bottom: "calc(env(safe-area-inset-bottom) + 5.5rem)",
+        }}
+        aria-label="Nouvelle dépense"
+        title="Nouvelle dépense"
+      >
+        <Plus size={26} strokeWidth={2.5} />
+      </button>
     </div>
   );
 }
