@@ -232,6 +232,7 @@ CREATE TABLE IF NOT EXISTS public.itinerary_items (
   location         text,
   type             text NOT NULL DEFAULT 'activity',
   duration_minutes integer,
+  participant_ids  jsonb NOT NULL DEFAULT '[]'::jsonb,
   created_at       timestamptz DEFAULT now() NOT NULL
 );
 

@@ -155,5 +155,7 @@ export interface ItineraryItem {
   type: ItineraryType;
   /** Duration in minutes (optional). */
   durationMinutes?: number;
+  /** Participant IDs involved in this step. */
+  participantIds: string[];
   createdAt: string;
 }
