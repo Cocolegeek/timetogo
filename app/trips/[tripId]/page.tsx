@@ -13,8 +13,9 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { GlassCard } from "@/components/layout/GlassCard";
-import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
+import { getBudgetColor, getBudgetTextColor } from "@/lib/budget/budget-color";
+import { Progress } from "@/components/ui/progress";
 import { ShareModal } from "@/components/trips/ShareModal";
 import { IdentityPicker } from "@/components/trips/IdentityPicker";
 import { BudgetEditDialog } from "@/components/trips/BudgetEditDialog";
@@ -28,6 +29,7 @@ import {
 import { useTrip } from "@/hooks/useTrip";
 import { useBudget } from "@/hooks/useBudget";
 import { useChecklist } from "@/hooks/useChecklist";
+import { cn } from "@/lib/utils";
 
 interface TripDashboardProps {
   params: Promise<{ tripId: string }>;
@@ -61,9 +63,12 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
   const currentParticipant = trip.participants.find(
     (p) => p.id === trip.myParticipantId
   );
-  const budgetProgress = trip.totalBudget
-    ? Math.min((totalSpent / trip.totalBudget) * 100, 100)
+  const budgetRawPct = trip.totalBudget
+    ? (totalSpent / trip.totalBudget) * 100
     : 0;
+  const budgetProgress = Math.min(budgetRawPct, 100);
+  const budgetBarColor = getBudgetColor(budgetRawPct);
+  const budgetIsOver = trip.totalBudget ? totalSpent > trip.totalBudget : false;
   const checklistProgress = totalCount > 0 ? (checkedCount / totalCount) * 100 : 0;
   const tripDuration = Math.round(
     (new Date(trip.endDate).getTime() - new Date(trip.startDate).getTime()) /
@@ -189,13 +194,19 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
                     }).format(totalSpent)}
                   </p>
                   {trip.totalBudget ? (
-                    <p className="text-xs text-slate-500 mt-1.5">
+                    <p
+                      className={cn(
+                        "text-xs mt-1.5",
+                        budgetIsOver ? getBudgetTextColor(budgetRawPct) + " font-medium" : "text-slate-500"
+                      )}
+                    >
                       /{" "}
                       {new Intl.NumberFormat("fr-FR", {
                         style: "currency",
                         currency: trip.currency,
                         maximumFractionDigits: 0,
                       }).format(trip.totalBudget)}
+                      {budgetIsOver && " · dépassé"}
                     </p>
                   ) : (
                     <p className="text-xs text-indigo-400 mt-1.5 font-medium">
@@ -204,13 +215,33 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
                   )}
                 </div>
                 {trip.totalBudget && (
-                  <Progress
-                    value={budgetProgress}
-                    className="h-1.5 bg-white/8 [&>div]:bg-indigo-500"
-                  />
+                  <div
+                    className="h-1.5 bg-white/8 rounded-full overflow-hidden"
+                    role="progressbar"
+                    aria-valuenow={Math.round(budgetProgress)}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                  >
+                    <div
+                      className="h-full rounded-full transition-all duration-500"
+                      style={{
+                        width: `${budgetProgress}%`,
+                        backgroundColor: budgetBarColor,
+                        boxShadow: `0 0 8px ${budgetBarColor}55`,
+                      }}
+                    />
+                  </div>
                 )}
                 <p className="text-xs text-slate-500">
                   {expenses.length} dépense{expenses.length !== 1 ? "s" : ""}
+                  {trip.totalBudget && (
+                    <>
+                      {" · "}
+                      <span className={getBudgetTextColor(budgetRawPct) + " font-medium"}>
+                        {Math.round(budgetRawPct)}%
+                      </span>
+                    </>
+                  )}
                 </p>
               </div>
             </GlassCard>
@@ -297,6 +328,7 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
         onOpenChange={setBudgetOpen}
         currency={trip.currency}
         initialValue={trip.totalBudget}
+        participantCount={trip.participants.length}
         onSave={async (val) => {
           await updateTrip({ totalBudget: val });
         }}
