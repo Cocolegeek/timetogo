@@ -67,7 +67,7 @@ export function TripCard({ trip, onEdit, onDelete, index }: TripCardProps) {
           {/* Emoji tile */}
           <div
             className={cn(
-              "w-14 h-14 rounded-2xl flex items-center justify-center text-3xl shrink-0 bg-gradient-to-br",
+              "w-16 h-16 rounded-2xl flex items-center justify-center text-4xl shrink-0 bg-gradient-to-br",
               gradient
             )}
           >
@@ -75,19 +75,19 @@ export function TripCard({ trip, onEdit, onDelete, index }: TripCardProps) {
           </div>
 
           {/* Title + destination */}
-          <div className="flex-1 min-w-0 space-y-0.5">
-            <h3 className="font-bold text-slate-100 text-base truncate">
+          <div className="flex-1 min-w-0 space-y-1">
+            <h3 className="font-bold text-slate-100 text-lg truncate leading-tight">
               {trip.name}
             </h3>
-            <p className="text-sm text-slate-400 truncate">{trip.destination}</p>
+            <p className="text-base text-slate-400 truncate">{trip.destination}</p>
           </div>
         </div>
 
         {/* Status badge — own row to never collide with the menu */}
-        <div className="mt-2.5">
+        <div className="mt-3">
           <span
             className={cn(
-              "inline-flex items-center text-[10px] px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider",
+              "inline-flex items-center text-[11px] px-2.5 py-1 rounded-full font-semibold uppercase tracking-wider",
               badge.className
             )}
           >
@@ -96,16 +96,16 @@ export function TripCard({ trip, onEdit, onDelete, index }: TripCardProps) {
         </div>
 
         {/* Footer */}
-        <div className="flex items-center gap-3 mt-3 text-xs text-slate-500">
+        <div className="flex items-center gap-3 mt-3 text-sm text-slate-500">
           <span className="flex items-center gap-1.5">
-            <Calendar size={12} />
+            <Calendar size={13} />
             {formatDateRange(trip.startDate, trip.endDate)}
           </span>
           <span className="text-slate-700">·</span>
           <span>{duration} j</span>
           <span className="text-slate-700">·</span>
           <span className="flex items-center gap-1">
-            <Users size={12} />
+            <Users size={13} />
             {trip.participants.length}
           </span>
           <span className="ml-auto font-medium text-slate-400">

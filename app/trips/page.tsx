@@ -12,11 +12,40 @@ import { UserMenu } from "@/components/layout/UserMenu";
 import { buttonVariants } from "@/components/ui/button";
 import { useTrips } from "@/hooks/useTrip";
 import { useProfile } from "@/hooks/useProfile";
+import { daysUntil } from "@/lib/format-date";
 import { cn } from "@/lib/utils";
+import { useMemo } from "react";
+import type { Trip } from "@/types";
 
 export default function TripsPage() {
   const { trips, loading, refetch, deleteTrip } = useTrips();
   const { profile } = useProfile();
+
+  /**
+   * Sort trips by relevance:
+   *   1. En cours  (current trips, most-recently-started first)
+   *   2. Planifié  (upcoming, closest first)
+   *   3. Passé     (most recently finished first)
+   */
+  const sortedTrips = useMemo(() => {
+    const bucket = (t: Trip): 0 | 1 | 2 => {
+      const startDays = daysUntil(t.startDate);
+      const endDays = daysUntil(t.endDate);
+      if (endDays < 0) return 2; // past
+      if (startDays > 0) return 1; // upcoming
+      return 0; // current
+    };
+    return [...trips].sort((a, b) => {
+      const ba = bucket(a);
+      const bb = bucket(b);
+      if (ba !== bb) return ba - bb;
+      // Within bucket
+      const sa = new Date(a.startDate).getTime();
+      const sb = new Date(b.startDate).getTime();
+      if (ba === 1) return sa - sb; // upcoming: closest first (asc)
+      return sb - sa; // current/past: most recent first (desc)
+    });
+  }, [trips]);
 
   const [refreshing, setRefreshing] = useState(false);
   const [editingTripId, setEditingTripId] = useState<string | null>(null);
@@ -110,16 +139,16 @@ export default function TripsPage() {
             <>
               {/* Section header */}
               <div className="flex items-baseline justify-between mb-4 px-1">
-                <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
+                <h2 className="text-base font-semibold text-slate-200 uppercase tracking-wider">
                   Mes voyages
                 </h2>
-                <span className="text-xs text-slate-500">
+                <span className="text-sm text-slate-500">
                   {trips.length} au total
                 </span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {trips.map((trip, i) => (
+                {sortedTrips.map((trip, i) => (
                   <TripCard
                     key={trip.id}
                     trip={trip}
