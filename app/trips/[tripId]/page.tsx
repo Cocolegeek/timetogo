@@ -105,15 +105,13 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
           >
             <RefreshCw size={18} className={refreshing ? "animate-spin" : ""} />
           </button>
-          {trip.isOwner && (
-            <button
-              onClick={() => setEditOpen(true)}
-              className="p-2 rounded-xl hover:bg-white/8 active:bg-white/12 text-slate-400 transition-all"
-              title="Modifier le voyage"
-            >
-              <Pencil size={18} />
-            </button>
-          )}
+          <button
+            onClick={() => setEditOpen(true)}
+            className="p-2 rounded-xl hover:bg-white/8 active:bg-white/12 text-slate-400 transition-all"
+            title="Modifier le voyage"
+          >
+            <Pencil size={18} />
+          </button>
           <button
             onClick={() => setShareOpen(true)}
             className="p-2 rounded-xl hover:bg-white/8 active:bg-white/12 text-indigo-300 transition-all"
@@ -334,7 +332,7 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
                     style={{ backgroundColor: p.color }}
                   />
                   <span className="text-sm font-medium text-slate-200">{p.name}</span>
-                  {isMe && <span className="text-[11px] text-indigo-400 font-semibold">moi</span>}
+                  {isMe && <span className="text-xs text-indigo-400 font-semibold">moi</span>}
                 </div>
               );
             })}

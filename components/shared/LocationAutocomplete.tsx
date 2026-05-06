@@ -167,7 +167,7 @@ export function LocationAutocomplete({
         </div>
       )}
 
-      <p className="text-[10px] text-slate-600 mt-1">
+      <p className="text-xs text-slate-600 mt-1">
         Suggestions OpenStreetMap
       </p>
     </div>

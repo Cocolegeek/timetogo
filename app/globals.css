@@ -128,6 +128,8 @@
 
   html {
     @apply h-full font-sans;
+    /* Slightly larger root size = global readability boost (was 16px) */
+    font-size: 17px;
     color-scheme: dark;
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;

@@ -87,7 +87,7 @@ export function TripCard({ trip, onEdit, onDelete, index }: TripCardProps) {
         <div className="mt-3">
           <span
             className={cn(
-              "inline-flex items-center text-[11px] px-2.5 py-1 rounded-full font-semibold uppercase tracking-wider",
+              "inline-flex items-center text-xs px-2.5 py-1 rounded-full font-semibold uppercase tracking-wider",
               badge.className
             )}
           >
@@ -128,18 +128,14 @@ export function TripCard({ trip, onEdit, onDelete, index }: TripCardProps) {
             align="end"
             className="glass-strong border-white/10 text-slate-200 min-w-44 bg-slate-900/95 backdrop-blur"
           >
-            {trip.isOwner && (
-              <>
-                <DropdownMenuItem
-                  className="gap-2 cursor-pointer"
-                  onClick={() => onEdit(trip)}
-                >
-                  <Pencil size={14} className="text-slate-400" />
-                  Modifier
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-              </>
-            )}
+            <DropdownMenuItem
+              className="gap-2 cursor-pointer"
+              onClick={() => onEdit(trip)}
+            >
+              <Pencil size={14} className="text-slate-400" />
+              Modifier
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={() => onDelete(trip.id)}
               className="gap-2 cursor-pointer text-red-400"
