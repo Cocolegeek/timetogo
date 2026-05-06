@@ -32,19 +32,26 @@ const ACCENT_GRADIENTS = [
 export function TripCard({ trip, onEdit, onDelete, index }: TripCardProps) {
   const gradient = ACCENT_GRADIENTS[index % ACCENT_GRADIENTS.length];
   const duration = tripDuration(trip.startDate, trip.endDate);
-  const days = daysUntil(trip.startDate);
+  const startDays = daysUntil(trip.startDate);
+  const endDays = daysUntil(trip.endDate);
 
-  // Status badge
-  let badge: { label: string; className: string } | null = null;
-  if (days > 0 && days <= 30) {
+  // Status badge — three states: passé (red), en cours (green), planifié (blue)
+  let badge: { label: string; className: string };
+  if (endDays < 0) {
     badge = {
-      label: `Dans ${days} j`,
-      className: "bg-indigo-500/15 text-indigo-300",
+      label: "Passé",
+      className: "bg-red-500/15 text-red-300 border border-red-500/20",
     };
-  } else if (days <= 0 && daysUntil(trip.endDate) >= 0) {
-    badge = { label: "En cours", className: "bg-emerald-500/15 text-emerald-300" };
-  } else if (daysUntil(trip.endDate) < 0) {
-    badge = { label: "Passé", className: "bg-white/5 text-slate-400" };
+  } else if (startDays > 0) {
+    badge = {
+      label: "Planifié",
+      className: "bg-sky-500/15 text-sky-300 border border-sky-500/20",
+    };
+  } else {
+    badge = {
+      label: "En cours",
+      className: "bg-emerald-500/15 text-emerald-300 border border-emerald-500/20",
+    };
   }
 
   return (
@@ -55,7 +62,8 @@ export function TripCard({ trip, onEdit, onDelete, index }: TripCardProps) {
       className="relative glass rounded-2xl overflow-hidden hover:border-white/15 transition-all duration-200 active:scale-[0.99]"
     >
       <Link href={`/trips/${trip.id}`} className="block p-4">
-        <div className="flex items-center gap-3">
+        {/* Top row — leaves space for the absolute 3-dots menu (pr-12) */}
+        <div className="flex items-center gap-3 pr-12">
           {/* Emoji tile */}
           <div
             className={cn(
@@ -66,25 +74,25 @@ export function TripCard({ trip, onEdit, onDelete, index }: TripCardProps) {
             {trip.emoji}
           </div>
 
-          {/* Content */}
+          {/* Title + destination */}
           <div className="flex-1 min-w-0 space-y-0.5">
-            <div className="flex items-center gap-2">
-              <h3 className="font-bold text-slate-100 text-base truncate flex-1">
-                {trip.name}
-              </h3>
-              {badge && (
-                <span
-                  className={cn(
-                    "text-[10px] px-1.5 py-0.5 rounded-full font-semibold uppercase tracking-wider shrink-0",
-                    badge.className
-                  )}
-                >
-                  {badge.label}
-                </span>
-              )}
-            </div>
+            <h3 className="font-bold text-slate-100 text-base truncate">
+              {trip.name}
+            </h3>
             <p className="text-sm text-slate-400 truncate">{trip.destination}</p>
           </div>
+        </div>
+
+        {/* Status badge — own row to never collide with the menu */}
+        <div className="mt-2.5">
+          <span
+            className={cn(
+              "inline-flex items-center text-[10px] px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider",
+              badge.className
+            )}
+          >
+            {badge.label}
+          </span>
         </div>
 
         {/* Footer */}
@@ -94,9 +102,7 @@ export function TripCard({ trip, onEdit, onDelete, index }: TripCardProps) {
             {formatDateRange(trip.startDate, trip.endDate)}
           </span>
           <span className="text-slate-700">·</span>
-          <span>
-            {duration} j{duration !== 1 ? "" : ""}
-          </span>
+          <span>{duration} j</span>
           <span className="text-slate-700">·</span>
           <span className="flex items-center gap-1">
             <Users size={12} />
