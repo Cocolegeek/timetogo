@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { Plus, X, Loader2 } from "lucide-react";
+import { Plus, X, Loader2, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { GlassCard } from "@/components/layout/GlassCard";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { LocationAutocomplete } from "@/components/shared/LocationAutocomplete";
 import { tripSchema, type TripFormValues } from "@/lib/budget/schemas";
 import { useTrips } from "@/hooks/useTrip";
+import { cn } from "@/lib/utils";
 
 const PARTICIPANT_COLORS = [
   "#6366f1", "#7c3aed", "#0ea5e9", "#10b981",
@@ -31,6 +32,9 @@ export function TripWizard() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newParticipantName, setNewParticipantName] = useState("");
   const [participants, setParticipants] = useState<ParticipantInput[]>([]);
+  const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
+  const [budgetEnabled, setBudgetEnabled] = useState(false);
+  const [budgetStr, setBudgetStr] = useState("");
 
   const {
     register,
@@ -72,6 +76,9 @@ export function TripWizard() {
   const onSubmit = async (data: TripFormValues) => {
     setIsSubmitting(true);
     try {
+      const parsedBudget = budgetEnabled
+        ? Number(budgetStr.replace(",", "."))
+        : undefined;
       const id = await createTrip({
         name: data.name,
         destination: data.destination,
@@ -79,7 +86,8 @@ export function TripWizard() {
         currency: data.currency,
         startDate: data.startDate,
         endDate: data.endDate,
-        totalBudget: data.totalBudget,
+        totalBudget:
+          parsedBudget && parsedBudget > 0 ? parsedBudget : undefined,
         participants,
       });
       router.push(`/trips/${id}/budget`);
@@ -90,43 +98,69 @@ export function TripWizard() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit as never)} className="space-y-6">
-      {/* Emoji + Name */}
+      {/* Name + emoji inline */}
       <GlassCard>
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <Label className="text-slate-300 text-xs">Emoji du voyage</Label>
-            <div className="flex gap-2 flex-wrap">
-              {EMOJIS.map((e) => (
-                <button
-                  key={e}
-                  type="button"
-                  onClick={() => setValue("emoji", e)}
-                  className={`w-10 h-10 rounded-xl text-xl transition-all ${
-                    selectedEmoji === e
-                      ? "bg-indigo-500/20 ring-2 ring-indigo-500/50 scale-110"
-                      : "bg-white/5 hover:bg-white/10"
-                  }`}
-                >
-                  {e}
-                </button>
-              ))}
+            <Label className="text-slate-300 text-sm font-medium">
+              Nom du voyage
+            </Label>
+            <div className="flex items-stretch gap-2 bg-white/8 border border-white/10 rounded-lg focus-within:ring-3 focus-within:ring-indigo-500/40 transition-all overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setEmojiPickerOpen((v) => !v)}
+                className="w-12 h-11 flex items-center justify-center text-2xl hover:bg-white/8 active:bg-white/12 transition-colors shrink-0"
+                aria-label="Changer l'emoji"
+              >
+                {selectedEmoji}
+              </button>
+              <input
+                {...register("name")}
+                placeholder="Road trip en Italie"
+                className="flex-1 bg-transparent border-0 outline-none text-base text-slate-100 placeholder:text-slate-500 pr-3"
+              />
             </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label className="text-slate-300 text-xs">Nom du voyage</Label>
-            <Input
-              {...register("name")}
-              placeholder="Road trip en Italie"
-              className="bg-white/8 border-white/10 text-slate-100 placeholder:text-slate-500 focus-visible:ring-indigo-500/50"
-            />
+            <AnimatePresence initial={false}>
+              {emojiPickerOpen && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.15 }}
+                  className="overflow-hidden"
+                >
+                  <div className="flex gap-1 pt-2 flex-wrap">
+                    {EMOJIS.map((e) => (
+                      <button
+                        key={e}
+                        type="button"
+                        onClick={() => {
+                          setValue("emoji", e);
+                          setEmojiPickerOpen(false);
+                        }}
+                        className={cn(
+                          "w-10 h-10 rounded-lg text-xl transition-all",
+                          selectedEmoji === e
+                            ? "bg-indigo-500/20 ring-1 ring-indigo-400/50"
+                            : "hover:bg-white/8 active:bg-white/12"
+                        )}
+                      >
+                        {e}
+                      </button>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
             {errors.name && (
               <p className="text-xs text-red-400">{errors.name.message}</p>
             )}
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-slate-300 text-xs">Destination</Label>
+            <Label className="text-slate-300 text-sm font-medium">
+              Destination
+            </Label>
             <LocationAutocomplete
               value={destination}
               onChange={(v) =>
@@ -170,7 +204,7 @@ export function TripWizard() {
       {/* Currency */}
       <GlassCard>
         <div className="space-y-2">
-          <Label className="text-slate-300 text-xs">Devise principale</Label>
+          <Label className="text-slate-300 text-sm font-medium">Devise principale</Label>
           <div className="flex gap-2 flex-wrap">
             {CURRENCIES.map((c) => (
               <button
@@ -190,10 +224,67 @@ export function TripWizard() {
         </div>
       </GlassCard>
 
+      {/* Budget prévisionnel (optional) */}
+      <GlassCard>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <Label className="text-slate-300 text-sm font-medium">
+              Budget prévisionnel{" "}
+              <span className="text-slate-500 font-normal">(optionnel)</span>
+            </Label>
+            <button
+              type="button"
+              onClick={() => setBudgetEnabled((v) => !v)}
+              className={cn(
+                "relative w-10 h-6 rounded-full transition-colors",
+                budgetEnabled ? "bg-indigo-500" : "bg-white/10"
+              )}
+              aria-label="Activer le budget prévisionnel"
+            >
+              <span
+                className={cn(
+                  "absolute top-0.5 w-5 h-5 rounded-full bg-white transition-transform",
+                  budgetEnabled ? "translate-x-[18px]" : "translate-x-0.5"
+                )}
+              />
+            </button>
+          </div>
+          <AnimatePresence initial={false}>
+            {budgetEnabled && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="relative">
+                  <Input
+                    type="text"
+                    inputMode="decimal"
+                    value={budgetStr}
+                    onChange={(e) =>
+                      setBudgetStr(e.target.value.replace(/[^0-9.,]/g, ""))
+                    }
+                    placeholder="ex: 1500"
+                    className="bg-white/8 border-white/10 text-slate-100 placeholder:text-slate-500 pr-14 tabular-nums"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-500 pointer-events-none">
+                    {selectedCurrency}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 mt-1.5">
+                  Sert à suivre tes dépenses avec une barre de progression.
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </GlassCard>
+
       {/* Participants */}
       <GlassCard>
         <div className="space-y-3">
-          <Label className="text-slate-300 text-xs">Participants</Label>
+          <Label className="text-slate-300 text-sm font-medium">Participants</Label>
 
           <div className="flex gap-2">
             <Input

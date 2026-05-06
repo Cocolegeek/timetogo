@@ -2,7 +2,6 @@
 
 import { motion } from "framer-motion";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
-import { ParticipantAvatar } from "@/components/shared/ParticipantAvatar";
 import { GlassCard } from "@/components/layout/GlassCard";
 import { cn } from "@/lib/utils";
 import type { Balance, Participant } from "@/types";
@@ -52,19 +51,17 @@ export function BalanceSummary({
               />
 
               <div className="p-4 pl-5 flex items-center gap-3">
-                <ParticipantAvatar participant={participant} size="md" />
-
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-slate-200 text-sm truncate">
+                  <p className="font-semibold text-slate-100 text-base truncate">
                     {participant.name}
                   </p>
-                  <p className="text-xs text-slate-500 mt-0.5">
+                  <p className="text-xs text-slate-500 mt-1">
                     Payé{" "}
-                    <span className="text-slate-400">
+                    <span className="text-slate-300">
                       {formatAmount(balance.paid, currency)}
                     </span>{" "}
                     · Doit{" "}
-                    <span className="text-slate-400">
+                    <span className="text-slate-300">
                       {formatAmount(balance.owes, currency)}
                     </span>
                   </p>
@@ -72,15 +69,15 @@ export function BalanceSummary({
 
                 <div className="flex items-center gap-1.5 shrink-0">
                   {isCreditor ? (
-                    <TrendingUp size={15} className="text-emerald-400" />
+                    <TrendingUp size={16} className="text-emerald-400" />
                   ) : isDebtor ? (
-                    <TrendingDown size={15} className="text-red-400" />
+                    <TrendingDown size={16} className="text-red-400" />
                   ) : (
-                    <Minus size={15} className="text-slate-500" />
+                    <Minus size={16} className="text-slate-500" />
                   )}
                   <span
                     className={cn(
-                      "font-semibold text-sm",
+                      "font-bold text-base tabular-nums",
                       isCreditor && "text-emerald-400",
                       isDebtor && "text-red-400",
                       !isCreditor && !isDebtor && "text-slate-500"

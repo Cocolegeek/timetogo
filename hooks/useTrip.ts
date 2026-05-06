@@ -207,19 +207,31 @@ export function useTrip(id: string) {
   useEffect(() => { fetchTrip(); }, [fetchTrip]);
 
   const updateTrip = async (
-    data: Partial<Pick<Trip, "name" | "destination" | "emoji" | "currency" | "startDate" | "endDate" | "totalBudget">>
+    data: Partial<{
+      name: string;
+      destination: string;
+      emoji: string;
+      currency: string;
+      startDate: string;
+      endDate: string;
+      /** Pass `null` to clear the budget. `undefined` means "no change". */
+      totalBudget: number | null;
+    }>
   ): Promise<void> => {
     const supabase = createClient();
-    await supabase.from("trips").update({
-      ...(data.name && { name: data.name }),
-      ...(data.destination && { destination: data.destination }),
-      ...(data.emoji && { emoji: data.emoji }),
-      ...(data.currency && { currency: data.currency }),
-      ...(data.startDate && { start_date: data.startDate }),
-      ...(data.endDate && { end_date: data.endDate }),
-      ...(data.totalBudget !== undefined && { total_budget: data.totalBudget }),
-      updated_at: new Date().toISOString(),
-    }).eq("id", id);
+    await supabase
+      .from("trips")
+      .update({
+        ...(data.name && { name: data.name }),
+        ...(data.destination && { destination: data.destination }),
+        ...(data.emoji && { emoji: data.emoji }),
+        ...(data.currency && { currency: data.currency }),
+        ...(data.startDate && { start_date: data.startDate }),
+        ...(data.endDate && { end_date: data.endDate }),
+        ...(data.totalBudget !== undefined && { total_budget: data.totalBudget }),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id);
     await fetchTrip();
   };
 

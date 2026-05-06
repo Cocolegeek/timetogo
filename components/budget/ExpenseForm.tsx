@@ -11,7 +11,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ParticipantAvatar } from "@/components/shared/ParticipantAvatar";
 import { CATEGORIES, CATEGORY_ORDER } from "@/lib/budget/categories";
 import { computeShares } from "@/lib/budget/splits";
 import { cn } from "@/lib/utils";
@@ -50,6 +49,22 @@ const formatCurrency = (n: number, currency: string) =>
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(n);
+
+/**
+ * Distribute `total` into `count` parts so that the sum of cents
+ * equals `total` exactly (no rounding errors). Extra cents are
+ * spread on the first participants.
+ */
+function distributeCents(total: number, count: number): number[] {
+  if (count === 0) return [];
+  const cents = Math.round(total * 100);
+  const baseCents = Math.floor(cents / count);
+  const remainder = cents - baseCents * count;
+  return Array.from(
+    { length: count },
+    (_, i) => (baseCents + (i < remainder ? 1 : 0)) / 100
+  );
+}
 
 export function ExpenseForm({
   open,
@@ -159,14 +174,38 @@ export function ExpenseForm({
     );
   };
 
+  /**
+   * In "fixed" mode: when user edits one participant's amount,
+   * auto-rebalance the OTHER active participants so the total
+   * matches `amount` (Tricount-style behaviour).
+   */
   const setFixedAmount = (participantId: string, value: number) => {
-    setSplits((prev) =>
-      prev.map((s) =>
-        s.participantId === participantId
-          ? { ...s, fixedAmount: Math.max(0, value) }
-          : s
-      )
-    );
+    const newValue = Math.max(0, value);
+    setSplits((prev) => {
+      const active = prev.filter((s) => !s.excluded);
+      const others = active.filter((s) => s.participantId !== participantId);
+      const remaining = Math.max(0, amount - newValue);
+      const distributed = distributeCents(remaining, others.length);
+
+      // Build a quick lookup for "others"
+      let i = 0;
+      const otherAmounts = new Map<string, number>();
+      for (const s of others) {
+        otherAmounts.set(s.participantId, distributed[i] ?? 0);
+        i++;
+      }
+
+      return prev.map((s) => {
+        if (s.excluded) return s;
+        if (s.participantId === participantId) {
+          return { ...s, fixedAmount: newValue };
+        }
+        return {
+          ...s,
+          fixedAmount: otherAmounts.get(s.participantId) ?? s.fixedAmount ?? 0,
+        };
+      });
+    });
   };
 
   // Auto-redistribute equally when switching to percentage/fixed for the first time
@@ -183,13 +222,37 @@ export function ExpenseForm({
       );
     } else if (newMode === "fixed") {
       const active = splits.filter((s) => !s.excluded);
-      const equalAmt =
-        active.length > 0 ? Math.round((amount / active.length) * 100) / 100 : 0;
+      const distributed = distributeCents(amount, active.length);
+      let i = 0;
       setSplits((prev) =>
-        prev.map((s) => (s.excluded ? s : { ...s, fixedAmount: equalAmt }))
+        prev.map((s) => {
+          if (s.excluded) return s;
+          const next = distributed[i] ?? 0;
+          i++;
+          return { ...s, fixedAmount: next };
+        })
       );
     }
   };
+
+  // When the total amount changes in fixed mode, rebalance to keep totals consistent
+  useEffect(() => {
+    if (splitMode !== "fixed") return;
+    if (!amount) return;
+    setSplits((prev) => {
+      const active = prev.filter((s) => !s.excluded);
+      if (active.length === 0) return prev;
+      const distributed = distributeCents(amount, active.length);
+      let i = 0;
+      return prev.map((s) => {
+        if (s.excluded) return s;
+        const next = distributed[i] ?? 0;
+        i++;
+        return { ...s, fixedAmount: next };
+      });
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [amount, splitMode]);
 
   const handleSubmit = async () => {
     if (!formValid) return;
@@ -303,13 +366,16 @@ export function ExpenseForm({
                     type="button"
                     onClick={() => setPaidById(p.id)}
                     className={cn(
-                      "flex items-center gap-2 pl-1 pr-3 py-1 rounded-full border transition-all active:scale-95",
+                      "flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all active:scale-95",
                       selected
                         ? "border-indigo-400 bg-indigo-500/15 text-indigo-200"
-                        : "border-white/10 bg-white/4 text-slate-400 hover:bg-white/8"
+                        : "border-white/10 bg-white/4 text-slate-300 hover:bg-white/8"
                     )}
                   >
-                    <ParticipantAvatar participant={p} size="xs" />
+                    <span
+                      className="w-2 h-2 rounded-full shrink-0"
+                      style={{ backgroundColor: p.color }}
+                    />
                     <span className="text-sm font-medium">{p.name}</span>
                   </button>
                 );
@@ -393,7 +459,10 @@ export function ExpenseForm({
                       </button>
                     )}
 
-                    <ParticipantAvatar participant={p} size="xs" />
+                    <span
+                      className="w-2.5 h-2.5 rounded-full shrink-0"
+                      style={{ backgroundColor: p.color }}
+                    />
                     <span className="text-sm text-slate-200 flex-1 truncate">
                       {p.name}
                     </span>

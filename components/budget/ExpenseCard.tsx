@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import { Trash2 } from "lucide-react";
-import { ParticipantAvatar } from "@/components/shared/ParticipantAvatar";
 import { CATEGORIES } from "@/lib/budget/categories";
 import { cn } from "@/lib/utils";
 import type { Expense, Participant } from "@/types";
@@ -125,8 +124,11 @@ export function ExpenseCard({
 
             <div className="flex items-center gap-2 mt-1.5">
               {payer && (
-                <div className="flex items-center gap-1.5">
-                  <ParticipantAvatar participant={payer} size="xs" />
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span
+                    className="w-2 h-2 rounded-full shrink-0"
+                    style={{ backgroundColor: payer.color }}
+                  />
                   <span className="text-sm text-slate-400 truncate">
                     {payer.name}
                   </span>

@@ -17,6 +17,7 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { ShareModal } from "@/components/trips/ShareModal";
 import { IdentityPicker } from "@/components/trips/IdentityPicker";
+import { BudgetEditDialog } from "@/components/trips/BudgetEditDialog";
 import { ParticipantAvatar } from "@/components/shared/ParticipantAvatar";
 import {
   Dialog,
@@ -34,12 +35,13 @@ interface TripDashboardProps {
 
 export default function TripDashboardPage({ params }: TripDashboardProps) {
   const { tripId } = use(params);
-  const { trip, refetch: refetchTrip, setMyParticipant } = useTrip(tripId);
+  const { trip, refetch: refetchTrip, updateTrip, setMyParticipant } = useTrip(tripId);
   const { expenses, totalSpent, refetch: refetchBudget } = useBudget(tripId);
   const { checkedCount, totalCount, refetch: refetchChecklist } = useChecklist(tripId);
 
   const [shareOpen, setShareOpen] = useState(false);
   const [identityOpen, setIdentityOpen] = useState(false);
+  const [budgetOpen, setBudgetOpen] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   const handleRefresh = async () => {
@@ -165,44 +167,54 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.05 }}
         >
-          <GlassCard className="h-full" padding={false}>
-            <div className="p-4 flex flex-col gap-2.5">
-              <div className="flex items-center gap-2">
-                <div className="w-10 h-10 rounded-xl bg-indigo-500/15 flex items-center justify-center">
-                  <Wallet size={19} className="text-indigo-400" />
+          <button
+            type="button"
+            onClick={() => setBudgetOpen(true)}
+            className="w-full text-left active:scale-[0.98] transition-transform"
+          >
+            <GlassCard className="h-full hover:border-white/15 transition-colors" padding={false}>
+              <div className="p-4 flex flex-col gap-2.5">
+                <div className="flex items-center gap-2">
+                  <div className="w-10 h-10 rounded-xl bg-indigo-500/15 flex items-center justify-center">
+                    <Wallet size={19} className="text-indigo-400" />
+                  </div>
+                  <span className="text-sm text-slate-300 font-medium">Budget</span>
                 </div>
-                <span className="text-sm text-slate-300 font-medium">Budget</span>
-              </div>
-              <div>
-                <p className="text-3xl font-bold text-slate-100 leading-none tabular-nums">
-                  {new Intl.NumberFormat("fr-FR", {
-                    style: "currency",
-                    currency: trip.currency,
-                    maximumFractionDigits: 0,
-                  }).format(totalSpent)}
-                </p>
-                {trip.totalBudget && (
-                  <p className="text-xs text-slate-500 mt-1.5">
-                    /{" "}
+                <div>
+                  <p className="text-3xl font-bold text-slate-100 leading-none tabular-nums">
                     {new Intl.NumberFormat("fr-FR", {
                       style: "currency",
                       currency: trip.currency,
                       maximumFractionDigits: 0,
-                    }).format(trip.totalBudget)}
+                    }).format(totalSpent)}
                   </p>
+                  {trip.totalBudget ? (
+                    <p className="text-xs text-slate-500 mt-1.5">
+                      /{" "}
+                      {new Intl.NumberFormat("fr-FR", {
+                        style: "currency",
+                        currency: trip.currency,
+                        maximumFractionDigits: 0,
+                      }).format(trip.totalBudget)}
+                    </p>
+                  ) : (
+                    <p className="text-xs text-indigo-400 mt-1.5 font-medium">
+                      Définir un budget →
+                    </p>
+                  )}
+                </div>
+                {trip.totalBudget && (
+                  <Progress
+                    value={budgetProgress}
+                    className="h-1.5 bg-white/8 [&>div]:bg-indigo-500"
+                  />
                 )}
+                <p className="text-xs text-slate-500">
+                  {expenses.length} dépense{expenses.length !== 1 ? "s" : ""}
+                </p>
               </div>
-              {trip.totalBudget && (
-                <Progress
-                  value={budgetProgress}
-                  className="h-1.5 bg-white/8 [&>div]:bg-indigo-500"
-                />
-              )}
-              <p className="text-xs text-slate-500">
-                {expenses.length} dépense{expenses.length !== 1 ? "s" : ""}
-              </p>
-            </div>
-          </GlassCard>
+            </GlassCard>
+          </button>
         </motion.div>
 
         <motion.div
@@ -278,6 +290,17 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
           </div>
         </GlassCard>
       </motion.div>
+
+      {/* Budget Edit */}
+      <BudgetEditDialog
+        open={budgetOpen}
+        onOpenChange={setBudgetOpen}
+        currency={trip.currency}
+        initialValue={trip.totalBudget}
+        onSave={async (val) => {
+          await updateTrip({ totalBudget: val });
+        }}
+      />
 
       {/* Share Modal */}
       <ShareModal open={shareOpen} onOpenChange={setShareOpen} trip={trip} />

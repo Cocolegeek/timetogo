@@ -2,7 +2,6 @@
 
 import { motion } from "framer-motion";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
-import { ParticipantAvatar } from "@/components/shared/ParticipantAvatar";
 import type { Settlement, Participant } from "@/types";
 
 interface DebtSettlementsProps {
@@ -48,18 +47,24 @@ export function DebtSettlements({
             transition={{ delay: i * 0.06 }}
             className="glass-subtle rounded-xl px-4 py-3 flex items-center gap-3"
           >
-            <ParticipantAvatar participant={from} size="sm" />
             <div className="flex-1 flex items-center gap-2 min-w-0">
-              <span className="text-sm text-slate-300 font-medium truncate">
+              <span
+                className="w-2.5 h-2.5 rounded-full shrink-0"
+                style={{ backgroundColor: from.color }}
+              />
+              <span className="text-sm text-slate-100 font-semibold truncate">
                 {from.name}
               </span>
               <ArrowRight size={14} className="text-slate-500 shrink-0" />
-              <span className="text-sm text-slate-300 font-medium truncate">
+              <span
+                className="w-2.5 h-2.5 rounded-full shrink-0"
+                style={{ backgroundColor: to.color }}
+              />
+              <span className="text-sm text-slate-100 font-semibold truncate">
                 {to.name}
               </span>
             </div>
-            <ParticipantAvatar participant={to} size="sm" />
-            <span className="font-semibold text-sm text-indigo-300 shrink-0">
+            <span className="font-bold text-base text-indigo-300 shrink-0 tabular-nums">
               {formatAmount(s.amount, currency)}
             </span>
           </motion.div>
