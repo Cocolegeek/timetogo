@@ -1,24 +1,37 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
+import { motion } from "framer-motion";
 import { Plus, Plane, RefreshCw } from "lucide-react";
 import { MeshGradientBackground } from "@/components/layout/MeshGradientBackground";
 import { TripCard } from "@/components/trips/TripCard";
+import { TripEditWrapper } from "@/components/trips/TripEditWrapper";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { UserMenu } from "@/components/layout/UserMenu";
 import { buttonVariants } from "@/components/ui/button";
 import { useTrips } from "@/hooks/useTrip";
+import { useProfile } from "@/hooks/useProfile";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
 
 export default function TripsPage() {
   const { trips, loading, refetch, deleteTrip } = useTrips();
+  const { profile } = useProfile();
+
   const [refreshing, setRefreshing] = useState(false);
+  const [editingTripId, setEditingTripId] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+
+  const firstName = profile?.name?.split(" ")[0] ?? null;
 
   const handleDelete = async (id: string) => {
-    if (confirm("Supprimer ce voyage et toutes ses données ?")) {
-      await deleteTrip(id);
-    }
+    setConfirmDelete(id);
+  };
+
+  const performDelete = async () => {
+    if (!confirmDelete) return;
+    await deleteTrip(confirmDelete);
+    setConfirmDelete(null);
   };
 
   const handleRefresh = async () => {
@@ -32,7 +45,7 @@ export default function TripsPage() {
       <MeshGradientBackground />
 
       <div className="min-h-screen">
-        {/* Header — simplifié */}
+        {/* Header */}
         <header className="sticky top-0 z-30 glass-strong border-b border-white/8">
           <div
             className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between"
@@ -43,9 +56,7 @@ export default function TripsPage() {
                 Time to Go
               </h1>
               <p className="text-xs text-slate-500 mt-1">
-                {loading
-                  ? "…"
-                  : `${trips.length} voyage${trips.length !== 1 ? "s" : ""}`}
+                {firstName ? `Salut ${firstName} 👋` : "Tes voyages"}
               </p>
             </div>
 
@@ -56,10 +67,7 @@ export default function TripsPage() {
                 className="p-2 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/8 active:bg-white/12 transition-all"
                 title="Actualiser"
               >
-                <RefreshCw
-                  size={18}
-                  className={refreshing ? "animate-spin" : ""}
-                />
+                <RefreshCw size={18} className={refreshing ? "animate-spin" : ""} />
               </button>
               <UserMenu />
             </div>
@@ -76,38 +84,56 @@ export default function TripsPage() {
               <div className="w-8 h-8 rounded-full border-2 border-indigo-500/50 border-t-indigo-400 animate-spin" />
             </div>
           ) : trips.length === 0 ? (
-            <EmptyState
-              icon={Plane}
-              title="Aucun voyage pour l'instant"
-              description="Crée ton premier voyage pour commencer à planifier et gérer le budget."
-              action={
-                <Link
-                  href="/trips/new"
-                  className={cn(
-                    buttonVariants(),
-                    "gradient-primary text-white border-0 gap-1.5"
-                  )}
-                >
-                  <Plus size={16} />
-                  Créer un voyage
-                </Link>
-              }
-            />
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <EmptyState
+                icon={Plane}
+                title="Aucun voyage pour l'instant"
+                description="Crée ton premier voyage pour commencer à planifier et gérer le budget."
+                action={
+                  <Link
+                    href="/trips/new"
+                    className={cn(
+                      buttonVariants(),
+                      "gradient-primary text-white border-0 gap-1.5 h-11 px-5"
+                    )}
+                  >
+                    <Plus size={16} />
+                    Créer un voyage
+                  </Link>
+                }
+              />
+            </motion.div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {trips.map((trip, i) => (
-                <TripCard
-                  key={trip.id}
-                  trip={trip}
-                  onDelete={handleDelete}
-                  index={i}
-                />
-              ))}
-            </div>
+            <>
+              {/* Section header */}
+              <div className="flex items-baseline justify-between mb-4 px-1">
+                <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
+                  Mes voyages
+                </h2>
+                <span className="text-xs text-slate-500">
+                  {trips.length} au total
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {trips.map((trip, i) => (
+                  <TripCard
+                    key={trip.id}
+                    trip={trip}
+                    onEdit={(t) => setEditingTripId(t.id)}
+                    onDelete={handleDelete}
+                    index={i}
+                  />
+                ))}
+              </div>
+            </>
           )}
         </main>
 
-        {/* Floating Action Button — Nouveau voyage */}
+        {/* Floating Action Button */}
         {!loading && trips.length > 0 && (
           <Link
             href="/trips/new"
@@ -121,7 +147,88 @@ export default function TripsPage() {
             <Plus size={24} strokeWidth={2.5} />
           </Link>
         )}
+
+        {/* Edit dialog */}
+        {editingTripId && (
+          <TripEditWrapper
+            tripId={editingTripId}
+            onClose={async () => {
+              setEditingTripId(null);
+              await refetch();
+            }}
+          />
+        )}
+
+        {/* Confirm delete dialog */}
+        {confirmDelete && (
+          <ConfirmDelete
+            tripName={trips.find((t) => t.id === confirmDelete)?.name ?? ""}
+            onCancel={() => setConfirmDelete(null)}
+            onConfirm={performDelete}
+          />
+        )}
       </div>
     </>
+  );
+}
+
+function ConfirmDelete({
+  tripName,
+  onCancel,
+  onConfirm,
+}: {
+  tripName: string;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  const [deleting, setDeleting] = useState(false);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+      onClick={onCancel}
+    >
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        onClick={(e) => e.stopPropagation()}
+        className="glass-strong border border-white/10 rounded-2xl p-5 max-w-sm w-full space-y-4"
+      >
+        <div>
+          <h3 className="text-lg font-bold text-slate-100">
+            Supprimer le voyage&nbsp;?
+          </h3>
+          <p className="text-sm text-slate-400 mt-1">
+            <span className="text-slate-200">{tripName}</span> et toutes ses
+            données (dépenses, planning, checklist) seront définitivement
+            supprimés.
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="flex-1 h-11 rounded-lg bg-white/5 hover:bg-white/8 text-slate-300 text-sm font-medium transition-colors"
+            disabled={deleting}
+          >
+            Annuler
+          </button>
+          <button
+            type="button"
+            onClick={async () => {
+              setDeleting(true);
+              await onConfirm();
+              setDeleting(false);
+            }}
+            disabled={deleting}
+            className="flex-1 h-11 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 text-sm font-semibold border border-red-500/30 transition-colors disabled:opacity-50"
+          >
+            {deleting ? "…" : "Supprimer"}
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
   );
 }
