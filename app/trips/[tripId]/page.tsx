@@ -11,6 +11,7 @@ import {
   UserCircle2,
   ChevronDown,
   RefreshCw,
+  Pencil,
 } from "lucide-react";
 import { GlassCard } from "@/components/layout/GlassCard";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ import { Progress } from "@/components/ui/progress";
 import { ShareModal } from "@/components/trips/ShareModal";
 import { IdentityPicker } from "@/components/trips/IdentityPicker";
 import { BudgetEditDialog } from "@/components/trips/BudgetEditDialog";
+import { TripEditDialog } from "@/components/trips/TripEditDialog";
 import { ParticipantAvatar } from "@/components/shared/ParticipantAvatar";
 import {
   Dialog,
@@ -37,13 +39,22 @@ interface TripDashboardProps {
 
 export default function TripDashboardPage({ params }: TripDashboardProps) {
   const { tripId } = use(params);
-  const { trip, refetch: refetchTrip, updateTrip, setMyParticipant } = useTrip(tripId);
+  const {
+    trip,
+    refetch: refetchTrip,
+    updateTrip,
+    setMyParticipant,
+    addParticipant,
+    updateParticipant,
+    deleteParticipant,
+  } = useTrip(tripId);
   const { expenses, totalSpent, refetch: refetchBudget } = useBudget(tripId);
   const { checkedCount, totalCount, refetch: refetchChecklist } = useChecklist(tripId);
 
   const [shareOpen, setShareOpen] = useState(false);
   const [identityOpen, setIdentityOpen] = useState(false);
   const [budgetOpen, setBudgetOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   const handleRefresh = async () => {
@@ -94,6 +105,15 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
           >
             <RefreshCw size={18} className={refreshing ? "animate-spin" : ""} />
           </button>
+          {trip.isOwner && (
+            <button
+              onClick={() => setEditOpen(true)}
+              className="p-2 rounded-xl hover:bg-white/8 active:bg-white/12 text-slate-400 transition-all"
+              title="Modifier le voyage"
+            >
+              <Pencil size={18} />
+            </button>
+          )}
           <button
             onClick={() => setShareOpen(true)}
             className="p-2 rounded-xl hover:bg-white/8 active:bg-white/12 text-indigo-300 transition-all"
@@ -321,6 +341,19 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
           </div>
         </GlassCard>
       </motion.div>
+
+      {/* Trip Edit */}
+      <TripEditDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        trip={trip}
+        onSaveTrip={async (data) => {
+          await updateTrip(data);
+        }}
+        onAddParticipant={addParticipant}
+        onUpdateParticipant={updateParticipant}
+        onDeleteParticipant={deleteParticipant}
+      />
 
       {/* Budget Edit */}
       <BudgetEditDialog

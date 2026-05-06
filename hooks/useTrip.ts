@@ -247,5 +247,45 @@ export function useTrip(id: string) {
     await fetchTrip();
   };
 
-  return { trip, loading, refetch: fetchTrip, updateTrip, setMyParticipant };
+  const addParticipant = async (data: { name: string; color: string }): Promise<void> => {
+    const supabase = createClient();
+    await supabase.from("participants").insert({
+      trip_id: id,
+      name: data.name,
+      color: data.color,
+    });
+    await fetchTrip();
+  };
+
+  const updateParticipant = async (
+    participantId: string,
+    data: { name?: string; color?: string }
+  ): Promise<void> => {
+    const supabase = createClient();
+    await supabase
+      .from("participants")
+      .update({
+        ...(data.name && { name: data.name }),
+        ...(data.color && { color: data.color }),
+      })
+      .eq("id", participantId);
+    await fetchTrip();
+  };
+
+  const deleteParticipant = async (participantId: string): Promise<void> => {
+    const supabase = createClient();
+    await supabase.from("participants").delete().eq("id", participantId);
+    await fetchTrip();
+  };
+
+  return {
+    trip,
+    loading,
+    refetch: fetchTrip,
+    updateTrip,
+    setMyParticipant,
+    addParticipant,
+    updateParticipant,
+    deleteParticipant,
+  };
 }
