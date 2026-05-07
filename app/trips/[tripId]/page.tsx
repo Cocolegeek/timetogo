@@ -22,7 +22,6 @@ import { IdentityPicker } from "@/components/trips/IdentityPicker";
 import { BudgetEditDialog } from "@/components/trips/BudgetEditDialog";
 import { TripEditDialog } from "@/components/trips/TripEditDialog";
 import { ParticipantAvatar } from "@/components/shared/ParticipantAvatar";
-import { AddressLink } from "@/components/shared/AddressLink";
 import {
   Dialog,
   DialogContent,
@@ -150,7 +149,7 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
             <h1 className="text-3xl font-bold text-slate-100 leading-tight truncate">
               {trip.name}
             </h1>
-            <AddressLink address={trip.destination} hideIcon className="mt-0.5" />
+            <p className="text-base text-slate-400 truncate">{trip.destination}</p>
           </div>
         </div>
         <p className="text-sm text-slate-500 pt-1">

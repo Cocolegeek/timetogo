@@ -156,7 +156,7 @@ function DayHeader({
     <div className="flex items-baseline gap-2 mb-3 px-1">
       <p
         className={cn(
-          "text-sm font-semibold uppercase tracking-wider",
+          "text-base font-semibold uppercase tracking-wider",
           isToday
             ? "text-indigo-300"
             : isPast
@@ -171,7 +171,7 @@ function DayHeader({
         })}
       </p>
       {isToday && (
-        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-bold tracking-normal">
+        <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-bold tracking-normal">
           AUJ.
         </span>
       )}
@@ -240,7 +240,7 @@ function MealCard({
             <div className="flex items-center justify-between gap-2 mb-1.5">
               <span
                 className={cn(
-                  "text-[11px] font-bold uppercase tracking-wider",
+                  "text-xs font-bold uppercase tracking-wider",
                   isEmpty ? "text-slate-500" : slotCfg.textClass
                 )}
               >
@@ -249,7 +249,7 @@ function MealCard({
               {!isEmpty && (
                 <span
                   className={cn(
-                    "text-[11px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap",
+                    "text-xs font-semibold px-2.5 py-0.5 rounded-full whitespace-nowrap",
                     catCfg.badgeClass
                   )}
                 >
@@ -260,26 +260,26 @@ function MealCard({
 
             {/* Title (or placeholder hint) */}
             {isEmpty ? (
-              <p className="text-sm text-slate-500 italic">
+              <p className="text-base text-slate-500 italic">
                 Repas non renseigné — tap pour ajouter
               </p>
             ) : (
-              <p className="text-base font-semibold text-slate-100 leading-tight truncate">
+              <p className="text-lg font-semibold text-slate-100 leading-tight truncate">
                 {meal.title}
               </p>
             )}
 
             {/* Footer: cook + eaters — only when filled */}
             {!isEmpty && (
-              <div className="flex items-center gap-3 mt-2 text-xs text-slate-400">
+              <div className="flex items-center gap-3 mt-2 text-sm text-slate-300">
                 {cookLabel && (
-                  <span className="flex items-center gap-1">
-                    <ChefHat size={12} className="text-amber-400/80" />
+                  <span className="flex items-center gap-1.5">
+                    <ChefHat size={13} className="text-amber-400/80" />
                     {cookLabel}
                   </span>
                 )}
-                <span className="flex items-center gap-1">
-                  <Users size={12} className="text-slate-500" />
+                <span className="flex items-center gap-1.5">
+                  <Users size={13} className="text-slate-500" />
                   {eaterLabel}
                 </span>
               </div>

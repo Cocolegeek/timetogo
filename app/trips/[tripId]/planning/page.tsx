@@ -5,6 +5,7 @@ import {
   Plus,
   Map,
   Clock,
+  MapPin,
   Hourglass,
   RefreshCw,
   MoreVertical,
@@ -29,7 +30,6 @@ import {
   type ItineraryFormValues,
 } from "@/components/planning/ItineraryItemForm";
 import { ParticipantStack } from "@/components/shared/ParticipantStack";
-import { AddressLink } from "@/components/shared/AddressLink";
 import { formatDuration } from "@/lib/format-date";
 import { cn } from "@/lib/utils";
 import type { ItineraryItem, ItineraryType, Participant } from "@/types";
@@ -130,7 +130,7 @@ export default function PlanningPage({ params }: PlanningPageProps) {
         <div className="space-y-6">
           {Object.entries(byDate).map(([d, dayItems]) => (
             <div key={d}>
-              <p className="text-sm text-slate-400 font-semibold mb-3 uppercase tracking-wider">
+              <p className="text-base text-slate-300 font-semibold mb-3 uppercase tracking-wider">
                 {new Date(d).toLocaleDateString("fr-FR", {
                   weekday: "long",
                   day: "numeric",
@@ -232,7 +232,7 @@ function ItineraryCard({
             <div className="flex items-center gap-2 flex-wrap">
               <span
                 className={cn(
-                  "text-xs px-2 py-0.5 rounded-full font-medium",
+                  "text-sm px-2.5 py-0.5 rounded-full font-medium",
                   cfg.bg,
                   cfg.color
                 )}
@@ -240,30 +240,31 @@ function ItineraryCard({
                 {cfg.label}
               </span>
               {item.time && (
-                <span className="flex items-center gap-1 text-sm text-slate-400">
-                  <Clock size={12} />
+                <span className="flex items-center gap-1.5 text-sm text-slate-300 font-medium tabular-nums">
+                  <Clock size={13} />
                   {item.time}
                 </span>
               )}
               {durationLabel && (
-                <span className="flex items-center gap-1 text-sm text-slate-400">
-                  <Hourglass size={12} />
+                <span className="flex items-center gap-1.5 text-sm text-slate-300">
+                  <Hourglass size={13} />
                   {durationLabel}
                 </span>
               )}
             </div>
 
-            <p className="text-base font-semibold text-slate-100 mt-1.5">
+            <p className="text-lg font-semibold text-slate-100 leading-tight mt-2">
               {item.title}
             </p>
 
             {item.location && (
-              <div className="mt-1.5">
-                <AddressLink address={item.location} compact />
-              </div>
+              <p className="flex items-center gap-1.5 text-sm text-slate-400 mt-1.5">
+                <MapPin size={13} className="shrink-0" />
+                <span className="truncate">{item.location}</span>
+              </p>
             )}
             {item.description && (
-              <p className="text-sm text-slate-500 mt-1">{item.description}</p>
+              <p className="text-sm text-slate-400 mt-1.5">{item.description}</p>
             )}
 
             {/* Participants — visible avatar stack */}
