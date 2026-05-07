@@ -57,10 +57,10 @@ export function UserMenu() {
 
         <DropdownMenuItem
           className="gap-2 cursor-pointer"
-          onClick={() => router.push("/profile")}
+          onClick={() => router.push("/settings")}
         >
           <Settings size={14} className="text-slate-400" />
-          Mon profil
+          Paramètres
         </DropdownMenuItem>
 
         <DropdownMenuSeparator />

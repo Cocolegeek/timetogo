@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 
 export function MeshGradientBackground() {
   return (
-    <div className="fixed inset-0 -z-10 overflow-hidden bg-slate-950">
+    <div className="fixed inset-0 -z-10 overflow-hidden bg-slate-100 dark:bg-slate-950">
       {/* Orb 1 — indigo top-left */}
       <motion.div
         className="absolute -top-32 -left-32 w-96 h-96 rounded-full"
