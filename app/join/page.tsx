@@ -157,18 +157,18 @@ function JoinContent() {
             <span className="text-4xl shrink-0">{tripPreview.emoji}</span>
             <div>
               <h2 className="text-xl font-bold text-slate-100">{tripPreview.name}</h2>
-              <p className="text-slate-400 text-sm mt-0.5">
-                {tripPreview.destination} · {duration} jours ·{" "}
-                {tripPreview.participants.length} voyageur
-                {tripPreview.participants.length !== 1 ? "s" : ""}
+              <p className="text-slate-400 text-base mt-1">
+                {tripPreview.destination}
               </p>
-              <p className="text-xs text-slate-500 mt-1">
+              <p className="text-sm text-slate-500 mt-1.5">
                 {new Date(tripPreview.startDate).toLocaleDateString("fr-FR", {
-                  day: "numeric", month: "long", year: "numeric",
+                  day: "numeric", month: "long",
                 })}{" "}→{" "}
                 {new Date(tripPreview.endDate).toLocaleDateString("fr-FR", {
                   day: "numeric", month: "long", year: "numeric",
-                })}
+                })}{" "}
+                · {duration} jours · {tripPreview.participants.length} voyageur
+                {tripPreview.participants.length !== 1 ? "s" : ""}
               </p>
             </div>
           </div>
@@ -182,7 +182,7 @@ function JoinContent() {
         transition={{ delay: 0.1 }}
       >
         <GlassCard>
-          <p className="text-xs text-slate-500 mb-3">
+          <p className="text-base text-slate-300 font-semibold mb-3">
             Qui es-tu parmi les participants ?
           </p>
           <IdentityPicker

@@ -84,7 +84,7 @@ export default function ProfilePage() {
                     <Camera size={12} className="text-slate-400" />
                   </div>
                 </div>
-                <p className="text-xs text-slate-600">
+                <p className="text-sm text-slate-500">
                   Photo synchronisée depuis Google
                 </p>
               </motion.div>
@@ -97,8 +97,8 @@ export default function ProfilePage() {
               >
                 <GlassCard className="space-y-4">
                   <div className="space-y-1.5">
-                    <Label className="text-slate-300 text-xs flex items-center gap-1.5">
-                      <User size={12} />
+                    <Label className="text-slate-300 text-sm font-medium flex items-center gap-1.5">
+                      <User size={14} />
                       Nom affiché
                     </Label>
                     <Input
@@ -107,14 +107,14 @@ export default function ProfilePage() {
                       placeholder="Ton prénom"
                       className="bg-white/8 border-white/10 text-slate-100 placeholder:text-slate-500 focus-visible:ring-indigo-500/50"
                     />
-                    <p className="text-xs text-slate-600">
+                    <p className="text-sm text-slate-500">
                       Utilisé pour t'identifier dans les voyages.
                     </p>
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label className="text-slate-300 text-xs flex items-center gap-1.5">
-                      <Mail size={12} />
+                    <Label className="text-slate-300 text-sm font-medium flex items-center gap-1.5">
+                      <Mail size={14} />
                       Email
                     </Label>
                     <Input
@@ -122,7 +122,7 @@ export default function ProfilePage() {
                       disabled
                       className="bg-white/4 border-white/8 text-slate-500 cursor-not-allowed"
                     />
-                    <p className="text-xs text-slate-600">
+                    <p className="text-sm text-slate-500">
                       Géré par ton compte Google.
                     </p>
                   </div>
@@ -153,7 +153,7 @@ export default function ProfilePage() {
                 transition={{ delay: 0.1 }}
               >
                 <GlassCard className="space-y-3">
-                  <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">
+                  <p className="text-sm text-slate-300 font-semibold uppercase tracking-wider">
                     Compte
                   </p>
                   <div className="flex items-center gap-3 p-3 glass-subtle rounded-xl">
@@ -162,22 +162,22 @@ export default function ProfilePage() {
                       <img
                         src={profile.avatar_url}
                         alt=""
-                        className="w-8 h-8 rounded-full"
+                        className="w-10 h-10 rounded-full"
                       />
                     ) : (
-                      <div className="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center">
-                        <User size={14} className="text-indigo-400" />
+                      <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center">
+                        <User size={16} className="text-indigo-400" />
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm text-slate-200 font-medium truncate">
+                      <p className="text-base text-slate-100 font-semibold truncate">
                         {profile?.name ?? "Utilisateur"}
                       </p>
-                      <p className="text-xs text-slate-500 truncate">
+                      <p className="text-sm text-slate-500 truncate">
                         {profile?.email}
                       </p>
                     </div>
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    <span className="text-xs px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 font-semibold">
                       Google
                     </span>
                   </div>

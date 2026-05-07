@@ -69,7 +69,7 @@ export function ShareModal({ open, onOpenChange, trip }: ShareModalProps) {
 
           {/* Code */}
           <div className="space-y-2">
-            <p className="text-xs text-slate-500 uppercase tracking-wider font-medium">
+            <p className="text-sm text-slate-300 uppercase tracking-wider font-semibold">
               Code d'accès
             </p>
             <div className="flex items-center gap-3">
@@ -103,12 +103,12 @@ export function ShareModal({ open, onOpenChange, trip }: ShareModalProps) {
 
           {/* Share URL */}
           <div className="space-y-2">
-            <p className="text-xs text-slate-500 uppercase tracking-wider font-medium">
+            <p className="text-sm text-slate-300 uppercase tracking-wider font-semibold">
               Lien de partage
             </p>
             <div className="flex items-center gap-2 p-3 glass-subtle rounded-xl">
               <Link2 size={14} className="text-slate-500 shrink-0" />
-              <p className="text-xs text-slate-400 truncate flex-1 font-mono">
+              <p className="text-sm text-slate-300 truncate flex-1 font-mono">
                 {shareUrl.replace(/^https?:\/\//, "")}
               </p>
             </div>
@@ -137,11 +137,11 @@ export function ShareModal({ open, onOpenChange, trip }: ShareModalProps) {
           </div>
 
           {/* Info */}
-          <div className="glass-subtle rounded-xl p-3">
-            <p className="text-xs text-slate-500 leading-relaxed">
+          <div className="glass-subtle rounded-xl p-3.5">
+            <p className="text-sm text-slate-400 leading-relaxed">
               Les personnes qui ouvrent ce lien devront se connecter avec Google,
               puis choisir qui elles sont parmi les{" "}
-              <span className="text-slate-400">
+              <span className="text-slate-200 font-medium">
                 {trip.participants.length} voyageur{trip.participants.length !== 1 ? "s" : ""}
               </span>{" "}
               du voyage. Elles pourront ensuite tout voir et modifier.

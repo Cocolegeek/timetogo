@@ -51,14 +51,14 @@ export function IdentityPicker({
               <div className="flex-1 min-w-0">
                 <p
                   className={cn(
-                    "font-medium text-sm truncate",
-                    isSelected ? "text-indigo-200" : "text-slate-300"
+                    "font-semibold text-base truncate",
+                    isSelected ? "text-indigo-200" : "text-slate-200"
                   )}
                 >
                   {p.name}
                 </p>
                 {isSelected && (
-                  <p className="text-xs text-indigo-400">C'est moi</p>
+                  <p className="text-sm text-indigo-400">C'est moi</p>
                 )}
               </div>
               {isSelected && (

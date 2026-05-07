@@ -348,10 +348,10 @@ export function MealEditDialog({
                     {/* Ingredients table */}
                     <div className="space-y-2">
                       <div className="grid grid-cols-[1fr_120px_36px] gap-2 px-1">
-                        <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                        <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
                           Ingrédient
                         </p>
-                        <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                        <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
                           Quantité
                         </p>
                         <span />
@@ -462,11 +462,11 @@ function Section({
     <div className="px-5 py-4 border-t border-white/8 space-y-2.5">
       <div className="flex items-center gap-1.5">
         {icon}
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+        <p className="text-xs font-semibold uppercase tracking-wider text-slate-300">
           {label}
         </p>
         {hint && (
-          <span className="text-[11px] text-slate-600 normal-case font-normal">
+          <span className="text-xs text-slate-500 normal-case font-normal">
             ({hint})
           </span>
         )}
