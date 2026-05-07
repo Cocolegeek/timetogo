@@ -5,7 +5,6 @@ import {
   Plus,
   Map,
   Clock,
-  MapPin,
   Hourglass,
   RefreshCw,
   MoreVertical,
@@ -30,6 +29,7 @@ import {
   type ItineraryFormValues,
 } from "@/components/planning/ItineraryItemForm";
 import { ParticipantStack } from "@/components/shared/ParticipantStack";
+import { AddressLink } from "@/components/shared/AddressLink";
 import { formatDuration } from "@/lib/format-date";
 import { cn } from "@/lib/utils";
 import type { ItineraryItem, ItineraryType, Participant } from "@/types";
@@ -258,10 +258,9 @@ function ItineraryCard({
             </p>
 
             {item.location && (
-              <p className="flex items-center gap-1 text-sm text-slate-400 mt-1">
-                <MapPin size={12} />
-                {item.location}
-              </p>
+              <div className="mt-1.5">
+                <AddressLink address={item.location} compact />
+              </div>
             )}
             {item.description && (
               <p className="text-sm text-slate-500 mt-1">{item.description}</p>
