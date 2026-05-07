@@ -11,15 +11,6 @@ const EXPENSE_CATEGORIES = [
 
 const SPLIT_MODES = ["equal", "percentage", "fixed"] as const;
 
-const CHECKLIST_CATEGORIES = [
-  "documents",
-  "clothes",
-  "electronics",
-  "health",
-  "toiletries",
-  "other",
-] as const;
-
 export const participantSplitSchema = z.object({
   participantId: z.string(),
   excluded: z.boolean(),
@@ -94,10 +85,3 @@ export const tripSchema = z.object({
 });
 
 export type TripFormValues = z.infer<typeof tripSchema>;
-
-export const checklistItemSchema = z.object({
-  text: z.string().min(1, "L'item ne peut pas être vide"),
-  category: z.enum(CHECKLIST_CATEGORIES),
-});
-
-export type ChecklistItemFormValues = z.infer<typeof checklistItemSchema>;

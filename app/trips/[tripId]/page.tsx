@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import {
   ArrowLeft,
   Wallet,
-  CheckSquare,
+  UtensilsCrossed,
   Share2,
   UserCircle2,
   ChevronDown,
@@ -16,7 +16,6 @@ import {
 import { GlassCard } from "@/components/layout/GlassCard";
 import { Button } from "@/components/ui/button";
 import { getBudgetColor, getBudgetTextColor } from "@/lib/budget/budget-color";
-import { Progress } from "@/components/ui/progress";
 import { ShareModal } from "@/components/trips/ShareModal";
 import { IdentityPicker } from "@/components/trips/IdentityPicker";
 import { BudgetEditDialog } from "@/components/trips/BudgetEditDialog";
@@ -30,7 +29,8 @@ import {
 } from "@/components/ui/dialog";
 import { useTrip } from "@/hooks/useTrip";
 import { useBudget } from "@/hooks/useBudget";
-import { useChecklist } from "@/hooks/useChecklist";
+import { useMeals } from "@/hooks/useMeals";
+import { SLOT_CONFIG } from "@/lib/meals/slots";
 import { cn } from "@/lib/utils";
 
 interface TripDashboardProps {
@@ -49,7 +49,10 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
     deleteParticipant,
   } = useTrip(tripId);
   const { expenses, totalSpent, refetch: refetchBudget } = useBudget(tripId);
-  const { checkedCount, totalCount, refetch: refetchChecklist } = useChecklist(tripId);
+  const { meals, refetch: refetchMeals } = useMeals(
+    tripId,
+    trip ? { startDate: trip.startDate, endDate: trip.endDate } : undefined
+  );
 
   const [shareOpen, setShareOpen] = useState(false);
   const [identityOpen, setIdentityOpen] = useState(false);
@@ -59,7 +62,7 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await Promise.all([refetchTrip(), refetchBudget(), refetchChecklist()]);
+    await Promise.all([refetchTrip(), refetchBudget(), refetchMeals()]);
     setTimeout(() => setRefreshing(false), 400);
   };
 
@@ -80,7 +83,14 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
   const budgetProgress = Math.min(budgetRawPct, 100);
   const budgetBarColor = getBudgetColor(budgetRawPct);
   const budgetIsOver = trip.totalBudget ? totalSpent > trip.totalBudget : false;
-  const checklistProgress = totalCount > 0 ? (checkedCount / totalCount) * 100 : 0;
+
+  // Today's meals: only meaningful while the trip is in progress
+  const today = new Date().toISOString().split("T")[0];
+  const isInTrip = today >= trip.startDate && today <= trip.endDate;
+  const todayMeals = isInTrip
+    ? meals.filter((m) => m.date === today).sort((a, b) => a.position - b.position)
+    : [];
+
   const tripDuration = Math.round(
     (new Date(trip.endDate).getTime() - new Date(trip.startDate).getTime()) /
       (1000 * 60 * 60 * 24)
@@ -271,36 +281,60 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
-          <GlassCard className="h-full" padding={false}>
-            <div className="p-4 flex flex-col gap-2.5">
-              <div className="flex items-center gap-2">
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/15 flex items-center justify-center">
-                  <CheckSquare size={19} className="text-emerald-400" />
-                </div>
-                <span className="text-sm text-slate-300 font-medium">Checklist</span>
-              </div>
-              <div>
-                <p className="text-3xl font-bold text-slate-100 leading-none tabular-nums">
-                  {checkedCount}
-                  <span className="text-lg text-slate-500 font-medium">
-                    /{totalCount}
+          <Link
+            href={`/trips/${tripId}/menus`}
+            className="block h-full active:scale-[0.98] transition-transform"
+          >
+            <GlassCard className="h-full hover:border-white/15 transition-colors" padding={false}>
+              <div className="p-4 flex flex-col gap-2.5 h-full">
+                <div className="flex items-center gap-2">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-500/15 flex items-center justify-center">
+                    <UtensilsCrossed size={19} className="text-emerald-400" />
+                  </div>
+                  <span className="text-sm text-slate-300 font-medium">
+                    {isInTrip ? "Menu du jour" : "Menus"}
                   </span>
-                </p>
-                <p className="text-xs text-slate-500 mt-1.5">items cochés</p>
+                </div>
+                {isInTrip && todayMeals.length > 0 ? (
+                  <div className="flex-1 space-y-1">
+                    {todayMeals.slice(0, 3).map((m) => (
+                      <p
+                        key={m.id}
+                        className="text-sm text-slate-300 truncate flex items-center gap-1.5"
+                      >
+                        <span>{SLOT_CONFIG[m.slot].emoji}</span>
+                        <span
+                          className={
+                            m.dishes.length === 0
+                              ? "text-slate-500"
+                              : "text-slate-200"
+                          }
+                        >
+                          {m.dishes.length === 0
+                            ? m.title
+                            : m.dishes.map((d) => d.name).join(" · ")}
+                        </span>
+                      </p>
+                    ))}
+                    {todayMeals.length > 3 && (
+                      <p className="text-xs text-slate-500">
+                        + {todayMeals.length - 3} autre
+                        {todayMeals.length - 3 !== 1 ? "s" : ""}
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex-1 flex items-center">
+                    <p className="text-sm text-slate-400">
+                      {isInTrip
+                        ? "Aucun repas pour aujourd'hui"
+                        : "Voir les repas planifiés →"}
+                    </p>
+                  </div>
+                )}
               </div>
-              {totalCount > 0 ? (
-                <Progress
-                  value={checklistProgress}
-                  className="h-1.5 bg-white/8 [&>div]:bg-emerald-500"
-                />
-              ) : (
-                <div className="h-1.5" />
-              )}
-              <p className="text-xs text-slate-500">
-                {totalCount > 0 ? `${Math.round(checklistProgress)}% prêt` : "Vide"}
-              </p>
-            </div>
-          </GlassCard>
+            </GlassCard>
+          </Link>
         </motion.div>
       </div>
 

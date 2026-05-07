@@ -203,20 +203,24 @@ CREATE POLICY "Trip members can CRUD expenses"
   WITH CHECK (public.is_trip_member(trip_id));
 
 
--- ─── Checklist Items ─────────────────────────────────────────
-CREATE TABLE IF NOT EXISTS public.checklist_items (
-  id         uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  trip_id    uuid NOT NULL REFERENCES public.trips(id) ON DELETE CASCADE,
-  text       text NOT NULL,
-  category   text NOT NULL,
-  checked    boolean NOT NULL DEFAULT false,
-  created_at timestamptz DEFAULT now() NOT NULL
+-- ─── Meals (meal planning) ───────────────────────────────────
+CREATE TABLE IF NOT EXISTS public.meals (
+  id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  trip_id         uuid NOT NULL REFERENCES public.trips(id) ON DELETE CASCADE,
+  date            date NOT NULL,
+  slot            text NOT NULL,
+  title           text NOT NULL,
+  notes           text,
+  participant_ids jsonb NOT NULL DEFAULT '[]'::jsonb,
+  dishes          jsonb NOT NULL DEFAULT '[]'::jsonb,
+  position        integer NOT NULL DEFAULT 0,
+  created_at      timestamptz DEFAULT now() NOT NULL
 );
 
-ALTER TABLE public.checklist_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.meals ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Trip members can CRUD checklist_items"
-  ON public.checklist_items FOR ALL
+CREATE POLICY "Trip members can CRUD meals"
+  ON public.meals FOR ALL
   USING (public.is_trip_member(trip_id))
   WITH CHECK (public.is_trip_member(trip_id));
 
@@ -247,7 +251,7 @@ CREATE POLICY "Trip members can CRUD itinerary_items"
 -- ─── Indexes ─────────────────────────────────────────────────
 CREATE INDEX IF NOT EXISTS idx_trip_members_user_id ON public.trip_members(user_id);
 CREATE INDEX IF NOT EXISTS idx_expenses_trip_id ON public.expenses(trip_id);
-CREATE INDEX IF NOT EXISTS idx_checklist_trip_id ON public.checklist_items(trip_id);
+CREATE INDEX IF NOT EXISTS idx_meals_trip_date ON public.meals(trip_id, date, position);
 CREATE INDEX IF NOT EXISTS idx_itinerary_trip_id ON public.itinerary_items(trip_id);
 CREATE INDEX IF NOT EXISTS idx_participants_trip_id ON public.participants(trip_id);
 CREATE INDEX IF NOT EXISTS idx_trips_share_code ON public.trips(share_code);

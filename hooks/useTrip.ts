@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { generateShareCode } from "@/lib/trip-share";
+import { buildDefaultMealRows } from "@/lib/meals/slots";
 import type { Trip, Participant } from "@/types";
 
 function rowsToTrip(
@@ -153,6 +154,16 @@ export function useTrips() {
         .update({ participant_id: matchedParticipant.id })
         .eq("trip_id", trip.id)
         .eq("user_id", user.id);
+    }
+
+    // 4. Auto-generate the default meal slots for every day of the trip
+    const mealRows = buildDefaultMealRows(
+      trip.id,
+      data.startDate,
+      data.endDate
+    );
+    if (mealRows.length > 0) {
+      await supabase.from("meals").insert(mealRows);
     }
 
     await fetchTrips();

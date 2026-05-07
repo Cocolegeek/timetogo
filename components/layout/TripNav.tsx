@@ -2,14 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Wallet, Map, CheckSquare, LayoutDashboard } from "lucide-react";
+import { Wallet, Map, UtensilsCrossed, LayoutDashboard } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
-  { label: "Résumé",    href: "",           icon: LayoutDashboard },
-  { label: "Budget",    href: "/budget",    icon: Wallet          },
-  { label: "Planning",  href: "/planning",  icon: Map             },
-  { label: "Checklist", href: "/checklist", icon: CheckSquare     },
+  { label: "Résumé",   href: "",          icon: LayoutDashboard  },
+  { label: "Budget",   href: "/budget",   icon: Wallet           },
+  { label: "Planning", href: "/planning", icon: Map              },
+  { label: "Menus",    href: "/menus",    icon: UtensilsCrossed  },
 ];
 
 interface TripNavProps {

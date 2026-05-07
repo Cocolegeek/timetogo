@@ -116,22 +116,33 @@ export interface Settlement {
   amount: number;
 }
 
-// ─── Checklist ────────────────────────────────────────────────────────────────
+// ─── Menus ────────────────────────────────────────────────────────────────────
 
-export type ChecklistCategory =
-  | "documents"
-  | "clothes"
-  | "electronics"
-  | "health"
-  | "toiletries"
-  | "other";
+export type MealSlot =
+  | "breakfast"
+  | "lunch"
+  | "snack"
+  | "dinner"
+  | "apero"
+  | "extra";
 
-export interface ChecklistItem {
+export interface Dish {
+  id: string;
+  name: string;
+  /** Free-text ingredient list */
+  ingredients: string[];
+}
+
+export interface Meal {
   id: string;
   tripId: string;
-  text: string;
-  category: ChecklistCategory;
-  checked: boolean;
+  date: string;
+  slot: MealSlot;
+  title: string;
+  notes?: string;
+  participantIds: string[];
+  dishes: Dish[];
+  position: number;
   createdAt: string;
 }
 
