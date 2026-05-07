@@ -208,6 +208,7 @@
  * Tailwind v4 exposes the colour palette as `--color-slate-*` CSS vars,
  * so reassigning them here filters down to every utility class. */
 :root:not(.dark) {
+  /* Slate (neutral) — used for text + subtle surfaces */
   --color-slate-50:  oklch(0.13 0.02 264);
   --color-slate-100: oklch(0.18 0.02 264);
   --color-slate-200: oklch(0.25 0.02 264);
@@ -219,6 +220,50 @@
   --color-slate-800: oklch(0.90 0.008 240);
   --color-slate-900: oklch(0.95 0.005 240);
   --color-slate-950: oklch(0.97 0.005 240);
+
+  /* Coloured accents — darken the 100..400 shades so pale text used on
+   * tinted backgrounds (e.g. text-indigo-200 on bg-indigo-500/15) stays
+   * readable on light surfaces. The 500 shade (brand) is left intact so
+   * gradients and tinted backgrounds keep their identity. */
+  --color-indigo-100: oklch(0.30 0.20 264);
+  --color-indigo-200: oklch(0.36 0.22 264);
+  --color-indigo-300: oklch(0.42 0.22 264);
+  --color-indigo-400: oklch(0.50 0.22 264);
+
+  --color-emerald-100: oklch(0.30 0.16 162);
+  --color-emerald-200: oklch(0.36 0.18 162);
+  --color-emerald-300: oklch(0.42 0.18 162);
+  --color-emerald-400: oklch(0.52 0.18 162);
+
+  --color-amber-100: oklch(0.40 0.17 80);
+  --color-amber-200: oklch(0.46 0.18 80);
+  --color-amber-300: oklch(0.52 0.18 80);
+  --color-amber-400: oklch(0.60 0.18 80);
+
+  --color-rose-100: oklch(0.40 0.20 18);
+  --color-rose-200: oklch(0.46 0.22 18);
+  --color-rose-300: oklch(0.52 0.22 18);
+  --color-rose-400: oklch(0.58 0.22 18);
+
+  --color-sky-100: oklch(0.36 0.16 230);
+  --color-sky-200: oklch(0.42 0.17 230);
+  --color-sky-300: oklch(0.48 0.18 230);
+  --color-sky-400: oklch(0.55 0.18 230);
+
+  --color-violet-100: oklch(0.32 0.22 295);
+  --color-violet-200: oklch(0.38 0.24 295);
+  --color-violet-300: oklch(0.44 0.24 295);
+  --color-violet-400: oklch(0.52 0.24 295);
+
+  --color-red-100: oklch(0.40 0.22 27);
+  --color-red-200: oklch(0.46 0.22 27);
+  --color-red-300: oklch(0.52 0.22 27);
+  --color-red-400: oklch(0.58 0.22 27);
+
+  --color-orange-100: oklch(0.42 0.18 50);
+  --color-orange-200: oklch(0.48 0.19 50);
+  --color-orange-300: oklch(0.54 0.20 50);
+  --color-orange-400: oklch(0.60 0.20 50);
 }
 
 
