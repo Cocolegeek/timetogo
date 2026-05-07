@@ -83,8 +83,9 @@ export function ExpenseCard({
         </motion.div>
       </motion.div>
 
-      {/* Foreground draggable card */}
+      {/* Foreground draggable card — opt out of layout-level tab swipe */}
       <motion.div
+        data-no-tab-swipe
         drag="x"
         dragConstraints={{ left: -200, right: 0 }}
         dragElastic={{ left: 0.2, right: 0 }}
