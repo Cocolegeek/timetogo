@@ -242,7 +242,7 @@ function ConfirmDelete({
           </h3>
           <p className="text-sm text-slate-400 mt-1">
             <span className="text-slate-200">{tripName}</span> et toutes ses
-            données (dépenses, planning, checklist) seront définitivement
+            données (dépenses, planning, menus) seront définitivement
             supprimés.
           </p>
         </div>

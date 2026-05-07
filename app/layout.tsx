@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Time to Go",
-  description: "L'application de voyage ultime — Budget, Planning, Checklist",
+  description: "L'application de voyage ultime — Budget, Planning, Menus",
 };
 
 export const viewport: Viewport = {
