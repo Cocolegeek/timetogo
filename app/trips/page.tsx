@@ -7,6 +7,7 @@ import { Plus, Plane, RefreshCw } from "lucide-react";
 import { MeshGradientBackground } from "@/components/layout/MeshGradientBackground";
 import { TripCard } from "@/components/trips/TripCard";
 import { TripEditWrapper } from "@/components/trips/TripEditWrapper";
+import { TodayPlanningBlock } from "@/components/trips/TodayPlanningBlock";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { UserMenu } from "@/components/layout/UserMenu";
 import { buttonVariants } from "@/components/ui/button";
@@ -46,6 +47,9 @@ export default function TripsPage() {
       return sb - sa; // current/past: most recent first (desc)
     });
   }, [trips]);
+
+  /** The single most relevant trip for the "Aujourd'hui" block — already first in sortedTrips. */
+  const featuredTrip = sortedTrips[0] ?? null;
 
   const [refreshing, setRefreshing] = useState(false);
   const [editingTripId, setEditingTripId] = useState<string | null>(null);
@@ -137,6 +141,13 @@ export default function TripsPage() {
             </motion.div>
           ) : (
             <>
+              {/* "Aujourd'hui" planning block (most relevant trip) */}
+              {featuredTrip && (
+                <div className="mb-6">
+                  <TodayPlanningBlock trip={featuredTrip} />
+                </div>
+              )}
+
               {/* Section header */}
               <div className="flex items-baseline justify-between mb-4 px-1">
                 <h2 className="text-base font-semibold text-slate-200 uppercase tracking-wider">
