@@ -83,6 +83,12 @@ export function ExpenseForm({
   const [paidById, setPaidById] = useState<string>("");
   const [splitMode, setSplitMode] = useState<SplitMode>("equal");
   const [splits, setSplits] = useState<ParticipantSplit[]>([]);
+  /**
+   * IDs of participants who joined the trip AFTER this expense was created.
+   * They are surfaced with a "NOUVEAU" badge and start unchecked so the user
+   * can manually decide whether they should benefit from the expense.
+   */
+  const [newMemberIds, setNewMemberIds] = useState<Set<string>>(new Set());
   const [submitting, setSubmitting] = useState(false);
 
   // Hydrate when opened or when participants change
@@ -96,7 +102,35 @@ export function ExpenseForm({
       setDate(initialValues.date);
       setPaidById(initialValues.paidById);
       setSplitMode(initialValues.splitMode);
-      setSplits(initialValues.splits);
+
+      // ── Reconciliation with the current trip member list ──
+      // 1. Keep splits for participants still in the trip (drops "ghosts").
+      // 2. Add any trip member missing from the saved splits as `excluded`,
+      //    so the user can manually opt them in if relevant.
+      const existingByParticipant = new Map(
+        initialValues.splits
+          .filter((s) => participants.some((p) => p.id === s.participantId))
+          .map((s) => [s.participantId, s])
+      );
+      const merged: ParticipantSplit[] = participants.map((p) => {
+        const existing = existingByParticipant.get(p.id);
+        if (existing) return existing;
+        return {
+          participantId: p.id,
+          excluded: true,
+          percentage: 0,
+          fixedAmount: 0,
+          share: 0,
+        };
+      });
+      setSplits(merged);
+      setNewMemberIds(
+        new Set(
+          participants
+            .filter((p) => !existingByParticipant.has(p.id))
+            .map((p) => p.id)
+        )
+      );
     } else {
       setTitle("");
       setAmountStr("");
@@ -104,6 +138,7 @@ export function ExpenseForm({
       setDate(new Date().toISOString().split("T")[0]);
       setPaidById(participants[0]?.id ?? "");
       setSplitMode("equal");
+      setNewMemberIds(new Set());
       setSplits(
         participants.map((p) => ({
           participantId: p.id,
@@ -386,6 +421,19 @@ export function ExpenseForm({
           {/* Split mode */}
           <div className="space-y-3">
             <Label className="text-slate-300 text-sm font-medium">Pour qui ?</Label>
+
+            {/* Heads-up banner when new members joined the trip after this expense */}
+            {newMemberIds.size > 0 && (
+              <div className="px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-xs text-amber-200 flex items-start gap-2">
+                <span className="text-base leading-none">👋</span>
+                <span>
+                  {newMemberIds.size === 1
+                    ? "Un nouveau membre a rejoint le voyage. Coche-le si cette dépense le concerne."
+                    : `${newMemberIds.size} nouveaux membres ont rejoint le voyage. Coche-les si cette dépense les concerne.`}
+                </span>
+              </div>
+            )}
+
             <Tabs value={splitMode} onValueChange={handleSplitModeChange}>
               <TabsList className="grid grid-cols-3 w-full bg-white/4 border border-white/8">
                 <TabsTrigger
@@ -418,6 +466,7 @@ export function ExpenseForm({
                   (s) => s.participantId === p.id
                 );
                 const share = computed?.share ?? 0;
+                const isNew = newMemberIds.has(p.id);
 
                 return (
                   <div
@@ -425,7 +474,9 @@ export function ExpenseForm({
                     className={cn(
                       "flex items-center gap-3 px-3 py-2 rounded-xl border transition-all",
                       split.excluded
-                        ? "border-white/4 bg-white/2 opacity-50"
+                        ? isNew
+                          ? "border-amber-500/40 bg-amber-500/5"
+                          : "border-white/4 bg-white/2 opacity-50"
                         : "border-white/8 bg-white/4"
                     )}
                   >
@@ -463,9 +514,15 @@ export function ExpenseForm({
                       className="w-2.5 h-2.5 rounded-full shrink-0"
                       style={{ backgroundColor: p.color }}
                     />
-                    <span className="text-sm text-slate-200 flex-1 truncate">
+                    <span className="text-sm text-slate-200 truncate">
                       {p.name}
                     </span>
+                    {isNew && (
+                      <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0">
+                        Nouveau
+                      </span>
+                    )}
+                    <span className="flex-1" />
 
                     {splitMode === "equal" && (
                       <span className="text-sm font-medium text-slate-300 tabular-nums">
