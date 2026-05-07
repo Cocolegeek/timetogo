@@ -1,29 +1,60 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { X } from "lucide-react";
+import {
+  X,
+  Calendar,
+  Clock,
+  Hourglass,
+  Tag,
+  MapPin,
+  Users,
+  AlignLeft,
+  Loader2,
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
 import { LocationAutocomplete } from "@/components/shared/LocationAutocomplete";
 import { cn } from "@/lib/utils";
 import type { ItineraryItem, ItineraryType, Participant } from "@/types";
 
 const TYPE_CONFIG: Record<
   ItineraryType,
-  { label: string; color: string; bg: string }
+  { label: string; emoji: string; color: string; bg: string }
 > = {
-  transport:     { label: "Transport",   color: "text-sky-400",     bg: "bg-sky-400/10"     },
-  accommodation: { label: "Hébergement", color: "text-violet-400",  bg: "bg-violet-400/10"  },
-  activity:      { label: "Activité",    color: "text-emerald-400", bg: "bg-emerald-400/10" },
-  food:          { label: "Resto",       color: "text-amber-400",   bg: "bg-amber-400/10"   },
-  other:         { label: "Autre",       color: "text-slate-400",   bg: "bg-slate-400/10"   },
+  transport: {
+    label: "Transport",
+    emoji: "🚗",
+    color: "text-sky-300",
+    bg: "bg-sky-500/15 ring-sky-500/40",
+  },
+  accommodation: {
+    label: "Hébergement",
+    emoji: "🏨",
+    color: "text-violet-300",
+    bg: "bg-violet-500/15 ring-violet-500/40",
+  },
+  activity: {
+    label: "Activité",
+    emoji: "🎯",
+    color: "text-emerald-300",
+    bg: "bg-emerald-500/15 ring-emerald-500/40",
+  },
+  food: {
+    label: "Resto",
+    emoji: "🍽️",
+    color: "text-amber-300",
+    bg: "bg-amber-500/15 ring-amber-500/40",
+  },
+  other: {
+    label: "Autre",
+    emoji: "📍",
+    color: "text-slate-300",
+    bg: "bg-slate-500/15 ring-slate-500/40",
+  },
 };
 
 const QUICK_DURATIONS: { label: string; minutes: number }[] = [
@@ -74,7 +105,9 @@ export function ItineraryItemForm({
   const [type, setType] = useState<ItineraryType>("activity");
   const [durationH, setDurationH] = useState("");
   const [durationM, setDurationM] = useState("");
-  const [selectedParticipantIds, setSelectedParticipantIds] = useState<string[]>([]);
+  const [selectedParticipantIds, setSelectedParticipantIds] = useState<string[]>(
+    []
+  );
   const [saving, setSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -124,9 +157,18 @@ export function ItineraryItemForm({
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
   };
+  const allSelected =
+    participants.length > 0 &&
+    selectedParticipantIds.length === participants.length;
+  const toggleAll = () =>
+    setSelectedParticipantIds(
+      allSelected ? [] : participants.map((p) => p.id)
+    );
+
+  const formValid = title.trim().length > 0 && !!date;
 
   const handleSubmit = async () => {
-    if (!title.trim() || !date) return;
+    if (!formValid) return;
     setSaving(true);
     setErrorMsg(null);
     try {
@@ -142,8 +184,13 @@ export function ItineraryItemForm({
       });
       onOpenChange(false);
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Erreur lors de l'enregistrement";
-      setErrorMsg(msg);
+      const raw = e instanceof Error ? e.message : "Erreur";
+      const friendly =
+        /column.*does not exist/i.test(raw) ||
+        /schema cache/i.test(raw)
+          ? "Colonne manquante en base. Exécute la dernière migration SQL Supabase."
+          : raw;
+      setErrorMsg(friendly);
     } finally {
       setSaving(false);
     }
@@ -152,83 +199,89 @@ export function ItineraryItemForm({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="glass-strong border-white/10 max-w-md p-0 max-h-[92vh] overflow-hidden flex flex-col"
         showCloseButton={false}
+        className={cn(
+          // Mobile: full-screen sheet
+          "!fixed !top-0 !left-0 !translate-x-0 !translate-y-0",
+          "!w-full !max-w-full !h-[100dvh]",
+          "!rounded-none !p-0 !gap-0 !border-0",
+          // Desktop: centered modal
+          "sm:!top-1/2 sm:!left-1/2 sm:!-translate-x-1/2 sm:!-translate-y-1/2",
+          "sm:!max-w-md sm:!h-auto sm:!max-h-[92vh]",
+          "sm:!rounded-2xl sm:!border sm:!border-white/10",
+          // Glass background
+          "glass-strong flex flex-col overflow-hidden"
+        )}
       >
-        <DialogHeader className="px-5 pt-5 pb-3 border-b border-white/8">
-          <DialogTitle className="text-slate-100 text-xl">
+        {/* Top app bar */}
+        <div
+          className="flex items-center justify-between gap-3 px-3 py-2.5 border-b border-white/8"
+          style={{ paddingTop: "calc(env(safe-area-inset-top) + 0.625rem)" }}
+        >
+          <button
+            type="button"
+            onClick={() => onOpenChange(false)}
+            aria-label="Fermer"
+            className="p-2 -ml-1 rounded-xl text-slate-300 hover:bg-white/8 active:bg-white/12 transition-all"
+          >
+            <X size={22} />
+          </button>
+          <DialogTitle className="text-base font-semibold text-slate-100">
             {isEdit ? "Modifier l'étape" : "Nouvelle étape"}
           </DialogTitle>
-        </DialogHeader>
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={!formValid || saving}
+            className={cn(
+              "px-4 h-10 rounded-full text-sm font-semibold transition-all",
+              "gradient-primary text-white",
+              "disabled:opacity-40 disabled:pointer-events-none",
+              "active:scale-95"
+            )}
+          >
+            {saving ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : isEdit ? (
+              "OK"
+            ) : (
+              "Ajouter"
+            )}
+          </button>
+        </div>
 
-        <div className="flex-1 overflow-y-auto px-5 py-5 space-y-5">
-          {/* Title */}
-          <div className="space-y-1.5">
-            <Label className="text-slate-300 text-sm font-medium">Titre</Label>
-            <Input
+        {/* Body — sectioned like Google Calendar */}
+        <div className="flex-1 overflow-y-auto">
+          {/* Title — big, no label */}
+          <div className="px-5 pt-5 pb-4">
+            <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Vol Paris → Rome"
-              className="bg-white/8 border-white/10 text-slate-100 placeholder:text-slate-500"
+              placeholder="Ajouter un titre"
+              className="w-full bg-transparent border-0 outline-none text-2xl font-bold text-slate-100 placeholder:text-slate-600 placeholder:font-normal"
               autoFocus={!isEdit}
             />
           </div>
 
           {/* Date + time */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label className="text-slate-300 text-sm font-medium">Date</Label>
-              <Input
-                type="date"
+          <Row icon={<Calendar size={18} />}>
+            <div className="grid grid-cols-2 gap-3">
+              <DateInput
                 value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="bg-white/8 border-white/10 text-slate-100 [color-scheme:dark]"
+                onChange={setDate}
+                placeholder="Date"
               />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-slate-300 text-sm font-medium">Heure</Label>
-              <Input
-                type="time"
+              <TimeInput
                 value={time}
-                onChange={(e) => setTime(e.target.value)}
-                className="bg-white/8 border-white/10 text-slate-100 [color-scheme:dark]"
+                onChange={setTime}
+                placeholder="Heure"
               />
             </div>
-          </div>
-
-          {/* Type */}
-          <div className="space-y-2">
-            <Label className="text-slate-300 text-sm font-medium">Type</Label>
-            <div className="flex gap-2 flex-wrap">
-              {(Object.keys(TYPE_CONFIG) as ItineraryType[]).map((t) => (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => setType(t)}
-                  className={cn(
-                    "px-3 py-1.5 rounded-xl text-sm font-medium transition-all active:scale-95",
-                    type === t
-                      ? cn(
-                          TYPE_CONFIG[t].bg,
-                          TYPE_CONFIG[t].color,
-                          "ring-1 ring-current"
-                        )
-                      : "bg-white/5 text-slate-400 hover:bg-white/10"
-                  )}
-                >
-                  {TYPE_CONFIG[t].label}
-                </button>
-              ))}
-            </div>
-          </div>
+          </Row>
 
           {/* Duration */}
-          <div className="space-y-2">
-            <Label className="text-slate-300 text-sm font-medium">
-              Durée{" "}
-              <span className="text-slate-500 font-normal">(optionnelle)</span>
-            </Label>
-            <div className="flex gap-2 flex-wrap">
+          <Row icon={<Hourglass size={18} />} label="Durée (optionnelle)">
+            <div className="flex gap-1.5 flex-wrap">
               {QUICK_DURATIONS.map((d) => {
                 const selected = totalMinutes === d.minutes;
                 return (
@@ -237,7 +290,7 @@ export function ItineraryItemForm({
                     type="button"
                     onClick={() => setQuickDuration(d.minutes)}
                     className={cn(
-                      "px-3 py-1.5 rounded-xl text-sm font-medium transition-all active:scale-95",
+                      "px-3 py-1.5 rounded-full text-sm font-medium transition-all active:scale-95",
                       selected
                         ? "bg-indigo-500/20 text-indigo-300 ring-1 ring-indigo-500/50"
                         : "bg-white/5 text-slate-400 hover:bg-white/10"
@@ -248,41 +301,19 @@ export function ItineraryItemForm({
                 );
               })}
             </div>
-            <div className="flex items-center gap-2 pt-1">
-              <div className="relative flex-1">
-                <Input
-                  type="number"
-                  inputMode="numeric"
-                  min="0"
-                  max="48"
-                  value={durationH}
-                  onChange={(e) =>
-                    setDurationH(e.target.value.replace(/[^0-9]/g, ""))
-                  }
-                  placeholder="0"
-                  className="bg-white/8 border-white/10 text-slate-100 placeholder:text-slate-500 pr-10 tabular-nums"
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-500 pointer-events-none">
-                  h
-                </span>
-              </div>
-              <div className="relative flex-1">
-                <Input
-                  type="number"
-                  inputMode="numeric"
-                  min="0"
-                  max="59"
-                  value={durationM}
-                  onChange={(e) =>
-                    setDurationM(e.target.value.replace(/[^0-9]/g, ""))
-                  }
-                  placeholder="0"
-                  className="bg-white/8 border-white/10 text-slate-100 placeholder:text-slate-500 pr-12 tabular-nums"
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-500 pointer-events-none">
-                  min
-                </span>
-              </div>
+            <div className="flex items-center gap-2 pt-2">
+              <NumberPill
+                value={durationH}
+                onChange={setDurationH}
+                suffix="h"
+                max={48}
+              />
+              <NumberPill
+                value={durationM}
+                onChange={setDurationM}
+                suffix="min"
+                max={59}
+              />
               {totalMinutes > 0 && (
                 <button
                   type="button"
@@ -291,55 +322,60 @@ export function ItineraryItemForm({
                     setDurationM("");
                   }}
                   className="p-2 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-white/8 transition-colors shrink-0"
-                  title="Effacer"
+                  aria-label="Effacer la durée"
                 >
                   <X size={14} />
                 </button>
               )}
             </div>
-          </div>
+          </Row>
+
+          {/* Type */}
+          <Row icon={<Tag size={18} />}>
+            <div className="flex gap-1.5 flex-wrap">
+              {(Object.keys(TYPE_CONFIG) as ItineraryType[]).map((t) => {
+                const cfg = TYPE_CONFIG[t];
+                const selected = type === t;
+                return (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => setType(t)}
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all active:scale-95",
+                      selected
+                        ? cn(cfg.bg, cfg.color, "ring-1")
+                        : "bg-white/5 text-slate-400 hover:bg-white/10"
+                    )}
+                  >
+                    <span>{cfg.emoji}</span>
+                    {cfg.label}
+                  </button>
+                );
+              })}
+            </div>
+          </Row>
 
           {/* Location */}
-          <div className="space-y-1.5">
-            <Label className="text-slate-300 text-sm font-medium">
-              Lieu{" "}
-              <span className="text-slate-500 font-normal">(optionnel)</span>
-            </Label>
+          <Row icon={<MapPin size={18} />}>
             <LocationAutocomplete
               value={location}
               onChange={setLocation}
-              placeholder="Aéroport CDG"
-              className="bg-white/8 border-white/10 text-slate-100 placeholder:text-slate-500"
+              placeholder="Ajouter un lieu"
+              className="bg-white/5 border-white/10 text-slate-100 placeholder:text-slate-500"
             />
-          </div>
+          </Row>
 
           {/* Participants */}
           {participants.length > 0 && (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label className="text-slate-300 text-sm font-medium">
-                  Avec qui ?{" "}
-                  <span className="text-slate-500 font-normal">(optionnel)</span>
-                </Label>
-                {selectedParticipantIds.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => setSelectedParticipantIds([])}
-                    className="text-xs text-slate-500 hover:text-slate-300"
-                  >
-                    Effacer
-                  </button>
-                )}
-              </div>
-              <div className="flex gap-2 flex-wrap">
+            <Row icon={<Users size={18} />} label="Participants">
+              <div className="flex gap-1.5 flex-wrap">
                 <button
                   type="button"
-                  onClick={() =>
-                    setSelectedParticipantIds(participants.map((p) => p.id))
-                  }
+                  onClick={toggleAll}
                   className={cn(
                     "px-3 py-1.5 rounded-full text-sm font-medium border transition-all active:scale-95",
-                    selectedParticipantIds.length === participants.length
+                    allSelected
                       ? "bg-indigo-500/15 text-indigo-300 border-indigo-500/40"
                       : "bg-white/5 text-slate-400 border-white/10 hover:bg-white/10"
                   )}
@@ -347,7 +383,7 @@ export function ItineraryItemForm({
                   Tout le monde
                 </button>
                 {participants.map((p) => {
-                  const selected = selectedParticipantIds.includes(p.id);
+                  const sel = selectedParticipantIds.includes(p.id);
                   return (
                     <button
                       key={p.id}
@@ -355,7 +391,7 @@ export function ItineraryItemForm({
                       onClick={() => toggleParticipant(p.id)}
                       className={cn(
                         "flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium transition-all active:scale-95",
-                        selected
+                        sel
                           ? "border-indigo-400 bg-indigo-500/15 text-indigo-200"
                           : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
                       )}
@@ -369,39 +405,132 @@ export function ItineraryItemForm({
                   );
                 })}
               </div>
+            </Row>
+          )}
+
+          {/* Description */}
+          <Row icon={<AlignLeft size={18} />}>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Ajouter une description"
+              rows={2}
+              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-base text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-3 focus:ring-indigo-500/40 resize-none"
+            />
+          </Row>
+
+          {/* Error */}
+          {errorMsg && (
+            <div className="px-5 pb-4">
+              <p className="text-sm text-red-300 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+                {errorMsg}
+              </p>
             </div>
           )}
-        </div>
 
-        <div
-          className="px-5 py-3 border-t border-white/8 bg-slate-900/50 space-y-2"
-          style={{
-            paddingBottom: "calc(env(safe-area-inset-bottom) + 0.75rem)",
-          }}
-        >
-          {errorMsg && (
-            <p className="text-sm text-red-300 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
-              {errorMsg}
-            </p>
-          )}
-          <div className="flex gap-2">
-            <Button
-              variant="ghost"
-              onClick={() => onOpenChange(false)}
-              className="flex-1 text-slate-400 hover:text-slate-200 hover:bg-white/8"
-            >
-              Annuler
-            </Button>
-            <Button
-              onClick={handleSubmit}
-              disabled={!title.trim() || !date || saving}
-              className="flex-1 gradient-primary text-white border-0 disabled:opacity-40"
-            >
-              {saving ? "…" : isEdit ? "Modifier" : "Ajouter"}
-            </Button>
-          </div>
+          <div
+            aria-hidden
+            style={{ height: "calc(env(safe-area-inset-bottom) + 1rem)" }}
+          />
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/** A Google-Calendar-style row: leading icon + content */
+function Row({
+  icon,
+  label,
+  children,
+}: {
+  icon: React.ReactNode;
+  label?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-start gap-4 px-5 py-3.5 border-t border-white/8">
+      <div className="text-slate-400 mt-2 shrink-0">{icon}</div>
+      <div className="flex-1 min-w-0 space-y-2">
+        {label && (
+          <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">
+            {label}
+          </p>
+        )}
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function DateInput({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+}) {
+  return (
+    <input
+      type="date"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="w-full bg-white/5 border border-white/10 rounded-lg px-3 h-10 text-base text-slate-100 [color-scheme:dark] focus:outline-none focus:ring-3 focus:ring-indigo-500/40 tabular-nums"
+    />
+  );
+}
+
+function TimeInput({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+}) {
+  return (
+    <div className="relative">
+      <Clock
+        size={14}
+        className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none"
+      />
+      <input
+        type="time"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full bg-white/5 border border-white/10 rounded-lg pl-9 pr-3 h-10 text-base text-slate-100 [color-scheme:dark] focus:outline-none focus:ring-3 focus:ring-indigo-500/40 tabular-nums"
+      />
+    </div>
+  );
+}
+
+function NumberPill({
+  value,
+  onChange,
+  suffix,
+  max,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  suffix: string;
+  max: number;
+}) {
+  return (
+    <div className="relative flex-1 min-w-0">
+      <input
+        type="number"
+        inputMode="numeric"
+        min="0"
+        max={max}
+        value={value}
+        onChange={(e) => onChange(e.target.value.replace(/[^0-9]/g, ""))}
+        placeholder="0"
+        className="w-full bg-white/5 border border-white/10 rounded-lg px-3 h-10 text-base text-slate-100 placeholder:text-slate-500 tabular-nums focus:outline-none focus:ring-3 focus:ring-indigo-500/40 pr-12"
+      />
+      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-500 pointer-events-none">
+        {suffix}
+      </span>
+    </div>
   );
 }
