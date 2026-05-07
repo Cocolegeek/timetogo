@@ -1,15 +1,37 @@
 "use client";
 
-import { useEffect, useRef, type CSSProperties, type ReactNode } from "react";
+import { type CSSProperties, type ReactNode, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import {
+  motion,
+  useMotionValue,
+  useTransform,
+  animate,
+  type PanInfo,
+} from "framer-motion";
+import {
+  LayoutDashboard,
+  Wallet,
+  Map,
+  UtensilsCrossed,
+  type LucideIcon,
+} from "lucide-react";
 
-/** Order of the trip tabs as exposed in the bottom nav. */
-const TAB_SUFFIXES = ["", "/budget", "/planning", "/menus"] as const;
+interface TripTab {
+  suffix: string;
+  label: string;
+  Icon: LucideIcon;
+}
 
-const SWIPE_THRESHOLD = 70;       // px the finger must travel
-const SWIPE_TIME_MAX = 500;       // ms — anything slower is treated as a pan
-const AXIS_LOCK_RATIO = 1.4;      // |dx| / |dy| — must be primarily horizontal
-const EDGE_GUARD = 24;            // px from the screen edge — avoid iOS back-swipe
+const TABS: TripTab[] = [
+  { suffix: "", label: "Résumé", Icon: LayoutDashboard },
+  { suffix: "/budget", label: "Budget", Icon: Wallet },
+  { suffix: "/planning", label: "Planning", Icon: Map },
+  { suffix: "/menus", label: "Menus", Icon: UtensilsCrossed },
+];
+
+const COMMIT_DISTANCE = 90;       // px — beyond this we navigate
+const COMMIT_VELOCITY = 600;      // px/s — flicks faster than this also commit
 
 interface TripSwipeContainerProps {
   tripId: string;
@@ -19,15 +41,17 @@ interface TripSwipeContainerProps {
 }
 
 /**
- * Wraps the trip layout content with horizontal-swipe navigation
- * between the four sub-tabs (Résumé / Budget / Planning / Menus).
+ * Drag-to-navigate between trip tabs with a peek of the destination
+ * label fading in on the side as the user swipes.
  *
- * Skips the gesture when:
- *  - Touch starts on an element marked `data-no-tab-swipe`
- *    (e.g. the ExpenseCard's drag-to-delete area).
- *  - An input/textarea is focused.
- *  - The touch starts very close to a vertical edge (back-swipe friendly).
- *  - The movement is primarily vertical (regular page scroll).
+ * - Children are wrapped in a motion.main that translates with the
+ *   finger; on release we either commit (navigate to neighbour tab) or
+ *   spring back to origin.
+ * - Peek pills are absolutely positioned on the screen edges and grow
+ *   in opacity / scale as the drag progresses.
+ * - ExpenseCard (which uses its own drag-to-delete) is marked
+ *   `data-no-tab-swipe` and framer's nested drag will keep its own
+ *   pointer capture, preventing accidental tab switches.
  */
 export function TripSwipeContainer({
   tripId,
@@ -37,101 +61,107 @@ export function TripSwipeContainer({
 }: TripSwipeContainerProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const ref = useRef<HTMLElement>(null);
+  const x = useMotionValue(0);
 
-  // Resolve the index of the currently visible tab (-1 if unknown)
-  const currentIndex = (() => {
-    const prefix = `/trips/${tripId}`;
-    if (!pathname?.startsWith(prefix)) return -1;
-    const suffix = pathname.slice(prefix.length);
-    const idx = TAB_SUFFIXES.indexOf(suffix as (typeof TAB_SUFFIXES)[number]);
-    return idx;
-  })();
+  // Resolve the active tab from the pathname
+  const prefix = `/trips/${tripId}`;
+  const suffix = pathname?.startsWith(prefix) ? pathname.slice(prefix.length) : "";
+  const currentIndex = TABS.findIndex((t) => t.suffix === suffix);
+  const prevTab = currentIndex > 0 ? TABS[currentIndex - 1] : null;
+  const nextTab =
+    currentIndex >= 0 && currentIndex < TABS.length - 1
+      ? TABS[currentIndex + 1]
+      : null;
 
+  // Snap back to 0 whenever we land on a new route
   useEffect(() => {
-    const el = ref.current;
-    if (!el || currentIndex < 0) return;
+    x.set(0);
+  }, [pathname, x]);
 
-    let startX = 0;
-    let startY = 0;
-    let startTime = 0;
-    let tracking = false;
+  // Peek pill animations driven by the drag offset
+  const prevOpacity = useTransform(x, [0, 40, 130], [0, 0.5, 1]);
+  const prevScale = useTransform(x, [0, 130], [0.7, 1]);
+  const prevX = useTransform(x, [0, 130], [-12, 0]);
 
-    const onStart = (e: TouchEvent) => {
-      if (e.touches.length !== 1) return;
-      const target = e.target as HTMLElement | null;
-      if (!target) return;
+  const nextOpacity = useTransform(x, [-130, -40, 0], [1, 0.5, 0]);
+  const nextScale = useTransform(x, [-130, 0], [1, 0.7]);
+  const nextX = useTransform(x, [-130, 0], [0, 12]);
 
-      // Skip if started inside a draggable / scrollable carve-out
-      if (target.closest("[data-no-tab-swipe]")) return;
+  const handleDragEnd = (
+    _event: PointerEvent | MouseEvent | TouchEvent,
+    info: PanInfo
+  ) => {
+    const { offset, velocity } = info;
 
-      // Skip if a text field is currently focused
-      const ae = document.activeElement;
-      if (
-        ae instanceof HTMLElement &&
-        (ae.tagName === "INPUT" ||
-          ae.tagName === "TEXTAREA" ||
-          ae.tagName === "SELECT" ||
-          ae.isContentEditable)
-      )
-        return;
+    // Swipe LEFT → next tab
+    if (
+      nextTab &&
+      (offset.x < -COMMIT_DISTANCE || velocity.x < -COMMIT_VELOCITY)
+    ) {
+      router.push(`/trips/${tripId}${nextTab.suffix}`);
+      return;
+    }
 
-      const t = e.touches[0];
-      // Skip touches starting near the edges (iOS back-swipe area, scrollbars…)
-      if (
-        t.clientX < EDGE_GUARD ||
-        t.clientX > window.innerWidth - EDGE_GUARD
-      )
-        return;
+    // Swipe RIGHT → previous tab
+    if (
+      prevTab &&
+      (offset.x > COMMIT_DISTANCE || velocity.x > COMMIT_VELOCITY)
+    ) {
+      router.push(`/trips/${tripId}${prevTab.suffix}`);
+      return;
+    }
 
-      startX = t.clientX;
-      startY = t.clientY;
-      startTime = Date.now();
-      tracking = true;
-    };
+    // Otherwise spring back to origin
+    animate(x, 0, { type: "spring", stiffness: 380, damping: 32 });
+  };
 
-    const onEnd = (e: TouchEvent) => {
-      if (!tracking) return;
-      tracking = false;
-
-      const t = e.changedTouches[0];
-      const dx = t.clientX - startX;
-      const dy = t.clientY - startY;
-      const dt = Date.now() - startTime;
-      const absDx = Math.abs(dx);
-      const absDy = Math.abs(dy);
-
-      if (dt > SWIPE_TIME_MAX) return;
-      if (absDx < SWIPE_THRESHOLD) return;
-      if (absDx < absDy * AXIS_LOCK_RATIO) return; // too vertical
-
-      let target = -1;
-      if (dx < 0 && currentIndex < TAB_SUFFIXES.length - 1)
-        target = currentIndex + 1;
-      else if (dx > 0 && currentIndex > 0) target = currentIndex - 1;
-      if (target < 0) return;
-
-      router.push(`/trips/${tripId}${TAB_SUFFIXES[target]}`);
-    };
-
-    const onCancel = () => {
-      tracking = false;
-    };
-
-    el.addEventListener("touchstart", onStart, { passive: true });
-    el.addEventListener("touchend", onEnd, { passive: true });
-    el.addEventListener("touchcancel", onCancel, { passive: true });
-
-    return () => {
-      el.removeEventListener("touchstart", onStart);
-      el.removeEventListener("touchend", onEnd);
-      el.removeEventListener("touchcancel", onCancel);
-    };
-  }, [currentIndex, tripId, router]);
+  // If we don't recognise the route, just render the content without drag
+  if (currentIndex < 0) {
+    return (
+      <main className={className} style={style}>
+        {children}
+      </main>
+    );
+  }
 
   return (
-    <main ref={ref} className={className} style={style}>
-      {children}
-    </main>
+    <>
+      <motion.main
+        className={className}
+        style={{ ...style, x, touchAction: "pan-y" }}
+        drag="x"
+        dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={0.45}
+        dragDirectionLock
+        dragMomentum={false}
+        onDragEnd={handleDragEnd}
+      >
+        {children}
+      </motion.main>
+
+      {/* Peek pill — previous tab (revealed when swiping right) */}
+      {prevTab && (
+        <motion.div
+          aria-hidden
+          className="fixed left-3 top-1/2 -translate-y-1/2 z-30 pointer-events-none flex items-center gap-2 px-3 py-2 rounded-2xl glass-strong border border-white/10 text-sm font-semibold text-slate-100 shadow-lg"
+          style={{ opacity: prevOpacity, scale: prevScale, x: prevX }}
+        >
+          <prevTab.Icon size={16} className="text-indigo-300" />
+          {prevTab.label}
+        </motion.div>
+      )}
+
+      {/* Peek pill — next tab (revealed when swiping left) */}
+      {nextTab && (
+        <motion.div
+          aria-hidden
+          className="fixed right-3 top-1/2 -translate-y-1/2 z-30 pointer-events-none flex items-center gap-2 px-3 py-2 rounded-2xl glass-strong border border-white/10 text-sm font-semibold text-slate-100 shadow-lg"
+          style={{ opacity: nextOpacity, scale: nextScale, x: nextX }}
+        >
+          {nextTab.label}
+          <nextTab.Icon size={16} className="text-indigo-300" />
+        </motion.div>
+      )}
+    </>
   );
 }
