@@ -131,26 +131,44 @@
   --sidebar-ring: oklch(0.60 0.22 264 / 60%);
 }
 
+/* ── Glass theme tokens (driven by .dark on <html>) ─────────────────── */
+:root {
+  --glass-bg: oklch(1 0 0 / 70%);
+  --glass-strong-bg: oklch(1 0 0 / 85%);
+  --glass-subtle-bg: oklch(1 0 0 / 50%);
+  --glass-border: oklch(0.18 0.02 264 / 10%);
+  --glass-border-strong: oklch(0.18 0.02 264 / 14%);
+  --glass-border-subtle: oklch(0.18 0.02 264 / 6%);
+}
+.dark {
+  --glass-bg: oklch(0.11 0.02 264 / 55%);
+  --glass-strong-bg: oklch(0.09 0.025 264 / 80%);
+  --glass-subtle-bg: oklch(0.13 0.02 264 / 35%);
+  --glass-border: oklch(1 0 0 / 8%);
+  --glass-border-strong: oklch(1 0 0 / 12%);
+  --glass-border-subtle: oklch(1 0 0 / 6%);
+}
+
 /* ── Custom Glass Utilities ───────────────────────────────────────────── */
 @utility glass {
-  background-color: oklch(0.11 0.02 264 / 55%);
+  background-color: var(--glass-bg);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid oklch(1 0 0 / 8%);
+  border: 1px solid var(--glass-border);
 }
 
 @utility glass-strong {
-  background-color: oklch(0.09 0.025 264 / 80%);
+  background-color: var(--glass-strong-bg);
   backdrop-filter: blur(40px) saturate(200%);
   -webkit-backdrop-filter: blur(40px) saturate(200%);
-  border: 1px solid oklch(1 0 0 / 12%);
+  border: 1px solid var(--glass-border-strong);
 }
 
 @utility glass-subtle {
-  background-color: oklch(0.13 0.02 264 / 35%);
+  background-color: var(--glass-subtle-bg);
   backdrop-filter: blur(12px) saturate(160%);
   -webkit-backdrop-filter: blur(12px) saturate(160%);
-  border: 1px solid oklch(1 0 0 / 6%);
+  border: 1px solid var(--glass-border-subtle);
 }
 
 @utility gradient-primary {
@@ -163,6 +181,30 @@
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+
+/* ── Slate scale inversion for light mode ──────────────────────────────
+ * The whole UI is dark-first and uses `text-slate-100..400` for primary
+ * text, `bg-white/x` and `border-white/x` for surfaces. By overriding the
+ * native slate tokens (and a couple of "white-as-surface" helpers) when
+ * the document is NOT in dark mode, we get a usable light theme without
+ * having to add dark: variants to every component.
+ *
+ * Tailwind v4 exposes the colour palette as `--color-slate-*` CSS vars,
+ * so reassigning them here filters down to every utility class. */
+:root:not(.dark) {
+  --color-slate-50:  oklch(0.13 0.02 264);
+  --color-slate-100: oklch(0.18 0.02 264);
+  --color-slate-200: oklch(0.25 0.02 264);
+  --color-slate-300: oklch(0.32 0.02 264);
+  --color-slate-400: oklch(0.45 0.015 240);
+  --color-slate-500: oklch(0.55 0.01 240);
+  --color-slate-600: oklch(0.70 0.008 240);
+  --color-slate-700: oklch(0.82 0.008 240);
+  --color-slate-800: oklch(0.90 0.008 240);
+  --color-slate-900: oklch(0.95 0.005 240);
+  --color-slate-950: oklch(0.97 0.005 240);
+}
+
 
 /* ── Base ─────────────────────────────────────────────────────────────── */
 @layer base {

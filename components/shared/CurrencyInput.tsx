@@ -34,7 +34,7 @@ export const CurrencyInput = forwardRef<HTMLInputElement, CurrencyInputProps>(
             }
           }}
           className={cn(
-            "w-full pl-8 pr-3 py-2.5 rounded-xl bg-white/8 border border-white/10 text-slate-100 text-sm",
+            "w-full pl-8 pr-3 py-2.5 rounded-xl bg-foreground/8 border border-foreground/10 text-slate-100 text-sm",
             "placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50",
             "transition-all duration-200",
             "[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",

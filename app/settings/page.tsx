@@ -52,14 +52,14 @@ export default function SettingsPage() {
       <MeshGradientBackground />
       <div className="min-h-screen">
         {/* Header */}
-        <header className="glass-strong border-b border-white/8 sticky top-0 z-40">
+        <header className="glass-strong border-b border-foreground/8 sticky top-0 z-40">
           <div
             className="max-w-lg mx-auto px-4 py-4 flex items-center gap-3"
             style={{ paddingTop: "calc(env(safe-area-inset-top) + 1rem)" }}
           >
             <Link
               href="/trips"
-              className="p-2 -ml-1 rounded-xl hover:bg-white/8 active:bg-white/12 text-slate-400 hover:text-slate-200 transition-all"
+              className="p-2 -ml-1 rounded-xl hover:bg-foreground/8 active:bg-foreground/12 text-slate-400 hover:text-slate-200 transition-all"
               aria-label="Retour"
             >
               <ArrowLeft size={20} />
@@ -94,14 +94,14 @@ export default function SettingsPage() {
                       <img
                         src={profile.avatar_url}
                         alt={profile.name ?? "avatar"}
-                        className="w-20 h-20 rounded-full object-cover border-2 border-white/10"
+                        className="w-20 h-20 rounded-full object-cover border-2 border-foreground/10"
                       />
                     ) : (
                       <div className="w-20 h-20 rounded-full bg-indigo-500/20 border-2 border-indigo-500/30 flex items-center justify-center">
                         <User size={32} className="text-indigo-400" />
                       </div>
                     )}
-                    <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-slate-800 border border-white/10 flex items-center justify-center">
+                    <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-slate-800 border border-foreground/10 flex items-center justify-center">
                       <Camera size={12} className="text-slate-400" />
                     </div>
                   </div>
@@ -121,7 +121,7 @@ export default function SettingsPage() {
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       placeholder="Ton prénom"
-                      className="bg-white/8 border-white/10 text-slate-100 placeholder:text-slate-500"
+                      className="bg-foreground/8 border-foreground/10 text-slate-100 placeholder:text-slate-500"
                     />
                     <p className="text-sm text-slate-500">
                       Utilisé pour t'identifier dans les voyages.
@@ -136,7 +136,7 @@ export default function SettingsPage() {
                     <Input
                       value={profile?.email ?? ""}
                       disabled
-                      className="bg-white/4 border-white/8 text-slate-500 cursor-not-allowed"
+                      className="bg-foreground/4 border-foreground/8 text-slate-500 cursor-not-allowed"
                     />
                     <p className="text-sm text-slate-500">
                       Géré par ton compte Google.
@@ -168,7 +168,7 @@ export default function SettingsPage() {
                   <button
                     type="button"
                     onClick={toggle}
-                    className="w-full flex items-center gap-3 px-4 py-4 active:bg-white/4 transition-colors"
+                    className="w-full flex items-center gap-3 px-4 py-4 active:bg-foreground/4 transition-colors"
                   >
                     <div className="w-10 h-10 rounded-xl bg-indigo-500/15 flex items-center justify-center shrink-0">
                       {isDark ? (
@@ -193,7 +193,7 @@ export default function SettingsPage() {
               {/* ─── Section Compte ──────────────────────────────────── */}
               <Section label="Compte">
                 <GlassCard padding={false}>
-                  <div className="px-4 py-3 flex items-center gap-3 border-b border-white/8">
+                  <div className="px-4 py-3 flex items-center gap-3 border-b border-foreground/8">
                     {profile?.avatar_url ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
@@ -266,7 +266,7 @@ function Switch({ checked }: { checked: boolean }) {
       aria-hidden
       className={cn(
         "relative inline-flex w-11 h-6 rounded-full transition-colors shrink-0",
-        checked ? "bg-indigo-500" : "bg-white/15"
+        checked ? "bg-indigo-500" : "bg-foreground/15"
       )}
     >
       <span

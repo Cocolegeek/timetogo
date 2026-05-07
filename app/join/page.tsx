@@ -127,7 +127,7 @@ function JoinContent() {
         <p className="text-sm text-slate-500">{error}</p>
         <Button
           onClick={() => router.push("/trips")}
-          className="mt-2 bg-white/8 hover:bg-white/12 text-slate-300 border border-white/10"
+          className="mt-2 bg-foreground/8 hover:bg-foreground/12 text-slate-300 border border-foreground/10"
         >
           Retour à l'accueil
         </Button>
@@ -224,7 +224,7 @@ export default function JoinPage() {
     <>
       <MeshGradientBackground />
       <div className="min-h-screen">
-        <header className="glass-strong border-b border-white/8 sticky top-0 z-40">
+        <header className="glass-strong border-b border-foreground/8 sticky top-0 z-40">
           <div
             className="max-w-md mx-auto px-4 py-4 flex items-center gap-3"
             style={{ paddingTop: "calc(env(safe-area-inset-top) + 1rem)" }}

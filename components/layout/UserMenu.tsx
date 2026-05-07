@@ -22,7 +22,7 @@ export function UserMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        className="rounded-full w-9 h-9 p-0 overflow-hidden border border-white/10 hover:border-white/20 transition-colors focus:outline-none"
+        className="rounded-full w-9 h-9 p-0 overflow-hidden border border-foreground/10 hover:border-foreground/20 transition-colors focus:outline-none"
         aria-label="Menu utilisateur"
       >
         {profile?.avatar_url ? (
@@ -41,7 +41,7 @@ export function UserMenu() {
 
       <DropdownMenuContent
         align="end"
-        className="glass-strong border-white/10 text-slate-200 min-w-48 bg-slate-900/95 backdrop-blur"
+        className="glass-strong border-foreground/10 text-slate-200 min-w-48 bg-slate-900/95 backdrop-blur"
       >
         {profile && (
           <>

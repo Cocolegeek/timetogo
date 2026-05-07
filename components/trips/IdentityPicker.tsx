@@ -44,7 +44,7 @@ export function IdentityPicker({
                 "flex items-center gap-3 p-3 rounded-xl border transition-all duration-200 text-left",
                 isSelected
                   ? "border-indigo-500/60 bg-indigo-500/10 ring-1 ring-indigo-500/30"
-                  : "border-white/8 bg-white/4 hover:border-white/15 hover:bg-white/8"
+                  : "border-foreground/8 bg-foreground/4 hover:border-foreground/15 hover:bg-foreground/8"
               )}
             >
               <ParticipantAvatar participant={p} size={compact ? "sm" : "md"} />

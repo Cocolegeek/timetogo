@@ -167,20 +167,20 @@ export function MealEditDialog({
           // Desktop: centered modal
           "sm:!top-1/2 sm:!left-1/2 sm:!-translate-x-1/2 sm:!-translate-y-1/2",
           "sm:!max-w-md sm:!h-auto sm:!max-h-[92vh]",
-          "sm:!rounded-2xl sm:!border sm:!border-white/10",
+          "sm:!rounded-2xl sm:!border sm:!border-foreground/10",
           "glass-strong flex flex-col overflow-hidden"
         )}
       >
         {/* Top app bar */}
         <div
-          className="flex items-center justify-between gap-3 px-3 py-2.5 border-b border-white/8"
+          className="flex items-center justify-between gap-3 px-3 py-2.5 border-b border-foreground/8"
           style={{ paddingTop: "calc(env(safe-area-inset-top) + 0.625rem)" }}
         >
           <button
             type="button"
             onClick={() => onOpenChange(false)}
             aria-label="Fermer"
-            className="p-2 -ml-1 rounded-xl text-slate-300 hover:bg-white/8 active:bg-white/12 transition-all"
+            className="p-2 -ml-1 rounded-xl text-slate-300 hover:bg-foreground/8 active:bg-foreground/12 transition-all"
           >
             <X size={22} />
           </button>
@@ -231,7 +231,7 @@ export function MealEditDialog({
                       "flex items-center justify-center py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95",
                       selected
                         ? cfg.badgeClass
-                        : "bg-white/4 text-slate-400 border border-white/8 hover:bg-white/8"
+                        : "bg-foreground/4 text-slate-400 border border-foreground/8 hover:bg-foreground/8"
                     )}
                   >
                     {cfg.label}
@@ -260,7 +260,7 @@ export function MealEditDialog({
                         "flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium transition-all active:scale-95",
                         sel
                           ? "border-amber-400 bg-amber-500/15 text-amber-200"
-                          : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+                          : "border-foreground/10 bg-foreground/5 text-slate-300 hover:bg-foreground/10"
                       )}
                     >
                       <span
@@ -289,7 +289,7 @@ export function MealEditDialog({
                     "px-3 py-1.5 rounded-full text-sm font-medium border transition-all active:scale-95",
                     allEatersSelected
                       ? "bg-indigo-500/15 text-indigo-300 border-indigo-500/40"
-                      : "bg-white/5 text-slate-400 border-white/10 hover:bg-white/10"
+                      : "bg-foreground/5 text-slate-400 border-foreground/10 hover:bg-foreground/10"
                   )}
                 >
                   Tout le monde
@@ -305,7 +305,7 @@ export function MealEditDialog({
                         "flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium transition-all active:scale-95",
                         sel
                           ? "border-indigo-400 bg-indigo-500/15 text-indigo-200"
-                          : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+                          : "border-foreground/10 bg-foreground/5 text-slate-300 hover:bg-foreground/10"
                       )}
                     >
                       <span
@@ -321,11 +321,11 @@ export function MealEditDialog({
           )}
 
           {/* Logistics — collapsed by default */}
-          <div className="border-t border-white/8">
+          <div className="border-t border-foreground/8">
             <button
               type="button"
               onClick={() => setShowLogistics((v) => !v)}
-              className="w-full flex items-center justify-between gap-2 px-5 py-3.5 text-sm font-medium text-slate-300 hover:bg-white/4 active:bg-white/8 transition-colors"
+              className="w-full flex items-center justify-between gap-2 px-5 py-3.5 text-sm font-medium text-slate-300 hover:bg-foreground/4 active:bg-foreground/8 transition-colors"
             >
               <span>Détails logistiques</span>
               <ChevronDown
@@ -373,7 +373,7 @@ export function MealEditDialog({
                                 updateIngredient(ing.id, "name", e.target.value)
                               }
                               placeholder="Tomates"
-                              className="bg-white/5 border-white/10 text-slate-100 placeholder:text-slate-500"
+                              className="bg-foreground/5 border-foreground/10 text-slate-100 placeholder:text-slate-500"
                             />
                             <Input
                               value={ing.quantity}
@@ -385,7 +385,7 @@ export function MealEditDialog({
                                 )
                               }
                               placeholder="500g"
-                              className="bg-white/5 border-white/10 text-slate-100 placeholder:text-slate-500"
+                              className="bg-foreground/5 border-foreground/10 text-slate-100 placeholder:text-slate-500"
                             />
                             <button
                               type="button"
@@ -402,7 +402,7 @@ export function MealEditDialog({
                       <button
                         type="button"
                         onClick={addIngredient}
-                        className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-dashed border-white/15 text-sm text-slate-400 hover:border-white/25 hover:text-slate-200 hover:bg-white/4 transition-colors"
+                        className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-dashed border-foreground/15 text-sm text-slate-400 hover:border-foreground/25 hover:text-slate-200 hover:bg-foreground/4 transition-colors"
                       >
                         <Plus size={14} />
                         Ajouter un ingrédient
@@ -419,7 +419,7 @@ export function MealEditDialog({
                         onChange={(e) => setNotes(e.target.value)}
                         placeholder="Allergies, restos envisagés…"
                         rows={2}
-                        className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-base text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-3 focus:ring-indigo-500/40 resize-none"
+                        className="w-full bg-foreground/5 border border-foreground/10 rounded-lg px-3 py-2 text-base text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-3 focus:ring-indigo-500/40 resize-none"
                       />
                     </div>
                   </div>
@@ -459,7 +459,7 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <div className="px-5 py-4 border-t border-white/8 space-y-2.5">
+    <div className="px-5 py-4 border-t border-foreground/8 space-y-2.5">
       <div className="flex items-center gap-1.5">
         {icon}
         <p className="text-xs font-semibold uppercase tracking-wider text-slate-300">

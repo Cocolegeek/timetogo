@@ -105,11 +105,11 @@ export function TripWizard() {
             <Label className="text-slate-300 text-sm font-medium">
               Nom du voyage
             </Label>
-            <div className="flex items-stretch gap-2 bg-white/8 border border-white/10 rounded-lg focus-within:ring-3 focus-within:ring-indigo-500/40 transition-all overflow-hidden">
+            <div className="flex items-stretch gap-2 bg-foreground/8 border border-foreground/10 rounded-lg focus-within:ring-3 focus-within:ring-indigo-500/40 transition-all overflow-hidden">
               <button
                 type="button"
                 onClick={() => setEmojiPickerOpen((v) => !v)}
-                className="w-12 h-11 flex items-center justify-center text-2xl hover:bg-white/8 active:bg-white/12 transition-colors shrink-0"
+                className="w-12 h-11 flex items-center justify-center text-2xl hover:bg-foreground/8 active:bg-foreground/12 transition-colors shrink-0"
                 aria-label="Changer l'emoji"
               >
                 {selectedEmoji}
@@ -142,7 +142,7 @@ export function TripWizard() {
                           "w-10 h-10 rounded-lg text-xl transition-all",
                           selectedEmoji === e
                             ? "bg-indigo-500/20 ring-1 ring-indigo-400/50"
-                            : "hover:bg-white/8 active:bg-white/12"
+                            : "hover:bg-foreground/8 active:bg-foreground/12"
                         )}
                       >
                         {e}
@@ -170,7 +170,7 @@ export function TripWizard() {
                 })
               }
               placeholder="Rome, Italie"
-              className="bg-white/8 border-white/10 text-slate-100 placeholder:text-slate-500 focus-visible:ring-indigo-500/50"
+              className="bg-foreground/8 border-foreground/10 text-slate-100 placeholder:text-slate-500 focus-visible:ring-indigo-500/50"
             />
             {errors.destination && (
               <p className="text-xs text-red-400">{errors.destination.message}</p>
@@ -187,7 +187,7 @@ export function TripWizard() {
             <Input
               {...register("startDate")}
               type="date"
-              className="bg-white/8 border-white/10 text-slate-100 focus-visible:ring-indigo-500/50 [color-scheme:dark]"
+              className="bg-foreground/8 border-foreground/10 text-slate-100 focus-visible:ring-indigo-500/50 [color-scheme:dark]"
             />
           </div>
           <div className="space-y-1.5">
@@ -195,7 +195,7 @@ export function TripWizard() {
             <Input
               {...register("endDate")}
               type="date"
-              className="bg-white/8 border-white/10 text-slate-100 focus-visible:ring-indigo-500/50 [color-scheme:dark]"
+              className="bg-foreground/8 border-foreground/10 text-slate-100 focus-visible:ring-indigo-500/50 [color-scheme:dark]"
             />
           </div>
         </div>
@@ -214,7 +214,7 @@ export function TripWizard() {
                 className={`px-3 py-1.5 rounded-xl text-sm font-medium transition-all ${
                   selectedCurrency === c
                     ? "bg-indigo-500/20 text-indigo-300 ring-1 ring-indigo-500/50"
-                    : "bg-white/5 text-slate-400 hover:bg-white/10 hover:text-slate-300"
+                    : "bg-foreground/5 text-slate-400 hover:bg-foreground/10 hover:text-slate-300"
                 }`}
               >
                 {c}
@@ -237,7 +237,7 @@ export function TripWizard() {
               onClick={() => setBudgetEnabled((v) => !v)}
               className={cn(
                 "relative w-10 h-6 rounded-full transition-colors",
-                budgetEnabled ? "bg-indigo-500" : "bg-white/10"
+                budgetEnabled ? "bg-indigo-500" : "bg-foreground/10"
               )}
               aria-label="Activer le budget prévisionnel"
             >
@@ -266,7 +266,7 @@ export function TripWizard() {
                       setBudgetStr(e.target.value.replace(/[^0-9.,]/g, ""))
                     }
                     placeholder="ex: 1500"
-                    className="bg-white/8 border-white/10 text-slate-100 placeholder:text-slate-500 pr-14 tabular-nums"
+                    className="bg-foreground/8 border-foreground/10 text-slate-100 placeholder:text-slate-500 pr-14 tabular-nums"
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-500 pointer-events-none">
                     {selectedCurrency}
@@ -297,7 +297,7 @@ export function TripWizard() {
                 }
               }}
               placeholder="Prénom du participant"
-              className="bg-white/8 border-white/10 text-slate-100 placeholder:text-slate-500 focus-visible:ring-indigo-500/50"
+              className="bg-foreground/8 border-foreground/10 text-slate-100 placeholder:text-slate-500 focus-visible:ring-indigo-500/50"
             />
             <Button
               type="button"

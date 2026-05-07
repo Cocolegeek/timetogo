@@ -107,7 +107,7 @@ export function BudgetEditDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="glass-strong border-white/10 max-w-sm">
+      <DialogContent className="glass-strong border-foreground/10 max-w-sm">
         <DialogHeader>
           <DialogTitle className="text-slate-100 text-lg flex items-center gap-2">
             <Wallet size={18} className="text-indigo-400" />
@@ -117,7 +117,7 @@ export function BudgetEditDialog({
 
         <div className="space-y-4 pt-1">
           {/* Mode selector */}
-          <div className="grid grid-cols-2 gap-1 p-1 bg-white/4 border border-white/8 rounded-lg">
+          <div className="grid grid-cols-2 gap-1 p-1 bg-foreground/4 border border-foreground/8 rounded-lg">
             <button
               type="button"
               onClick={() => switchMode("total")}
@@ -158,7 +158,7 @@ export function BudgetEditDialog({
                   setValue(e.target.value.replace(/[^0-9.,]/g, ""))
                 }
                 placeholder={mode === "per-person" ? "ex: 400" : "ex: 1500"}
-                className="bg-white/8 border-white/10 text-slate-100 placeholder:text-slate-500 pr-14 tabular-nums"
+                className="bg-foreground/8 border-foreground/10 text-slate-100 placeholder:text-slate-500 pr-14 tabular-nums"
                 autoFocus
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-500 pointer-events-none">

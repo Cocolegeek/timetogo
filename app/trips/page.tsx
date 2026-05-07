@@ -76,7 +76,7 @@ export default function TripsPage() {
 
       <div className="min-h-screen">
         {/* Header */}
-        <header className="sticky top-0 z-30 glass-strong border-b border-white/8">
+        <header className="sticky top-0 z-30 glass-strong border-b border-foreground/8">
           <div
             className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between"
             style={{ paddingTop: "calc(env(safe-area-inset-top) + 0.75rem)" }}
@@ -94,7 +94,7 @@ export default function TripsPage() {
               <button
                 onClick={handleRefresh}
                 disabled={refreshing}
-                className="p-2 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/8 active:bg-white/12 transition-all"
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-foreground/8 active:bg-foreground/12 transition-all"
                 title="Actualiser"
               >
                 <RefreshCw size={18} className={refreshing ? "animate-spin" : ""} />
@@ -224,7 +224,7 @@ function ConfirmDelete({
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         onClick={(e) => e.stopPropagation()}
-        className="glass-strong border border-white/10 rounded-2xl p-5 max-w-sm w-full space-y-4"
+        className="glass-strong border border-foreground/10 rounded-2xl p-5 max-w-sm w-full space-y-4"
       >
         <div>
           <h3 className="text-lg font-bold text-slate-100">
@@ -240,7 +240,7 @@ function ConfirmDelete({
           <button
             type="button"
             onClick={onCancel}
-            className="flex-1 h-11 rounded-lg bg-white/5 hover:bg-white/8 text-slate-300 text-sm font-medium transition-colors"
+            className="flex-1 h-11 rounded-lg bg-foreground/5 hover:bg-foreground/8 text-slate-300 text-sm font-medium transition-colors"
             disabled={deleting}
           >
             Annuler

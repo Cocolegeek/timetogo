@@ -52,7 +52,7 @@ export function ShareModal({ open, onOpenChange, trip }: ShareModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="glass-strong border-white/10 max-w-sm">
+      <DialogContent className="glass-strong border-foreground/10 max-w-sm">
         <DialogHeader>
           <DialogTitle className="text-slate-100">Partager le voyage</DialogTitle>
         </DialogHeader>

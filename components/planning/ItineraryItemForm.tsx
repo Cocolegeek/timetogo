@@ -208,21 +208,21 @@ export function ItineraryItemForm({
           // Desktop: centered modal
           "sm:!top-1/2 sm:!left-1/2 sm:!-translate-x-1/2 sm:!-translate-y-1/2",
           "sm:!max-w-md sm:!h-auto sm:!max-h-[92vh]",
-          "sm:!rounded-2xl sm:!border sm:!border-white/10",
+          "sm:!rounded-2xl sm:!border sm:!border-foreground/10",
           // Glass background
           "glass-strong flex flex-col overflow-hidden"
         )}
       >
         {/* Top app bar */}
         <div
-          className="flex items-center justify-between gap-3 px-3 py-2.5 border-b border-white/8"
+          className="flex items-center justify-between gap-3 px-3 py-2.5 border-b border-foreground/8"
           style={{ paddingTop: "calc(env(safe-area-inset-top) + 0.625rem)" }}
         >
           <button
             type="button"
             onClick={() => onOpenChange(false)}
             aria-label="Fermer"
-            className="p-2 -ml-1 rounded-xl text-slate-300 hover:bg-white/8 active:bg-white/12 transition-all"
+            className="p-2 -ml-1 rounded-xl text-slate-300 hover:bg-foreground/8 active:bg-foreground/12 transition-all"
           >
             <X size={22} />
           </button>
@@ -293,7 +293,7 @@ export function ItineraryItemForm({
                       "px-3 py-1.5 rounded-full text-sm font-medium transition-all active:scale-95",
                       selected
                         ? "bg-indigo-500/20 text-indigo-300 ring-1 ring-indigo-500/50"
-                        : "bg-white/5 text-slate-400 hover:bg-white/10"
+                        : "bg-foreground/5 text-slate-400 hover:bg-foreground/10"
                     )}
                   >
                     {d.label}
@@ -321,7 +321,7 @@ export function ItineraryItemForm({
                     setDurationH("");
                     setDurationM("");
                   }}
-                  className="p-2 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-white/8 transition-colors shrink-0"
+                  className="p-2 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-foreground/8 transition-colors shrink-0"
                   aria-label="Effacer la durée"
                 >
                   <X size={14} />
@@ -345,7 +345,7 @@ export function ItineraryItemForm({
                       "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all active:scale-95",
                       selected
                         ? cn(cfg.bg, cfg.color, "ring-1")
-                        : "bg-white/5 text-slate-400 hover:bg-white/10"
+                        : "bg-foreground/5 text-slate-400 hover:bg-foreground/10"
                     )}
                   >
                     <span>{cfg.emoji}</span>
@@ -362,7 +362,7 @@ export function ItineraryItemForm({
               value={location}
               onChange={setLocation}
               placeholder="Ajouter un lieu"
-              className="bg-white/5 border-white/10 text-slate-100 placeholder:text-slate-500"
+              className="bg-foreground/5 border-foreground/10 text-slate-100 placeholder:text-slate-500"
             />
           </Row>
 
@@ -377,7 +377,7 @@ export function ItineraryItemForm({
                     "px-3 py-1.5 rounded-full text-sm font-medium border transition-all active:scale-95",
                     allSelected
                       ? "bg-indigo-500/15 text-indigo-300 border-indigo-500/40"
-                      : "bg-white/5 text-slate-400 border-white/10 hover:bg-white/10"
+                      : "bg-foreground/5 text-slate-400 border-foreground/10 hover:bg-foreground/10"
                   )}
                 >
                   Tout le monde
@@ -393,7 +393,7 @@ export function ItineraryItemForm({
                         "flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium transition-all active:scale-95",
                         sel
                           ? "border-indigo-400 bg-indigo-500/15 text-indigo-200"
-                          : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+                          : "border-foreground/10 bg-foreground/5 text-slate-300 hover:bg-foreground/10"
                       )}
                     >
                       <span
@@ -415,7 +415,7 @@ export function ItineraryItemForm({
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Ajouter une description"
               rows={2}
-              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-base text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-3 focus:ring-indigo-500/40 resize-none"
+              className="w-full bg-foreground/5 border border-foreground/10 rounded-lg px-3 py-2 text-base text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-3 focus:ring-indigo-500/40 resize-none"
             />
           </Row>
 
@@ -449,7 +449,7 @@ function Row({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex items-start gap-4 px-5 py-3.5 border-t border-white/8">
+    <div className="flex items-start gap-4 px-5 py-3.5 border-t border-foreground/8">
       <div className="text-slate-400 mt-2 shrink-0">{icon}</div>
       <div className="flex-1 min-w-0 space-y-2">
         {label && (
@@ -476,7 +476,7 @@ function DateInput({
       type="date"
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full bg-white/5 border border-white/10 rounded-lg px-3 h-10 text-base text-slate-100 [color-scheme:dark] focus:outline-none focus:ring-3 focus:ring-indigo-500/40 tabular-nums"
+      className="w-full bg-foreground/5 border border-foreground/10 rounded-lg px-3 h-10 text-base text-slate-100 [color-scheme:dark] focus:outline-none focus:ring-3 focus:ring-indigo-500/40 tabular-nums"
     />
   );
 }
@@ -499,7 +499,7 @@ function TimeInput({
         type="time"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full bg-white/5 border border-white/10 rounded-lg pl-9 pr-3 h-10 text-base text-slate-100 [color-scheme:dark] focus:outline-none focus:ring-3 focus:ring-indigo-500/40 tabular-nums"
+        className="w-full bg-foreground/5 border border-foreground/10 rounded-lg pl-9 pr-3 h-10 text-base text-slate-100 [color-scheme:dark] focus:outline-none focus:ring-3 focus:ring-indigo-500/40 tabular-nums"
       />
     </div>
   );
@@ -526,7 +526,7 @@ function NumberPill({
         value={value}
         onChange={(e) => onChange(e.target.value.replace(/[^0-9]/g, ""))}
         placeholder="0"
-        className="w-full bg-white/5 border border-white/10 rounded-lg px-3 h-10 text-base text-slate-100 placeholder:text-slate-500 tabular-nums focus:outline-none focus:ring-3 focus:ring-indigo-500/40 pr-12"
+        className="w-full bg-foreground/5 border border-foreground/10 rounded-lg px-3 h-10 text-base text-slate-100 placeholder:text-slate-500 tabular-nums focus:outline-none focus:ring-3 focus:ring-indigo-500/40 pr-12"
       />
       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-500 pointer-events-none">
         {suffix}

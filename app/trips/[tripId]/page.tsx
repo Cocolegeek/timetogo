@@ -107,7 +107,7 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
       <div className="flex items-center justify-between -mt-1">
         <Link
           href="/trips"
-          className="p-2 -ml-2 rounded-xl hover:bg-white/8 active:bg-white/12 text-slate-400 transition-all"
+          className="p-2 -ml-2 rounded-xl hover:bg-foreground/8 active:bg-foreground/12 text-slate-400 transition-all"
         >
           <ArrowLeft size={20} />
         </Link>
@@ -115,21 +115,21 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
           <button
             onClick={handleRefresh}
             disabled={refreshing}
-            className="p-2 rounded-xl hover:bg-white/8 active:bg-white/12 text-slate-400 transition-all"
+            className="p-2 rounded-xl hover:bg-foreground/8 active:bg-foreground/12 text-slate-400 transition-all"
             title="Actualiser"
           >
             <RefreshCw size={18} className={refreshing ? "animate-spin" : ""} />
           </button>
           <button
             onClick={() => setEditOpen(true)}
-            className="p-2 rounded-xl hover:bg-white/8 active:bg-white/12 text-slate-400 transition-all"
+            className="p-2 rounded-xl hover:bg-foreground/8 active:bg-foreground/12 text-slate-400 transition-all"
             title="Modifier le voyage"
           >
             <Pencil size={18} />
           </button>
           <button
             onClick={() => setShareOpen(true)}
-            className="p-2 rounded-xl hover:bg-white/8 active:bg-white/12 text-indigo-300 transition-all"
+            className="p-2 rounded-xl hover:bg-foreground/8 active:bg-foreground/12 text-indigo-300 transition-all"
             title="Partager"
           >
             <Share2 size={18} />
@@ -163,7 +163,7 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
         initial={{ opacity: 0, scale: 0.97 }}
         animate={{ opacity: 1, scale: 1 }}
         onClick={() => setIdentityOpen(true)}
-        className="w-full flex items-center gap-3 p-3.5 glass-subtle rounded-2xl border border-white/8 hover:border-white/15 active:scale-[0.99] transition-all text-left group"
+        className="w-full flex items-center gap-3 p-3.5 glass-subtle rounded-2xl border border-foreground/8 hover:border-foreground/15 active:scale-[0.99] transition-all text-left group"
       >
         {currentParticipant ? (
           <>
@@ -179,7 +179,7 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
           </>
         ) : (
           <>
-            <div className="w-9 h-9 rounded-full bg-white/8 flex items-center justify-center shrink-0">
+            <div className="w-9 h-9 rounded-full bg-foreground/8 flex items-center justify-center shrink-0">
               <UserCircle2 size={20} className="text-slate-500" />
             </div>
             <div className="flex-1">
@@ -210,7 +210,7 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
             onClick={() => setBudgetOpen(true)}
             className="w-full text-left active:scale-[0.98] transition-transform"
           >
-            <GlassCard className="h-full hover:border-white/15 transition-colors" padding={false}>
+            <GlassCard className="h-full hover:border-foreground/15 transition-colors" padding={false}>
               <div className="p-4 flex flex-col gap-2.5">
                 <div className="flex items-center gap-2">
                   <div className="w-10 h-10 rounded-xl bg-indigo-500/15 flex items-center justify-center">
@@ -249,7 +249,7 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
                 </div>
                 {trip.totalBudget && (
                   <div
-                    className="h-1.5 bg-white/8 rounded-full overflow-hidden"
+                    className="h-1.5 bg-foreground/8 rounded-full overflow-hidden"
                     role="progressbar"
                     aria-valuenow={Math.round(budgetProgress)}
                     aria-valuemin={0}
@@ -290,7 +290,7 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
             href={`/trips/${tripId}/planning`}
             className="block h-full active:scale-[0.98] transition-transform"
           >
-            <GlassCard className="h-full hover:border-white/15 transition-colors" padding={false}>
+            <GlassCard className="h-full hover:border-foreground/15 transition-colors" padding={false}>
               <div className="p-4 flex flex-col gap-2.5 h-full">
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2 min-w-0">
@@ -309,7 +309,7 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
                           ? "bg-emerald-500/15 text-emerald-300"
                           : relevantDay.daysOffset > 0
                           ? "bg-sky-500/15 text-sky-300"
-                          : "bg-white/5 text-slate-400"
+                          : "bg-foreground/5 text-slate-400"
                       )}
                     >
                       {relativeDayLabel(relevantDay.daysOffset)}
@@ -423,7 +423,7 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
 
       {/* Identity Dialog */}
       <Dialog open={identityOpen} onOpenChange={setIdentityOpen}>
-        <DialogContent className="glass-strong border-white/10 max-w-sm">
+        <DialogContent className="glass-strong border-foreground/10 max-w-sm">
           <DialogHeader>
             <DialogTitle className="text-slate-100">Mon identité</DialogTitle>
           </DialogHeader>

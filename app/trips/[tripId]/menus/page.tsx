@@ -69,7 +69,7 @@ export default function MenusPage({ params }: MenusPageProps) {
         <button
           onClick={handleRefresh}
           disabled={refreshing}
-          className="p-2 -mr-2 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/8 active:bg-white/12 transition-all"
+          className="p-2 -mr-2 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-foreground/8 active:bg-foreground/12 transition-all"
           title="Actualiser"
         >
           <RefreshCw size={18} className={refreshing ? "animate-spin" : ""} />
@@ -225,7 +225,7 @@ function MealCard({
           onKeyDown={(e) => {
             if (e.key === "Enter") onTap();
           }}
-          className="flex cursor-pointer active:bg-white/4 transition-colors"
+          className="flex cursor-pointer active:bg-foreground/4 transition-colors"
         >
           {/* Left strip — slot color when filled, neutral grey when empty */}
           <div

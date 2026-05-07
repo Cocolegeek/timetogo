@@ -146,7 +146,7 @@ export function LocationAutocomplete({
       </div>
 
       {open && suggestions.length > 0 && (
-        <div className="absolute z-50 mt-1 left-0 right-0 rounded-xl border border-white/10 bg-slate-900/95 backdrop-blur shadow-lg overflow-hidden max-h-72 overflow-y-auto">
+        <div className="absolute z-50 mt-1 left-0 right-0 rounded-xl border border-foreground/10 bg-slate-900/95 backdrop-blur shadow-lg overflow-hidden max-h-72 overflow-y-auto">
           {suggestions.map((s, i) => (
             <button
               key={s.place_id}
@@ -157,7 +157,7 @@ export function LocationAutocomplete({
                 "w-full text-left px-3 py-2 flex items-start gap-2 transition-colors",
                 highlightIdx === i
                   ? "bg-indigo-500/20 text-slate-100"
-                  : "text-slate-300 hover:bg-white/8"
+                  : "text-slate-300 hover:bg-foreground/8"
               )}
             >
               <MapPin size={13} className="text-slate-500 mt-0.5 shrink-0" />

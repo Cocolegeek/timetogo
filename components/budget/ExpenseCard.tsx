@@ -98,7 +98,7 @@ export function ExpenseCard({
         }}
         className={cn(
           "glass-subtle rounded-xl p-4 cursor-pointer touch-pan-y select-none",
-          "active:bg-white/8 transition-colors"
+          "active:bg-foreground/8 transition-colors"
         )}
       >
         <div className="flex items-center gap-3">

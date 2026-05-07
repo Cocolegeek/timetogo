@@ -94,7 +94,7 @@ export default function BudgetPage({ params }: BudgetPageProps) {
         <button
           onClick={handleRefresh}
           disabled={refreshing}
-          className="p-2 -mr-2 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/8 active:bg-white/12 transition-all"
+          className="p-2 -mr-2 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-foreground/8 active:bg-foreground/12 transition-all"
           title="Actualiser"
         >
           <RefreshCw size={18} className={refreshing ? "animate-spin" : ""} />
@@ -141,7 +141,7 @@ export default function BudgetPage({ params }: BudgetPageProps) {
 
       {/* Tabs */}
       <Tabs defaultValue="expenses">
-        <TabsList className="grid grid-cols-3 w-full bg-white/4 border border-white/8 h-11">
+        <TabsList className="grid grid-cols-3 w-full bg-foreground/4 border border-foreground/8 h-11">
           <TabsTrigger
             value="expenses"
             className="text-sm data-[state=active]:bg-indigo-500/20 data-[state=active]:text-indigo-300"

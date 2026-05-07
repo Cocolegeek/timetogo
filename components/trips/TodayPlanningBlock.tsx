@@ -86,9 +86,9 @@ export function TodayPlanningBlock({ trip }: TodayPlanningBlockProps) {
       transition={{ delay: 0.05 }}
     >
       <Link href={`/trips/${trip.id}/planning`} className="block">
-        <GlassCard padding={false} className="overflow-hidden hover:border-white/15 transition-colors active:scale-[0.99]">
+        <GlassCard padding={false} className="overflow-hidden hover:border-foreground/15 transition-colors active:scale-[0.99]">
           {/* Header */}
-          <div className="flex items-center gap-3 p-4 border-b border-white/8">
+          <div className="flex items-center gap-3 p-4 border-b border-foreground/8">
             <span className="text-3xl shrink-0">{trip.emoji}</span>
             <div className="flex-1 min-w-0">
               <p className="text-base font-bold text-slate-100 truncate">
@@ -140,7 +140,7 @@ function ContextBadge({ offset }: { offset: number }) {
       ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30"
       : offset > 0
       ? "bg-sky-500/15 text-sky-300 border-sky-500/30"
-      : "bg-white/5 text-slate-400 border-white/10";
+      : "bg-foreground/5 text-slate-400 border-foreground/10";
 
   return (
     <span

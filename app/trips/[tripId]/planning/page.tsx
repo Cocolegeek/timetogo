@@ -104,7 +104,7 @@ export default function PlanningPage({ params }: PlanningPageProps) {
         <button
           onClick={handleRefresh}
           disabled={refreshing}
-          className="p-2 -mr-2 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/8 active:bg-white/12 transition-all"
+          className="p-2 -mr-2 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-foreground/8 active:bg-foreground/12 transition-all"
           title="Actualiser"
         >
           <RefreshCw size={18} className={refreshing ? "animate-spin" : ""} />
@@ -137,7 +137,7 @@ export default function PlanningPage({ params }: PlanningPageProps) {
                   month: "long",
                 })}
               </p>
-              <div className="relative pl-4 border-l border-white/8 space-y-3">
+              <div className="relative pl-4 border-l border-foreground/8 space-y-3">
                 <AnimatePresence>
                   {dayItems.map((item) => (
                     <ItineraryCard
@@ -225,7 +225,7 @@ function ItineraryCard({
           onKeyDown={(e) => {
             if (e.key === "Enter") onEdit();
           }}
-          className="p-3.5 flex items-start gap-3 cursor-pointer active:bg-white/4 transition-colors"
+          className="p-3.5 flex items-start gap-3 cursor-pointer active:bg-foreground/4 transition-colors"
         >
           <div className="flex-1 min-w-0 pr-1">
             {/* Tags row */}
@@ -282,14 +282,14 @@ function ItineraryCard({
           <div onClick={(e) => e.stopPropagation()}>
             <DropdownMenu>
               <DropdownMenuTrigger
-                className="p-2 rounded-xl text-slate-500 hover:text-slate-200 hover:bg-white/8 active:bg-white/12 transition-all focus:outline-none"
+                className="p-2 rounded-xl text-slate-500 hover:text-slate-200 hover:bg-foreground/8 active:bg-foreground/12 transition-all focus:outline-none"
                 aria-label="Actions"
               >
                 <MoreVertical size={16} />
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="end"
-                className="glass-strong border-white/10 text-slate-200 min-w-44 bg-slate-900/95 backdrop-blur"
+                className="glass-strong border-foreground/10 text-slate-200 min-w-44 bg-slate-900/95 backdrop-blur"
               >
                 <DropdownMenuItem
                   className="gap-2 cursor-pointer"
@@ -338,7 +338,7 @@ function ConfirmDelete({
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         onClick={(e) => e.stopPropagation()}
-        className="glass-strong border border-white/10 rounded-2xl p-5 max-w-sm w-full space-y-4"
+        className="glass-strong border border-foreground/10 rounded-2xl p-5 max-w-sm w-full space-y-4"
       >
         <div>
           <h3 className="text-lg font-bold text-slate-100">
@@ -354,7 +354,7 @@ function ConfirmDelete({
             type="button"
             onClick={onCancel}
             disabled={deleting}
-            className="flex-1 h-11 rounded-lg bg-white/5 hover:bg-white/8 text-slate-300 text-sm font-medium transition-colors"
+            className="flex-1 h-11 rounded-lg bg-foreground/5 hover:bg-foreground/8 text-slate-300 text-sm font-medium transition-colors"
           >
             Annuler
           </button>

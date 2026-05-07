@@ -313,10 +313,10 @@ export function ExpenseForm({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="glass-strong border-white/10 max-w-md p-0 max-h-[92vh] overflow-hidden flex flex-col"
+        className="glass-strong border-foreground/10 max-w-md p-0 max-h-[92vh] overflow-hidden flex flex-col"
         showCloseButton={false}
       >
-        <DialogHeader className="px-5 pt-5 pb-3 border-b border-white/8">
+        <DialogHeader className="px-5 pt-5 pb-3 border-b border-foreground/8">
           <DialogTitle className="text-slate-100 text-xl">
             {isEdit ? "Modifier la dépense" : "Nouvelle dépense"}
           </DialogTitle>
@@ -346,7 +346,7 @@ export function ExpenseForm({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Restaurant, courses, taxi…"
-              className="bg-white/8 border-white/10 text-slate-100 placeholder:text-slate-500 focus-visible:ring-indigo-500/50"
+              className="bg-foreground/8 border-foreground/10 text-slate-100 placeholder:text-slate-500 focus-visible:ring-indigo-500/50"
             />
           </div>
 
@@ -367,7 +367,7 @@ export function ExpenseForm({
                       "flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all active:scale-95",
                       selected
                         ? cn(cfg.bg, cfg.color, "border-current ring-1", cfg.ring)
-                        : "bg-white/4 border-white/8 text-slate-400 hover:bg-white/8"
+                        : "bg-foreground/4 border-foreground/8 text-slate-400 hover:bg-foreground/8"
                     )}
                   >
                     <Icon size={22} />
@@ -385,7 +385,7 @@ export function ExpenseForm({
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="bg-white/8 border-white/10 text-slate-100 [color-scheme:dark]"
+              className="bg-foreground/8 border-foreground/10 text-slate-100 [color-scheme:dark]"
             />
           </div>
 
@@ -404,7 +404,7 @@ export function ExpenseForm({
                       "flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all active:scale-95",
                       selected
                         ? "border-indigo-400 bg-indigo-500/15 text-indigo-200"
-                        : "border-white/10 bg-white/4 text-slate-300 hover:bg-white/8"
+                        : "border-foreground/10 bg-foreground/4 text-slate-300 hover:bg-foreground/8"
                     )}
                   >
                     <span
@@ -435,7 +435,7 @@ export function ExpenseForm({
             )}
 
             <Tabs value={splitMode} onValueChange={handleSplitModeChange}>
-              <TabsList className="grid grid-cols-3 w-full bg-white/4 border border-white/8">
+              <TabsList className="grid grid-cols-3 w-full bg-foreground/4 border border-foreground/8">
                 <TabsTrigger
                   value="equal"
                   className="data-[state=active]:bg-indigo-500/20 data-[state=active]:text-indigo-300"
@@ -476,8 +476,8 @@ export function ExpenseForm({
                       split.excluded
                         ? isNew
                           ? "border-amber-500/40 bg-amber-500/5"
-                          : "border-white/4 bg-white/2 opacity-50"
-                        : "border-white/8 bg-white/4"
+                          : "border-foreground/4 bg-foreground/2 opacity-50"
+                        : "border-foreground/8 bg-foreground/4"
                     )}
                   >
                     {splitMode === "equal" && (
@@ -542,7 +542,7 @@ export function ExpenseForm({
                           onChange={(e) =>
                             setPercentage(p.id, Number(e.target.value) || 0)
                           }
-                          className="w-16 text-right bg-white/8 border border-white/10 rounded-lg px-2 py-1 text-sm text-slate-100 focus:outline-none focus:border-indigo-400 tabular-nums"
+                          className="w-16 text-right bg-foreground/8 border border-foreground/10 rounded-lg px-2 py-1 text-sm text-slate-100 focus:outline-none focus:border-indigo-400 tabular-nums"
                         />
                         <span className="text-xs text-slate-500">%</span>
                         <span className="text-xs text-slate-400 w-16 text-right tabular-nums">
@@ -562,7 +562,7 @@ export function ExpenseForm({
                           onChange={(e) =>
                             setFixedAmount(p.id, Number(e.target.value) || 0)
                           }
-                          className="w-20 text-right bg-white/8 border border-white/10 rounded-lg px-2 py-1 text-sm text-slate-100 focus:outline-none focus:border-indigo-400 tabular-nums"
+                          className="w-20 text-right bg-foreground/8 border border-foreground/10 rounded-lg px-2 py-1 text-sm text-slate-100 focus:outline-none focus:border-indigo-400 tabular-nums"
                         />
                         <span className="text-xs text-slate-500 w-6">
                           {currency.slice(0, 3)}
@@ -587,14 +587,14 @@ export function ExpenseForm({
 
         {/* Sticky footer */}
         <div
-          className="px-5 py-3 border-t border-white/8 bg-slate-900/50"
+          className="px-5 py-3 border-t border-foreground/8 bg-slate-900/50"
           style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 0.75rem)" }}
         >
           <div className="flex gap-2">
             <Button
               variant="ghost"
               onClick={() => onOpenChange(false)}
-              className="flex-1 text-slate-400 hover:text-slate-200 hover:bg-white/8"
+              className="flex-1 text-slate-400 hover:text-slate-200 hover:bg-foreground/8"
             >
               Annuler
             </Button>

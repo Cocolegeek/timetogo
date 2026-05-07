@@ -59,7 +59,7 @@ export function TripCard({ trip, onEdit, onDelete, index }: TripCardProps) {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
-      className="relative glass rounded-2xl overflow-hidden hover:border-white/15 transition-all duration-200 active:scale-[0.99]"
+      className="relative glass rounded-2xl overflow-hidden hover:border-foreground/15 transition-all duration-200 active:scale-[0.99]"
     >
       <Link href={`/trips/${trip.id}`} className="block p-4">
         {/* Top row — leaves space for the absolute 3-dots menu (pr-12) */}
@@ -118,7 +118,7 @@ export function TripCard({ trip, onEdit, onDelete, index }: TripCardProps) {
       <div className="absolute top-2.5 right-2.5">
         <DropdownMenu>
           <DropdownMenuTrigger
-            className="p-2 rounded-xl text-slate-500 hover:text-slate-200 hover:bg-white/8 active:bg-white/12 transition-all focus:outline-none"
+            className="p-2 rounded-xl text-slate-500 hover:text-slate-200 hover:bg-foreground/8 active:bg-foreground/12 transition-all focus:outline-none"
             aria-label="Actions"
           >
             <MoreVertical size={18} />
@@ -126,7 +126,7 @@ export function TripCard({ trip, onEdit, onDelete, index }: TripCardProps) {
 
           <DropdownMenuContent
             align="end"
-            className="glass-strong border-white/10 text-slate-200 min-w-44 bg-slate-900/95 backdrop-blur"
+            className="glass-strong border-foreground/10 text-slate-200 min-w-44 bg-slate-900/95 backdrop-blur"
           >
             <DropdownMenuItem
               className="gap-2 cursor-pointer"

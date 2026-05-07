@@ -145,10 +145,10 @@ export function TripEditDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="glass-strong border-white/10 max-w-md p-0 max-h-[92vh] overflow-hidden flex flex-col"
+        className="glass-strong border-foreground/10 max-w-md p-0 max-h-[92vh] overflow-hidden flex flex-col"
         showCloseButton={false}
       >
-        <DialogHeader className="px-5 pt-5 pb-3 border-b border-white/8">
+        <DialogHeader className="px-5 pt-5 pb-3 border-b border-foreground/8">
           <DialogTitle className="text-slate-100 text-xl">
             Modifier le voyage
           </DialogTitle>
@@ -160,11 +160,11 @@ export function TripEditDialog({
             <Label className="text-slate-300 text-sm font-medium">
               Nom du voyage
             </Label>
-            <div className="flex items-stretch gap-2 bg-white/8 border border-white/10 rounded-lg focus-within:ring-3 focus-within:ring-indigo-500/40 transition-all overflow-hidden">
+            <div className="flex items-stretch gap-2 bg-foreground/8 border border-foreground/10 rounded-lg focus-within:ring-3 focus-within:ring-indigo-500/40 transition-all overflow-hidden">
               <button
                 type="button"
                 onClick={() => setEmojiPickerOpen((v) => !v)}
-                className="w-12 h-11 flex items-center justify-center text-2xl hover:bg-white/8 active:bg-white/12 transition-colors shrink-0"
+                className="w-12 h-11 flex items-center justify-center text-2xl hover:bg-foreground/8 active:bg-foreground/12 transition-colors shrink-0"
                 aria-label="Changer l'emoji"
               >
                 {emoji}
@@ -198,7 +198,7 @@ export function TripEditDialog({
                           "w-10 h-10 rounded-lg text-xl transition-all",
                           emoji === e
                             ? "bg-indigo-500/20 ring-1 ring-indigo-400/50"
-                            : "hover:bg-white/8 active:bg-white/12"
+                            : "hover:bg-foreground/8 active:bg-foreground/12"
                         )}
                       >
                         {e}
@@ -217,7 +217,7 @@ export function TripEditDialog({
               value={destination}
               onChange={setDestination}
               placeholder="Rome, Italie"
-              className="bg-white/8 border-white/10 text-slate-100 placeholder:text-slate-500 focus-visible:ring-indigo-500/50"
+              className="bg-foreground/8 border-foreground/10 text-slate-100 placeholder:text-slate-500 focus-visible:ring-indigo-500/50"
             />
           </div>
 
@@ -229,7 +229,7 @@ export function TripEditDialog({
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="bg-white/8 border-white/10 text-slate-100 [color-scheme:dark]"
+                className="bg-foreground/8 border-foreground/10 text-slate-100 [color-scheme:dark]"
               />
             </div>
             <div className="space-y-1.5">
@@ -238,7 +238,7 @@ export function TripEditDialog({
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="bg-white/8 border-white/10 text-slate-100 [color-scheme:dark]"
+                className="bg-foreground/8 border-foreground/10 text-slate-100 [color-scheme:dark]"
               />
             </div>
           </div>
@@ -258,7 +258,7 @@ export function TripEditDialog({
                     "px-3 py-1.5 rounded-xl text-sm font-medium transition-all active:scale-95",
                     currency === c
                       ? "bg-indigo-500/20 text-indigo-300 ring-1 ring-indigo-500/50"
-                      : "bg-white/5 text-slate-400 hover:bg-white/10"
+                      : "bg-foreground/5 text-slate-400 hover:bg-foreground/10"
                   )}
                 >
                   {c}
@@ -288,7 +288,7 @@ export function TripEditDialog({
             </Button>
           )}
 
-          <div className="border-t border-white/8 -mx-5" />
+          <div className="border-t border-foreground/8 -mx-5" />
 
           {/* Participants */}
           <div className="space-y-3">
@@ -302,7 +302,7 @@ export function TripEditDialog({
                 return (
                   <div
                     key={p.id}
-                    className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/4 border border-white/8"
+                    className="flex items-center gap-2 px-3 py-2 rounded-xl bg-foreground/4 border border-foreground/8"
                   >
                     <span
                       className="w-3 h-3 rounded-full shrink-0"
@@ -323,7 +323,7 @@ export function TripEditDialog({
                         <button
                           type="button"
                           onClick={confirmEditingParticipant}
-                          className="p-1.5 rounded-lg text-emerald-400 hover:bg-white/8"
+                          className="p-1.5 rounded-lg text-emerald-400 hover:bg-foreground/8"
                         >
                           <Check size={14} />
                         </button>
@@ -336,7 +336,7 @@ export function TripEditDialog({
                         <button
                           type="button"
                           onClick={() => startEditingParticipant(p)}
-                          className="p-1.5 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-white/8"
+                          className="p-1.5 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-foreground/8"
                         >
                           <Pencil size={13} />
                         </button>
@@ -365,7 +365,7 @@ export function TripEditDialog({
                   }
                 }}
                 placeholder="Ajouter un voyageur"
-                className="bg-white/8 border-white/10 text-slate-100 placeholder:text-slate-500"
+                className="bg-foreground/8 border-foreground/10 text-slate-100 placeholder:text-slate-500"
               />
               <Button
                 type="button"
@@ -381,7 +381,7 @@ export function TripEditDialog({
 
         {/* Footer */}
         <div
-          className="px-5 py-3 border-t border-white/8 bg-slate-900/50"
+          className="px-5 py-3 border-t border-foreground/8 bg-slate-900/50"
           style={{
             paddingBottom: "calc(env(safe-area-inset-bottom) + 0.75rem)",
           }}
@@ -389,7 +389,7 @@ export function TripEditDialog({
           <Button
             onClick={() => onOpenChange(false)}
             variant="ghost"
-            className="w-full text-slate-300 hover:text-slate-100 hover:bg-white/8"
+            className="w-full text-slate-300 hover:text-slate-100 hover:bg-foreground/8"
           >
             Fermer
           </Button>

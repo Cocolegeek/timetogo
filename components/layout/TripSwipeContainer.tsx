@@ -143,7 +143,7 @@ export function TripSwipeContainer({
       {prevTab && (
         <motion.div
           aria-hidden
-          className="fixed left-3 top-1/2 -translate-y-1/2 z-30 pointer-events-none flex items-center gap-2 px-3 py-2 rounded-2xl glass-strong border border-white/10 text-sm font-semibold text-slate-100 shadow-lg"
+          className="fixed left-3 top-1/2 -translate-y-1/2 z-30 pointer-events-none flex items-center gap-2 px-3 py-2 rounded-2xl glass-strong border border-foreground/10 text-sm font-semibold text-slate-100 shadow-lg"
           style={{ opacity: prevOpacity, scale: prevScale, x: prevX }}
         >
           <prevTab.Icon size={16} className="text-indigo-300" />
@@ -155,7 +155,7 @@ export function TripSwipeContainer({
       {nextTab && (
         <motion.div
           aria-hidden
-          className="fixed right-3 top-1/2 -translate-y-1/2 z-30 pointer-events-none flex items-center gap-2 px-3 py-2 rounded-2xl glass-strong border border-white/10 text-sm font-semibold text-slate-100 shadow-lg"
+          className="fixed right-3 top-1/2 -translate-y-1/2 z-30 pointer-events-none flex items-center gap-2 px-3 py-2 rounded-2xl glass-strong border border-foreground/10 text-sm font-semibold text-slate-100 shadow-lg"
           style={{ opacity: nextOpacity, scale: nextScale, x: nextX }}
         >
           {nextTab.label}

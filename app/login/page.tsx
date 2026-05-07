@@ -46,7 +46,7 @@ function LoginForm() {
           </div>
         </div>
 
-        <div className="border-t border-white/8" />
+        <div className="border-t border-foreground/8" />
 
         {/* Sign in */}
         <div className="space-y-3">

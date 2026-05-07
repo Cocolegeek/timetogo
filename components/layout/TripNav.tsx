@@ -22,7 +22,7 @@ export function TripNav({ tripId }: TripNavProps) {
 
   return (
     <nav
-      className="fixed bottom-0 inset-x-0 z-40 glass-strong border-t border-white/8"
+      className="fixed bottom-0 inset-x-0 z-40 glass-strong border-t border-foreground/8"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
       <div className="max-w-3xl mx-auto px-2">
