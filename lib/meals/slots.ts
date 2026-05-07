@@ -2,36 +2,41 @@ import type { MealSlot } from "@/types";
 
 export interface SlotConfig {
   slot: MealSlot;
-  /** Default title used when auto-generating a meal slot. */
-  defaultTitle: string;
   /** Compact label shown on cards (uppercase). */
   shortLabel: string;
   position: number;
   emoji: string;
+  /** Tailwind class for the colored left-strip when the meal is filled. */
+  stripClass: string;
+  /** Tailwind text-color class matching the strip (used on badges/etc.). */
+  textClass: string;
 }
 
 /** Three fixed slots auto-generated for every day of a trip. */
 export const DEFAULT_SLOTS: SlotConfig[] = [
   {
     slot: "breakfast",
-    defaultTitle: "Matin",
     shortLabel: "MATIN",
     position: 0,
     emoji: "🥐",
+    stripClass: "bg-amber-500",
+    textClass: "text-amber-300",
   },
   {
     slot: "lunch",
-    defaultTitle: "Midi",
     shortLabel: "MIDI",
     position: 1,
     emoji: "🍝",
+    stripClass: "bg-sky-500",
+    textClass: "text-sky-300",
   },
   {
     slot: "dinner",
-    defaultTitle: "Soir",
     shortLabel: "SOIR",
     position: 2,
     emoji: "🍽️",
+    stripClass: "bg-violet-500",
+    textClass: "text-violet-300",
   },
 ];
 
@@ -53,7 +58,11 @@ export function eachDate(startISO: string, endISO: string): string[] {
   return out;
 }
 
-/** Build the rows (snake_case for Supabase) to insert in `meals` for a fresh trip. */
+/**
+ * Build the rows (snake_case for Supabase) to insert in `meals` for a fresh trip.
+ * Titles are intentionally left blank so the UI shows "non renseigné" until
+ * the user actually names the meal.
+ */
 export function buildDefaultMealRows(
   tripId: string,
   startDate: string,
@@ -77,7 +86,7 @@ export function buildDefaultMealRows(
         trip_id: tripId,
         date,
         slot: slot.slot,
-        title: slot.defaultTitle,
+        title: "",
         category: "home",
         position: slot.position,
         participant_ids: [],

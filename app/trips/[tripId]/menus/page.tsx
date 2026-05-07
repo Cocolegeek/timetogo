@@ -190,6 +190,7 @@ function MealCard({
 }) {
   const slotCfg = SLOT_CONFIG[meal.slot];
   const catCfg = CATEGORY_CONFIG[meal.category];
+  const isEmpty = !meal.title.trim();
 
   const cooks = participants.filter((p) => meal.cookIds.includes(p.id));
   const cookLabel =
@@ -210,7 +211,13 @@ function MealCard({
 
   return (
     <motion.div layout>
-      <GlassCard padding={false} className="overflow-hidden">
+      <GlassCard
+        padding={false}
+        className={cn(
+          "overflow-hidden transition-opacity",
+          isEmpty && "opacity-55 hover:opacity-80"
+        )}
+      >
         <div
           role="button"
           tabIndex={0}
@@ -220,43 +227,63 @@ function MealCard({
           }}
           className="flex cursor-pointer active:bg-white/4 transition-colors"
         >
-          {/* Colored left strip — visual category at a glance */}
-          <div className={cn("w-1.5 shrink-0", catCfg.stripClass)} />
+          {/* Left strip — slot color when filled, neutral grey when empty */}
+          <div
+            className={cn(
+              "w-1.5 shrink-0",
+              isEmpty ? "bg-slate-600/40" : slotCfg.stripClass
+            )}
+          />
 
           <div className="flex-1 min-w-0 p-3.5">
-            {/* Top row: slot label + category badge */}
+            {/* Top row: slot label + category badge (only when filled) */}
             <div className="flex items-center justify-between gap-2 mb-1.5">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                {slotCfg.shortLabel}
-              </span>
               <span
                 className={cn(
-                  "text-[11px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap",
-                  catCfg.badgeClass
+                  "text-[11px] font-bold uppercase tracking-wider",
+                  isEmpty ? "text-slate-500" : slotCfg.textClass
                 )}
               >
-                {catCfg.label}
+                {slotCfg.shortLabel}
               </span>
-            </div>
-
-            {/* Title — main info */}
-            <p className="text-base font-semibold text-slate-100 leading-tight truncate">
-              {meal.title}
-            </p>
-
-            {/* Footer: cook + eaters */}
-            <div className="flex items-center gap-3 mt-2 text-xs text-slate-400">
-              {cookLabel && (
-                <span className="flex items-center gap-1">
-                  <ChefHat size={12} className="text-amber-400/80" />
-                  {cookLabel}
+              {!isEmpty && (
+                <span
+                  className={cn(
+                    "text-[11px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap",
+                    catCfg.badgeClass
+                  )}
+                >
+                  {catCfg.label}
                 </span>
               )}
-              <span className="flex items-center gap-1">
-                <Users size={12} className="text-slate-500" />
-                {eaterLabel}
-              </span>
             </div>
+
+            {/* Title (or placeholder hint) */}
+            {isEmpty ? (
+              <p className="text-sm text-slate-500 italic">
+                Repas non renseigné — tap pour ajouter
+              </p>
+            ) : (
+              <p className="text-base font-semibold text-slate-100 leading-tight truncate">
+                {meal.title}
+              </p>
+            )}
+
+            {/* Footer: cook + eaters — only when filled */}
+            {!isEmpty && (
+              <div className="flex items-center gap-3 mt-2 text-xs text-slate-400">
+                {cookLabel && (
+                  <span className="flex items-center gap-1">
+                    <ChefHat size={12} className="text-amber-400/80" />
+                    {cookLabel}
+                  </span>
+                )}
+                <span className="flex items-center gap-1">
+                  <Users size={12} className="text-slate-500" />
+                  {eaterLabel}
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </GlassCard>
