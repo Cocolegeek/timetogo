@@ -6,7 +6,6 @@ import {
   RefreshCw,
   Plus,
   UtensilsCrossed,
-  Users,
   ChevronRight,
 } from "lucide-react";
 import { GlassCard } from "@/components/layout/GlassCard";
@@ -19,6 +18,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { MealEditDialog } from "@/components/menus/MealEditDialog";
+import { ParticipantStack } from "@/components/shared/ParticipantStack";
 import { useTrip } from "@/hooks/useTrip";
 import { useMeals } from "@/hooks/useMeals";
 import { SLOT_CONFIG, eachDate } from "@/lib/meals/slots";
@@ -276,23 +276,11 @@ function MealRow({
             </p>
           )}
           {involved.length > 0 && (
-            <div className="flex items-center gap-1.5 mt-1.5 text-xs text-slate-500">
-              <Users size={11} />
-              {everyone ? (
-                <span>Tout le monde</span>
-              ) : (
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  {involved.map((p) => (
-                    <span key={p.id} className="flex items-center gap-1">
-                      <span
-                        className="w-1.5 h-1.5 rounded-full"
-                        style={{ backgroundColor: p.color }}
-                      />
-                      {p.name}
-                    </span>
-                  ))}
-                </div>
-              )}
+            <div className="mt-1.5">
+              <ParticipantStack
+                participants={involved}
+                everyone={everyone}
+              />
             </div>
           )}
         </div>

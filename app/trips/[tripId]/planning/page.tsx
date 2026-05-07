@@ -11,7 +11,6 @@ import {
   MoreVertical,
   Pencil,
   Trash2,
-  Users,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { GlassCard } from "@/components/layout/GlassCard";
@@ -30,6 +29,7 @@ import {
   ItineraryItemForm,
   type ItineraryFormValues,
 } from "@/components/planning/ItineraryItemForm";
+import { ParticipantStack } from "@/components/shared/ParticipantStack";
 import { formatDuration } from "@/lib/format-date";
 import { cn } from "@/lib/utils";
 import type { ItineraryItem, ItineraryType, Participant } from "@/types";
@@ -267,28 +267,13 @@ function ItineraryCard({
               <p className="text-sm text-slate-500 mt-1">{item.description}</p>
             )}
 
-            {/* Participants */}
+            {/* Participants — visible avatar stack */}
             {involved.length > 0 && (
-              <div className="flex items-center gap-2 mt-2.5">
-                <Users size={12} className="text-slate-500" />
-                {everyone ? (
-                  <span className="text-xs text-slate-400">Tout le monde</span>
-                ) : (
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    {involved.map((p) => (
-                      <span
-                        key={p.id}
-                        className="flex items-center gap-1 text-xs text-slate-300"
-                      >
-                        <span
-                          className="w-2 h-2 rounded-full"
-                          style={{ backgroundColor: p.color }}
-                        />
-                        {p.name}
-                      </span>
-                    ))}
-                  </div>
-                )}
+              <div className="mt-2.5">
+                <ParticipantStack
+                  participants={involved}
+                  everyone={everyone}
+                />
               </div>
             )}
           </div>
