@@ -89,12 +89,8 @@ export default function BudgetPage({ params }: BudgetPageProps) {
 
   return (
     <div className="space-y-5">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-bold text-slate-100">Budget</h1>
-          <p className="text-sm text-slate-500 mt-0.5 truncate">{trip.name}</p>
-        </div>
+      {/* Refresh action only — title is redundant with bottom nav */}
+      <div className="flex justify-end -mt-1 -mb-2">
         <button
           onClick={handleRefresh}
           disabled={refreshing}

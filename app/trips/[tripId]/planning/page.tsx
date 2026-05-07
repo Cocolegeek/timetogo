@@ -99,11 +99,8 @@ export default function PlanningPage({ params }: PlanningPageProps) {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-100">Planning</h1>
-          <p className="text-sm text-slate-500 mt-0.5">{trip?.name}</p>
-        </div>
+      {/* Refresh action only — title is redundant with bottom nav */}
+      <div className="flex justify-end -mt-1 -mb-2">
         <button
           onClick={handleRefresh}
           disabled={refreshing}

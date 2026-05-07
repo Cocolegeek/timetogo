@@ -1,7 +1,7 @@
 "use client";
 
 import { use, useState } from "react";
-import { Plus, CheckSquare, Check } from "lucide-react";
+import { Plus, CheckSquare, Check, RefreshCw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { GlassCard } from "@/components/layout/GlassCard";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { useChecklist } from "@/hooks/useChecklist";
-import { useTrip } from "@/hooks/useTrip";
 import { cn } from "@/lib/utils";
 import type { ChecklistCategory } from "@/types";
 
@@ -40,13 +39,19 @@ const QUICK_ITEMS: Record<ChecklistCategory, string[]> = {
 
 export default function ChecklistPage({ params }: ChecklistPageProps) {
   const { tripId } = use(params);
-  const { trip } = useTrip(tripId);
-  const { items, addItem, toggleItem, deleteItem, checkedCount, totalCount } =
+  const { items, addItem, toggleItem, deleteItem, checkedCount, totalCount, refetch } =
     useChecklist(tripId);
 
   const [newText, setNewText] = useState("");
   const [selectedCategory, setSelectedCategory] =
     useState<ChecklistCategory>("other");
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await refetch();
+    setTimeout(() => setRefreshing(false), 400);
+  };
 
   const handleAdd = async () => {
     if (!newText.trim()) return;
@@ -72,10 +77,16 @@ export default function ChecklistPage({ params }: ChecklistPageProps) {
 
   return (
     <div className="space-y-5">
-      {/* Header */}
-      <div>
-        <h1 className="text-xl font-bold text-slate-100">Checklist</h1>
-        <p className="text-sm text-slate-400 mt-0.5">{trip?.name}</p>
+      {/* Refresh action only — title is redundant with bottom nav */}
+      <div className="flex justify-end -mt-1 -mb-2">
+        <button
+          onClick={handleRefresh}
+          disabled={refreshing}
+          className="p-2 -mr-2 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/8 active:bg-white/12 transition-all"
+          title="Actualiser"
+        >
+          <RefreshCw size={18} className={refreshing ? "animate-spin" : ""} />
+        </button>
       </div>
 
       {/* Progress */}
