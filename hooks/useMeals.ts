@@ -1,25 +1,29 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { v4 as uuidv4 } from "uuid";
 import { createClient } from "@/lib/supabase/client";
 import { buildDefaultMealRows } from "@/lib/meals/slots";
-import type { Dish, Meal, MealSlot } from "@/types";
+import type { Ingredient, Meal, MealCategory, MealSlot } from "@/types";
 
 function rowToMeal(row: Record<string, unknown>): Meal {
   const participantIds = Array.isArray(row.participant_ids)
     ? (row.participant_ids as string[])
     : [];
-  const dishes = Array.isArray(row.dishes) ? (row.dishes as Dish[]) : [];
+  const cookIds = Array.isArray(row.cook_ids) ? (row.cook_ids as string[]) : [];
+  const ingredients = Array.isArray(row.ingredients)
+    ? (row.ingredients as Ingredient[])
+    : [];
   return {
     id: row.id as string,
     tripId: row.trip_id as string,
     date: row.date as string,
     slot: row.slot as MealSlot,
+    category: ((row.category as string) ?? "home") as MealCategory,
     title: row.title as string,
     notes: (row.notes as string | null) ?? undefined,
     participantIds,
-    dishes,
+    cookIds,
+    ingredients,
     position: (row.position as number) ?? 0,
     createdAt: row.created_at as string,
   };
@@ -40,6 +44,7 @@ export function useMeals(
       .from("meals")
       .select("*")
       .eq("trip_id", tripId)
+      .in("slot", ["breakfast", "lunch", "dinner"]) // ignore any legacy snack/apero/extra rows
       .order("date")
       .order("position");
 
@@ -68,68 +73,56 @@ export function useMeals(
 
   const updateMeal = async (
     id: string,
-    data: Partial<Pick<Meal, "title" | "notes" | "participantIds" | "dishes">>
+    data: Partial<
+      Pick<
+        Meal,
+        | "title"
+        | "category"
+        | "notes"
+        | "participantIds"
+        | "cookIds"
+        | "ingredients"
+      >
+    >
   ): Promise<void> => {
     const supabase = createClient();
-    await supabase
+    const { error } = await supabase
       .from("meals")
       .update({
         ...(data.title !== undefined && { title: data.title }),
+        ...(data.category !== undefined && { category: data.category }),
         ...(data.notes !== undefined && { notes: data.notes ?? null }),
         ...(data.participantIds !== undefined && {
           participant_ids: data.participantIds,
         }),
-        ...(data.dishes !== undefined && { dishes: data.dishes }),
+        ...(data.cookIds !== undefined && { cook_ids: data.cookIds }),
+        ...(data.ingredients !== undefined && {
+          ingredients: data.ingredients,
+        }),
       })
       .eq("id", id);
-    await fetchMeals();
-  };
-
-  /** Add an extra meal slot to a given date (e.g. another apero, snack…). */
-  const addExtraMeal = async (
-    date: string,
-    slot: MealSlot,
-    title: string
-  ): Promise<void> => {
-    const supabase = createClient();
-    // Place new extras at the end of the day
-    const dayMaxPos =
-      meals
-        .filter((m) => m.date === date)
-        .reduce((max, m) => Math.max(max, m.position), -1) + 1;
-
-    await supabase.from("meals").insert({
-      trip_id: tripId,
-      date,
-      slot,
-      title,
-      position: Math.max(dayMaxPos, 100),
-      participant_ids: [],
-      dishes: [],
-    });
+    if (error) {
+      console.error("updateMeal failed:", error);
+      throw new Error(error.message);
+    }
     await fetchMeals();
   };
 
   const deleteMeal = async (id: string): Promise<void> => {
     const supabase = createClient();
-    await supabase.from("meals").delete().eq("id", id);
+    const { error } = await supabase.from("meals").delete().eq("id", id);
+    if (error) {
+      console.error("deleteMeal failed:", error);
+      throw new Error(error.message);
+    }
     await fetchMeals();
   };
-
-  /** Convenience helper to create a Dish with a fresh ID. */
-  const newDish = (name = "", ingredients: string[] = []): Dish => ({
-    id: uuidv4(),
-    name,
-    ingredients,
-  });
 
   return {
     meals,
     loading,
     refetch: fetchMeals,
     updateMeal,
-    addExtraMeal,
     deleteMeal,
-    newDish,
   };
 }

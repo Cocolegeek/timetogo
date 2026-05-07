@@ -2,29 +2,42 @@ import type { MealSlot } from "@/types";
 
 export interface SlotConfig {
   slot: MealSlot;
-  title: string;
-  /** Default position (0..4 for default slots, ≥ 100 for extras). */
+  /** Default title used when auto-generating a meal slot. */
+  defaultTitle: string;
+  /** Compact label shown on cards (uppercase). */
+  shortLabel: string;
   position: number;
   emoji: string;
 }
 
-/** Default slots auto-generated for every day of a trip (in chronological order). */
+/** Three fixed slots auto-generated for every day of a trip. */
 export const DEFAULT_SLOTS: SlotConfig[] = [
-  { slot: "breakfast", title: "Petit-déjeuner", position: 0, emoji: "🥐" },
-  { slot: "lunch", title: "Déjeuner", position: 1, emoji: "🍝" },
-  { slot: "snack", title: "Goûter", position: 2, emoji: "🍪" },
-  { slot: "dinner", title: "Dîner", position: 3, emoji: "🍽️" },
-  { slot: "apero", title: "Apéro", position: 4, emoji: "🍷" },
+  {
+    slot: "breakfast",
+    defaultTitle: "Matin",
+    shortLabel: "MATIN",
+    position: 0,
+    emoji: "🥐",
+  },
+  {
+    slot: "lunch",
+    defaultTitle: "Midi",
+    shortLabel: "MIDI",
+    position: 1,
+    emoji: "🍝",
+  },
+  {
+    slot: "dinner",
+    defaultTitle: "Soir",
+    shortLabel: "SOIR",
+    position: 2,
+    emoji: "🍽️",
+  },
 ];
 
-export const SLOT_CONFIG: Record<MealSlot, { title: string; emoji: string }> = {
-  breakfast: { title: "Petit-déjeuner", emoji: "🥐" },
-  lunch: { title: "Déjeuner", emoji: "🍝" },
-  snack: { title: "Goûter", emoji: "🍪" },
-  dinner: { title: "Dîner", emoji: "🍽️" },
-  apero: { title: "Apéro", emoji: "🍷" },
-  extra: { title: "Repas", emoji: "🍴" },
-};
+export const SLOT_CONFIG: Record<MealSlot, SlotConfig> = Object.fromEntries(
+  DEFAULT_SLOTS.map((s) => [s.slot, s])
+) as Record<MealSlot, SlotConfig>;
 
 /** Iterate every date string (YYYY-MM-DD) between start and end (inclusive). */
 export function eachDate(startISO: string, endISO: string): string[] {
@@ -51,9 +64,11 @@ export function buildDefaultMealRows(
     date: string;
     slot: MealSlot;
     title: string;
+    category: "home";
     position: number;
     participant_ids: string[];
-    dishes: never[];
+    cook_ids: string[];
+    ingredients: never[];
   }> = [];
 
   for (const date of eachDate(startDate, endDate)) {
@@ -62,10 +77,12 @@ export function buildDefaultMealRows(
         trip_id: tripId,
         date,
         slot: slot.slot,
-        title: slot.title,
+        title: slot.defaultTitle,
+        category: "home",
         position: slot.position,
         participant_ids: [],
-        dishes: [],
+        cook_ids: [],
+        ingredients: [],
       });
     }
   }

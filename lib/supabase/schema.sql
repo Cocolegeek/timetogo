@@ -208,11 +208,13 @@ CREATE TABLE IF NOT EXISTS public.meals (
   id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   trip_id         uuid NOT NULL REFERENCES public.trips(id) ON DELETE CASCADE,
   date            date NOT NULL,
-  slot            text NOT NULL,
+  slot            text NOT NULL,                                 -- 'breakfast' | 'lunch' | 'dinner'
+  category        text NOT NULL DEFAULT 'home',                  -- 'home' | 'picnic' | 'restaurant'
   title           text NOT NULL,
   notes           text,
-  participant_ids jsonb NOT NULL DEFAULT '[]'::jsonb,
-  dishes          jsonb NOT NULL DEFAULT '[]'::jsonb,
+  participant_ids jsonb NOT NULL DEFAULT '[]'::jsonb,            -- who eats
+  cook_ids        jsonb NOT NULL DEFAULT '[]'::jsonb,            -- who manages/cooks
+  ingredients     jsonb NOT NULL DEFAULT '[]'::jsonb,            -- [{id, name, quantity}]
   position        integer NOT NULL DEFAULT 0,
   created_at      timestamptz DEFAULT now() NOT NULL
 );

@@ -118,19 +118,16 @@ export interface Settlement {
 
 // ─── Menus ────────────────────────────────────────────────────────────────────
 
-export type MealSlot =
-  | "breakfast"
-  | "lunch"
-  | "snack"
-  | "dinner"
-  | "apero"
-  | "extra";
+/** Three fixed slots per day: morning / noon / evening. */
+export type MealSlot = "breakfast" | "lunch" | "dinner";
 
-export interface Dish {
+/** Visual category that drives the badge color. */
+export type MealCategory = "home" | "picnic" | "restaurant";
+
+export interface Ingredient {
   id: string;
   name: string;
-  /** Free-text ingredient list */
-  ingredients: string[];
+  quantity: string;
 }
 
 export interface Meal {
@@ -138,10 +135,14 @@ export interface Meal {
   tripId: string;
   date: string;
   slot: MealSlot;
+  category: MealCategory;
   title: string;
   notes?: string;
+  /** Participants who eat this meal — empty list = "tout le monde" implicit. */
   participantIds: string[];
-  dishes: Dish[];
+  /** Participants in charge of preparing the meal — optional. */
+  cookIds: string[];
+  ingredients: Ingredient[];
   position: number;
   createdAt: string;
 }
