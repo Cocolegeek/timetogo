@@ -3,7 +3,9 @@
 import { useEffect, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, X, Trash2, Loader2 } from "lucide-react";
+import { Plus, X, Trash2, Loader2, ChefHat } from "lucide-react";
+import { RecipeSearch } from "./RecipeSearch";
+import type { RecipeResult } from "@/lib/meals/themealdb";
 import {
   Dialog,
   DialogContent,
@@ -45,6 +47,7 @@ export function MealEditDialog({
   const [dishes, setDishes] = useState<Dish[]>([]);
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [recipeSearchOpen, setRecipeSearchOpen] = useState(false);
 
   // Hydrate when dialog opens
   useEffect(() => {
@@ -75,6 +78,12 @@ export function MealEditDialog({
     setDishes((prev) => [
       ...prev,
       { id: uuidv4(), name: "", ingredients: [] },
+    ]);
+  };
+  const importRecipe = (recipe: RecipeResult) => {
+    setDishes((prev) => [
+      ...prev,
+      { id: uuidv4(), name: recipe.name, ingredients: recipe.ingredients },
     ]);
   };
   const removeDish = (id: string) => {
@@ -253,14 +262,24 @@ export function MealEditDialog({
               ))}
             </AnimatePresence>
 
-            <button
-              type="button"
-              onClick={addDish}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-dashed border-white/15 text-slate-400 hover:border-white/25 hover:text-slate-200 hover:bg-white/4 active:scale-[0.99] transition-all text-sm font-medium"
-            >
-              <Plus size={16} />
-              Ajouter un plat
-            </button>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={addDish}
+                className="flex items-center justify-center gap-2 py-3 rounded-xl border border-dashed border-white/15 text-slate-400 hover:border-white/25 hover:text-slate-200 hover:bg-white/4 active:scale-[0.99] transition-all text-sm font-medium"
+              >
+                <Plus size={16} />
+                Plat vide
+              </button>
+              <button
+                type="button"
+                onClick={() => setRecipeSearchOpen(true)}
+                className="flex items-center justify-center gap-2 py-3 rounded-xl bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 hover:bg-indigo-500/20 active:scale-[0.99] transition-all text-sm font-medium"
+              >
+                <ChefHat size={16} />
+                Importer recette
+              </button>
+            </div>
           </div>
 
           {/* Notes */}
@@ -344,6 +363,13 @@ export function MealEditDialog({
             </Button>
           </div>
         </div>
+
+        {/* Nested recipe search */}
+        <RecipeSearch
+          open={recipeSearchOpen}
+          onOpenChange={setRecipeSearchOpen}
+          onSelect={importRecipe}
+        />
       </DialogContent>
     </Dialog>
   );
