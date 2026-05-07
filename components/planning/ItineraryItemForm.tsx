@@ -76,6 +76,7 @@ export function ItineraryItemForm({
   const [durationM, setDurationM] = useState("");
   const [selectedParticipantIds, setSelectedParticipantIds] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   // Hydrate when opened
   useEffect(() => {
@@ -107,6 +108,7 @@ export function ItineraryItemForm({
       setDurationM("");
       setSelectedParticipantIds([]);
     }
+    setErrorMsg(null);
   }, [open, initialValues, defaultDate]);
 
   const totalMinutes =
@@ -126,6 +128,7 @@ export function ItineraryItemForm({
   const handleSubmit = async () => {
     if (!title.trim() || !date) return;
     setSaving(true);
+    setErrorMsg(null);
     try {
       await onSubmit({
         title: title.trim(),
@@ -138,6 +141,9 @@ export function ItineraryItemForm({
         participantIds: selectedParticipantIds,
       });
       onOpenChange(false);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Erreur lors de l'enregistrement";
+      setErrorMsg(msg);
     } finally {
       setSaving(false);
     }
@@ -368,11 +374,16 @@ export function ItineraryItemForm({
         </div>
 
         <div
-          className="px-5 py-3 border-t border-white/8 bg-slate-900/50"
+          className="px-5 py-3 border-t border-white/8 bg-slate-900/50 space-y-2"
           style={{
             paddingBottom: "calc(env(safe-area-inset-bottom) + 0.75rem)",
           }}
         >
+          {errorMsg && (
+            <p className="text-sm text-red-300 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+              {errorMsg}
+            </p>
+          )}
           <div className="flex gap-2">
             <Button
               variant="ghost"

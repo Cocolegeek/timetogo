@@ -46,7 +46,7 @@ export function useItinerary(tripId: string) {
     data: Omit<ItineraryItem, "id" | "createdAt" | "tripId">
   ): Promise<void> => {
     const supabase = createClient();
-    await supabase.from("itinerary_items").insert({
+    const { error } = await supabase.from("itinerary_items").insert({
       trip_id: tripId,
       date: data.date,
       time: data.time ?? null,
@@ -57,6 +57,10 @@ export function useItinerary(tripId: string) {
       duration_minutes: data.durationMinutes ?? null,
       participant_ids: data.participantIds ?? [],
     });
+    if (error) {
+      console.error("addItem failed:", error);
+      throw new Error(error.message);
+    }
     await fetchItems();
   };
 
@@ -65,7 +69,7 @@ export function useItinerary(tripId: string) {
     data: Partial<Omit<ItineraryItem, "id" | "createdAt" | "tripId">>
   ): Promise<void> => {
     const supabase = createClient();
-    await supabase
+    const { error } = await supabase
       .from("itinerary_items")
       .update({
         ...(data.date !== undefined && { date: data.date }),
@@ -86,12 +90,23 @@ export function useItinerary(tripId: string) {
         }),
       })
       .eq("id", id);
+    if (error) {
+      console.error("updateItem failed:", error);
+      throw new Error(error.message);
+    }
     await fetchItems();
   };
 
   const deleteItem = async (id: string): Promise<void> => {
     const supabase = createClient();
-    await supabase.from("itinerary_items").delete().eq("id", id);
+    const { error } = await supabase
+      .from("itinerary_items")
+      .delete()
+      .eq("id", id);
+    if (error) {
+      console.error("deleteItem failed:", error);
+      throw new Error(error.message);
+    }
     await fetchItems();
   };
 

@@ -6,12 +6,13 @@ import { motion } from "framer-motion";
 import {
   ArrowLeft,
   Wallet,
-  UtensilsCrossed,
+  Map,
   Share2,
   UserCircle2,
   ChevronDown,
   RefreshCw,
   Pencil,
+  Clock,
 } from "lucide-react";
 import { GlassCard } from "@/components/layout/GlassCard";
 import { Button } from "@/components/ui/button";
@@ -29,9 +30,18 @@ import {
 } from "@/components/ui/dialog";
 import { useTrip } from "@/hooks/useTrip";
 import { useBudget } from "@/hooks/useBudget";
-import { useMeals } from "@/hooks/useMeals";
-import { SLOT_CONFIG } from "@/lib/meals/slots";
+import { useItinerary } from "@/hooks/useItinerary";
+import { pickRelevantPlanningDay, relativeDayLabel } from "@/lib/planning-day";
 import { cn } from "@/lib/utils";
+import type { ItineraryType } from "@/types";
+
+const ITINERARY_EMOJI: Record<ItineraryType, string> = {
+  transport: "🚗",
+  accommodation: "🏨",
+  activity: "🎯",
+  food: "🍽️",
+  other: "📍",
+};
 
 interface TripDashboardProps {
   params: Promise<{ tripId: string }>;
@@ -49,10 +59,8 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
     deleteParticipant,
   } = useTrip(tripId);
   const { expenses, totalSpent, refetch: refetchBudget } = useBudget(tripId);
-  const { meals, refetch: refetchMeals } = useMeals(
-    tripId,
-    trip ? { startDate: trip.startDate, endDate: trip.endDate } : undefined
-  );
+  const { items: itineraryItems, refetch: refetchItinerary } =
+    useItinerary(tripId);
 
   const [shareOpen, setShareOpen] = useState(false);
   const [identityOpen, setIdentityOpen] = useState(false);
@@ -62,7 +70,7 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await Promise.all([refetchTrip(), refetchBudget(), refetchMeals()]);
+    await Promise.all([refetchTrip(), refetchBudget(), refetchItinerary()]);
     setTimeout(() => setRefreshing(false), 400);
   };
 
@@ -84,12 +92,9 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
   const budgetBarColor = getBudgetColor(budgetRawPct);
   const budgetIsOver = trip.totalBudget ? totalSpent > trip.totalBudget : false;
 
-  // Today's meals: only meaningful while the trip is in progress
+  // Most relevant planning day (today if events, else next future, else last past)
   const today = new Date().toISOString().split("T")[0];
-  const isInTrip = today >= trip.startDate && today <= trip.endDate;
-  const todayMeals = isInTrip
-    ? meals.filter((m) => m.date === today).sort((a, b) => a.position - b.position)
-    : [];
+  const relevantDay = pickRelevantPlanningDay(itineraryItems, today);
 
   const tripDuration = Math.round(
     (new Date(trip.endDate).getTime() - new Date(trip.startDate).getTime()) /
@@ -282,53 +287,67 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
           transition={{ delay: 0.1 }}
         >
           <Link
-            href={`/trips/${tripId}/menus`}
+            href={`/trips/${tripId}/planning`}
             className="block h-full active:scale-[0.98] transition-transform"
           >
             <GlassCard className="h-full hover:border-white/15 transition-colors" padding={false}>
               <div className="p-4 flex flex-col gap-2.5 h-full">
-                <div className="flex items-center gap-2">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-500/15 flex items-center justify-center">
-                    <UtensilsCrossed size={19} className="text-emerald-400" />
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="w-10 h-10 rounded-xl bg-sky-500/15 flex items-center justify-center shrink-0">
+                      <Map size={19} className="text-sky-400" />
+                    </div>
+                    <span className="text-sm text-slate-300 font-medium truncate">
+                      Planning
+                    </span>
                   </div>
-                  <span className="text-sm text-slate-300 font-medium">
-                    {isInTrip ? "Menu du jour" : "Menus"}
-                  </span>
+                  {relevantDay && (
+                    <span
+                      className={cn(
+                        "text-[11px] px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider whitespace-nowrap shrink-0",
+                        relevantDay.daysOffset === 0
+                          ? "bg-emerald-500/15 text-emerald-300"
+                          : relevantDay.daysOffset > 0
+                          ? "bg-sky-500/15 text-sky-300"
+                          : "bg-white/5 text-slate-400"
+                      )}
+                    >
+                      {relativeDayLabel(relevantDay.daysOffset)}
+                    </span>
+                  )}
                 </div>
-                {isInTrip && todayMeals.length > 0 ? (
+                {relevantDay ? (
                   <div className="flex-1 space-y-1">
-                    {todayMeals.slice(0, 3).map((m) => (
-                      <p
-                        key={m.id}
-                        className="text-sm text-slate-300 truncate flex items-center gap-1.5"
+                    {relevantDay.items.slice(0, 3).map((item) => (
+                      <div
+                        key={item.id}
+                        className="flex items-center gap-1.5 text-sm"
                       >
-                        <span>{SLOT_CONFIG[m.slot].emoji}</span>
-                        <span
-                          className={
-                            m.dishes.length === 0
-                              ? "text-slate-500"
-                              : "text-slate-200"
-                          }
-                        >
-                          {m.dishes.length === 0
-                            ? m.title
-                            : m.dishes.map((d) => d.name).join(" · ")}
+                        <span className="shrink-0">
+                          {ITINERARY_EMOJI[item.type]}
                         </span>
-                      </p>
+                        {item.time && (
+                          <span className="text-xs text-slate-500 tabular-nums shrink-0 flex items-center gap-0.5">
+                            <Clock size={10} />
+                            {item.time}
+                          </span>
+                        )}
+                        <span className="text-slate-200 truncate">
+                          {item.title}
+                        </span>
+                      </div>
                     ))}
-                    {todayMeals.length > 3 && (
+                    {relevantDay.items.length > 3 && (
                       <p className="text-xs text-slate-500">
-                        + {todayMeals.length - 3} autre
-                        {todayMeals.length - 3 !== 1 ? "s" : ""}
+                        + {relevantDay.items.length - 3} autre
+                        {relevantDay.items.length - 3 !== 1 ? "s" : ""}
                       </p>
                     )}
                   </div>
                 ) : (
                   <div className="flex-1 flex items-center">
                     <p className="text-sm text-slate-400">
-                      {isInTrip
-                        ? "Aucun repas pour aujourd'hui"
-                        : "Voir les repas planifiés →"}
+                      Aucune étape planifiée →
                     </p>
                   </div>
                 )}
