@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Shield } from "lucide-react";
 import { motion } from "framer-motion";
 import { GlassCard } from "@/components/layout/GlassCard";
@@ -10,17 +9,20 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export default function ConsentPage() {
-  const router = useRouter();
   const [checked, setChecked] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
 
   const handleAccept = async () => {
     if (!checked || loading) return;
     setLoading(true);
+    setError(false);
     try {
-      await fetch("/api/consent", { method: "POST" });
-      router.push("/trips");
-    } finally {
+      const res = await fetch("/api/consent", { method: "POST" });
+      if (!res.ok) throw new Error();
+      window.location.href = "/trips";
+    } catch {
+      setError(true);
       setLoading(false);
     }
   };
@@ -99,6 +101,12 @@ export default function ConsentPage() {
               conformément à la politique de confidentialité.
             </span>
           </button>
+
+          {error && (
+            <p className="text-xs text-red-400 text-center">
+              Une erreur est survenue, réessaie.
+            </p>
+          )}
 
           {/* CTA */}
           <Button
