@@ -51,7 +51,7 @@ export default async function proxy(req: NextRequest) {
   }
 
   // RGPD: redirect authenticated users without consent to /consent
-  if (user && pathname !== "/consent") {
+  if (user && pathname !== "/consent" && !pathname.startsWith("/api/")) {
     const hasConsent = req.cookies.get(CONSENT_COOKIE)?.value === "1";
     if (!hasConsent) {
       return NextResponse.redirect(new URL("/consent", req.nextUrl));
