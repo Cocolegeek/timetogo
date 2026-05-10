@@ -10,33 +10,38 @@ export interface SlotConfig {
   stripClass: string;
   /** Tailwind text-color class matching the strip (used on badges/etc.). */
   textClass: string;
+  /** Tailwind bg class for the pill badge. */
+  bgClass: string;
 }
 
 /** Three fixed slots auto-generated for every day of a trip. */
 export const DEFAULT_SLOTS: SlotConfig[] = [
   {
     slot: "breakfast",
-    shortLabel: "MATIN",
+    shortLabel: "Matin",
     position: 0,
     emoji: "🥐",
     stripClass: "bg-amber-500",
-    textClass: "text-amber-300",
+    textClass: "text-amber-400",
+    bgClass: "bg-amber-400/10",
   },
   {
     slot: "lunch",
-    shortLabel: "MIDI",
+    shortLabel: "Midi",
     position: 1,
     emoji: "🍝",
     stripClass: "bg-sky-500",
-    textClass: "text-sky-300",
+    textClass: "text-sky-400",
+    bgClass: "bg-sky-400/10",
   },
   {
     slot: "dinner",
-    shortLabel: "SOIR",
+    shortLabel: "Soir",
     position: 2,
     emoji: "🍽️",
     stripClass: "bg-violet-500",
-    textClass: "text-violet-300",
+    textClass: "text-violet-400",
+    bgClass: "bg-violet-400/10",
   },
 ];
 
