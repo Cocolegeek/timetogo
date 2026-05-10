@@ -4,20 +4,13 @@ import { motion } from "framer-motion";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { GlassCard } from "@/components/layout/GlassCard";
 import { cn } from "@/lib/utils";
+import { formatCurrency } from "@/lib/format-currency";
 import type { Balance, Participant } from "@/types";
 
 interface BalanceSummaryProps {
   balances: Balance[];
   participants: Participant[];
   currency: string;
-}
-
-function formatAmount(amount: number, currency: string) {
-  return new Intl.NumberFormat("fr-FR", {
-    style: "currency",
-    currency,
-    minimumFractionDigits: 2,
-  }).format(Math.abs(amount));
 }
 
 export function BalanceSummary({
@@ -58,11 +51,11 @@ export function BalanceSummary({
                   <p className="text-base text-slate-400 mt-1">
                     Payé{" "}
                     <span className="text-slate-200">
-                      {formatAmount(balance.paid, currency)}
+                      {formatCurrency(Math.abs(balance.paid), currency)}
                     </span>{" "}
                     · Doit{" "}
                     <span className="text-slate-200">
-                      {formatAmount(balance.owes, currency)}
+                      {formatCurrency(Math.abs(balance.owes), currency)}
                     </span>
                   </p>
                 </div>
@@ -84,7 +77,7 @@ export function BalanceSummary({
                     )}
                   >
                     {isCreditor ? "+" : isDebtor ? "-" : ""}
-                    {formatAmount(balance.net, currency)}
+                    {formatCurrency(Math.abs(balance.net), currency)}
                   </span>
                 </div>
               </div>

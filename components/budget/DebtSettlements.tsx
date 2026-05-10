@@ -2,20 +2,13 @@
 
 import { motion } from "framer-motion";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
+import { formatCurrency } from "@/lib/format-currency";
 import type { Settlement, Participant } from "@/types";
 
 interface DebtSettlementsProps {
   settlements: Settlement[];
   participants: Participant[];
   currency: string;
-}
-
-function formatAmount(amount: number, currency: string) {
-  return new Intl.NumberFormat("fr-FR", {
-    style: "currency",
-    currency,
-    minimumFractionDigits: 2,
-  }).format(amount);
 }
 
 export function DebtSettlements({
@@ -70,7 +63,7 @@ export function DebtSettlements({
               </span>
             </div>
             <span className="font-bold text-base text-indigo-300 shrink-0 tabular-nums">
-              {formatAmount(s.amount, currency)}
+              {formatCurrency(s.amount, currency)}
             </span>
           </motion.div>
         );

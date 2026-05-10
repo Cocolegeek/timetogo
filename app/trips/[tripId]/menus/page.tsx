@@ -4,7 +4,9 @@ import { use, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { RefreshCw, UtensilsCrossed, ChefHat, Users } from "lucide-react";
 import { GlassCard } from "@/components/layout/GlassCard";
+import { DayHeader } from "@/components/shared/DayHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { Spinner } from "@/components/shared/Spinner";
 import dynamic from "next/dynamic";
 const MealEditDialog = dynamic(() => import("@/components/menus/MealEditDialog").then(m => ({ default: m.MealEditDialog })), { ssr: false });
 import { useTrip } from "@/hooks/useTrip";
@@ -51,9 +53,7 @@ export default function MenusPage({ params }: MenusPageProps) {
 
   if (!trip) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div className="w-8 h-8 rounded-full border-2 border-indigo-500/50 border-t-indigo-400 animate-spin" />
-      </div>
+      <Spinner />
     );
   }
 
@@ -138,42 +138,6 @@ export default function MenusPage({ params }: MenusPageProps) {
           await updateMeal(editingMeal.id, data);
         }}
       />
-    </div>
-  );
-}
-
-function DayHeader({
-  date,
-  isToday,
-  isPast,
-}: {
-  date: string;
-  isToday: boolean;
-  isPast: boolean;
-}) {
-  return (
-    <div className="flex items-baseline gap-2 mb-3 px-1">
-      <p
-        className={cn(
-          "text-base font-semibold uppercase tracking-wider",
-          isToday
-            ? "text-indigo-300"
-            : isPast
-            ? "text-slate-500"
-            : "text-slate-300"
-        )}
-      >
-        {new Date(date).toLocaleDateString("fr-FR", {
-          weekday: "long",
-          day: "numeric",
-          month: "long",
-        })}
-      </p>
-      {isToday && (
-        <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-bold tracking-normal">
-          AUJ.
-        </span>
-      )}
     </div>
   );
 }

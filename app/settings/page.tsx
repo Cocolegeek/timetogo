@@ -15,6 +15,7 @@ import {
   LogOut,
 } from "lucide-react";
 import { MeshGradientBackground } from "@/components/layout/MeshGradientBackground";
+import { Spinner } from "@/components/shared/Spinner";
 import { GlassCard } from "@/components/layout/GlassCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -75,9 +76,7 @@ export default function SettingsPage() {
           }}
         >
           {loading ? (
-            <div className="flex items-center justify-center py-20">
-              <div className="w-8 h-8 rounded-full border-2 border-indigo-500/50 border-t-indigo-400 animate-spin" />
-            </div>
+            <Spinner />
           ) : (
             <>
               {/* ─── Section Profil ──────────────────────────────────── */}
