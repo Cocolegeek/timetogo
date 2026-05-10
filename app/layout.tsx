@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
-    title: "Time to Go",
+    title: "TimeToGo",
     statusBarStyle: "black-translucent",
   },
   icons: {
