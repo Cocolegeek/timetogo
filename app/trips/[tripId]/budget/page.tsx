@@ -5,14 +5,15 @@ import { Plus, Wallet, ArrowRightLeft, RefreshCw } from "lucide-react";
 import { motion } from "framer-motion";
 import { GlassCard } from "@/components/layout/GlassCard";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { ExpenseForm } from "@/components/budget/ExpenseForm";
+import dynamic from "next/dynamic";
+const ExpenseForm = dynamic(() => import("@/components/budget/ExpenseForm").then(m => ({ default: m.ExpenseForm })), { ssr: false });
 import { ExpenseList } from "@/components/budget/ExpenseList";
 import { BalanceSummary } from "@/components/budget/BalanceSummary";
 import { DebtSettlements } from "@/components/budget/DebtSettlements";
 import { useTrip } from "@/hooks/useTrip";
 import { useBudget } from "@/hooks/useBudget";
 import { useDebts } from "@/hooks/useDebts";
-import type { Expense } from "@/types";
+import type { Expense, Payer } from "@/types";
 
 interface BudgetPageProps {
   params: Promise<{ tripId: string }>;
@@ -45,7 +46,7 @@ export default function BudgetPage({ params }: BudgetPageProps) {
     currency: string;
     exchangeRate: number;
     category: Expense["category"];
-    paidById: string;
+    payers: Payer[];
     date: string;
     splitMode: Expense["splitMode"];
     splits: Expense["splits"];

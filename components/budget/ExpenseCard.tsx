@@ -32,7 +32,9 @@ export function ExpenseCard({
   onDelete,
   onEdit,
 }: ExpenseCardProps) {
-  const payer = participants.find((p) => p.id === expense.paidById);
+  const payers = expense.payers
+    .map((p) => participants.find((part) => part.id === p.participantId))
+    .filter(Boolean) as typeof participants;
   const cfg = CATEGORIES[expense.category] ?? CATEGORIES.other;
   const Icon = cfg.icon;
 
@@ -124,14 +126,17 @@ export function ExpenseCard({
             </div>
 
             <div className="flex items-center gap-2 mt-1.5">
-              {payer && (
+              {payers.length > 0 && (
                 <div className="flex items-center gap-1.5 min-w-0">
-                  <span
-                    className="w-2 h-2 rounded-full shrink-0"
-                    style={{ backgroundColor: payer.color }}
-                  />
+                  {payers.map((p) => (
+                    <span
+                      key={p.id}
+                      className="w-2 h-2 rounded-full shrink-0"
+                      style={{ backgroundColor: p.color }}
+                    />
+                  ))}
                   <span className="text-sm text-slate-400 truncate">
-                    {payer.name}
+                    {payers.map((p) => p.name).join(" & ")}
                   </span>
                 </div>
               )}

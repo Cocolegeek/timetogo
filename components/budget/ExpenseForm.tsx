@@ -19,6 +19,7 @@ import type {
   ExpenseCategory,
   Participant,
   ParticipantSplit,
+  Payer,
   SplitMode,
 } from "@/types";
 
@@ -35,7 +36,7 @@ interface ExpenseFormProps {
     currency: string;
     exchangeRate: number;
     category: ExpenseCategory;
-    paidById: string;
+    payers: Payer[];
     date: string;
     splitMode: SplitMode;
     splits: ParticipantSplit[];
@@ -80,7 +81,7 @@ export function ExpenseForm({
   const [amountStr, setAmountStr] = useState("");
   const [category, setCategory] = useState<ExpenseCategory>("other");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
-  const [paidById, setPaidById] = useState<string>("");
+  const [payers, setPayers] = useState<Payer[]>([]);
   const [splitMode, setSplitMode] = useState<SplitMode>("equal");
   const [splits, setSplits] = useState<ParticipantSplit[]>([]);
   /**
@@ -100,7 +101,7 @@ export function ExpenseForm({
       setAmountStr(initialValues.amount.toString().replace(".", ","));
       setCategory(initialValues.category);
       setDate(initialValues.date);
-      setPaidById(initialValues.paidById);
+      setPayers(initialValues.payers.map(p => ({ ...p, amount: p.amount / (initialValues.exchangeRate || 1) })));
       setSplitMode(initialValues.splitMode);
 
       // ── Reconciliation with the current trip member list ──
@@ -136,7 +137,7 @@ export function ExpenseForm({
       setAmountStr("");
       setCategory("other");
       setDate(new Date().toISOString().split("T")[0]);
-      setPaidById(participants[0]?.id ?? "");
+      setPayers(participants[0] ? [{ participantId: participants[0].id, amount: 0 }] : []);
       setSplitMode("equal");
       setNewMemberIds(new Set());
       setSplits(
@@ -184,11 +185,43 @@ export function ExpenseForm({
       ? Math.abs(splitTotal - 100) < 0.01
       : Math.abs(splitTotal - amount) < 0.01);
 
+  const payerTotal = payers.reduce((acc, p) => acc + p.amount, 0);
+  const payerValid = payers.length > 0 && (payers.length === 1 || Math.abs(payerTotal - amount) < 0.01);
+
   const formValid =
     title.trim().length > 0 &&
     amount > 0 &&
-    paidById.length > 0 &&
+    payerValid &&
     splitValid;
+
+  const togglePayer = (participantId: string) => {
+    setPayers(prev => {
+      const exists = prev.some(p => p.participantId === participantId);
+      let next: Payer[];
+      if (exists) {
+        if (prev.length <= 1) return prev;
+        next = prev.filter(p => p.participantId !== participantId);
+      } else {
+        next = [...prev, { participantId, amount: 0 }];
+      }
+      const distributed = distributeCents(amount, next.length);
+      return next.map((p, i) => ({ ...p, amount: distributed[i] ?? 0 }));
+    });
+  };
+
+  const setPayerAmount = (participantId: string, value: number) => {
+    const newValue = Math.max(0, value);
+    setPayers(prev => {
+      const others = prev.filter(p => p.participantId !== participantId);
+      const remaining = Math.max(0, amount - newValue);
+      const distributed = distributeCents(remaining, others.length);
+      return prev.map(p => {
+        if (p.participantId === participantId) return { ...p, amount: newValue };
+        const idx = others.findIndex(o => o.participantId === p.participantId);
+        return { ...p, amount: distributed[idx] ?? 0 };
+      });
+    });
+  };
 
   // Toggle inclusion
   const toggleInclusion = (participantId: string) => {
@@ -270,6 +303,15 @@ export function ExpenseForm({
     }
   };
 
+  // When amount changes with multiple payers, redistribute equally
+  useEffect(() => {
+    if (payers.length <= 1) return;
+    if (!amount) return;
+    const distributed = distributeCents(amount, payers.length);
+    setPayers(prev => prev.map((p, i) => ({ ...p, amount: distributed[i] ?? 0 })));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [amount]);
+
   // When the total amount changes in fixed mode, rebalance to keep totals consistent
   useEffect(() => {
     if (splitMode !== "fixed") return;
@@ -293,13 +335,16 @@ export function ExpenseForm({
     if (!formValid) return;
     setSubmitting(true);
     try {
+      const finalPayers = payers.length === 1
+        ? [{ participantId: payers[0].participantId, amount }]
+        : payers;
       await onSubmit({
         title: title.trim(),
         amount,
         currency,
         exchangeRate: 1,
         category,
-        paidById,
+        payers: finalPayers,
         date,
         splitMode,
         splits,
@@ -394,12 +439,12 @@ export function ExpenseForm({
             <Label className="text-slate-300 text-sm font-medium">Payé par</Label>
             <div className="flex gap-2 flex-wrap">
               {participants.map((p) => {
-                const selected = p.id === paidById;
+                const selected = payers.some(py => py.participantId === p.id);
                 return (
                   <button
                     key={p.id}
                     type="button"
-                    onClick={() => setPaidById(p.id)}
+                    onClick={() => togglePayer(p.id)}
                     className={cn(
                       "flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all active:scale-95",
                       selected
@@ -416,6 +461,40 @@ export function ExpenseForm({
                 );
               })}
             </div>
+
+            {/* Amount inputs per payer when multiple selected */}
+            {payers.length > 1 && (
+              <div className="space-y-1.5 mt-1">
+                {payers.map((payer) => {
+                  const p = participants.find(part => part.id === payer.participantId);
+                  if (!p) return null;
+                  return (
+                    <div key={payer.participantId} className="flex items-center gap-3 px-3 py-2 rounded-xl border border-foreground/8 bg-foreground/4">
+                      <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: p.color }} />
+                      <span className="text-sm text-slate-200 flex-1 truncate">{p.name}</span>
+                      <input
+                        type="number"
+                        inputMode="decimal"
+                        step="0.01"
+                        min="0"
+                        value={payer.amount}
+                        onChange={(e) => setPayerAmount(payer.participantId, Number(e.target.value) || 0)}
+                        className="w-20 text-right bg-foreground/8 border border-foreground/10 rounded-lg px-2 py-1 text-sm text-slate-100 focus:outline-none focus:border-indigo-400 tabular-nums"
+                      />
+                      <span className="text-xs text-slate-500 w-8">{currency.slice(0, 3)}</span>
+                    </div>
+                  );
+                })}
+                <p className={cn(
+                  "text-center text-xs",
+                  Math.abs(payerTotal - amount) < 0.01 ? "text-emerald-400" : "text-amber-400"
+                )}>
+                  {Math.abs(payerTotal - amount) < 0.01
+                    ? "Répartition correcte ✓"
+                    : `Total payeurs : ${formatCurrency(payerTotal, currency)} / ${formatCurrency(amount, currency)}`}
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Split mode */}

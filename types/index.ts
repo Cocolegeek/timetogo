@@ -83,6 +83,11 @@ export interface ParticipantSplit {
   fixedAmount?: number;
 }
 
+export interface Payer {
+  participantId: string;
+  amount: number; // amount in trip currency
+}
+
 export interface Expense {
   id: string;
   tripId: string;
@@ -92,7 +97,7 @@ export interface Expense {
   exchangeRate: number;
   amountInTripCurrency: number;
   category: ExpenseCategory;
-  paidById: string;
+  payers: Payer[];
   date: string;
   splitMode: SplitMode;
   splits: ParticipantSplit[];

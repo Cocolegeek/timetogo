@@ -357,42 +357,6 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
         </motion.div>
       </div>
 
-      {/* Participants */}
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.15 }}
-      >
-        <GlassCard>
-          <div className="flex items-center gap-2 mb-3">
-            <h2 className="text-base font-semibold text-slate-200">Voyageurs</h2>
-            <span className="text-xs text-slate-500 ml-auto">
-              Code <span className="font-mono text-slate-300">{trip.shareCode}</span>
-            </span>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {trip.participants.map((p) => {
-              const isMe = p.id === trip.myParticipantId;
-              return (
-                <div
-                  key={p.id}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-full transition-all ${
-                    isMe ? "glass-subtle ring-1 ring-indigo-500/30" : "glass-subtle"
-                  }`}
-                >
-                  <div
-                    className="w-5 h-5 rounded-full shrink-0"
-                    style={{ backgroundColor: p.color }}
-                  />
-                  <span className="text-sm font-medium text-slate-200">{p.name}</span>
-                  {isMe && <span className="text-xs text-indigo-400 font-semibold">moi</span>}
-                </div>
-              );
-            })}
-          </div>
-        </GlassCard>
-      </motion.div>
-
       {/* Trip Edit */}
       <TripEditDialog
         open={editOpen}
@@ -423,22 +387,24 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
 
       {/* Identity Dialog */}
       <Dialog open={identityOpen} onOpenChange={setIdentityOpen}>
-        <DialogContent className="glass-strong border-foreground/10 max-w-sm">
-          <DialogHeader>
+        <DialogContent className="glass-strong border-foreground/10 max-w-sm flex flex-col max-h-[85vh]">
+          <DialogHeader className="shrink-0">
             <DialogTitle className="text-slate-100">Mon identité</DialogTitle>
           </DialogHeader>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-slate-500 shrink-0">
             Indique qui tu es parmi les participants pour que tes dépenses soient
             bien attribuées.
           </p>
-          <IdentityPicker
-            participants={trip.participants}
-            selectedId={trip.myParticipantId}
-            onSelect={async (id) => {
-              await setMyParticipant(id);
-              setIdentityOpen(false);
-            }}
-          />
+          <div className="overflow-y-auto flex-1 min-h-0 -mx-1 px-1">
+            <IdentityPicker
+              participants={trip.participants}
+              selectedId={trip.myParticipantId}
+              onSelect={async (id) => {
+                await setMyParticipant(id);
+                setIdentityOpen(false);
+              }}
+            />
+          </div>
         </DialogContent>
       </Dialog>
     </div>

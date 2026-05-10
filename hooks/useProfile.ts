@@ -9,9 +9,10 @@ export function useProfile() {
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = useCallback(async () => {
-    setLoading(true);
     const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    setLoading(true);
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user;
     if (!user) { setLoading(false); return; }
 
     const { data } = await supabase
@@ -28,15 +29,17 @@ export function useProfile() {
 
   const updateProfile = async (updates: { name?: string }): Promise<void> => {
     const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user;
     if (!user) return;
-    await supabase.from("profiles").update(updates).eq("id", user.id);
-    await fetchProfile();
+
+    setProfile(prev => prev ? { ...prev, ...updates } : prev);
+    const { error } = await supabase.from("profiles").update(updates).eq("id", user.id);
+    if (error) await fetchProfile();
   };
 
   const signOut = async (): Promise<void> => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
+    await createClient().auth.signOut();
     window.location.href = "/login";
   };
 

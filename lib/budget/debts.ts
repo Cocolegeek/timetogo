@@ -13,8 +13,9 @@ export function computeBalances(
   }
 
   for (const expense of expenses) {
-    paid[expense.paidById] =
-      (paid[expense.paidById] ?? 0) + expense.amountInTripCurrency;
+    for (const payer of expense.payers) {
+      paid[payer.participantId] = (paid[payer.participantId] ?? 0) + payer.amount;
+    }
 
     for (const split of expense.splits) {
       owes[split.participantId] =

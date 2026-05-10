@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { computeShares } from "@/lib/budget/splits";
-import type { Expense } from "@/types";
+import type { Expense, Payer } from "@/types";
 
 function rowToExpense(row: Record<string, unknown>): Expense {
   return {
@@ -15,7 +15,9 @@ function rowToExpense(row: Record<string, unknown>): Expense {
     exchangeRate: row.exchange_rate as number,
     amountInTripCurrency: row.amount_in_trip_currency as number,
     category: row.category as Expense["category"],
-    paidById: row.paid_by_id as string,
+    payers: Array.isArray(row.payers) && (row.payers as Payer[]).length > 0
+      ? (row.payers as Payer[])
+      : [{ participantId: row.paid_by_id as string, amount: row.amount_in_trip_currency as number }],
     date: row.date as string,
     splitMode: row.split_mode as Expense["splitMode"],
     splits: row.splits as Expense["splits"],
@@ -30,8 +32,8 @@ export function useBudget(tripId: string) {
   const [loading, setLoading] = useState(true);
 
   const fetchExpenses = useCallback(async () => {
-    setLoading(true);
     const supabase = createClient();
+    setLoading(true);
     const { data } = await supabase
       .from("expenses")
       .select("*")
@@ -46,11 +48,10 @@ export function useBudget(tripId: string) {
   const addExpense = async (
     data: Omit<Expense, "id" | "createdAt" | "updatedAt" | "amountInTripCurrency">
   ): Promise<string> => {
-    const supabase = createClient();
     const amountInTripCurrency = data.amount * data.exchangeRate;
     const computedSplits = computeShares(amountInTripCurrency, data.splits, data.splitMode);
 
-    const { data: row, error } = await supabase
+    const { data: row, error } = await createClient()
       .from("expenses")
       .insert({
         trip_id: data.tripId,
@@ -60,7 +61,8 @@ export function useBudget(tripId: string) {
         exchange_rate: data.exchangeRate,
         amount_in_trip_currency: amountInTripCurrency,
         category: data.category,
-        paid_by_id: data.paidById,
+        paid_by_id: data.payers[0]?.participantId ?? null,
+        payers: data.payers.map(p => ({ participantId: p.participantId, amount: p.amount * data.exchangeRate })),
         date: data.date,
         split_mode: data.splitMode,
         splits: computedSplits,
@@ -70,7 +72,10 @@ export function useBudget(tripId: string) {
       .single();
 
     if (error) throw error;
-    await fetchExpenses();
+    const newExpense = rowToExpense(row);
+    setExpenses(prev =>
+      [newExpense, ...prev].sort((a, b) => b.date.localeCompare(a.date))
+    );
     return row.id;
   };
 
@@ -78,7 +83,6 @@ export function useBudget(tripId: string) {
     id: string,
     data: Partial<Omit<Expense, "id" | "createdAt">>
   ): Promise<void> => {
-    const supabase = createClient();
     const existing = expenses.find((e) => e.id === id);
     if (!existing) return;
 
@@ -88,15 +92,24 @@ export function useBudget(tripId: string) {
     const splitMode = data.splitMode ?? existing.splitMode;
     const amountInTripCurrency = amount * exchangeRate;
     const computedSplits = computeShares(amountInTripCurrency, splits, splitMode);
+    const updated: Expense = {
+      ...existing, ...data, amountInTripCurrency, splits: computedSplits,
+      updatedAt: new Date().toISOString(),
+    };
 
-    await supabase.from("expenses").update({
+    setExpenses(prev => prev.map(e => e.id === id ? updated : e));
+
+    const { error } = await createClient().from("expenses").update({
       ...(data.title && { title: data.title }),
       ...(data.amount !== undefined && { amount: data.amount }),
       ...(data.currency && { currency: data.currency }),
       ...(data.exchangeRate !== undefined && { exchange_rate: data.exchangeRate }),
       amount_in_trip_currency: amountInTripCurrency,
       ...(data.category && { category: data.category }),
-      ...(data.paidById && { paid_by_id: data.paidById }),
+      ...(data.payers !== undefined && {
+        paid_by_id: data.payers[0]?.participantId ?? null,
+        payers: data.payers.map(p => ({ participantId: p.participantId, amount: p.amount * (data.exchangeRate ?? existing.exchangeRate) })),
+      }),
       ...(data.date && { date: data.date }),
       ...(data.splitMode && { split_mode: data.splitMode }),
       splits: computedSplits,
@@ -104,24 +117,20 @@ export function useBudget(tripId: string) {
       updated_at: new Date().toISOString(),
     }).eq("id", id);
 
-    await fetchExpenses();
+    if (error) {
+      setExpenses(prev => prev.map(e => e.id === id ? existing : e));
+      throw error;
+    }
   };
 
   const deleteExpense = async (id: string): Promise<void> => {
-    const supabase = createClient();
-    await supabase.from("expenses").delete().eq("id", id);
-    await fetchExpenses();
+    const snapshot = expenses;
+    setExpenses(es => es.filter(e => e.id !== id));
+    const { error } = await createClient().from("expenses").delete().eq("id", id);
+    if (error) { setExpenses(snapshot); throw error; }
   };
 
   const totalSpent = expenses.reduce((acc, e) => acc + e.amountInTripCurrency, 0);
 
-  return {
-    expenses,
-    loading,
-    refetch: fetchExpenses,
-    addExpense,
-    updateExpense,
-    deleteExpense,
-    totalSpent,
-  };
+  return { expenses, loading, refetch: fetchExpenses, addExpense, updateExpense, deleteExpense, totalSpent };
 }

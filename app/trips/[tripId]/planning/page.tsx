@@ -25,10 +25,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useTrip } from "@/hooks/useTrip";
 import { useItinerary } from "@/hooks/useItinerary";
-import {
-  ItineraryItemForm,
-  type ItineraryFormValues,
-} from "@/components/planning/ItineraryItemForm";
+import dynamic from "next/dynamic";
+import type { ItineraryFormValues } from "@/components/planning/ItineraryItemForm";
+const ItineraryItemForm = dynamic(() => import("@/components/planning/ItineraryItemForm").then(m => ({ default: m.ItineraryItemForm })), { ssr: false });
 import { ParticipantStack } from "@/components/shared/ParticipantStack";
 import { eachDate } from "@/lib/meals/slots";
 import { formatDuration } from "@/lib/format-date";

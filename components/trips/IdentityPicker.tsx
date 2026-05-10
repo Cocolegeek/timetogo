@@ -23,9 +23,13 @@ export function IdentityPicker({
   return (
     <div className="space-y-3">
       {!compact && (
-        <div className="flex items-center gap-2 text-slate-300">
-          <UserCheck size={18} className="text-indigo-400" />
-          <p className="font-medium">Qui es-tu parmi les voyageurs ?</p>
+        <div className="flex items-center gap-3 pb-1">
+          <div className="w-9 h-9 rounded-xl bg-indigo-500/15 flex items-center justify-center shrink-0">
+            <UserCheck size={20} className="text-indigo-400" />
+          </div>
+          <p className="text-lg font-semibold text-slate-100 leading-snug">
+            Qui es-tu parmi les voyageurs ?
+          </p>
         </div>
       )}
 

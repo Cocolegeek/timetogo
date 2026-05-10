@@ -19,6 +19,11 @@ export const participantSplitSchema = z.object({
   share: z.number().optional(),
 });
 
+export const payerSchema = z.object({
+  participantId: z.string(),
+  amount: z.number().min(0),
+});
+
 export const expenseSchema = z
   .object({
     title: z.string().min(1, "Le titre est requis"),
@@ -26,7 +31,7 @@ export const expenseSchema = z
       .number({ message: "Montant invalide" })
       .positive("Le montant doit être positif"),
     category: z.enum(EXPENSE_CATEGORIES),
-    paidById: z.string().min(1, "Sélectionne qui a payé"),
+    payers: z.array(payerSchema).min(1, "Sélectionne au moins un payeur"),
     date: z.string().min(1, "La date est requise"),
     splitMode: z.enum(SPLIT_MODES),
     splits: z.array(participantSplitSchema),
