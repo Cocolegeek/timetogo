@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LocationAutocomplete } from "@/components/shared/LocationAutocomplete";
+import { DateRangePicker } from "@/components/shared/DateRangePicker";
 import { tripSchema, type TripFormValues } from "@/lib/budget/schemas";
 import { useTrips } from "@/hooks/useTrip";
 import { cn } from "@/lib/utils";
@@ -56,6 +57,8 @@ export function TripWizard() {
   const selectedEmoji = watch("emoji");
   const selectedCurrency = watch("currency");
   const destination = watch("destination") ?? "";
+  const startDate = watch("startDate");
+  const endDate = watch("endDate");
 
   const addParticipant = () => {
     const name = newParticipantName.trim();
@@ -181,24 +184,14 @@ export function TripWizard() {
 
       {/* Dates */}
       <GlassCard>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-1.5">
-            <Label className="text-slate-300 text-xs">Départ</Label>
-            <Input
-              {...register("startDate")}
-              type="date"
-              className="bg-foreground/8 border-foreground/10 text-slate-100 focus-visible:ring-indigo-500/50 [color-scheme:dark]"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-slate-300 text-xs">Retour</Label>
-            <Input
-              {...register("endDate")}
-              type="date"
-              className="bg-foreground/8 border-foreground/10 text-slate-100 focus-visible:ring-indigo-500/50 [color-scheme:dark]"
-            />
-          </div>
-        </div>
+        <DateRangePicker
+          startDate={startDate}
+          endDate={endDate}
+          onChange={(start, end) => {
+            setValue("startDate", start);
+            setValue("endDate", end);
+          }}
+        />
       </GlassCard>
 
       {/* Currency */}

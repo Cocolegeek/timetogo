@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useEffect, useMemo, useRef, useState } from "react";
 import {
   Plus,
   Map,
@@ -59,6 +59,18 @@ export default function PlanningPage({ params }: PlanningPageProps) {
   const [editingItem, setEditingItem] = useState<ItineraryItem | undefined>();
   const [confirmDelete, setConfirmDelete] = useState<ItineraryItem | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+
+  const today = useMemo(() => new Date().toISOString().split("T")[0], []);
+  const todayRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (items.length === 0) return;
+    const el = todayRef.current;
+    if (!el) return;
+    requestAnimationFrame(() => {
+      el.scrollIntoView({ behavior: "auto", block: "start" });
+    });
+  }, [items.length]);
 
   const openForCreate = () => {
     setEditingItem(undefined);
@@ -128,30 +140,35 @@ export default function PlanningPage({ params }: PlanningPageProps) {
         />
       ) : (
         <div className="space-y-6">
-          {Object.entries(byDate).map(([d, dayItems]) => (
-            <div key={d}>
-              <p className="text-base text-slate-300 font-semibold mb-3 uppercase tracking-wider">
-                {new Date(d).toLocaleDateString("fr-FR", {
-                  weekday: "long",
-                  day: "numeric",
-                  month: "long",
-                })}
-              </p>
-              <div className="relative pl-4 border-l border-foreground/8 space-y-3">
-                <AnimatePresence>
-                  {dayItems.map((item) => (
-                    <ItineraryCard
-                      key={item.id}
-                      item={item}
-                      participants={trip?.participants ?? []}
-                      onEdit={() => openForEdit(item)}
-                      onDelete={() => setConfirmDelete(item)}
-                    />
-                  ))}
-                </AnimatePresence>
-              </div>
-            </div>
-          ))}
+          {Object.entries(byDate).map(([d, dayItems], idx) => {
+            const isToday = d === today;
+            const isPast = d < today;
+            return (
+              <motion.div
+                key={d}
+                ref={isToday ? todayRef : undefined}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: isPast ? 0.45 : 1, y: 0 }}
+                transition={{ delay: Math.min(idx * 0.02, 0.2) }}
+                className="scroll-mt-2"
+              >
+                <DayHeader date={d} isToday={isToday} isPast={isPast} />
+                <div className="relative pl-4 border-l border-foreground/8 space-y-3">
+                  <AnimatePresence>
+                    {dayItems.map((item) => (
+                      <ItineraryCard
+                        key={item.id}
+                        item={item}
+                        participants={trip?.participants ?? []}
+                        onEdit={() => openForEdit(item)}
+                        onDelete={() => setConfirmDelete(item)}
+                      />
+                    ))}
+                  </AnimatePresence>
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
       )}
 
@@ -185,6 +202,42 @@ export default function PlanningPage({ params }: PlanningPageProps) {
           onCancel={() => setConfirmDelete(null)}
           onConfirm={performDelete}
         />
+      )}
+    </div>
+  );
+}
+
+function DayHeader({
+  date,
+  isToday,
+  isPast,
+}: {
+  date: string;
+  isToday: boolean;
+  isPast: boolean;
+}) {
+  return (
+    <div className="flex items-baseline gap-2 mb-3 px-1">
+      <p
+        className={cn(
+          "text-base font-semibold uppercase tracking-wider",
+          isToday
+            ? "text-indigo-300"
+            : isPast
+            ? "text-slate-500"
+            : "text-slate-300"
+        )}
+      >
+        {new Date(date).toLocaleDateString("fr-FR", {
+          weekday: "long",
+          day: "numeric",
+          month: "long",
+        })}
+      </p>
+      {isToday && (
+        <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-bold tracking-normal">
+          AUJ.
+        </span>
       )}
     </div>
   );
