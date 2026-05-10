@@ -30,6 +30,7 @@ import {
   type ItineraryFormValues,
 } from "@/components/planning/ItineraryItemForm";
 import { ParticipantStack } from "@/components/shared/ParticipantStack";
+import { eachDate } from "@/lib/meals/slots";
 import { formatDuration } from "@/lib/format-date";
 import { cn } from "@/lib/utils";
 import type { ItineraryItem, ItineraryType, Participant } from "@/types";
@@ -64,13 +65,13 @@ export default function PlanningPage({ params }: PlanningPageProps) {
   const todayRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (items.length === 0) return;
+    if (!trip) return;
     const el = todayRef.current;
     if (!el) return;
     requestAnimationFrame(() => {
       el.scrollIntoView({ behavior: "auto", block: "start" });
     });
-  }, [items.length]);
+  }, [trip?.id]);
 
   const openForCreate = () => {
     setEditingItem(undefined);
@@ -109,6 +110,8 @@ export default function PlanningPage({ params }: PlanningPageProps) {
     return acc;
   }, {});
 
+  const dates = trip ? eachDate(trip.startDate, trip.endDate) : [];
+
   return (
     <div className="space-y-5">
       {/* Refresh action only — title is redundant with bottom nav */}
@@ -123,26 +126,18 @@ export default function PlanningPage({ params }: PlanningPageProps) {
         </button>
       </div>
 
-      {items.length === 0 ? (
+      {dates.length === 0 ? (
         <EmptyState
           icon={Map}
-          title="Itinéraire vide"
-          description="Ajoute des étapes pour construire ton planning de voyage."
-          action={
-            <Button
-              onClick={openForCreate}
-              className="gradient-primary text-white border-0"
-            >
-              <Plus size={16} />
-              Ajouter une étape
-            </Button>
-          }
+          title="Aucun jour de voyage"
+          description="Vérifie les dates du voyage pour afficher le planning."
         />
       ) : (
         <div className="space-y-6">
-          {Object.entries(byDate).map(([d, dayItems], idx) => {
+          {dates.map((d, idx) => {
             const isToday = d === today;
             const isPast = d < today;
+            const dayItems = byDate[d] ?? [];
             return (
               <motion.div
                 key={d}
@@ -165,6 +160,11 @@ export default function PlanningPage({ params }: PlanningPageProps) {
                       />
                     ))}
                   </AnimatePresence>
+                  {dayItems.length === 0 && (
+                    <p className="text-sm text-slate-600 italic py-1">
+                      Aucune étape — tap + pour ajouter
+                    </p>
+                  )}
                 </div>
               </motion.div>
             );
