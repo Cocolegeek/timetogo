@@ -12,7 +12,8 @@ export default async function proxy(req: NextRequest) {
     PUBLIC_ROUTES.some((r) => pathname.startsWith(r)) ||
     pathname.startsWith("/_next") ||
     pathname.startsWith("/api") ||
-    pathname.match(/\.(ico|png|jpg|svg|webp|json|txt)$/);
+    pathname === "/sw.js" ||
+    pathname.match(/\.(ico|png|jpg|svg|webp|json|txt|xml|js)$/);
 
   let response = NextResponse.next({ request: req });
 
@@ -62,5 +63,5 @@ export default async function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|sw\\.js).*)"],
 };
