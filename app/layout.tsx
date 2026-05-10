@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { PwaRegister } from "./pwa-register";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -15,10 +16,19 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Time to Go",
   description: "L'application de voyage ultime — Budget, Planning, Menus",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    title: "Time to Go",
+    statusBarStyle: "black-translucent",
+  },
+  icons: {
+    apple: "/icons/icon.png",
+  },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#020617",
+  themeColor: "#e8197d",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -27,11 +37,6 @@ export const viewport: Viewport = {
   colorScheme: "dark",
 };
 
-/**
- * Inline script that runs BEFORE React hydrates and applies the user's
- * persisted theme preference to <html> so we avoid a flash of the wrong
- * theme. Default = dark (the historical app look).
- */
 const themeScript = `
   (function() {
     try {
@@ -60,6 +65,7 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body className="min-h-full flex flex-col">
+        <PwaRegister />
         {children}
       </body>
     </html>
