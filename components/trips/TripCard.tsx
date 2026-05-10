@@ -76,7 +76,7 @@ export function TripCard({ trip, onEdit, onDelete, index }: TripCardProps) {
 
           {/* Title + destination */}
           <div className="flex-1 min-w-0 space-y-1">
-            <h3 className="font-bold text-slate-100 text-lg truncate leading-tight">
+            <h3 className="font-bold text-slate-100 text-xl truncate leading-tight">
               {trip.name}
             </h3>
             <p className="text-base text-slate-400 truncate">{trip.destination}</p>
@@ -87,7 +87,7 @@ export function TripCard({ trip, onEdit, onDelete, index }: TripCardProps) {
         <div className="mt-3">
           <span
             className={cn(
-              "inline-flex items-center text-xs px-2.5 py-1 rounded-full font-semibold uppercase tracking-wider",
+              "inline-flex items-center text-sm px-2.5 py-1 rounded-full font-semibold uppercase tracking-wider",
               badge.className
             )}
           >
@@ -96,7 +96,7 @@ export function TripCard({ trip, onEdit, onDelete, index }: TripCardProps) {
         </div>
 
         {/* Footer */}
-        <div className="flex items-center gap-3 mt-3 text-sm text-slate-500">
+        <div className="flex items-center gap-3 mt-3 text-base text-slate-500">
           <span className="flex items-center gap-1.5">
             <Calendar size={13} />
             {formatDateRange(trip.startDate, trip.endDate)}

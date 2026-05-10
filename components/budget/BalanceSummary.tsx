@@ -55,7 +55,7 @@ export function BalanceSummary({
                   <p className="font-semibold text-slate-100 text-base truncate">
                     {participant.name}
                   </p>
-                  <p className="text-sm text-slate-400 mt-1">
+                  <p className="text-base text-slate-400 mt-1">
                     Payé{" "}
                     <span className="text-slate-200">
                       {formatAmount(balance.paid, currency)}

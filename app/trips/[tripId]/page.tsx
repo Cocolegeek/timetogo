@@ -152,7 +152,7 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
             <p className="text-base text-slate-400 truncate">{trip.destination}</p>
           </div>
         </div>
-        <p className="text-sm text-slate-500 pt-1">
+        <p className="text-base text-slate-500 pt-1">
           {tripDuration} jour{tripDuration !== 1 ? "s" : ""} · {trip.participants.length} voyageur
           {trip.participants.length !== 1 ? "s" : ""}
         </p>
@@ -169,7 +169,7 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
           <>
             <ParticipantAvatar participant={currentParticipant} size="md" />
             <div className="flex-1 min-w-0">
-              <p className="text-xs text-slate-500 uppercase tracking-wider">
+              <p className="text-sm text-slate-500 uppercase tracking-wider">
                 Connecté en tant que
               </p>
               <p className="text-base font-medium text-slate-200 truncate">
@@ -183,7 +183,7 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
               <UserCircle2 size={20} className="text-slate-500" />
             </div>
             <div className="flex-1">
-              <p className="text-xs text-slate-500 uppercase tracking-wider">
+              <p className="text-sm text-slate-500 uppercase tracking-wider">
                 Identité
               </p>
               <p className="text-base font-medium text-indigo-400">
@@ -216,7 +216,7 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
                   <div className="w-10 h-10 rounded-xl bg-indigo-500/15 flex items-center justify-center">
                     <Wallet size={19} className="text-indigo-400" />
                   </div>
-                  <span className="text-sm text-slate-300 font-medium">Budget</span>
+                  <span className="text-base text-slate-300 font-medium">Budget</span>
                 </div>
                 <div>
                   <p className="text-3xl font-bold text-slate-100 leading-none tabular-nums">
@@ -229,7 +229,7 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
                   {trip.totalBudget ? (
                     <p
                       className={cn(
-                        "text-xs mt-1.5",
+                        "text-sm mt-1.5",
                         budgetIsOver ? getBudgetTextColor(budgetRawPct) + " font-medium" : "text-slate-500"
                       )}
                     >
@@ -242,7 +242,7 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
                       {budgetIsOver && " · dépassé"}
                     </p>
                   ) : (
-                    <p className="text-xs text-indigo-400 mt-1.5 font-medium">
+                    <p className="text-sm text-indigo-400 mt-1.5 font-medium">
                       Définir un budget →
                     </p>
                   )}
@@ -265,7 +265,7 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
                     />
                   </div>
                 )}
-                <p className="text-xs text-slate-500">
+                <p className="text-sm text-slate-500">
                   {expenses.length} dépense{expenses.length !== 1 ? "s" : ""}
                   {trip.totalBudget && (
                     <>
@@ -297,7 +297,7 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
                     <div className="w-10 h-10 rounded-xl bg-sky-500/15 flex items-center justify-center shrink-0">
                       <Map size={19} className="text-sky-400" />
                     </div>
-                    <span className="text-sm text-slate-300 font-medium truncate">
+                    <span className="text-base text-slate-300 font-medium truncate">
                       Planning
                     </span>
                   </div>
@@ -321,14 +321,14 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
                     {relevantDay.items.slice(0, 3).map((item) => (
                       <div
                         key={item.id}
-                        className="flex items-center gap-1.5 text-sm"
+                        className="flex items-center gap-1.5 text-base"
                       >
                         <span className="shrink-0">
                           {ITINERARY_EMOJI[item.type]}
                         </span>
                         {item.time && (
-                          <span className="text-xs text-slate-500 tabular-nums shrink-0 flex items-center gap-0.5">
-                            <Clock size={10} />
+                          <span className="text-sm text-slate-500 tabular-nums shrink-0 flex items-center gap-0.5">
+                            <Clock size={11} />
                             {item.time}
                           </span>
                         )}
@@ -338,7 +338,7 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
                       </div>
                     ))}
                     {relevantDay.items.length > 3 && (
-                      <p className="text-xs text-slate-500">
+                      <p className="text-sm text-slate-500">
                         + {relevantDay.items.length - 3} autre
                         {relevantDay.items.length - 3 !== 1 ? "s" : ""}
                       </p>
@@ -391,7 +391,7 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
           <DialogHeader className="shrink-0">
             <DialogTitle className="text-slate-100">Mon identité</DialogTitle>
           </DialogHeader>
-          <p className="text-xs text-slate-500 shrink-0">
+          <p className="text-sm text-slate-500 shrink-0">
             Indique qui tu es parmi les participants pour que tes dépenses soient
             bien attribuées.
           </p>

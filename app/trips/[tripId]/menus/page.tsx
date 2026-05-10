@@ -252,11 +252,11 @@ function MealCard({
             </span>
           </div>
 
-          <p className="text-lg font-semibold text-slate-100 leading-tight mt-2">
+          <p className="text-xl font-semibold text-slate-100 leading-tight mt-2">
             {meal.title}
           </p>
 
-          <div className="flex items-center gap-3 mt-1.5 text-sm text-slate-400">
+          <div className="flex items-center gap-3 mt-1.5 text-base text-slate-400">
             {cookLabel && (
               <span className="flex items-center gap-1.5">
                 <ChefHat size={13} className="text-amber-400" />

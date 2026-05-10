@@ -115,7 +115,7 @@ export default function BudgetPage({ params }: BudgetPageProps) {
           <div className="relative p-5">
             <div className="flex items-center gap-2 mb-2">
               <Wallet size={15} className="text-slate-300" />
-              <span className="text-xs text-slate-300 uppercase tracking-wider font-semibold">
+              <span className="text-sm text-slate-300 uppercase tracking-wider font-semibold">
                 Total dépensé
               </span>
             </div>
@@ -185,7 +185,7 @@ export default function BudgetPage({ params }: BudgetPageProps) {
           <GlassCard>
             <div className="flex items-center gap-2 mb-4">
               <ArrowRightLeft size={15} className="text-indigo-400" />
-              <h3 className="text-sm font-semibold text-slate-200">
+              <h3 className="text-base font-semibold text-slate-200">
                 Remboursements simplifiés
               </h3>
             </div>

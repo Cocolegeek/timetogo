@@ -117,10 +117,10 @@ export function ExpenseCard({
           {/* Content */}
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
-              <p className="font-semibold text-slate-100 text-base truncate leading-tight">
+              <p className="font-semibold text-slate-100 text-lg truncate leading-tight">
                 {expense.title}
               </p>
-              <span className="font-bold text-slate-100 text-base shrink-0 tabular-nums">
+              <span className="font-bold text-slate-100 text-lg shrink-0 tabular-nums">
                 {formatAmount(expense.amountInTripCurrency, currency)}
               </span>
             </div>
@@ -135,12 +135,12 @@ export function ExpenseCard({
                       style={{ backgroundColor: p.color }}
                     />
                   ))}
-                  <span className="text-sm text-slate-400 truncate">
+                  <span className="text-base text-slate-400 truncate">
                     {payers.map((p) => p.name).join(" & ")}
                   </span>
                 </div>
               )}
-              <span className="text-xs text-slate-600">·</span>
+              <span className="text-sm text-slate-600">·</span>
               <span className="text-sm text-slate-500 shrink-0">
                 {new Date(expense.date).toLocaleDateString("fr-FR", {
                   day: "numeric",

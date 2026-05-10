@@ -57,7 +57,7 @@ export function DebtSettlements({
                 className="w-2.5 h-2.5 rounded-full shrink-0"
                 style={{ backgroundColor: from.color }}
               />
-              <span className="text-sm text-slate-100 font-semibold truncate">
+              <span className="text-base text-slate-100 font-semibold truncate">
                 {from.name}
               </span>
               <ArrowRight size={14} className="text-slate-500 shrink-0" />
@@ -65,7 +65,7 @@ export function DebtSettlements({
                 className="w-2.5 h-2.5 rounded-full shrink-0"
                 style={{ backgroundColor: to.color }}
               />
-              <span className="text-sm text-slate-100 font-semibold truncate">
+              <span className="text-base text-slate-100 font-semibold truncate">
                 {to.name}
               </span>
             </div>
