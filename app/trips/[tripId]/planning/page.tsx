@@ -57,6 +57,7 @@ export default function PlanningPage({ params }: PlanningPageProps) {
     useItinerary(tripId);
 
   const [formOpen, setFormOpen] = useState(false);
+  const [formDefaultDate, setFormDefaultDate] = useState<string | undefined>();
   const [editingItem, setEditingItem] = useState<ItineraryItem | undefined>();
   const [confirmDelete, setConfirmDelete] = useState<ItineraryItem | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -73,8 +74,9 @@ export default function PlanningPage({ params }: PlanningPageProps) {
     });
   }, [trip?.id]);
 
-  const openForCreate = () => {
+  const openForCreate = (date?: string) => {
     setEditingItem(undefined);
+    setFormDefaultDate(date);
     setFormOpen(true);
   };
 
@@ -161,9 +163,14 @@ export default function PlanningPage({ params }: PlanningPageProps) {
                     ))}
                   </AnimatePresence>
                   {dayItems.length === 0 && (
-                    <p className="text-sm text-slate-600 italic py-1">
-                      Aucune étape — tap + pour ajouter
-                    </p>
+                    <button
+                      type="button"
+                      onClick={() => openForCreate(d)}
+                      className="w-full flex items-center gap-2.5 px-3.5 py-3 rounded-xl border border-dashed border-foreground/10 bg-foreground/3 text-slate-600 hover:text-slate-400 hover:border-foreground/20 hover:bg-foreground/6 active:bg-foreground/8 transition-all"
+                    >
+                      <Plus size={15} className="shrink-0" />
+                      <span className="text-sm">Ajouter une étape</span>
+                    </button>
                   )}
                 </div>
               </motion.div>
@@ -177,17 +184,17 @@ export default function PlanningPage({ params }: PlanningPageProps) {
         open={formOpen}
         onOpenChange={(open) => {
           setFormOpen(open);
-          if (!open) setEditingItem(undefined);
+          if (!open) { setEditingItem(undefined); setFormDefaultDate(undefined); }
         }}
         participants={trip?.participants ?? []}
-        defaultDate={trip?.startDate ?? new Date().toISOString().split("T")[0]}
+        defaultDate={formDefaultDate ?? trip?.startDate ?? new Date().toISOString().split("T")[0]}
         initialValues={editingItem}
         onSubmit={handleSubmit}
       />
 
       {/* FAB */}
       <button
-        onClick={openForCreate}
+        onClick={() => openForCreate()}
         className="fixed right-4 z-30 w-14 h-14 rounded-full gradient-primary text-white shadow-lg shadow-indigo-500/30 flex items-center justify-center active:scale-95 hover:scale-105 transition-all"
         style={{ bottom: "calc(env(safe-area-inset-bottom) + 5.5rem)" }}
         aria-label="Nouvelle étape"
