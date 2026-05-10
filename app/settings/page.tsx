@@ -252,7 +252,7 @@ function Section({
 }) {
   return (
     <section className="space-y-2">
-      <p className="text-sm text-slate-400 font-semibold uppercase tracking-wider px-1">
+      <p className="text-base text-slate-400 font-semibold uppercase tracking-wider px-1">
         {label}
       </p>
       <div className="space-y-3">{children}</div>

@@ -170,7 +170,7 @@ export default function PlanningPage({ params }: PlanningPageProps) {
                       <Plus size={16} className="shrink-0 text-indigo-400" />
                       <div>
                         <p className="text-sm font-medium">Rien de prévu ce jour</p>
-                        <p className="text-xs text-slate-500 mt-0.5">Transport, hébergement, activité, resto…</p>
+                        <p className="text-sm text-slate-500 mt-0.5">Transport, hébergement, activité, resto…</p>
                       </div>
                     </button>
                   )}
@@ -302,31 +302,31 @@ function ItineraryCard({
                 {cfg.label}
               </span>
               {item.time && (
-                <span className="flex items-center gap-1.5 text-sm text-slate-300 font-medium tabular-nums">
+                <span className="flex items-center gap-1.5 text-base text-slate-300 font-medium tabular-nums">
                   <Clock size={13} />
                   {item.time}
                 </span>
               )}
               {durationLabel && (
-                <span className="flex items-center gap-1.5 text-sm text-slate-300">
+                <span className="flex items-center gap-1.5 text-base text-slate-300">
                   <Hourglass size={13} />
                   {durationLabel}
                 </span>
               )}
             </div>
 
-            <p className="text-lg font-semibold text-slate-100 leading-tight mt-2">
+            <p className="text-xl font-semibold text-slate-100 leading-tight mt-2">
               {item.title}
             </p>
 
             {item.location && (
-              <p className="flex items-center gap-1.5 text-sm text-slate-400 mt-1.5">
+              <p className="flex items-center gap-1.5 text-base text-slate-400 mt-1.5">
                 <MapPin size={13} className="shrink-0" />
                 <span className="truncate">{item.location}</span>
               </p>
             )}
             {item.description && (
-              <p className="text-sm text-slate-400 mt-1.5">{item.description}</p>
+              <p className="text-base text-slate-400 mt-1.5">{item.description}</p>
             )}
 
             {/* Participants — visible avatar stack */}

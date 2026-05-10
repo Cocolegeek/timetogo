@@ -40,7 +40,7 @@ function LoginForm() {
           </div>
           <div>
             <h1 className="text-2xl font-bold gradient-text">Time to Go</h1>
-            <p className="text-sm text-slate-400 mt-1">
+            <p className="text-base text-slate-400 mt-1">
               Planifie, partage et gère tes voyages
             </p>
           </div>
@@ -50,7 +50,7 @@ function LoginForm() {
 
         {/* Sign in */}
         <div className="space-y-3">
-          <p className="text-xs text-slate-500 text-center">
+          <p className="text-sm text-slate-500 text-center">
             Connecte-toi pour accéder à tes voyages
           </p>
           <Button
@@ -84,7 +84,7 @@ function LoginForm() {
           </Button>
         </div>
 
-        <p className="text-xs text-slate-600 text-center leading-relaxed">
+        <p className="text-sm text-slate-600 text-center leading-relaxed">
           En continuant, tu acceptes que tes données de voyage soient stockées
           de façon sécurisée.
         </p>

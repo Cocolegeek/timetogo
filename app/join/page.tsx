@@ -160,7 +160,7 @@ function JoinContent() {
               <p className="text-slate-400 text-base mt-1">
                 {tripPreview.destination}
               </p>
-              <p className="text-sm text-slate-500 mt-1.5">
+              <p className="text-base text-slate-500 mt-1.5">
                 {new Date(tripPreview.startDate).toLocaleDateString("fr-FR", {
                   day: "numeric", month: "long",
                 })}{" "}→{" "}
@@ -210,7 +210,7 @@ function JoinContent() {
           )}
         </Button>
         {!selectedParticipantId && (
-          <p className="text-center text-xs text-slate-500 mt-2">
+          <p className="text-center text-sm text-slate-500 mt-2">
             Sélectionne ton identité pour continuer
           </p>
         )}
@@ -231,8 +231,8 @@ export default function JoinPage() {
           >
             <span className="text-2xl">✈️</span>
             <div>
-              <h1 className="font-bold text-slate-100">Time to Go</h1>
-              <p className="text-xs text-slate-500">Rejoindre un voyage</p>
+              <h1 className="text-lg font-bold text-slate-100">Time to Go</h1>
+              <p className="text-sm text-slate-500">Rejoindre un voyage</p>
             </div>
           </div>
         </header>
