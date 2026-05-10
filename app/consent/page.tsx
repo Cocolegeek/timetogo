@@ -19,9 +19,14 @@ export default function ConsentPage() {
     setError(false);
     try {
       const res = await fetch("/api/consent", { method: "POST" });
-      if (!res.ok) throw new Error();
+      const body = await res.json();
+      if (!res.ok) {
+        console.error("[consent]", res.status, body);
+        throw new Error(body?.error ?? "unknown");
+      }
       window.location.href = "/trips";
-    } catch {
+    } catch (e) {
+      console.error("[consent] catch", e);
       setError(true);
       setLoading(false);
     }
