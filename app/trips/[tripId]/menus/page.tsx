@@ -1,7 +1,7 @@
 "use client";
 
 import { use, useEffect, useMemo, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { RefreshCw, UtensilsCrossed, ChefHat, Users } from "lucide-react";
 import { GlassCard } from "@/components/layout/GlassCard";
 import { EmptyState } from "@/components/shared/EmptyState";
