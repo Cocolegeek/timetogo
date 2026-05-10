@@ -207,6 +207,27 @@ function MealCard({
       ? "Tous"
       : `${eatersCount} pers.`;
 
+  if (isEmpty) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, x: -10 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -10 }}
+      >
+        <button
+          type="button"
+          onClick={onTap}
+          className="w-full text-left px-3.5 py-3.5 rounded-2xl border border-dashed border-foreground/20 bg-foreground/4 hover:border-foreground/35 hover:bg-foreground/8 active:bg-foreground/10 transition-all"
+        >
+          <span className={cn("text-sm px-2.5 py-0.5 rounded-full font-medium", slotCfg.bgClass, slotCfg.textClass)}>
+            {slotCfg.shortLabel}
+          </span>
+          <p className="text-sm text-slate-400 mt-2">Rien de prévu — tap pour ajouter</p>
+        </button>
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, x: -10 }}
@@ -226,37 +247,27 @@ function MealCard({
             <span className={cn("text-sm px-2.5 py-0.5 rounded-full font-medium", slotCfg.bgClass, slotCfg.textClass)}>
               {slotCfg.shortLabel}
             </span>
-            {!isEmpty && (
-              <span className={cn("text-sm px-2.5 py-0.5 rounded-full font-medium", catCfg.badgeClass)}>
-                {catCfg.label}
-              </span>
-            )}
+            <span className={cn("text-sm px-2.5 py-0.5 rounded-full font-medium", catCfg.badgeClass)}>
+              {catCfg.label}
+            </span>
           </div>
 
-          {isEmpty ? (
-            <p className="text-base text-slate-400 mt-2">
-              Rien de prévu — tap pour ajouter
-            </p>
-          ) : (
-            <p className="text-lg font-semibold text-slate-100 leading-tight mt-2">
-              {meal.title}
-            </p>
-          )}
+          <p className="text-lg font-semibold text-slate-100 leading-tight mt-2">
+            {meal.title}
+          </p>
 
-          {!isEmpty && (
-            <div className="flex items-center gap-3 mt-1.5 text-sm text-slate-400">
-              {cookLabel && (
-                <span className="flex items-center gap-1.5">
-                  <ChefHat size={13} className="text-amber-400" />
-                  {cookLabel}
-                </span>
-              )}
+          <div className="flex items-center gap-3 mt-1.5 text-sm text-slate-400">
+            {cookLabel && (
               <span className="flex items-center gap-1.5">
-                <Users size={13} />
-                {eaterLabel}
+                <ChefHat size={13} className="text-amber-400" />
+                {cookLabel}
               </span>
-            </div>
-          )}
+            )}
+            <span className="flex items-center gap-1.5">
+              <Users size={13} />
+              {eaterLabel}
+            </span>
+          </div>
         </div>
       </GlassCard>
     </motion.div>
