@@ -25,8 +25,8 @@ export function ExpenseList({
     return (
       <EmptyState
         icon={Receipt}
-        title="Aucune dépense pour l'instant"
-        description="Ajoute ta première dépense pour commencer à suivre le budget."
+        title="Aucune dépense encore"
+        description="Ajoute restos, transports, hébergement… Time to Go calcule automatiquement qui doit quoi à qui, et simplifie les remboursements."
       />
     );
   }
@@ -46,7 +46,7 @@ export function ExpenseList({
     <div className="space-y-5">
       {sortedDates.map((date) => (
         <div key={date}>
-          <p className="text-sm text-slate-400 font-semibold mb-2.5 uppercase tracking-wider">
+          <p className="text-sm text-slate-300 font-semibold mb-2.5 uppercase tracking-wider">
             {new Date(date).toLocaleDateString("fr-FR", {
               weekday: "long",
               day: "numeric",

@@ -25,9 +25,14 @@ export function DebtSettlements({
 }: DebtSettlementsProps) {
   if (settlements.length === 0) {
     return (
-      <div className="flex items-center gap-2 py-4 text-sm text-emerald-400">
-        <CheckCircle2 size={18} />
-        <span>Tout le monde est quitte !</span>
+      <div className="space-y-2 py-2">
+        <div className="flex items-center gap-2 text-base text-emerald-400 font-semibold">
+          <CheckCircle2 size={18} />
+          <span>Tout le monde est quitte !</span>
+        </div>
+        <p className="text-sm text-slate-400 leading-relaxed">
+          Dès que des dépenses sont ajoutées, Time to Go calcule ici le minimum de virements pour solder les comptes entre vous.
+        </p>
       </div>
     );
   }

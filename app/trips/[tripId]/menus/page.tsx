@@ -97,7 +97,7 @@ export default function MenusPage({ params }: MenusPageProps) {
                 key={d}
                 ref={isToday ? todayRef : undefined}
                 initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: isPast ? 0.45 : 1, y: 0 }}
+                animate={{ opacity: isPast ? 0.6 : 1, y: 0 }}
                 transition={{ delay: Math.min(idx * 0.02, 0.2) }}
                 className="scroll-mt-2"
               >
@@ -261,7 +261,7 @@ function MealCard({
 
             {/* Title (or placeholder hint) */}
             {isEmpty ? (
-              <p className="text-base text-slate-500 italic">
+              <p className="text-base text-slate-400">
                 Repas non renseigné — tap pour ajouter
               </p>
             ) : (
@@ -280,7 +280,7 @@ function MealCard({
                   </span>
                 )}
                 <span className="flex items-center gap-1.5">
-                  <Users size={13} className="text-slate-500" />
+                  <Users size={13} className="text-slate-400" />
                   {eaterLabel}
                 </span>
               </div>
