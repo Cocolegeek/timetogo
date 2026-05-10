@@ -4,8 +4,8 @@
   "description": "L'application de voyage ultime — Budget, Planning, Menus",
   "start_url": "/trips",
   "display": "standalone",
-  "background_color": "#e8197d",
-  "theme_color": "#e8197d",
+  "background_color": "#0a0c14",
+  "theme_color": "#0a0c14",
   "orientation": "portrait-primary",
   "icons": [
     {
