@@ -1,7 +1,7 @@
 "use client";
 
 import { use, useEffect, useMemo, useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { RefreshCw, UtensilsCrossed, ChefHat, Users } from "lucide-react";
 import { GlassCard } from "@/components/layout/GlassCard";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -9,10 +9,10 @@ import dynamic from "next/dynamic";
 const MealEditDialog = dynamic(() => import("@/components/menus/MealEditDialog").then(m => ({ default: m.MealEditDialog })), { ssr: false });
 import { useTrip } from "@/hooks/useTrip";
 import { useMeals } from "@/hooks/useMeals";
-import { DEFAULT_SLOTS, SLOT_CONFIG, eachDate } from "@/lib/meals/slots";
+import { DEFAULT_SLOTS, SLOT_CONFIG, eachDate, type SlotConfig } from "@/lib/meals/slots";
 import { CATEGORY_CONFIG } from "@/lib/meals/categories";
 import { cn } from "@/lib/utils";
-import type { Meal, MealSlot, Participant } from "@/types";
+import type { Meal, Participant } from "@/types";
 
 interface MenusPageProps {
   params: Promise<{ tripId: string }>;
@@ -102,7 +102,7 @@ export default function MenusPage({ params }: MenusPageProps) {
                 className="scroll-mt-2"
               >
                 <DayHeader date={d} isToday={isToday} isPast={isPast} />
-                <div className="space-y-2.5">
+                <div className="relative pl-4 border-l border-foreground/8 space-y-3">
                   {DEFAULT_SLOTS.map((slot) => {
                     const meal = mealMap.get(`${d}#${slot.slot}`);
                     return meal ? (
@@ -113,11 +113,9 @@ export default function MenusPage({ params }: MenusPageProps) {
                         onTap={() => setEditingMeal(meal)}
                       />
                     ) : (
-                      // Should never happen (auto-gen ensures all 3 exist),
-                      // but keep a placeholder for resilience
                       <PlaceholderCard
                         key={slot.slot}
-                        slotLabel={slot.shortLabel}
+                        slot={slot}
                       />
                     );
                   })}
@@ -203,7 +201,6 @@ function MealCard({
       ? "Tous"
       : `${cooks.length} pers.`;
 
-  // Empty list semantics: empty = "Tous" (everyone implicitly)
   const eatersCount = meal.participantIds.length;
   const eaterLabel =
     eatersCount === 0 || eatersCount === participants.length
@@ -211,95 +208,69 @@ function MealCard({
       : `${eatersCount} pers.`;
 
   return (
-    <motion.div layout>
-      <GlassCard
-        padding={false}
-        className={cn(
-          "overflow-hidden transition-opacity",
-          isEmpty && "opacity-55 hover:opacity-80"
-        )}
-      >
+    <motion.div
+      initial={{ opacity: 0, x: -10 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -10 }}
+    >
+      <GlassCard padding={false}>
         <div
           role="button"
           tabIndex={0}
           onClick={onTap}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") onTap();
-          }}
-          className="flex cursor-pointer active:bg-foreground/4 transition-colors"
+          onKeyDown={(e) => { if (e.key === "Enter") onTap(); }}
+          className="p-3.5 cursor-pointer active:bg-foreground/4 transition-colors"
         >
-          {/* Left strip — slot color when filled, neutral grey when empty */}
-          <div
-            className={cn(
-              "w-1.5 shrink-0",
-              isEmpty ? "bg-slate-600/40" : slotCfg.stripClass
-            )}
-          />
-
-          <div className="flex-1 min-w-0 p-3.5">
-            {/* Top row: slot label + category badge (only when filled) */}
-            <div className="flex items-center justify-between gap-2 mb-1.5">
-              <span
-                className={cn(
-                  "text-xs font-bold uppercase tracking-wider",
-                  isEmpty ? "text-slate-500" : slotCfg.textClass
-                )}
-              >
-                {slotCfg.shortLabel}
-              </span>
-              {!isEmpty && (
-                <span
-                  className={cn(
-                    "text-xs font-semibold px-2.5 py-0.5 rounded-full whitespace-nowrap",
-                    catCfg.badgeClass
-                  )}
-                >
-                  {catCfg.label}
-                </span>
-              )}
-            </div>
-
-            {/* Title (or placeholder hint) */}
-            {isEmpty ? (
-              <p className="text-base text-slate-400">
-                Repas non renseigné — tap pour ajouter
-              </p>
-            ) : (
-              <p className="text-lg font-semibold text-slate-100 leading-tight truncate">
-                {meal.title}
-              </p>
-            )}
-
-            {/* Footer: cook + eaters — only when filled */}
+          {/* Tags row */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className={cn("text-sm px-2.5 py-0.5 rounded-full font-medium", slotCfg.bgClass, slotCfg.textClass)}>
+              {slotCfg.shortLabel}
+            </span>
             {!isEmpty && (
-              <div className="flex items-center gap-3 mt-2 text-sm text-slate-300">
-                {cookLabel && (
-                  <span className="flex items-center gap-1.5">
-                    <ChefHat size={13} className="text-amber-400/80" />
-                    {cookLabel}
-                  </span>
-                )}
-                <span className="flex items-center gap-1.5">
-                  <Users size={13} className="text-slate-400" />
-                  {eaterLabel}
-                </span>
-              </div>
+              <span className={cn("text-sm px-2.5 py-0.5 rounded-full font-medium", catCfg.badgeClass)}>
+                {catCfg.label}
+              </span>
             )}
           </div>
+
+          {isEmpty ? (
+            <p className="text-base text-slate-400 mt-2">
+              Rien de prévu — tap pour ajouter
+            </p>
+          ) : (
+            <p className="text-lg font-semibold text-slate-100 leading-tight mt-2">
+              {meal.title}
+            </p>
+          )}
+
+          {!isEmpty && (
+            <div className="flex items-center gap-3 mt-1.5 text-sm text-slate-400">
+              {cookLabel && (
+                <span className="flex items-center gap-1.5">
+                  <ChefHat size={13} className="text-amber-400" />
+                  {cookLabel}
+                </span>
+              )}
+              <span className="flex items-center gap-1.5">
+                <Users size={13} />
+                {eaterLabel}
+              </span>
+            </div>
+          )}
         </div>
       </GlassCard>
     </motion.div>
   );
 }
 
-function PlaceholderCard({ slotLabel }: { slotLabel: string }) {
+function PlaceholderCard({ slot }: { slot: SlotConfig }) {
   return (
-    <GlassCard padding={false} className="overflow-hidden opacity-60">
+    <GlassCard padding={false} className="opacity-50">
       <div className="p-3.5">
-        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
-          {slotLabel}
+        <span className={cn("text-sm px-2.5 py-0.5 rounded-full font-medium", slot.bgClass, slot.textClass)}>
+          {slot.shortLabel}
         </span>
-        <p className="text-sm text-slate-500 mt-1">Repas non initialisé</p>
+        <p className="text-base text-slate-500 mt-2">Repas non initialisé</p>
       </div>
     </GlassCard>
   );
