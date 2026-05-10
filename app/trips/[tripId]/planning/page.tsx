@@ -144,7 +144,7 @@ export default function PlanningPage({ params }: PlanningPageProps) {
                 key={d}
                 ref={isToday ? todayRef : undefined}
                 initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: isPast ? 0.45 : 1, y: 0 }}
+                animate={{ opacity: isPast ? 0.6 : 1, y: 0 }}
                 transition={{ delay: Math.min(idx * 0.02, 0.2) }}
                 className="scroll-mt-2"
               >
@@ -165,10 +165,13 @@ export default function PlanningPage({ params }: PlanningPageProps) {
                     <button
                       type="button"
                       onClick={() => openForCreate(d)}
-                      className="w-full flex items-center gap-2.5 px-3.5 py-3 rounded-xl border border-dashed border-foreground/10 bg-foreground/3 text-slate-600 hover:text-slate-400 hover:border-foreground/20 hover:bg-foreground/6 active:bg-foreground/8 transition-all"
+                      className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl border border-dashed border-foreground/20 bg-foreground/4 text-slate-400 hover:text-slate-200 hover:border-foreground/35 hover:bg-foreground/8 active:bg-foreground/10 transition-all text-left"
                     >
-                      <Plus size={15} className="shrink-0" />
-                      <span className="text-sm">Ajouter une étape</span>
+                      <Plus size={16} className="shrink-0 text-indigo-400" />
+                      <div>
+                        <p className="text-sm font-medium">Rien de prévu ce jour</p>
+                        <p className="text-xs text-slate-500 mt-0.5">Transport, hébergement, activité, resto…</p>
+                      </div>
                     </button>
                   )}
                 </div>
