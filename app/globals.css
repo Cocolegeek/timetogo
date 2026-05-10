@@ -6,6 +6,10 @@
   color-scheme: dark;
 }
 
+html, body {
+  overflow-x: hidden;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
