@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
 const PUBLIC_ROUTES = ["/login", "/auth/callback"];
+const CONSENT_COOKIE = "gdpr_ok";
 
 export default async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -47,6 +48,14 @@ export default async function proxy(req: NextRequest) {
   if (pathname === "/login" && user) {
     const redirectTo = req.nextUrl.searchParams.get("redirect_to") ?? "/trips";
     return NextResponse.redirect(new URL(redirectTo, req.nextUrl));
+  }
+
+  // RGPD: redirect authenticated users without consent to /consent
+  if (user && pathname !== "/consent") {
+    const hasConsent = req.cookies.get(CONSENT_COOKIE)?.value === "1";
+    if (!hasConsent) {
+      return NextResponse.redirect(new URL("/consent", req.nextUrl));
+    }
   }
 
   return response;
