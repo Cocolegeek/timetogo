@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import { Trash2 } from "lucide-react";
 import { CATEGORIES } from "@/lib/budget/categories";
+import { formatCurrency } from "@/lib/format-currency";
 import { cn } from "@/lib/utils";
 import type { Expense, Participant } from "@/types";
 
@@ -16,14 +17,6 @@ interface ExpenseCardProps {
 }
 
 const SWIPE_THRESHOLD = -110;
-
-function formatAmount(amount: number, currency: string) {
-  return new Intl.NumberFormat("fr-FR", {
-    style: "currency",
-    currency,
-    minimumFractionDigits: 2,
-  }).format(amount);
-}
 
 export function ExpenseCard({
   expense,
@@ -121,7 +114,7 @@ export function ExpenseCard({
                 {expense.title}
               </p>
               <span className="font-bold text-slate-100 text-lg shrink-0 tabular-nums">
-                {formatAmount(expense.amountInTripCurrency, currency)}
+                {formatCurrency(expense.amountInTripCurrency, currency)}
               </span>
             </div>
 

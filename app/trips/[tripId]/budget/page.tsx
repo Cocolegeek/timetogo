@@ -8,6 +8,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import dynamic from "next/dynamic";
 const ExpenseForm = dynamic(() => import("@/components/budget/ExpenseForm").then(m => ({ default: m.ExpenseForm })), { ssr: false });
 import { ExpenseList } from "@/components/budget/ExpenseList";
+import { Spinner } from "@/components/shared/Spinner";
 import { BalanceSummary } from "@/components/budget/BalanceSummary";
 import { DebtSettlements } from "@/components/budget/DebtSettlements";
 import { useTrip } from "@/hooks/useTrip";
@@ -82,9 +83,7 @@ export default function BudgetPage({ params }: BudgetPageProps) {
 
   if (!trip) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div className="w-8 h-8 rounded-full border-2 border-indigo-500/50 border-t-indigo-400 animate-spin" />
-      </div>
+      <Spinner />
     );
   }
 

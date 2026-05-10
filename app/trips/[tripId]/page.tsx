@@ -22,6 +22,7 @@ import { IdentityPicker } from "@/components/trips/IdentityPicker";
 import { BudgetEditDialog } from "@/components/trips/BudgetEditDialog";
 import { TripEditDialog } from "@/components/trips/TripEditDialog";
 import { ParticipantAvatar } from "@/components/shared/ParticipantAvatar";
+import { Spinner } from "@/components/shared/Spinner";
 import {
   Dialog,
   DialogContent,
@@ -76,9 +77,7 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
 
   if (!trip) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div className="w-8 h-8 rounded-full border-2 border-indigo-500/50 border-t-indigo-400 animate-spin" />
-      </div>
+      <Spinner />
     );
   }
 
