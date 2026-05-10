@@ -12,6 +12,7 @@ import { UserMenu } from "@/components/layout/UserMenu";
 import { buttonVariants } from "@/components/ui/button";
 import { useTrips } from "@/hooks/useTrip";
 import { useProfile } from "@/hooks/useProfile";
+import { PwaInstallBanner } from "@/components/shared/PwaInstallBanner";
 import { daysUntil } from "@/lib/format-date";
 import { cn } from "@/lib/utils";
 import { useMemo } from "react";
@@ -103,6 +104,8 @@ export default function TripsPage() {
             </div>
           </div>
         </header>
+
+        <PwaInstallBanner />
 
         {/* Content */}
         <main
