@@ -1,6 +1,7 @@
 "use client";
 
 import { use, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import {
   Plus,
   Map,
@@ -10,6 +11,7 @@ import {
   MoreVertical,
   Pencil,
   Trash2,
+  ArrowLeft,
 } from "lucide-react";
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from "framer-motion";
 import { GlassCard } from "@/components/layout/GlassCard";
@@ -118,6 +120,16 @@ export default function PlanningPage({ params }: PlanningPageProps) {
 
   return (
     <div className="space-y-5">
+      {/* Back to home */}
+      <div className="-mt-1 -mb-2">
+        <Link
+          href="/trips"
+          className="inline-flex items-center justify-center p-2 -ml-2 rounded-xl hover:bg-foreground/8 active:bg-foreground/12 text-slate-400 hover:text-slate-200 transition-all"
+          aria-label="Retour à l'accueil"
+        >
+          <ArrowLeft size={20} />
+        </Link>
+      </div>
 
       {dates.length === 0 ? (
         <EmptyState

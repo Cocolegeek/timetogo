@@ -1,7 +1,8 @@
 "use client";
 
 import { use, useState } from "react";
-import { Plus, Wallet, ArrowRightLeft } from "lucide-react";
+import Link from "next/link";
+import { Plus, Wallet, ArrowRightLeft, ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
 import { GlassCard } from "@/components/layout/GlassCard";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -114,6 +115,16 @@ export default function BudgetPage({ params }: BudgetPageProps) {
 
   return (
     <div className="space-y-5">
+      {/* Back to home */}
+      <div className="-mt-1 -mb-2">
+        <Link
+          href="/trips"
+          className="inline-flex items-center justify-center p-2 -ml-2 rounded-xl hover:bg-foreground/8 active:bg-foreground/12 text-slate-400 hover:text-slate-200 transition-all"
+          aria-label="Retour à l'accueil"
+        >
+          <ArrowLeft size={20} />
+        </Link>
+      </div>
 
       {/* Total spent — hero pleine couleur, suit l'accent de la section */}
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}>
