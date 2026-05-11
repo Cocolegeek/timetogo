@@ -39,13 +39,13 @@ export function TripNav({ tripId, tripType }: TripNavProps) {
     >
       <div className="max-w-3xl mx-auto">
         <div
-          className="glass-strong rounded-3xl px-2 py-2 shadow-2xl"
+          className="glass-strong rounded-[1.75rem] px-2.5 py-2.5"
           style={{
             boxShadow:
               "0 24px 60px -16px rgba(0,0,0,0.45), 0 0 0 1px var(--glass-border-strong) inset",
           }}
         >
-          <div className="flex items-center justify-around gap-1">
+          <div className="flex items-stretch justify-around gap-1">
             {items.map(({ label, href, icon: Icon }) => {
               const fullHref = `${base}${href}`;
               const isActive =
@@ -58,16 +58,17 @@ export function TripNav({ tripId, tripType }: TripNavProps) {
                   key={href}
                   href={fullHref}
                   className={cn(
-                    "flex-1 flex flex-col items-center justify-center gap-1 py-1.5 px-1 rounded-2xl transition-all relative active:scale-95",
+                    "flex-1 flex flex-col items-center justify-center gap-1.5 py-2 px-1 rounded-2xl transition-all relative active:scale-95 min-w-0",
                     isActive
                       ? "text-slate-100"
                       : "text-slate-400 hover:text-slate-200"
                   )}
+                  aria-current={isActive ? "page" : undefined}
                 >
                   <div
                     className={cn(
-                      "flex items-center justify-center rounded-full transition-all duration-200",
-                      isActive ? "w-11 h-11" : "w-10 h-10"
+                      "flex items-center justify-center rounded-full transition-all duration-200 shrink-0",
+                      isActive ? "w-12 h-12" : "w-11 h-11"
                     )}
                     style={
                       isActive
@@ -75,21 +76,21 @@ export function TripNav({ tripId, tripType }: TripNavProps) {
                             background:
                               "linear-gradient(135deg, var(--accent-500), oklch(0.50 calc(var(--accent-c) + 0.03) calc(var(--accent-h) + 25)))",
                             boxShadow:
-                              "0 10px 24px -6px var(--accent-glow), inset 0 1px 0 0 oklch(1 0 0 / 20%)",
+                              "0 12px 28px -8px var(--accent-glow), inset 0 1px 0 0 oklch(1 0 0 / 22%)",
                           }
                         : undefined
                     }
                   >
                     <Icon
-                      size={22}
+                      size={isActive ? 24 : 23}
                       strokeWidth={isActive ? 2.5 : 2}
                       className={isActive ? "text-white" : ""}
                     />
                   </div>
                   <span
                     className={cn(
-                      "text-[11px] leading-none tracking-tight transition-all",
-                      isActive ? "font-semibold" : "font-medium"
+                      "text-[12px] sm:text-[13px] leading-none tracking-tight truncate max-w-full px-0.5 transition-all",
+                      isActive ? "font-bold" : "font-medium"
                     )}
                     style={isActive ? { color: "var(--accent-300)" } : undefined}
                   >
