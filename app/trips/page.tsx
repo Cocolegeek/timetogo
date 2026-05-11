@@ -67,6 +67,7 @@ export default function TripsPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [editingTripId, setEditingTripId] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"voyages" | "budgets">("voyages");
 
   const firstName = profile?.name?.split(" ")[0] ?? null;
 
@@ -141,42 +142,43 @@ export default function TripsPage() {
               {isEmpty ? (
                 <FirstTimeEmptyState />
               ) : (
-                <div className="space-y-8 mt-7">
-                  {/* Voyages section */}
-                  <Section
-                    icon={Plane}
-                    label="Voyages"
-                    count={sortedVoyages.length}
-                  >
-                    {sortedVoyages.length === 0 ? (
-                      <SectionEmpty
-                        icon={Plane}
-                        text="Aucun voyage pour l'instant"
-                        ctaLabel="Créer un voyage"
-                        href="/trips/new"
-                      />
-                    ) : (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {sortedVoyages.map((trip, i) => (
-                          <TripCard
-                            key={trip.id}
-                            trip={trip}
-                            onEdit={(t) => setEditingTripId(t.id)}
-                            onDelete={handleDelete}
-                            index={i}
-                          />
-                        ))}
-                      </div>
-                    )}
-                  </Section>
+                <div className="mt-7">
+                  <TabSwitcher
+                    active={activeTab}
+                    onChange={setActiveTab}
+                    voyageCount={sortedVoyages.length}
+                    groupCount={sortedGroups.length}
+                  />
 
-                  {/* Budgets section */}
-                  <Section
-                    icon={Wallet}
-                    label="Budgets partagés"
-                    count={sortedGroups.length}
+                  <motion.div
+                    key={activeTab}
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="mt-4"
                   >
-                    {sortedGroups.length === 0 ? (
+                    {activeTab === "voyages" ? (
+                      sortedVoyages.length === 0 ? (
+                        <SectionEmpty
+                          icon={Plane}
+                          text="Aucun voyage pour l'instant"
+                          ctaLabel="Créer un voyage"
+                          href="/trips/new"
+                        />
+                      ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {sortedVoyages.map((trip, i) => (
+                            <TripCard
+                              key={trip.id}
+                              trip={trip}
+                              onEdit={(t) => setEditingTripId(t.id)}
+                              onDelete={handleDelete}
+                              index={i}
+                            />
+                          ))}
+                        </div>
+                      )
+                    ) : sortedGroups.length === 0 ? (
                       <SectionEmpty
                         icon={Wallet}
                         text="Aucun budget partagé"
@@ -196,7 +198,7 @@ export default function TripsPage() {
                         ))}
                       </div>
                     )}
-                  </Section>
+                  </motion.div>
                 </div>
               )}
             </>
@@ -355,36 +357,69 @@ function HeroGreeting({
   );
 }
 
-// ─── Section ────────────────────────────────────────────────────────────────
+// ─── TabSwitcher ────────────────────────────────────────────────────────────
 
-function Section({
-  icon: Icon,
-  label,
-  count,
-  children,
+function TabSwitcher({
+  active,
+  onChange,
+  voyageCount,
+  groupCount,
 }: {
-  icon: typeof Plane;
-  label: string;
-  count: number;
-  children: React.ReactNode;
+  active: "voyages" | "budgets";
+  onChange: (tab: "voyages" | "budgets") => void;
+  voyageCount: number;
+  groupCount: number;
 }) {
+  const tabs = [
+    { id: "voyages" as const, label: "Voyages", icon: Plane, count: voyageCount },
+    { id: "budgets" as const, label: "Budgets", icon: Wallet, count: groupCount },
+  ];
+
   return (
-    <section>
-      <div className="flex items-center justify-between mb-3 px-1">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-section-soft flex items-center justify-center shrink-0">
-            <Icon size={16} className="text-section" />
-          </div>
-          <h2 className="text-base font-bold text-slate-100 tracking-tight">
-            {label}
-          </h2>
-          <span className="text-xs font-bold text-slate-400 bg-foreground/8 px-2 py-0.5 rounded-full tabular-nums">
-            {count}
-          </span>
-        </div>
-      </div>
-      {children}
-    </section>
+    <div className="relative flex items-center gap-1 p-1 rounded-2xl bg-foreground/5 border border-foreground/8">
+      {tabs.map((tab) => {
+        const isActive = active === tab.id;
+        const Icon = tab.icon;
+        return (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => onChange(tab.id)}
+            className={cn(
+              "relative flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors active:scale-[0.98]",
+              isActive ? "text-white" : "text-slate-400 hover:text-slate-200"
+            )}
+          >
+            {isActive && (
+              <motion.span
+                layoutId="tab-pill"
+                transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                className="absolute inset-0 rounded-xl"
+                style={{
+                  background:
+                    "linear-gradient(135deg, var(--accent-500), oklch(0.50 calc(var(--accent-c) + 0.03) calc(var(--accent-h) + 25)))",
+                  boxShadow: "0 6px 18px -6px var(--accent-glow)",
+                }}
+              />
+            )}
+            <span className="relative flex items-center gap-2">
+              <Icon size={15} strokeWidth={isActive ? 2.4 : 2} />
+              <span>{tab.label}</span>
+              <span
+                className={cn(
+                  "text-[11px] font-bold px-1.5 py-0.5 rounded-full tabular-nums leading-none",
+                  isActive
+                    ? "bg-white/20 text-white"
+                    : "bg-foreground/10 text-slate-400"
+                )}
+              >
+                {tab.count}
+              </span>
+            </span>
+          </button>
+        );
+      })}
+    </div>
   );
 }
 
