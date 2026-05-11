@@ -18,6 +18,7 @@ function rowsToTrip(
     id: tripRow.id as string,
     name: tripRow.name as string,
     emoji: tripRow.emoji as string,
+    iconUrl: (tripRow.icon_url as string | null) ?? null,
     currency: tripRow.currency as string,
     totalBudget: (tripRow.total_budget as number | null) ?? undefined,
     shareCode: tripRow.share_code as string,
@@ -194,28 +195,35 @@ export function useTrip(id: string) {
   useRevalidateOnFocus(fetchTrip);
 
   const updateTrip = async (
-    data: Partial<{ name: string; destination: string; emoji: string; currency: string; startDate: string; endDate: string; totalBudget: number | null }>
+    data: Partial<{
+      name: string;
+      destination: string;
+      emoji: string;
+      currency: string;
+      startDate: string;
+      endDate: string;
+      totalBudget: number | null;
+      iconUrl: string | null;
+    }>
   ): Promise<void> => {
     const snapshot = trip;
     if (trip) {
+      const sharedPatch = {
+        ...(data.name && { name: data.name }),
+        ...(data.emoji && { emoji: data.emoji }),
+        ...(data.currency && { currency: data.currency }),
+        ...(data.iconUrl !== undefined && { iconUrl: data.iconUrl }),
+        totalBudget: data.totalBudget ?? trip.totalBudget,
+      };
       const next: Trip = trip.type === "trip"
         ? {
             ...trip,
-            ...(data.name && { name: data.name }),
-            ...(data.emoji && { emoji: data.emoji }),
-            ...(data.currency && { currency: data.currency }),
+            ...sharedPatch,
             ...(data.destination !== undefined && { destination: data.destination }),
             ...(data.startDate !== undefined && { startDate: data.startDate }),
             ...(data.endDate !== undefined && { endDate: data.endDate }),
-            totalBudget: data.totalBudget ?? trip.totalBudget,
           }
-        : {
-            ...trip,
-            ...(data.name && { name: data.name }),
-            ...(data.emoji && { emoji: data.emoji }),
-            ...(data.currency && { currency: data.currency }),
-            totalBudget: data.totalBudget ?? trip.totalBudget,
-          };
+        : { ...trip, ...sharedPatch };
       setTrip(next);
     }
 
@@ -227,6 +235,7 @@ export function useTrip(id: string) {
       ...(data.startDate !== undefined && { start_date: data.startDate }),
       ...(data.endDate !== undefined && { end_date: data.endDate }),
       ...(data.totalBudget !== undefined && { total_budget: data.totalBudget }),
+      ...(data.iconUrl !== undefined && { icon_url: data.iconUrl }),
       updated_at: new Date().toISOString(),
     }).eq("id", id);
 

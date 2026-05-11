@@ -33,6 +33,7 @@ export function TripEditWrapper({ tripId, onClose }: TripEditWrapperProps) {
       }}
       trip={trip}
       onSaveTrip={updateTrip}
+      onSaveIcon={(iconUrl) => updateTrip({ iconUrl })}
       onAddParticipant={addParticipant}
       onUpdateParticipant={updateParticipant}
       onDeleteParticipant={deleteParticipant}

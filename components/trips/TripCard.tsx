@@ -66,11 +66,22 @@ export function TripCard({ trip, onEdit, onDelete, onShare, index }: TripCardPro
         <div className="flex items-center gap-3 pr-12">
           <div
             className={cn(
-              "w-16 h-16 rounded-2xl flex items-center justify-center text-4xl shrink-0 bg-gradient-to-br",
-              gradient
+              "w-16 h-16 rounded-2xl flex items-center justify-center text-4xl shrink-0 overflow-hidden",
+              !trip.iconUrl && "bg-gradient-to-br",
+              !trip.iconUrl && gradient
             )}
           >
-            {trip.emoji}
+            {trip.iconUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={trip.iconUrl}
+                alt=""
+                className="w-full h-full object-cover"
+                draggable={false}
+              />
+            ) : (
+              trip.emoji
+            )}
           </div>
 
           <div className="flex-1 min-w-0 space-y-1">

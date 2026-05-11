@@ -9,7 +9,6 @@ import {
   Loader2,
   User,
   Mail,
-  Camera,
   Moon,
   Sun,
   LogOut,
@@ -17,17 +16,20 @@ import {
 import { MeshGradientBackground } from "@/components/layout/MeshGradientBackground";
 import { Spinner } from "@/components/shared/Spinner";
 import { GlassCard } from "@/components/layout/GlassCard";
+import { AvatarUpload } from "@/components/shared/AvatarUpload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useProfile } from "@/hooks/useProfile";
 import { useTheme } from "@/hooks/useTheme";
+import { useUserId } from "@/hooks/useUserId";
 import { MAP_APPS, MAP_PREF_KEY, type MapAppId } from "@/lib/map-apps";
 import { cn } from "@/lib/utils";
 
 export default function SettingsPage() {
   const { profile, loading, updateProfile, signOut } = useProfile();
   const { theme, toggle } = useTheme();
+  const userId = useUserId();
 
   const [name, setName] = useState("");
   const [saving, setSaving] = useState(false);
@@ -99,25 +101,37 @@ export default function SettingsPage() {
                   animate={{ opacity: 1, y: 0 }}
                   className="flex flex-col items-center gap-3 py-2"
                 >
-                  <div className="relative">
-                    {profile?.avatar_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={profile.avatar_url}
-                        alt={profile.name ?? "avatar"}
-                        className="w-20 h-20 rounded-full object-cover border-2 border-foreground/10"
-                      />
-                    ) : (
-                      <div className="w-20 h-20 rounded-full bg-section-soft border-2 border-section flex items-center justify-center">
-                        <User size={32} className="text-section" />
-                      </div>
-                    )}
-                    <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-slate-800 border border-foreground/10 flex items-center justify-center">
-                      <Camera size={12} className="text-slate-400" />
-                    </div>
-                  </div>
+                  {userId ? (
+                    <AvatarUpload
+                      bucket="profile-avatars"
+                      path={`${userId}/avatar.webp`}
+                      currentUrl={profile?.custom_avatar_url ?? profile?.avatar_url ?? null}
+                      size={88}
+                      ringClass="ring-2 ring-section/40"
+                      dialogTitle="Recadrer la photo"
+                      placeholder={
+                        <div className="w-full h-full bg-section-soft flex items-center justify-center">
+                          <User size={32} className="text-section" />
+                        </div>
+                      }
+                      onUploaded={async (url) => {
+                        await updateProfile({ custom_avatar_url: url });
+                      }}
+                      onRemoved={
+                        profile?.custom_avatar_url
+                          ? async () => {
+                              await updateProfile({ custom_avatar_url: null });
+                            }
+                          : undefined
+                      }
+                    />
+                  ) : (
+                    <div className="w-[88px] h-[88px] rounded-full bg-foreground/8" />
+                  )}
                   <p className="text-sm text-slate-500">
-                    Photo synchronisée depuis Google
+                    {profile?.custom_avatar_url
+                      ? "Photo personnalisée"
+                      : "Photo synchronisée depuis Google"}
                   </p>
                 </motion.div>
 
@@ -233,12 +247,12 @@ export default function SettingsPage() {
               <Section label="Compte">
                 <GlassCard padding={false}>
                   <div className="px-4 py-3 flex items-center gap-3 border-b border-foreground/8">
-                    {profile?.avatar_url ? (
+                    {profile?.custom_avatar_url || profile?.avatar_url ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
-                        src={profile.avatar_url}
+                        src={profile.custom_avatar_url ?? profile.avatar_url ?? ""}
                         alt=""
-                        className="w-10 h-10 rounded-full"
+                        className="w-10 h-10 rounded-full object-cover"
                       />
                     ) : (
                       <div className="w-10 h-10 rounded-full bg-section-soft flex items-center justify-center">

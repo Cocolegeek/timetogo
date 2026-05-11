@@ -4,6 +4,7 @@ export interface Profile {
   id: string;
   name: string | null;
   avatar_url: string | null;
+  custom_avatar_url: string | null;
   email: string | null;
   created_at: string;
 }
@@ -43,6 +44,7 @@ interface BaseTrip {
   id: string;
   name: string;
   emoji: string;
+  iconUrl?: string | null;
   currency: string;
   participants: Participant[];
   totalBudget?: number;
@@ -79,6 +81,7 @@ export interface TripRow {
   share_code: string;
   owner_id: string;
   type: TripType;
+  icon_url: string | null;
   created_at: string;
   updated_at: string;
 }

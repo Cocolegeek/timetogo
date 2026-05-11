@@ -25,10 +25,10 @@ export function UserMenu() {
         className="rounded-full w-9 h-9 p-0 overflow-hidden border border-foreground/10 hover:border-foreground/20 transition-colors focus:outline-none"
         aria-label="Menu utilisateur"
       >
-        {profile?.avatar_url ? (
+        {profile?.custom_avatar_url || profile?.avatar_url ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={profile.avatar_url}
+            src={profile.custom_avatar_url ?? profile.avatar_url ?? ""}
             alt={profile.name ?? "avatar"}
             className="w-full h-full object-cover"
           />

@@ -125,7 +125,7 @@ export default function TripsPage() {
               {/* ─── Hero greeting card ─────────────────────────────── */}
               <HeroGreeting
                 firstName={firstName}
-                avatarUrl={profile?.avatar_url ?? null}
+                avatarUrl={profile?.custom_avatar_url ?? profile?.avatar_url ?? null}
                 voyageCount={sortedVoyages.length}
                 groupCount={sortedGroups.length}
                 ongoingCount={ongoingCount}

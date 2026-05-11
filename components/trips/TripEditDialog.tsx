@@ -13,6 +13,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { LocationAutocomplete } from "@/components/shared/LocationAutocomplete";
+import { AvatarUpload } from "@/components/shared/AvatarUpload";
+import { useUserId } from "@/hooks/useUserId";
 import { cn } from "@/lib/utils";
 import { isVoyage, tripFeatures } from "@/lib/trip-features";
 import type { Trip, Participant } from "@/types";
@@ -36,7 +38,12 @@ interface TripEditDialogProps {
     currency: string;
     startDate: string;
     endDate: string;
+    iconUrl?: string | null;
   }) => Promise<void>;
+  /** Save only the trip icon URL (or null to remove). Independent of the
+   *  rest of the form so uploading an image doesn't silently persist other
+   *  in-progress edits. */
+  onSaveIcon: (iconUrl: string | null) => Promise<void>;
   onAddParticipant: (data: { name: string; color: string }) => Promise<unknown>;
   onUpdateParticipant: (
     id: string,
@@ -50,11 +57,13 @@ export function TripEditDialog({
   onOpenChange,
   trip,
   onSaveTrip,
+  onSaveIcon,
   onAddParticipant,
   onUpdateParticipant,
   onDeleteParticipant,
 }: TripEditDialogProps) {
   const features = tripFeatures(trip);
+  const userId = useUserId();
   const [name, setName] = useState(trip.name);
   const [destination, setDestination] = useState(isVoyage(trip) ? trip.destination : "");
   const [emoji, setEmoji] = useState(trip.emoji);
@@ -157,6 +166,26 @@ export function TripEditDialog({
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto px-5 py-5 space-y-6">
+          {/* Custom icon — upload + crop */}
+          {userId && (
+            <div className="flex flex-col items-center gap-2">
+              <AvatarUpload
+                bucket="trip-icons"
+                path={`${userId}/${trip.id}.webp`}
+                currentUrl={trip.iconUrl ?? null}
+                size={88}
+                ringClass="ring-2 ring-section/40"
+                placeholder={<span className="text-4xl">{emoji}</span>}
+                dialogTitle="Recadrer l'icône du voyage"
+                onUploaded={(url) => onSaveIcon(url)}
+                onRemoved={() => onSaveIcon(null)}
+              />
+              <p className="text-xs text-slate-500">
+                {trip.iconUrl ? "Tap pour changer" : "Ou choisis un emoji ↓"}
+              </p>
+            </div>
+          )}
+
           {/* Name + emoji */}
           <div className="space-y-1.5">
             <Label className="text-slate-300 text-sm font-medium">

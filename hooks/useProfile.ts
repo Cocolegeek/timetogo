@@ -27,7 +27,9 @@ export function useProfile() {
 
   useEffect(() => { fetchProfile(); }, [fetchProfile]);
 
-  const updateProfile = async (updates: { name?: string }): Promise<void> => {
+  const updateProfile = async (
+    updates: { name?: string; custom_avatar_url?: string | null }
+  ): Promise<void> => {
     const supabase = createClient();
     const { data: { session } } = await supabase.auth.getSession();
     const user = session?.user;

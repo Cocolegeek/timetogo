@@ -139,7 +139,17 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
         className="space-y-1.5"
       >
         <div className="flex items-center gap-3">
-          <span className="text-5xl">{trip.emoji}</span>
+          {trip.iconUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={trip.iconUrl}
+              alt=""
+              className="w-16 h-16 rounded-2xl object-cover shrink-0"
+              draggable={false}
+            />
+          ) : (
+            <span className="text-5xl">{trip.emoji}</span>
+          )}
           <div className="min-w-0 flex-1">
             <h1 className="text-3xl font-bold text-slate-100 leading-tight truncate">
               {trip.name}
@@ -365,6 +375,7 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
         onSaveTrip={async (data) => {
           await updateTrip(data);
         }}
+        onSaveIcon={(iconUrl) => updateTrip({ iconUrl })}
         onAddParticipant={addParticipant}
         onUpdateParticipant={updateParticipant}
         onDeleteParticipant={deleteParticipant}
