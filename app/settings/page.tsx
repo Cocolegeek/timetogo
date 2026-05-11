@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useProfile } from "@/hooks/useProfile";
 import { useTheme } from "@/hooks/useTheme";
+import { MAP_APPS, MAP_PREF_KEY, type MapAppId } from "@/lib/map-apps";
 import { cn } from "@/lib/utils";
 
 export default function SettingsPage() {
@@ -31,6 +32,17 @@ export default function SettingsPage() {
   const [name, setName] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [mapApp, setMapAppState] = useState<MapAppId>("google");
+
+  useEffect(() => {
+    const stored = localStorage.getItem(MAP_PREF_KEY) as MapAppId | null;
+    if (stored) setMapAppState(stored);
+  }, []);
+
+  const setMapApp = (id: MapAppId) => {
+    localStorage.setItem(MAP_PREF_KEY, id);
+    setMapAppState(id);
+  };
 
   // Sync name once profile loads
   useEffect(() => {
@@ -186,6 +198,34 @@ export default function SettingsPage() {
                     </div>
                     <Switch checked={isDark} />
                   </button>
+                </GlassCard>
+              </Section>
+
+              {/* ─── Section Navigation ─────────────────────────────── */}
+              <Section label="Navigation">
+                <GlassCard>
+                  <p className="text-sm font-medium text-slate-300 mb-3">Application de plans</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {MAP_APPS.map((app) => (
+                      <button
+                        key={app.id}
+                        type="button"
+                        onClick={() => setMapApp(app.id)}
+                        className={cn(
+                          "flex flex-col items-center gap-1.5 py-3 rounded-xl text-sm font-medium transition-all active:scale-95",
+                          mapApp === app.id
+                            ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/40"
+                            : "bg-foreground/4 text-slate-400 border border-foreground/8 hover:bg-foreground/8"
+                        )}
+                      >
+                        <span className="text-xl">{app.emoji}</span>
+                        <span>{app.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-500 mt-3">
+                    Appuie sur un lieu dans le planning pour l'ouvrir dans cette app.
+                  </p>
                 </GlassCard>
               </Section>
 

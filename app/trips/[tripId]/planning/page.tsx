@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from "framer-motion";
 import { GlassCard } from "@/components/layout/GlassCard";
+import { openLocation } from "@/lib/map-apps";
 import { ConfirmDeleteDialog } from "@/components/shared/ConfirmDeleteDialog";
 import { DayHeader } from "@/components/shared/DayHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -321,10 +322,14 @@ function ItineraryCard({
               </div>
               <p className="text-xl font-semibold text-slate-100 leading-tight mt-2">{item.title}</p>
               {item.location && (
-                <p className="flex items-center gap-1.5 text-base text-slate-400 mt-1.5">
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); openLocation(item.location!); }}
+                  className="flex items-center gap-1.5 text-base text-slate-400 mt-1.5 hover:text-sky-400 active:text-sky-300 transition-colors"
+                >
                   <MapPin size={13} className="shrink-0" />
                   <span className="truncate">{item.location}</span>
-                </p>
+                </button>
               )}
               {item.description && (
                 <p className="text-base text-slate-400 mt-1.5">{item.description}</p>

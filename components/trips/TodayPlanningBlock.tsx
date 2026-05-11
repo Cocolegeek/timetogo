@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { GlassCard } from "@/components/layout/GlassCard";
 import { createClient } from "@/lib/supabase/client";
+import { openLocation } from "@/lib/map-apps";
 import { formatDuration } from "@/lib/format-date";
 import {
   pickRelevantPlanningDay,
@@ -172,10 +173,14 @@ function PlanningSection({ day }: { day: RelevantDay }) {
           {item.location && (
             <>
               <span className="text-slate-600 shrink-0">·</span>
-              <span className="text-xs text-slate-500 truncate flex items-center gap-0.5">
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); openLocation(item.location!); }}
+                className="text-xs text-slate-500 truncate flex items-center gap-0.5 hover:text-sky-400 active:text-sky-300 transition-colors"
+              >
                 <MapPin size={10} />
                 {item.location}
-              </span>
+              </button>
             </>
           )}
           {item.durationMinutes && (
