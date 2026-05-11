@@ -9,12 +9,24 @@
 - **Forms** — react-hook-form + Zod v4
 - **State** — Custom hooks + local useState (no Redux/Zustand)
 
+## Trip vs Group (discriminated union)
+
+Le projet gère deux types d'entités via la même table `trips`, distinguées par la colonne `type`:
+- **`type: "trip"`** — voyage complet (destination, dates, planning, menus, budget)
+- **`type: "group"`** — budget partagé style Tricount (nom + participants + budget seulement)
+
+`types/index.ts` exporte une discriminated union `Trip = VoyageTrip | GroupTrip`. TypeScript force le narrowing avant d'accéder à `destination` / `startDate` / `endDate`.
+
+**Source de vérité des features** : `lib/trip-features.ts` (`tripFeatures(trip)`, `isVoyage(trip)`, `isGroup(trip)`, `TRIP_TYPE_LABELS`). Tous les rendus conditionnels passent par là — ne pas ré-écrire de `trip.type === "..."` ailleurs.
+
 ## Route Map
 ```
 app/
   page.tsx               → redirects to /trips
   login/page.tsx         → Google OAuth entry
   auth/callback/route.ts → exchanges OAuth code for session
+  consent/page.tsx       → GDPR consent (shown once after first login)
+  api/consent/route.ts   → POST: saves consent to DB, redirects to /trips
   join/page.tsx          → join trip by share code
   settings/page.tsx      → profile + theme
   trips/
@@ -26,19 +38,21 @@ app/
       budget/page.tsx    → expense tracking
       menus/page.tsx     → meal planning
       planning/page.tsx  → itinerary builder
-proxy.ts                 → middleware: enforces auth on all routes except /login /auth/callback /join
+proxy.ts                 → middleware: enforces auth on all routes except /login /auth/callback /join /consent
 ```
 
 ## Component Map
 ```
 components/
   budget/     BalanceSummary, DebtSettlements, ExpenseCard, ExpenseForm, ExpenseList
-  layout/     GlassCard, MeshGradientBackground, TripNav, TripSwipeContainer, UserMenu
+  layout/     GlassCard, MeshGradientBackground, TripNav, UserMenu
   menus/      MealEditDialog
   planning/   ItineraryItemForm
-  shared/     CurrencyInput, EmptyState, LocationAutocomplete, ParticipantAvatar, ParticipantStack
-  trips/      BudgetEditDialog, IdentityPicker, ShareModal, TodayPlanningBlock, TripCard,
-              TripEditDialog, TripEditWrapper, TripWizard
+  shared/     ConfirmDeleteDialog, CurrencyInput, DateRangePicker, DayHeader, EmptyState,
+              IosInstallBanner, LocationAutocomplete, ParticipantAvatar, ParticipantStack,
+              PwaInstallBanner, Spinner
+  trips/      BudgetEditDialog, GroupWizard, IdentityPicker, ShareModal, TodayPlanningBlock,
+              TripCard, TripEditDialog, TripEditWrapper, TripWizard
   ui/         shadcn primitives (button, card, dialog, dropdown-menu, input, label,
               progress, select, separator, sheet, tabs, textarea, badge)
 ```
@@ -61,11 +75,14 @@ lib/
   supabase/client.ts   → createBrowserClient() — use in hooks/client components
   supabase/server.ts   → createServerClient() with cookies — use in server components/API routes
   supabase/schema.sql  → canonical schema with RLS
-  supabase/migrations/ → 001..007_*.sql
+  supabase/migrations/ → 001..010_*.sql (008: RGPD, 009: multi-payer, 010: trip type)
+  trip-features.ts     → tripFeatures(trip), isVoyage(t), isGroup(t), TRIP_TYPE_LABELS
   budget/splits.ts     → computeShares(equal|percentage|fixed)
   budget/debts.ts      → computeBalances(), simplifyDebts() (greedy O(n log n))
   budget/categories.ts → courses|restaurant|activities|transport|accommodation|other
   budget/schemas.ts    → Zod schemas for expenses
+  budget/budget-color.ts → getBudgetColor(pct), getBudgetTextColor(pct)
+  map-apps.ts            → sélecteur d'app de navigation (Maps/Waze/Google Maps) pour lieux cliquables
   meals/slots.ts       → DEFAULT_SLOTS, eachDate(), buildDefaultMealRows()
   meals/categories.ts  → home|picnic|restaurant
   utils.ts             → cn() (clsx + tailwind-merge)
@@ -76,12 +93,13 @@ lib/
 
 ## DB Schema (key tables)
 ```
-profiles          id, name, avatar_url, email
-trips             id, name, destination, emoji, currency, start_date, end_date, total_budget, share_code(UNIQUE), owner_id
+profiles          id, name, avatar_url, email, gdpr_consent: bool
+trips             id, name, type ('trip'|'group'), destination?, emoji, currency, start_date?, end_date?,
+                  total_budget, share_code(UNIQUE), owner_id  // dest/dates nullable for type='group'
 participants      id, trip_id, name, color
 trip_members      trip_id + user_id (composite PK), participant_id, role: owner|contributor
 expenses          id, trip_id, title, amount, currency, exchange_rate, amount_in_trip_currency,
-                  category, paid_by_id, date, split_mode, splits: json[], notes
+                  category, paid_by_id (legacy), payers: jsonb[], date, split_mode, splits: jsonb[], notes
 meals             id, trip_id, date, slot: breakfast|lunch|dinner, title, category,
                   participant_ids: uuid[], cook_ids: uuid[], ingredients: json[], position
 itinerary_items   id, trip_id, date, time, title, location, type, duration_minutes, participant_ids: uuid[]

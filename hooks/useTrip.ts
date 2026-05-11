@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { generateShareCode } from "@/lib/trip-share";
 import { buildDefaultMealRows } from "@/lib/meals/slots";
-import type { Trip, Participant } from "@/types";
+import type { Trip, TripType, Participant } from "@/types";
 
 function rowsToTrip(
   tripRow: Record<string, unknown>,
@@ -12,21 +12,30 @@ function rowsToTrip(
   isOwner: boolean,
   myParticipantId: string | null
 ): Trip {
-  return {
+  const type = ((tripRow.type as TripType | undefined) ?? "trip") as TripType;
+  const base = {
     id: tripRow.id as string,
     name: tripRow.name as string,
-    destination: tripRow.destination as string,
     emoji: tripRow.emoji as string,
     currency: tripRow.currency as string,
-    startDate: tripRow.start_date as string,
-    endDate: tripRow.end_date as string,
-    totalBudget: tripRow.total_budget as number | undefined,
+    totalBudget: (tripRow.total_budget as number | null) ?? undefined,
     shareCode: tripRow.share_code as string,
     isOwner,
     myParticipantId,
     participants,
     createdAt: tripRow.created_at as string,
     updatedAt: tripRow.updated_at as string,
+  };
+
+  if (type === "group") {
+    return { ...base, type: "group" };
+  }
+  return {
+    ...base,
+    type: "trip",
+    destination: (tripRow.destination as string | null) ?? "",
+    startDate: (tripRow.start_date as string | null) ?? "",
+    endDate: (tripRow.end_date as string | null) ?? "",
   };
 }
 
@@ -77,7 +86,17 @@ export function useTrips() {
   useEffect(() => { fetchTrips(); }, [fetchTrips]);
 
   const createTrip = async (
-    data: Pick<Trip, "name" | "destination" | "emoji" | "currency" | "startDate" | "endDate" | "totalBudget"> & { participants: Omit<Participant, "id">[] }
+    data: {
+      type: TripType;
+      name: string;
+      emoji: string;
+      currency: string;
+      destination?: string;
+      startDate?: string;
+      endDate?: string;
+      totalBudget?: number;
+      participants: Omit<Participant, "id">[];
+    }
   ): Promise<string> => {
     const supabase = createClient();
     const { data: { session } } = await supabase.auth.getSession();
@@ -88,11 +107,12 @@ export function useTrips() {
       .from("trips")
       .insert({
         name: data.name,
-        destination: data.destination,
+        type: data.type,
+        destination: data.type === "trip" ? (data.destination ?? null) : null,
         emoji: data.emoji,
         currency: data.currency,
-        start_date: data.startDate,
-        end_date: data.endDate,
+        start_date: data.type === "trip" ? (data.startDate ?? null) : null,
+        end_date: data.type === "trip" ? (data.endDate ?? null) : null,
         total_budget: data.totalBudget ?? null,
         share_code: generateShareCode(),
         owner_id: user.id,
@@ -122,8 +142,10 @@ export function useTrips() {
         .eq("trip_id", trip.id).eq("user_id", user.id);
     }
 
-    const mealRows = buildDefaultMealRows(trip.id, data.startDate, data.endDate);
-    if (mealRows.length > 0) await supabase.from("meals").insert(mealRows);
+    if (data.type === "trip" && data.startDate && data.endDate) {
+      const mealRows = buildDefaultMealRows(trip.id, data.startDate, data.endDate);
+      if (mealRows.length > 0) await supabase.from("meals").insert(mealRows);
+    }
 
     await fetchTrips();
     return trip.id;
@@ -172,15 +194,35 @@ export function useTrip(id: string) {
     data: Partial<{ name: string; destination: string; emoji: string; currency: string; startDate: string; endDate: string; totalBudget: number | null }>
   ): Promise<void> => {
     const snapshot = trip;
-    if (trip) setTrip({ ...trip, ...data, totalBudget: data.totalBudget ?? undefined });
+    if (trip) {
+      const next: Trip = trip.type === "trip"
+        ? {
+            ...trip,
+            ...(data.name && { name: data.name }),
+            ...(data.emoji && { emoji: data.emoji }),
+            ...(data.currency && { currency: data.currency }),
+            ...(data.destination !== undefined && { destination: data.destination }),
+            ...(data.startDate !== undefined && { startDate: data.startDate }),
+            ...(data.endDate !== undefined && { endDate: data.endDate }),
+            totalBudget: data.totalBudget ?? trip.totalBudget,
+          }
+        : {
+            ...trip,
+            ...(data.name && { name: data.name }),
+            ...(data.emoji && { emoji: data.emoji }),
+            ...(data.currency && { currency: data.currency }),
+            totalBudget: data.totalBudget ?? trip.totalBudget,
+          };
+      setTrip(next);
+    }
 
     const { error } = await createClient().from("trips").update({
       ...(data.name && { name: data.name }),
-      ...(data.destination && { destination: data.destination }),
+      ...(data.destination !== undefined && { destination: data.destination }),
       ...(data.emoji && { emoji: data.emoji }),
       ...(data.currency && { currency: data.currency }),
-      ...(data.startDate && { start_date: data.startDate }),
-      ...(data.endDate && { end_date: data.endDate }),
+      ...(data.startDate !== undefined && { start_date: data.startDate }),
+      ...(data.endDate !== undefined && { end_date: data.endDate }),
       ...(data.totalBudget !== undefined && { total_budget: data.totalBudget }),
       updated_at: new Date().toISOString(),
     }).eq("id", id);

@@ -2,10 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Wallet, Map, UtensilsCrossed, LayoutDashboard } from "lucide-react";
+import { Wallet, Map, UtensilsCrossed, LayoutDashboard, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { featuresForType } from "@/lib/trip-features";
+import type { TripType } from "@/types";
 
-const NAV_ITEMS = [
+type NavItem = { label: string; href: string; icon: LucideIcon };
+
+const NAV_ITEMS: NavItem[] = [
   { label: "Résumé",   href: "",          icon: LayoutDashboard  },
   { label: "Budget",   href: "/budget",   icon: Wallet           },
   { label: "Planning", href: "/planning", icon: Map              },
@@ -14,11 +18,19 @@ const NAV_ITEMS = [
 
 interface TripNavProps {
   tripId: string;
+  tripType: TripType;
 }
 
-export function TripNav({ tripId }: TripNavProps) {
+export function TripNav({ tripId, tripType }: TripNavProps) {
   const pathname = usePathname();
   const base = `/trips/${tripId}`;
+  const features = featuresForType(tripType);
+
+  const items = NAV_ITEMS.filter((item) => {
+    if (item.href === "/planning") return features.hasPlanning;
+    if (item.href === "/menus") return features.hasMenus;
+    return true;
+  });
 
   return (
     <nav
@@ -27,7 +39,7 @@ export function TripNav({ tripId }: TripNavProps) {
     >
       <div className="max-w-3xl mx-auto px-2">
         <div className="flex">
-          {NAV_ITEMS.map(({ label, href, icon: Icon }) => {
+          {items.map(({ label, href, icon: Icon }) => {
             const fullHref = `${base}${href}`;
             const isActive =
               href === ""

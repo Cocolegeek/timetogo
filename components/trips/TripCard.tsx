@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { MoreVertical, Pencil, Trash2, Calendar, Users } from "lucide-react";
+import { MoreVertical, Pencil, Trash2, Calendar, Users, Wallet } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { formatDateRange, tripDuration, daysUntil } from "@/lib/format-date";
 import { cn } from "@/lib/utils";
+import { isVoyage, TRIP_TYPE_LABELS } from "@/lib/trip-features";
 import type { Trip } from "@/types";
 
 interface TripCardProps {
@@ -31,28 +32,27 @@ const ACCENT_GRADIENTS = [
 
 export function TripCard({ trip, onEdit, onDelete, index }: TripCardProps) {
   const gradient = ACCENT_GRADIENTS[index % ACCENT_GRADIENTS.length];
-  const duration = tripDuration(trip.startDate, trip.endDate);
-  const startDays = daysUntil(trip.startDate);
-  const endDays = daysUntil(trip.endDate);
 
-  // Status badge — three states: passé (red), en cours (green), planifié (blue)
-  let badge: { label: string; className: string };
-  if (endDays < 0) {
-    badge = {
-      label: "Passé",
-      className: "bg-red-500/15 text-red-300 border border-red-500/20",
-    };
-  } else if (startDays > 0) {
-    badge = {
-      label: "Planifié",
-      className: "bg-sky-500/15 text-sky-300 border border-sky-500/20",
-    };
-  } else {
-    badge = {
-      label: "En cours",
-      className: "bg-emerald-500/15 text-emerald-300 border border-emerald-500/20",
-    };
+  // Status badge — only meaningful for voyages with dates.
+  let badge: { label: string; className: string } | null = null;
+  if (isVoyage(trip)) {
+    const endDays = daysUntil(trip.endDate);
+    const startDays = daysUntil(trip.startDate);
+    if (endDays < 0) {
+      badge = { label: "Passé", className: "bg-red-500/15 text-red-300 border border-red-500/20" };
+    } else if (startDays > 0) {
+      badge = { label: "Planifié", className: "bg-sky-500/15 text-sky-300 border border-sky-500/20" };
+    } else {
+      badge = { label: "En cours", className: "bg-emerald-500/15 text-emerald-300 border border-emerald-500/20" };
+    }
   }
+
+  const typeLabel = TRIP_TYPE_LABELS[trip.type];
+  const typeBadgeClass = trip.type === "group"
+    ? "bg-indigo-500/15 text-indigo-300 border border-indigo-500/25"
+    : "bg-violet-500/15 text-violet-300 border border-violet-500/25";
+
+  const href = trip.type === "group" ? `/trips/${trip.id}/budget` : `/trips/${trip.id}`;
 
   return (
     <motion.div
@@ -61,10 +61,8 @@ export function TripCard({ trip, onEdit, onDelete, index }: TripCardProps) {
       transition={{ delay: index * 0.05 }}
       className="relative glass rounded-2xl overflow-hidden hover:border-foreground/15 transition-all duration-200 active:scale-[0.99]"
     >
-      <Link href={`/trips/${trip.id}`} className="block p-4">
-        {/* Top row — leaves space for the absolute 3-dots menu (pr-12) */}
+      <Link href={href} className="block p-4">
         <div className="flex items-center gap-3 pr-12">
-          {/* Emoji tile */}
           <div
             className={cn(
               "w-16 h-16 rounded-2xl flex items-center justify-center text-4xl shrink-0 bg-gradient-to-br",
@@ -74,35 +72,55 @@ export function TripCard({ trip, onEdit, onDelete, index }: TripCardProps) {
             {trip.emoji}
           </div>
 
-          {/* Title + destination */}
           <div className="flex-1 min-w-0 space-y-1">
             <h3 className="font-bold text-slate-100 text-xl truncate leading-tight">
               {trip.name}
             </h3>
-            <p className="text-base text-slate-400 truncate">{trip.destination}</p>
+            {isVoyage(trip) && trip.destination && (
+              <p className="text-base text-slate-400 truncate">{trip.destination}</p>
+            )}
           </div>
         </div>
 
-        {/* Status badge — own row to never collide with the menu */}
-        <div className="mt-3">
+        {/* Badges row — type + status (status only for voyages) */}
+        <div className="mt-3 flex flex-wrap items-center gap-2">
           <span
             className={cn(
               "inline-flex items-center text-sm px-2.5 py-1 rounded-full font-semibold uppercase tracking-wider",
-              badge.className
+              typeBadgeClass
             )}
           >
-            {badge.label}
+            {typeLabel}
           </span>
+          {badge && (
+            <span
+              className={cn(
+                "inline-flex items-center text-sm px-2.5 py-1 rounded-full font-semibold uppercase tracking-wider",
+                badge.className
+              )}
+            >
+              {badge.label}
+            </span>
+          )}
         </div>
 
         {/* Footer */}
         <div className="flex items-center gap-3 mt-3 text-base text-slate-500">
-          <span className="flex items-center gap-1.5">
-            <Calendar size={13} />
-            {formatDateRange(trip.startDate, trip.endDate)}
-          </span>
-          <span className="text-slate-700">·</span>
-          <span>{duration} j</span>
+          {isVoyage(trip) ? (
+            <>
+              <span className="flex items-center gap-1.5">
+                <Calendar size={13} />
+                {formatDateRange(trip.startDate, trip.endDate)}
+              </span>
+              <span className="text-slate-700">·</span>
+              <span>{tripDuration(trip.startDate, trip.endDate)} j</span>
+            </>
+          ) : (
+            <span className="flex items-center gap-1.5">
+              <Wallet size={13} />
+              Budget partagé
+            </span>
+          )}
           <span className="text-slate-700">·</span>
           <span className="flex items-center gap-1">
             <Users size={13} />
@@ -114,7 +132,6 @@ export function TripCard({ trip, onEdit, onDelete, index }: TripCardProps) {
         </div>
       </Link>
 
-      {/* Action menu — absolute, outside the Link to prevent navigation */}
       <div className="absolute top-2.5 right-2.5">
         <DropdownMenu>
           <DropdownMenuTrigger

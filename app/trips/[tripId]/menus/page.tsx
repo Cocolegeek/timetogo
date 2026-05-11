@@ -1,6 +1,7 @@
 "use client";
 
 import { use, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import { RefreshCw, UtensilsCrossed, ChefHat, Users, Plus, Trash2 } from "lucide-react";
 import { GlassCard } from "@/components/layout/GlassCard";
@@ -14,6 +15,7 @@ import { useMeals } from "@/hooks/useMeals";
 import { DEFAULT_SLOTS, SLOT_CONFIG, eachDate, type SlotConfig } from "@/lib/meals/slots";
 import { CATEGORY_CONFIG } from "@/lib/meals/categories";
 import { cn } from "@/lib/utils";
+import { isVoyage } from "@/lib/trip-features";
 import type { Meal, Participant } from "@/types";
 
 interface MenusPageProps {
@@ -22,11 +24,12 @@ interface MenusPageProps {
 
 export default function MenusPage({ params }: MenusPageProps) {
   const { tripId } = use(params);
+  const router = useRouter();
   const { trip } = useTrip(tripId);
-  const { meals, loading, refetch, addMeal, updateMeal, deleteMeal } = useMeals(
-    tripId,
-    trip ? { startDate: trip.startDate, endDate: trip.endDate } : undefined
-  );
+  const dateRange = trip && isVoyage(trip)
+    ? { startDate: trip.startDate, endDate: trip.endDate }
+    : undefined;
+  const { meals, loading, refetch, addMeal, updateMeal, deleteMeal } = useMeals(tripId, dateRange);
 
   const [refreshing, setRefreshing] = useState(false);
   const [editingMeal, setEditingMeal] = useState<Meal | null>(null);
@@ -51,10 +54,20 @@ export default function MenusPage({ params }: MenusPageProps) {
     });
   }, [loading]);
 
+  useEffect(() => {
+    if (trip && !isVoyage(trip)) {
+      router.replace(`/trips/${tripId}/budget`);
+    }
+  }, [trip, tripId, router]);
+
   if (!trip) {
     return (
       <Spinner />
     );
+  }
+
+  if (!isVoyage(trip)) {
+    return <Spinner />;
   }
 
   const dates = eachDate(trip.startDate, trip.endDate);

@@ -7,6 +7,7 @@ const EXPENSE_CATEGORIES = [
   "transport",
   "accommodation",
   "other",
+  "reimbursement",
 ] as const;
 
 const SPLIT_MODES = ["equal", "percentage", "fixed"] as const;
@@ -90,3 +91,21 @@ export const tripSchema = z.object({
 });
 
 export type TripFormValues = z.infer<typeof tripSchema>;
+
+export const groupSchema = z.object({
+  name: z.string().min(1, "Le nom du budget est requis"),
+  emoji: z.string().min(1),
+  currency: z.string().min(1),
+  participants: z
+    .array(
+      z.object({
+        id: z.string(),
+        name: z.string().min(1, "Nom requis"),
+        color: z.string(),
+      })
+    )
+    .min(1, "Au moins un participant est requis"),
+  totalBudget: z.number().positive().optional(),
+});
+
+export type GroupFormValues = z.infer<typeof groupSchema>;

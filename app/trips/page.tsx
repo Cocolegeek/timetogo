@@ -25,28 +25,30 @@ export default function TripsPage() {
   const { profile } = useProfile();
 
   /**
-   * Sort trips by relevance:
-   *   1. En cours  (current trips, most-recently-started first)
-   *   2. Planifié  (upcoming, closest first)
-   *   3. Passé     (most recently finished first)
+   * Sort entries:
+   *   - Voyages first, bucketed by status (en cours / planifié / passé)
+   *   - Budgets (groups) after, most recently created first
    */
   const sortedTrips = useMemo(() => {
-    const bucket = (t: Trip): 0 | 1 | 2 => {
+    const bucket = (t: Trip): 0 | 1 | 2 | 3 => {
+      if (t.type === "group") return 3;
       const startDays = daysUntil(t.startDate);
       const endDays = daysUntil(t.endDate);
-      if (endDays < 0) return 2; // past
-      if (startDays > 0) return 1; // upcoming
-      return 0; // current
+      if (endDays < 0) return 2;
+      if (startDays > 0) return 1;
+      return 0;
     };
     return [...trips].sort((a, b) => {
       const ba = bucket(a);
       const bb = bucket(b);
       if (ba !== bb) return ba - bb;
-      // Within bucket
-      const sa = new Date(a.startDate).getTime();
-      const sb = new Date(b.startDate).getTime();
-      if (ba === 1) return sa - sb; // upcoming: closest first (asc)
-      return sb - sa; // current/past: most recent first (desc)
+      if (a.type === "trip" && b.type === "trip") {
+        const sa = new Date(a.startDate).getTime();
+        const sb = new Date(b.startDate).getTime();
+        if (ba === 1) return sa - sb;
+        return sb - sa;
+      }
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
   }, [trips]);
 
@@ -144,7 +146,7 @@ export default function TripsPage() {
               {/* Section header */}
               <div className="flex items-baseline justify-between mb-4 px-1">
                 <h2 className="text-base font-semibold text-slate-200 uppercase tracking-wider">
-                  Mes voyages
+                  Voyages & budgets
                 </h2>
                 <span className="text-sm text-slate-500">
                   {trips.length} au total

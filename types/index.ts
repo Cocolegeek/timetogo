@@ -30,35 +30,55 @@ export interface TripMember {
 
 // ─── Voyages ─────────────────────────────────────────────────────────────────
 
-export interface Trip {
+/**
+ * Discriminator for the two kinds of entities stored in the `trips` table.
+ * - "trip"  : full voyage with destination, dates, planning, menus
+ * - "group" : budget-only entity (à la Tricount) — no destination, no dates
+ *
+ * Feature flags derived from this discriminator live in `lib/trip-features.ts`.
+ */
+export type TripType = "trip" | "group";
+
+interface BaseTrip {
   id: string;
   name: string;
-  destination: string;
   emoji: string;
   currency: string;
-  startDate: string;  // camelCase alias used in UI, mapped from start_date
-  endDate: string;
   participants: Participant[];
   totalBudget?: number;
   shareCode: string;
   isOwner: boolean;
-  myParticipantId: string | null; // which participant the current user is
+  myParticipantId: string | null;
   createdAt: string;
   updatedAt: string;
 }
+
+export interface VoyageTrip extends BaseTrip {
+  type: "trip";
+  destination: string;
+  startDate: string;
+  endDate: string;
+}
+
+export interface GroupTrip extends BaseTrip {
+  type: "group";
+}
+
+export type Trip = VoyageTrip | GroupTrip;
 
 // Raw Supabase row shapes (snake_case from DB)
 export interface TripRow {
   id: string;
   name: string;
-  destination: string;
+  destination: string | null;
   emoji: string;
   currency: string;
-  start_date: string;
-  end_date: string;
+  start_date: string | null;
+  end_date: string | null;
   total_budget: number | null;
   share_code: string;
   owner_id: string;
+  type: TripType;
   created_at: string;
   updated_at: string;
 }

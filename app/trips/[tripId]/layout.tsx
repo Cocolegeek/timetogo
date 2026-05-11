@@ -1,5 +1,7 @@
 import { MeshGradientBackground } from "@/components/layout/MeshGradientBackground";
 import { TripNav } from "@/components/layout/TripNav";
+import { createClient } from "@/lib/supabase/server";
+import type { TripType } from "@/types";
 
 interface TripLayoutProps {
   children: React.ReactNode;
@@ -8,6 +10,9 @@ interface TripLayoutProps {
 
 export default async function TripLayout({ children, params }: TripLayoutProps) {
   const { tripId } = await params;
+  const supabase = await createClient();
+  const { data } = await supabase.from("trips").select("type").eq("id", tripId).single();
+  const tripType: TripType = (data?.type as TripType | undefined) ?? "trip";
 
   return (
     <>
@@ -22,7 +27,7 @@ export default async function TripLayout({ children, params }: TripLayoutProps) 
         >
           {children}
         </main>
-        <TripNav tripId={tripId} />
+        <TripNav tripId={tripId} tripType={tripType} />
       </div>
     </>
   );

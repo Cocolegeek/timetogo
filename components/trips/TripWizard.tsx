@@ -83,6 +83,7 @@ export function TripWizard() {
         ? Number(budgetStr.replace(",", "."))
         : undefined;
       const id = await createTrip({
+        type: "trip",
         name: data.name,
         destination: data.destination,
         emoji: data.emoji,

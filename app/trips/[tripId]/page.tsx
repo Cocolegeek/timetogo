@@ -33,6 +33,7 @@ import { useBudget } from "@/hooks/useBudget";
 import { useItinerary } from "@/hooks/useItinerary";
 import { pickRelevantPlanningDay, relativeDayLabel } from "@/lib/planning-day";
 import { cn } from "@/lib/utils";
+import { isVoyage, tripFeatures } from "@/lib/trip-features";
 import type { ItineraryType } from "@/types";
 
 const ITINERARY_EMOJI: Record<ItineraryType, string> = {
@@ -94,10 +95,13 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
   const today = new Date().toISOString().split("T")[0];
   const relevantDay = pickRelevantPlanningDay(itineraryItems, today);
 
-  const tripDuration = Math.round(
-    (new Date(trip.endDate).getTime() - new Date(trip.startDate).getTime()) /
-      (1000 * 60 * 60 * 24)
-  );
+  const features = tripFeatures(trip);
+  const tripDuration = isVoyage(trip)
+    ? Math.round(
+        (new Date(trip.endDate).getTime() - new Date(trip.startDate).getTime()) /
+          (1000 * 60 * 60 * 24)
+      )
+    : 0;
 
   return (
     <div className="space-y-5">
@@ -147,12 +151,15 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
             <h1 className="text-3xl font-bold text-slate-100 leading-tight truncate">
               {trip.name}
             </h1>
-            <p className="text-base text-slate-400 truncate">{trip.destination}</p>
+            {isVoyage(trip) && trip.destination && (
+              <p className="text-base text-slate-400 truncate">{trip.destination}</p>
+            )}
           </div>
         </div>
         <p className="text-base text-slate-500 pt-1">
-          {tripDuration} jour{tripDuration !== 1 ? "s" : ""} · {trip.participants.length} voyageur
-          {trip.participants.length !== 1 ? "s" : ""}
+          {isVoyage(trip)
+            ? `${tripDuration} jour${tripDuration !== 1 ? "s" : ""} · ${trip.participants.length} voyageur${trip.participants.length !== 1 ? "s" : ""}`
+            : `Budget partagé · ${trip.participants.length} participant${trip.participants.length !== 1 ? "s" : ""}`}
         </p>
       </motion.div>
 
@@ -279,6 +286,7 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
           </button>
         </motion.div>
 
+        {features.hasPlanning && (
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -353,6 +361,7 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
             </GlassCard>
           </Link>
         </motion.div>
+        )}
       </div>
 
       {/* Trip Edit */}

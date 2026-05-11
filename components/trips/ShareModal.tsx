@@ -82,7 +82,9 @@ export function ShareModal({ open, onOpenChange, trip }: ShareModalProps) {
             <span className="text-2xl">{trip.emoji}</span>
             <div>
               <p className="font-medium text-slate-200 text-sm">{trip.name}</p>
-              <p className="text-xs text-slate-500">{trip.destination}</p>
+              <p className="text-xs text-slate-500">
+                {trip.type === "trip" ? trip.destination : "Budget partagé"}
+              </p>
             </div>
           </div>
 

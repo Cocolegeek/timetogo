@@ -25,8 +25,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useRouter } from "next/navigation";
 import { useTrip } from "@/hooks/useTrip";
 import { useItinerary } from "@/hooks/useItinerary";
+import { isVoyage } from "@/lib/trip-features";
 import dynamic from "next/dynamic";
 import type { ItineraryFormValues } from "@/components/planning/ItineraryItemForm";
 const ItineraryItemForm = dynamic(() => import("@/components/planning/ItineraryItemForm").then(m => ({ default: m.ItineraryItemForm })), { ssr: false });
@@ -53,9 +55,16 @@ const TYPE_CONFIG: Record<
 
 export default function PlanningPage({ params }: PlanningPageProps) {
   const { tripId } = use(params);
+  const router = useRouter();
   const { trip } = useTrip(tripId);
   const { items, addItem, updateItem, deleteItem, refetch } =
     useItinerary(tripId);
+
+  useEffect(() => {
+    if (trip && !isVoyage(trip)) {
+      router.replace(`/trips/${tripId}/budget`);
+    }
+  }, [trip, tripId, router]);
 
   const [formOpen, setFormOpen] = useState(false);
   const [formDefaultDate, setFormDefaultDate] = useState<string | undefined>();
@@ -113,7 +122,7 @@ export default function PlanningPage({ params }: PlanningPageProps) {
     return acc;
   }, {});
 
-  const dates = trip ? eachDate(trip.startDate, trip.endDate) : [];
+  const dates = trip && isVoyage(trip) ? eachDate(trip.startDate, trip.endDate) : [];
 
   return (
     <div className="space-y-5">
@@ -189,7 +198,7 @@ export default function PlanningPage({ params }: PlanningPageProps) {
           if (!open) { setEditingItem(undefined); setFormDefaultDate(undefined); }
         }}
         participants={trip?.participants ?? []}
-        defaultDate={formDefaultDate ?? trip?.startDate ?? new Date().toISOString().split("T")[0]}
+        defaultDate={formDefaultDate ?? (trip && isVoyage(trip) ? trip.startDate : undefined) ?? new Date().toISOString().split("T")[0]}
         initialValues={editingItem}
         onSubmit={handleSubmit}
       />

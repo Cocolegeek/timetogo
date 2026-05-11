@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { LocationAutocomplete } from "@/components/shared/LocationAutocomplete";
 import { cn } from "@/lib/utils";
+import { isVoyage, tripFeatures } from "@/lib/trip-features";
 import type { Trip, Participant } from "@/types";
 
 const PARTICIPANT_COLORS = [
@@ -53,12 +54,13 @@ export function TripEditDialog({
   onUpdateParticipant,
   onDeleteParticipant,
 }: TripEditDialogProps) {
+  const features = tripFeatures(trip);
   const [name, setName] = useState(trip.name);
-  const [destination, setDestination] = useState(trip.destination);
+  const [destination, setDestination] = useState(isVoyage(trip) ? trip.destination : "");
   const [emoji, setEmoji] = useState(trip.emoji);
   const [currency, setCurrency] = useState(trip.currency);
-  const [startDate, setStartDate] = useState(trip.startDate);
-  const [endDate, setEndDate] = useState(trip.endDate);
+  const [startDate, setStartDate] = useState(isVoyage(trip) ? trip.startDate : "");
+  const [endDate, setEndDate] = useState(isVoyage(trip) ? trip.endDate : "");
   const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
   const [newParticipantName, setNewParticipantName] = useState("");
   const [editingParticipantId, setEditingParticipantId] = useState<string | null>(null);
@@ -69,29 +71,29 @@ export function TripEditDialog({
   useEffect(() => {
     if (open) {
       setName(trip.name);
-      setDestination(trip.destination);
+      setDestination(isVoyage(trip) ? trip.destination : "");
       setEmoji(trip.emoji);
       setCurrency(trip.currency);
-      setStartDate(trip.startDate);
-      setEndDate(trip.endDate);
+      setStartDate(isVoyage(trip) ? trip.startDate : "");
+      setEndDate(isVoyage(trip) ? trip.endDate : "");
       setEmojiPickerOpen(false);
       setEditingParticipantId(null);
     }
   }, [open, trip]);
 
+  const voyageDirty = isVoyage(trip)
+    ? destination !== trip.destination || startDate !== trip.startDate || endDate !== trip.endDate
+    : false;
   const dirty =
     name !== trip.name ||
-    destination !== trip.destination ||
     emoji !== trip.emoji ||
     currency !== trip.currency ||
-    startDate !== trip.startDate ||
-    endDate !== trip.endDate;
+    voyageDirty;
 
   const formValid =
     name.trim().length > 0 &&
-    destination.trim().length > 0 &&
-    startDate &&
-    endDate;
+    (features.hasDestination ? destination.trim().length > 0 : true) &&
+    (features.hasDates ? !!startDate && !!endDate : true);
 
   const handleSaveTrip = async () => {
     if (!formValid || !dirty) return;
@@ -99,11 +101,11 @@ export function TripEditDialog({
     try {
       await onSaveTrip({
         name: name.trim(),
-        destination: destination.trim(),
+        destination: features.hasDestination ? destination.trim() : "",
         emoji,
         currency,
-        startDate,
-        endDate,
+        startDate: features.hasDates ? startDate : "",
+        endDate: features.hasDates ? endDate : "",
       });
     } finally {
       setSaving(false);
@@ -150,7 +152,7 @@ export function TripEditDialog({
       >
         <DialogHeader className="px-5 pt-5 pb-3 border-b border-foreground/8">
           <DialogTitle className="text-slate-100 text-xl">
-            Modifier le voyage
+            {isVoyage(trip) ? "Modifier le voyage" : "Modifier le budget"}
           </DialogTitle>
         </DialogHeader>
 
@@ -210,38 +212,42 @@ export function TripEditDialog({
             </AnimatePresence>
           </div>
 
-          {/* Destination */}
-          <div className="space-y-1.5">
-            <Label className="text-slate-300 text-sm font-medium">Destination</Label>
-            <LocationAutocomplete
-              value={destination}
-              onChange={setDestination}
-              placeholder="Rome, Italie"
-              className="bg-foreground/8 border-foreground/10 text-slate-100 placeholder:text-slate-500 focus-visible:ring-indigo-500/50"
-            />
-          </div>
+          {/* Destination — voyages only */}
+          {features.hasDestination && (
+            <div className="space-y-1.5">
+              <Label className="text-slate-300 text-sm font-medium">Destination</Label>
+              <LocationAutocomplete
+                value={destination}
+                onChange={setDestination}
+                placeholder="Rome, Italie"
+                className="bg-foreground/8 border-foreground/10 text-slate-100 placeholder:text-slate-500 focus-visible:ring-indigo-500/50"
+              />
+            </div>
+          )}
 
-          {/* Dates */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label className="text-slate-300 text-sm font-medium">Départ</Label>
-              <Input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="bg-foreground/8 border-foreground/10 text-slate-100 [color-scheme:dark]"
-              />
+          {/* Dates — voyages only */}
+          {features.hasDates && (
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-slate-300 text-sm font-medium">Départ</Label>
+                <Input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="bg-foreground/8 border-foreground/10 text-slate-100 [color-scheme:dark]"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-slate-300 text-sm font-medium">Retour</Label>
+                <Input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="bg-foreground/8 border-foreground/10 text-slate-100 [color-scheme:dark]"
+                />
+              </div>
             </div>
-            <div className="space-y-1.5">
-              <Label className="text-slate-300 text-sm font-medium">Retour</Label>
-              <Input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="bg-foreground/8 border-foreground/10 text-slate-100 [color-scheme:dark]"
-              />
-            </div>
-          </div>
+          )}
 
           {/* Currency */}
           <div className="space-y-2">
