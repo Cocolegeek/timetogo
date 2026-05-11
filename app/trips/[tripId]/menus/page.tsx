@@ -192,7 +192,6 @@ function MealCard({
             <span className={cn("text-sm px-2.5 py-0.5 rounded-full font-medium", slotCfg.bgClass, slotCfg.textClass)}>
               {slotCfg.shortLabel}
             </span>
-            <p className="text-sm text-slate-400 mt-1.5">Rien de prévu — tap pour ajouter</p>
           </div>
         </button>
       </motion.div>

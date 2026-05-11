@@ -169,10 +169,7 @@ export default function PlanningPage({ params }: PlanningPageProps) {
                       className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl border border-dashed border-foreground/20 bg-foreground/4 text-slate-400 hover:text-slate-200 hover:border-foreground/35 hover:bg-foreground/8 active:bg-foreground/10 transition-all text-left"
                     >
                       <Plus size={16} className="shrink-0 text-indigo-400" />
-                      <div>
-                        <p className="text-sm font-medium">Rien de prévu ce jour</p>
-                        <p className="text-sm text-slate-500 mt-0.5">Transport, hébergement, activité, resto…</p>
-                      </div>
+                      <p className="text-sm font-medium">Rien de prévu ce jour</p>
                     </button>
                   )}
                 </div>
