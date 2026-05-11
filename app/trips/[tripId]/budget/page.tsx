@@ -11,6 +11,8 @@ import { ExpenseList } from "@/components/budget/ExpenseList";
 import { Spinner } from "@/components/shared/Spinner";
 import { BalanceSummary } from "@/components/budget/BalanceSummary";
 import { DebtSettlements } from "@/components/budget/DebtSettlements";
+import { MyBalanceCard } from "@/components/budget/MyBalanceCard";
+import { CheckCircle2 } from "lucide-react";
 import { useTrip } from "@/hooks/useTrip";
 import { useBudget } from "@/hooks/useBudget";
 import { useDebts } from "@/hooks/useDebts";
@@ -40,6 +42,16 @@ export default function BudgetPage({ params }: BudgetPageProps) {
   const currency = trip?.currency ?? "EUR";
 
   const { balances, settlements } = useDebts(expenses, participants);
+
+  const myId = trip?.myParticipantId ?? null;
+  const myParticipant = myId ? participants.find((p) => p.id === myId) : null;
+  const myBalance = myId ? balances.find((b) => b.participantId === myId) : null;
+  const mySettlements = myId
+    ? settlements.filter((s) => s.fromId === myId || s.toId === myId)
+    : [];
+  const otherSettlements = myId
+    ? settlements.filter((s) => s.fromId !== myId && s.toId !== myId)
+    : settlements;
 
   const handleSubmit = async (data: {
     title: string;
@@ -209,29 +221,84 @@ export default function BudgetPage({ params }: BudgetPageProps) {
           />
         </TabsContent>
 
-        <TabsContent value="balances" className="mt-4">
-          <BalanceSummary
-            balances={balances}
-            participants={participants}
-            currency={currency}
-          />
-        </TabsContent>
+        <TabsContent value="balances" className="mt-4 space-y-5">
+          {myParticipant && myBalance && (
+            <MyBalanceCard
+              balance={myBalance}
+              participant={myParticipant}
+              currency={currency}
+            />
+          )}
 
-        <TabsContent value="settlements" className="mt-4">
-          <GlassCard>
-            <div className="flex items-center gap-2 mb-4">
-              <ArrowRightLeft size={15} className="text-section" />
-              <h3 className="text-base font-semibold text-slate-200">
-                Remboursements simplifiés
-              </h3>
-            </div>
-            <DebtSettlements
-              settlements={settlements}
+          <div className="space-y-3">
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">
+              {myParticipant ? "Tous les soldes" : "Soldes"}
+            </h3>
+            <BalanceSummary
+              balances={balances}
               participants={participants}
               currency={currency}
-              onSettle={handleSettle}
             />
-          </GlassCard>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="settlements" className="mt-4 space-y-5">
+          {/* Me concerne — only when identity is set */}
+          {myParticipant && (
+            <GlassCard className="border-section">
+              <div className="flex items-center gap-2 mb-3">
+                <span
+                  className="w-2.5 h-2.5 rounded-full shrink-0"
+                  style={{ backgroundColor: myParticipant.color }}
+                  aria-hidden
+                />
+                <h3 className="text-base font-semibold text-slate-100">
+                  Me concerne
+                </h3>
+                {mySettlements.length > 0 && (
+                  <span className="text-[11px] font-bold tabular-nums px-1.5 py-0.5 rounded-full bg-section-soft text-section-soft">
+                    {mySettlements.length}
+                  </span>
+                )}
+              </div>
+              {mySettlements.length === 0 ? (
+                <div className="flex items-center gap-2 text-base text-emerald-400 font-semibold py-1">
+                  <CheckCircle2 size={18} />
+                  <span>Tu es quitte ✓</span>
+                </div>
+              ) : (
+                <DebtSettlements
+                  settlements={mySettlements}
+                  participants={participants}
+                  currency={currency}
+                  onSettle={handleSettle}
+                />
+              )}
+            </GlassCard>
+          )}
+
+          {/* Tous les règlements (ou seulement les autres si identité connue) */}
+          {(otherSettlements.length > 0 || !myParticipant) && (
+            <GlassCard>
+              <div className="flex items-center gap-2 mb-3">
+                <ArrowRightLeft size={15} className="text-section" />
+                <h3 className="text-base font-semibold text-slate-200">
+                  {myParticipant ? "Entre les autres" : "Remboursements simplifiés"}
+                </h3>
+                {myParticipant && otherSettlements.length > 0 && (
+                  <span className="text-[11px] font-bold tabular-nums px-1.5 py-0.5 rounded-full bg-foreground/10 text-slate-400">
+                    {otherSettlements.length}
+                  </span>
+                )}
+              </div>
+              <DebtSettlements
+                settlements={myParticipant ? otherSettlements : settlements}
+                participants={participants}
+                currency={currency}
+                onSettle={handleSettle}
+              />
+            </GlassCard>
+          )}
         </TabsContent>
       </Tabs>
 
