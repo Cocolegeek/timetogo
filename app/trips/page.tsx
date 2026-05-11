@@ -5,10 +5,18 @@ import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Plus, Compass, RefreshCw, Wallet, Sparkles } from "lucide-react";
 import { MeshGradientBackground } from "@/components/layout/MeshGradientBackground";
+import dynamic from "next/dynamic";
 import { TripCard } from "@/components/trips/TripCard";
-import { TripEditWrapper } from "@/components/trips/TripEditWrapper";
-import { ShareModal } from "@/components/trips/ShareModal";
 import { ConfirmDeleteDialog } from "@/components/shared/ConfirmDeleteDialog";
+
+const TripEditWrapper = dynamic(
+  () => import("@/components/trips/TripEditWrapper").then((m) => ({ default: m.TripEditWrapper })),
+  { ssr: false }
+);
+const ShareModal = dynamic(
+  () => import("@/components/trips/ShareModal").then((m) => ({ default: m.ShareModal })),
+  { ssr: false }
+);
 import { Spinner } from "@/components/shared/Spinner";
 import { UserMenu } from "@/components/layout/UserMenu";
 import { useTrips } from "@/hooks/useTrip";

@@ -47,7 +47,11 @@ export default async function proxy(req: NextRequest) {
 
   // Redirect logged-in users away from /login
   if (pathname === "/login" && user) {
-    const redirectTo = req.nextUrl.searchParams.get("redirect_to") ?? "/trips";
+    const raw = req.nextUrl.searchParams.get("redirect_to");
+    const redirectTo =
+      raw && raw.startsWith("/") && !raw.startsWith("//") && !raw.startsWith("/\\")
+        ? raw
+        : "/trips";
     return NextResponse.redirect(new URL(redirectTo, req.nextUrl));
   }
 

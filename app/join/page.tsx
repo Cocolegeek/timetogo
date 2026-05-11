@@ -40,21 +40,31 @@ function JoinContent() {
     const load = async () => {
       const supabase = createClient();
 
-      const { data: trip } = await supabase
-        .from("trips")
-        .select("id, name, destination, emoji, currency, start_date, end_date, share_code")
-        .eq("share_code", code)
-        .single();
+      // Single RPC: returns trip + participants only for matching share_code.
+      // Backed by SECURITY DEFINER function (see migration 011) so we don't
+      // need broad SELECT policies on trips/participants.
+      const { data: preview, error: rpcError } = await supabase
+        .rpc("get_join_preview", { p_code: code });
 
-      if (!trip) { setError("Aucun voyage trouvé avec ce code."); return; }
+      if (rpcError || !preview) {
+        setError("Aucun voyage trouvé avec ce code.");
+        return;
+      }
 
-      const { data: participants } = await supabase
-        .from("participants")
-        .select("id, name, color, avatar")
-        .eq("trip_id", trip.id)
-        .order("created_at");
+      const trip = preview as {
+        id: string;
+        name: string;
+        destination: string | null;
+        emoji: string;
+        currency: string;
+        start_date: string | null;
+        end_date: string | null;
+        share_code: string;
+        type: "trip" | "group";
+        participants: { id: string; name: string; color: string; avatar: string | null }[];
+      };
 
-      // Check if already a member
+      // Check if already a member (RLS on trip_members handles auth)
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const { data: membership } = await supabase
@@ -62,20 +72,20 @@ function JoinContent() {
           .select("trip_id")
           .eq("trip_id", trip.id)
           .eq("user_id", user.id)
-          .single();
+          .maybeSingle();
         if (membership) { setAlreadyMember(true); router.replace(`/trips/${trip.id}`); return; }
       }
 
       setTripPreview({
         id: trip.id,
         name: trip.name,
-        destination: trip.destination,
+        destination: trip.destination ?? "",
         emoji: trip.emoji,
         currency: trip.currency,
-        startDate: trip.start_date,
-        endDate: trip.end_date,
+        startDate: trip.start_date ?? "",
+        endDate: trip.end_date ?? "",
         shareCode: trip.share_code,
-        participants: (participants ?? []).map((p) => ({
+        participants: (trip.participants ?? []).map((p) => ({
           id: p.id,
           name: p.name,
           color: p.color,

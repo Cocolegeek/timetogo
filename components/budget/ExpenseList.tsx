@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { AnimatePresence } from "framer-motion";
 import { Receipt } from "lucide-react";
 import { ExpenseCard } from "./ExpenseCard";
@@ -31,16 +32,17 @@ export function ExpenseList({
     );
   }
 
-  const byDate = expenses.reduce<Record<string, Expense[]>>((acc, e) => {
-    const key = e.date;
-    if (!acc[key]) acc[key] = [];
-    acc[key].push(e);
-    return acc;
-  }, {});
-
-  const sortedDates = Object.keys(byDate).sort((a, b) =>
-    b.localeCompare(a)
-  );
+  const { byDate, sortedDates } = useMemo(() => {
+    const grouped = expenses.reduce<Record<string, Expense[]>>((acc, e) => {
+      if (!acc[e.date]) acc[e.date] = [];
+      acc[e.date].push(e);
+      return acc;
+    }, {});
+    return {
+      byDate: grouped,
+      sortedDates: Object.keys(grouped).sort((a, b) => b.localeCompare(a)),
+    };
+  }, [expenses]);
 
   return (
     <div className="space-y-5">

@@ -14,12 +14,23 @@ import {
   Pencil,
   Clock,
 } from "lucide-react";
+import dynamic from "next/dynamic";
 import { GlassCard } from "@/components/layout/GlassCard";
 import { getBudgetColor, getBudgetTextColor } from "@/lib/budget/budget-color";
-import { ShareModal } from "@/components/trips/ShareModal";
 import { IdentityPicker } from "@/components/trips/IdentityPicker";
-import { BudgetEditDialog } from "@/components/trips/BudgetEditDialog";
-import { TripEditDialog } from "@/components/trips/TripEditDialog";
+
+const ShareModal = dynamic(
+  () => import("@/components/trips/ShareModal").then((m) => ({ default: m.ShareModal })),
+  { ssr: false }
+);
+const BudgetEditDialog = dynamic(
+  () => import("@/components/trips/BudgetEditDialog").then((m) => ({ default: m.BudgetEditDialog })),
+  { ssr: false }
+);
+const TripEditDialog = dynamic(
+  () => import("@/components/trips/TripEditDialog").then((m) => ({ default: m.TripEditDialog })),
+  { ssr: false }
+);
 import { ParticipantAvatar } from "@/components/shared/ParticipantAvatar";
 import { Spinner } from "@/components/shared/Spinner";
 import {
