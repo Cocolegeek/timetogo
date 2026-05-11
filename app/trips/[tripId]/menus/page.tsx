@@ -2,7 +2,7 @@
 
 import { use, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { RefreshCw, UtensilsCrossed, ChefHat, Users } from "lucide-react";
+import { RefreshCw, UtensilsCrossed, ChefHat, Users, Plus } from "lucide-react";
 import { GlassCard } from "@/components/layout/GlassCard";
 import { DayHeader } from "@/components/shared/DayHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -23,7 +23,7 @@ interface MenusPageProps {
 export default function MenusPage({ params }: MenusPageProps) {
   const { tripId } = use(params);
   const { trip } = useTrip(tripId);
-  const { meals, loading, refetch, updateMeal } = useMeals(
+  const { meals, loading, refetch, addMeal, updateMeal } = useMeals(
     tripId,
     trip ? { startDate: trip.startDate, endDate: trip.endDate } : undefined
   );
@@ -116,6 +116,10 @@ export default function MenusPage({ params }: MenusPageProps) {
                       <PlaceholderCard
                         key={slot.slot}
                         slot={slot}
+                        onTap={async () => {
+                          const newMeal = await addMeal(d, slot.slot);
+                          setEditingMeal(newMeal);
+                        }}
                       />
                     );
                   })}
@@ -183,9 +187,12 @@ function MealCard({
           onClick={onTap}
           className="w-full text-left px-3.5 py-3.5 rounded-2xl border border-dashed border-foreground/20 bg-foreground/4 hover:border-foreground/35 hover:bg-foreground/8 active:bg-foreground/10 transition-all"
         >
-          <span className={cn("text-sm px-2.5 py-0.5 rounded-full font-medium", slotCfg.bgClass, slotCfg.textClass)}>
-            {slotCfg.shortLabel}
-          </span>
+          <div className="flex items-center justify-between gap-2">
+            <span className={cn("text-sm px-2.5 py-0.5 rounded-full font-medium", slotCfg.bgClass, slotCfg.textClass)}>
+              {slotCfg.shortLabel}
+            </span>
+            <Plus size={16} className="text-sky-400 shrink-0" />
+          </div>
           <p className="text-sm text-slate-400 mt-2">Rien de prévu — tap pour ajouter</p>
         </button>
       </motion.div>
@@ -238,15 +245,22 @@ function MealCard({
   );
 }
 
-function PlaceholderCard({ slot }: { slot: SlotConfig }) {
+function PlaceholderCard({ slot, onTap }: { slot: SlotConfig; onTap: () => void }) {
   return (
-    <GlassCard padding={false} className="opacity-50">
-      <div className="p-3.5">
-        <span className={cn("text-sm px-2.5 py-0.5 rounded-full font-medium", slot.bgClass, slot.textClass)}>
-          {slot.shortLabel}
-        </span>
-        <p className="text-base text-slate-500 mt-2">Repas non initialisé</p>
-      </div>
-    </GlassCard>
+    <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}>
+      <button
+        type="button"
+        onClick={onTap}
+        className="w-full text-left px-3.5 py-3.5 rounded-2xl border border-dashed border-foreground/20 bg-foreground/4 hover:border-foreground/35 hover:bg-foreground/8 active:bg-foreground/10 transition-all"
+      >
+        <div className="flex items-center justify-between gap-2">
+          <span className={cn("text-sm px-2.5 py-0.5 rounded-full font-medium", slot.bgClass, slot.textClass)}>
+            {slot.shortLabel}
+          </span>
+          <Plus size={16} className="text-sky-400 shrink-0" />
+        </div>
+        <p className="text-sm text-slate-400 mt-2">Rien de prévu — tap pour ajouter</p>
+      </button>
+    </motion.div>
   );
 }

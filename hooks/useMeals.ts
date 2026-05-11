@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { buildDefaultMealRows } from "@/lib/meals/slots";
+import { buildDefaultMealRows, DEFAULT_SLOTS } from "@/lib/meals/slots";
 import type { Ingredient, Meal, MealCategory, MealSlot } from "@/types";
 
 function rowToMeal(row: Record<string, unknown>): Meal {
@@ -75,6 +75,18 @@ export function useMeals(
     if (error) { setMeals(snapshot); throw new Error(error.message); }
   };
 
+  const addMeal = async (date: string, slot: MealSlot): Promise<Meal> => {
+    const position = DEFAULT_SLOTS.find(s => s.slot === slot)?.position ?? 0;
+    const { data, error } = await createClient().from("meals").insert({
+      trip_id: tripId, date, slot, title: "", category: "home",
+      position, participant_ids: [], cook_ids: [], ingredients: [],
+    }).select().single();
+    if (error) throw new Error(error.message);
+    const meal = rowToMeal(data as Record<string, unknown>);
+    setMeals(ms => [...ms, meal].sort((a, b) => a.date.localeCompare(b.date) || a.position - b.position));
+    return meal;
+  };
+
   const deleteMeal = async (id: string): Promise<void> => {
     const snapshot = meals;
     setMeals(ms => ms.filter(m => m.id !== id));
@@ -82,5 +94,5 @@ export function useMeals(
     if (error) { setMeals(snapshot); throw new Error(error.message); }
   };
 
-  return { meals, loading, refetch: fetchMeals, updateMeal, deleteMeal };
+  return { meals, loading, refetch: fetchMeals, addMeal, updateMeal, deleteMeal };
 }
