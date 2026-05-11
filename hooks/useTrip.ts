@@ -243,9 +243,20 @@ export function useTrip(id: string) {
     await fetchTrip();
   };
 
-  const addParticipant = async (data: { name: string; color: string }): Promise<void> => {
-    await createClient().from("participants").insert({ trip_id: id, name: data.name, color: data.color });
+  const addParticipant = async (data: { name: string; color: string }): Promise<Participant> => {
+    const { data: row, error } = await createClient()
+      .from("participants")
+      .insert({ trip_id: id, name: data.name, color: data.color })
+      .select()
+      .single();
+    if (error || !row) throw error ?? new Error("Failed to create participant");
     await fetchTrip();
+    return {
+      id: row.id as string,
+      name: row.name as string,
+      color: row.color as string,
+      avatar: (row.avatar as string | null) ?? undefined,
+    };
   };
 
   const updateParticipant = async (participantId: string, data: { name?: string; color?: string }): Promise<void> => {

@@ -403,6 +403,15 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
                 await setMyParticipant(id);
                 setIdentityOpen(false);
               }}
+              onCreate={async (name) => {
+                const FALLBACK_COLORS = [
+                  "#6366f1", "#7c3aed", "#0ea5e9", "#10b981",
+                  "#f59e0b", "#ef4444", "#ec4899", "#14b8a6",
+                ];
+                const color =
+                  FALLBACK_COLORS[trip.participants.length % FALLBACK_COLORS.length];
+                return await addParticipant({ name, color });
+              }}
             />
           </div>
         </DialogContent>

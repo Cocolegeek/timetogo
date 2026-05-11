@@ -37,7 +37,7 @@ interface TripEditDialogProps {
     startDate: string;
     endDate: string;
   }) => Promise<void>;
-  onAddParticipant: (data: { name: string; color: string }) => Promise<void>;
+  onAddParticipant: (data: { name: string; color: string }) => Promise<unknown>;
   onUpdateParticipant: (
     id: string,
     data: { name?: string; color?: string }

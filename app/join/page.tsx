@@ -31,6 +31,13 @@ function JoinContent() {
   const [tripPreview, setTripPreview] = useState<TripPreview | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selectedParticipantId, setSelectedParticipantId] = useState<string | null>(null);
+  /**
+   * Local-only marker: when the user creates a brand-new participant via
+   * the picker's "Je ne suis pas dans la liste" flow, we keep their name
+   * here so the actual creation happens atomically inside join_trip RPC
+   * (the user isn't a member yet, so direct INSERT on participants is RLS-blocked).
+   */
+  const [pendingNewName, setPendingNewName] = useState<string | null>(null);
   const [isJoining, setIsJoining] = useState(false);
   const [alreadyMember, setAlreadyMember] = useState(false);
 
@@ -98,25 +105,50 @@ function JoinContent() {
   }, [code, router]);
 
   const handleJoin = async () => {
-    if (!tripPreview || !selectedParticipantId) return;
+    if (!tripPreview || !code) return;
+    if (!selectedParticipantId && !pendingNewName) return;
     setIsJoining(true);
     try {
       const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
-
-      await supabase.from("trip_members").insert({
-        trip_id: tripPreview.id,
-        user_id: user.id,
-        participant_id: selectedParticipantId,
-        role: "contributor",
+      const { error: rpcError } = await supabase.rpc("join_trip", {
+        p_code: code,
+        p_participant_id: pendingNewName ? null : selectedParticipantId,
+        p_new_participant_name: pendingNewName,
+        p_new_participant_color: null,
       });
-
+      if (rpcError) throw rpcError;
       router.push(`/trips/${tripPreview.id}`);
     } catch {
       setError("Impossible de rejoindre le voyage. Réessaie.");
       setIsJoining(false);
     }
+  };
+
+  /**
+   * Called when the user opts to create a new participant from the picker.
+   * Since they're not a member yet, we can't INSERT directly — RLS would block.
+   * Instead we stash the name locally; the join_trip RPC will create the
+   * participant atomically when the user confirms.
+   *
+   * We return a synthetic Participant so the picker can immediately show it
+   * as selected. The synthetic id is replaced server-side when join_trip runs.
+   */
+  const stashNewParticipant = async (name: string) => {
+    const FALLBACK_COLORS = [
+      "#6366f1", "#7c3aed", "#0ea5e9", "#10b981",
+      "#f59e0b", "#ef4444", "#ec4899", "#14b8a6",
+    ];
+    const color =
+      FALLBACK_COLORS[(tripPreview?.participants.length ?? 0) % FALLBACK_COLORS.length];
+    const synthetic: Participant = { id: `__pending__${Date.now()}`, name, color };
+    setPendingNewName(name);
+    if (tripPreview) {
+      setTripPreview({
+        ...tripPreview,
+        participants: [...tripPreview.participants, synthetic],
+      });
+    }
+    return synthetic;
   };
 
   if (alreadyMember) {
@@ -198,7 +230,13 @@ function JoinContent() {
           <IdentityPicker
             participants={tripPreview.participants}
             selectedId={selectedParticipantId}
-            onSelect={setSelectedParticipantId}
+            onSelect={(id) => {
+              setSelectedParticipantId(id);
+              // If user picks one of the existing (non-pending) participants,
+              // clear any pending creation.
+              if (!id.startsWith("__pending__")) setPendingNewName(null);
+            }}
+            onCreate={stashNewParticipant}
           />
         </GlassCard>
       </motion.div>
