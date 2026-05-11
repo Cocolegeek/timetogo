@@ -95,7 +95,7 @@ export function AppInstallBanner() {
             <button
               type="button"
               onClick={install}
-              className="px-3.5 py-2 rounded-xl bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-sm font-semibold hover:bg-indigo-500/30 active:scale-95 transition-all shrink-0"
+              className="px-3.5 py-2 rounded-xl bg-section-soft text-section-soft border border-section text-sm font-semibold hover:bg-section-medium active:scale-95 transition-all shrink-0"
             >
               Installer
             </button>

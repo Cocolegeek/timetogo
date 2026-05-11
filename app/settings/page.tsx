@@ -108,8 +108,8 @@ export default function SettingsPage() {
                         className="w-20 h-20 rounded-full object-cover border-2 border-foreground/10"
                       />
                     ) : (
-                      <div className="w-20 h-20 rounded-full bg-indigo-500/20 border-2 border-indigo-500/30 flex items-center justify-center">
-                        <User size={32} className="text-indigo-400" />
+                      <div className="w-20 h-20 rounded-full bg-section-soft border-2 border-section flex items-center justify-center">
+                        <User size={32} className="text-section" />
                       </div>
                     )}
                     <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-slate-800 border border-foreground/10 flex items-center justify-center">
@@ -181,9 +181,9 @@ export default function SettingsPage() {
                     onClick={toggle}
                     className="w-full flex items-center gap-3 px-4 py-4 active:bg-foreground/4 transition-colors"
                   >
-                    <div className="w-10 h-10 rounded-xl bg-indigo-500/15 flex items-center justify-center shrink-0">
+                    <div className="w-10 h-10 rounded-xl bg-section-soft flex items-center justify-center shrink-0">
                       {isDark ? (
-                        <Moon size={18} className="text-indigo-300" />
+                        <Moon size={18} className="text-section-soft" />
                       ) : (
                         <Sun size={18} className="text-amber-400" />
                       )}
@@ -214,7 +214,7 @@ export default function SettingsPage() {
                         className={cn(
                           "flex flex-col items-center gap-1.5 py-3 rounded-xl text-sm font-medium transition-all active:scale-95",
                           mapApp === app.id
-                            ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/40"
+                            ? "bg-section-soft text-section-soft border border-section"
                             : "bg-foreground/4 text-slate-400 border border-foreground/8 hover:bg-foreground/8"
                         )}
                       >
@@ -241,8 +241,8 @@ export default function SettingsPage() {
                         className="w-10 h-10 rounded-full"
                       />
                     ) : (
-                      <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center">
-                        <User size={16} className="text-indigo-400" />
+                      <div className="w-10 h-10 rounded-full bg-section-soft flex items-center justify-center">
+                        <User size={16} className="text-section" />
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
@@ -305,7 +305,7 @@ function Switch({ checked }: { checked: boolean }) {
       aria-hidden
       className={cn(
         "relative inline-flex w-11 h-6 rounded-full transition-colors shrink-0",
-        checked ? "bg-indigo-500" : "bg-foreground/15"
+        checked ? "bg-section" : "bg-foreground/15"
       )}
     >
       <span

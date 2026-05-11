@@ -162,7 +162,7 @@ export function TripEditDialog({
             <Label className="text-slate-300 text-sm font-medium">
               Nom du voyage
             </Label>
-            <div className="flex items-stretch gap-2 bg-foreground/8 border border-foreground/10 rounded-lg focus-within:ring-3 focus-within:ring-indigo-500/40 transition-all overflow-hidden">
+            <div className="flex items-stretch gap-2 bg-foreground/8 border border-foreground/10 rounded-lg focus-within:ring-3 focus-within:ring-section transition-all overflow-hidden">
               <button
                 type="button"
                 onClick={() => setEmojiPickerOpen((v) => !v)}
@@ -199,7 +199,7 @@ export function TripEditDialog({
                         className={cn(
                           "w-10 h-10 rounded-lg text-xl transition-all",
                           emoji === e
-                            ? "bg-indigo-500/20 ring-1 ring-indigo-400/50"
+                            ? "bg-section-soft ring-1 ring-section"
                             : "hover:bg-foreground/8 active:bg-foreground/12"
                         )}
                       >
@@ -220,7 +220,7 @@ export function TripEditDialog({
                 value={destination}
                 onChange={setDestination}
                 placeholder="Rome, Italie"
-                className="bg-foreground/8 border-foreground/10 text-slate-100 placeholder:text-slate-500 focus-visible:ring-indigo-500/50"
+                className="bg-foreground/8 border-foreground/10 text-slate-100 placeholder:text-slate-500 focus-visible:ring-section"
               />
             </div>
           )}
@@ -263,7 +263,7 @@ export function TripEditDialog({
                   className={cn(
                     "px-3 py-1.5 rounded-xl text-sm font-medium transition-all active:scale-95",
                     currency === c
-                      ? "bg-indigo-500/20 text-indigo-300 ring-1 ring-indigo-500/50"
+                      ? "bg-section-soft text-section-soft ring-1 ring-section"
                       : "bg-foreground/5 text-slate-400 hover:bg-foreground/10"
                   )}
                 >
@@ -377,7 +377,7 @@ export function TripEditDialog({
                 type="button"
                 onClick={handleAddParticipant}
                 disabled={!newParticipantName.trim()}
-                className="shrink-0 bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/30 disabled:opacity-40"
+                className="shrink-0 bg-section-soft hover:bg-section-medium text-section-soft border border-section disabled:opacity-40"
               >
                 <Plus size={16} />
               </Button>

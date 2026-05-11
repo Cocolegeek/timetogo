@@ -101,7 +101,7 @@ export function ShareModal({ open, onOpenChange, trip }: ShareModalProps) {
                     initial={{ opacity: 0, y: -6 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.05 }}
-                    className="font-mono text-2xl font-bold tracking-widest text-indigo-300"
+                    className="font-mono text-2xl font-bold tracking-widest text-section-soft"
                   >
                     {char}
                   </motion.span>
@@ -136,7 +136,7 @@ export function ShareModal({ open, onOpenChange, trip }: ShareModalProps) {
             <div className="flex gap-2">
               <Button
                 onClick={copyUrl}
-                className="flex-1 bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/30"
+                className="flex-1 bg-section-soft hover:bg-section-medium text-section-soft border border-section"
               >
                 {copiedUrl ? (
                   <Check size={15} className="text-emerald-400" />

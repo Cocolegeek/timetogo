@@ -156,7 +156,7 @@ export function LocationAutocomplete({
               className={cn(
                 "w-full text-left px-3 py-2 flex items-start gap-2 transition-colors",
                 highlightIdx === i
-                  ? "bg-indigo-500/20 text-slate-100"
+                  ? "bg-section-soft text-slate-100"
                   : "text-slate-300 hover:bg-foreground/8"
               )}
             >

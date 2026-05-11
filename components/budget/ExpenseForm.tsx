@@ -391,7 +391,7 @@ export function ExpenseForm({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Restaurant, courses, taxi…"
-              className="bg-foreground/8 border-foreground/10 text-slate-100 placeholder:text-slate-500 focus-visible:ring-indigo-500/50"
+              className="bg-foreground/8 border-foreground/10 text-slate-100 placeholder:text-slate-500 focus-visible:ring-section"
             />
           </div>
 
@@ -448,7 +448,7 @@ export function ExpenseForm({
                     className={cn(
                       "flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all active:scale-95",
                       selected
-                        ? "border-indigo-400 bg-indigo-500/15 text-indigo-200"
+                        ? "border-section bg-section-soft text-section-soft"
                         : "border-foreground/10 bg-foreground/4 text-slate-300 hover:bg-foreground/8"
                     )}
                   >
@@ -479,7 +479,7 @@ export function ExpenseForm({
                         min="0"
                         value={payer.amount}
                         onChange={(e) => setPayerAmount(payer.participantId, Number(e.target.value) || 0)}
-                        className="w-20 text-right bg-foreground/8 border border-foreground/10 rounded-lg px-2 py-1 text-sm text-slate-100 focus:outline-none focus:border-indigo-400 tabular-nums"
+                        className="w-20 text-right bg-foreground/8 border border-foreground/10 rounded-lg px-2 py-1 text-sm text-slate-100 focus:outline-none focus:border-section tabular-nums"
                       />
                       <span className="text-xs text-slate-500 w-8">{currency.slice(0, 3)}</span>
                     </div>
@@ -517,19 +517,19 @@ export function ExpenseForm({
               <TabsList className="grid grid-cols-3 w-full bg-foreground/4 border border-foreground/8">
                 <TabsTrigger
                   value="equal"
-                  className="data-[state=active]:bg-indigo-500/20 data-[state=active]:text-indigo-300"
+                  className="data-[state=active]:bg-section-soft data-[state=active]:text-section"
                 >
                   Équitable
                 </TabsTrigger>
                 <TabsTrigger
                   value="percentage"
-                  className="data-[state=active]:bg-indigo-500/20 data-[state=active]:text-indigo-300"
+                  className="data-[state=active]:bg-section-soft data-[state=active]:text-section"
                 >
                   %
                 </TabsTrigger>
                 <TabsTrigger
                   value="fixed"
-                  className="data-[state=active]:bg-indigo-500/20 data-[state=active]:text-indigo-300"
+                  className="data-[state=active]:bg-section-soft data-[state=active]:text-section"
                 >
                   Montants
                 </TabsTrigger>
@@ -567,7 +567,7 @@ export function ExpenseForm({
                           "w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all",
                           split.excluded
                             ? "border-slate-600"
-                            : "border-indigo-400 bg-indigo-500"
+                            : "border-section bg-section"
                         )}
                       >
                         {!split.excluded && (
@@ -621,7 +621,7 @@ export function ExpenseForm({
                           onChange={(e) =>
                             setPercentage(p.id, Number(e.target.value) || 0)
                           }
-                          className="w-16 text-right bg-foreground/8 border border-foreground/10 rounded-lg px-2 py-1 text-sm text-slate-100 focus:outline-none focus:border-indigo-400 tabular-nums"
+                          className="w-16 text-right bg-foreground/8 border border-foreground/10 rounded-lg px-2 py-1 text-sm text-slate-100 focus:outline-none focus:border-section tabular-nums"
                         />
                         <span className="text-xs text-slate-500">%</span>
                         <span className="text-xs text-slate-400 w-16 text-right tabular-nums">
@@ -641,7 +641,7 @@ export function ExpenseForm({
                           onChange={(e) =>
                             setFixedAmount(p.id, Number(e.target.value) || 0)
                           }
-                          className="w-20 text-right bg-foreground/8 border border-foreground/10 rounded-lg px-2 py-1 text-sm text-slate-100 focus:outline-none focus:border-indigo-400 tabular-nums"
+                          className="w-20 text-right bg-foreground/8 border border-foreground/10 rounded-lg px-2 py-1 text-sm text-slate-100 focus:outline-none focus:border-section tabular-nums"
                         />
                         <span className="text-xs text-slate-500 w-6">
                           {currency.slice(0, 3)}

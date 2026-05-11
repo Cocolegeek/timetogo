@@ -109,7 +109,7 @@ export function TripWizard() {
             <Label className="text-slate-300 text-sm font-medium">
               Nom du voyage
             </Label>
-            <div className="flex items-stretch gap-2 bg-foreground/8 border border-foreground/10 rounded-lg focus-within:ring-3 focus-within:ring-indigo-500/40 transition-all overflow-hidden">
+            <div className="flex items-stretch gap-2 bg-foreground/8 border border-foreground/10 rounded-lg focus-within:ring-3 focus-within:ring-section transition-all overflow-hidden">
               <button
                 type="button"
                 onClick={() => setEmojiPickerOpen((v) => !v)}
@@ -145,7 +145,7 @@ export function TripWizard() {
                         className={cn(
                           "w-10 h-10 rounded-lg text-xl transition-all",
                           selectedEmoji === e
-                            ? "bg-indigo-500/20 ring-1 ring-indigo-400/50"
+                            ? "bg-section-soft ring-1 ring-section"
                             : "hover:bg-foreground/8 active:bg-foreground/12"
                         )}
                       >
@@ -174,7 +174,7 @@ export function TripWizard() {
                 })
               }
               placeholder="Rome, Italie"
-              className="bg-foreground/8 border-foreground/10 text-slate-100 placeholder:text-slate-500 focus-visible:ring-indigo-500/50"
+              className="bg-foreground/8 border-foreground/10 text-slate-100 placeholder:text-slate-500 focus-visible:ring-section"
             />
             {errors.destination && (
               <p className="text-xs text-red-400">{errors.destination.message}</p>
@@ -207,7 +207,7 @@ export function TripWizard() {
                 onClick={() => setValue("currency", c)}
                 className={`px-3 py-1.5 rounded-xl text-sm font-medium transition-all ${
                   selectedCurrency === c
-                    ? "bg-indigo-500/20 text-indigo-300 ring-1 ring-indigo-500/50"
+                    ? "bg-section-soft text-section-soft ring-1 ring-section"
                     : "bg-foreground/5 text-slate-400 hover:bg-foreground/10 hover:text-slate-300"
                 }`}
               >
@@ -231,7 +231,7 @@ export function TripWizard() {
               onClick={() => setBudgetEnabled((v) => !v)}
               className={cn(
                 "relative w-10 h-6 rounded-full transition-colors",
-                budgetEnabled ? "bg-indigo-500" : "bg-foreground/10"
+                budgetEnabled ? "bg-section" : "bg-foreground/10"
               )}
               aria-label="Activer le budget prévisionnel"
             >
@@ -291,12 +291,12 @@ export function TripWizard() {
                 }
               }}
               placeholder="Prénom du participant"
-              className="bg-foreground/8 border-foreground/10 text-slate-100 placeholder:text-slate-500 focus-visible:ring-indigo-500/50"
+              className="bg-foreground/8 border-foreground/10 text-slate-100 placeholder:text-slate-500 focus-visible:ring-section"
             />
             <Button
               type="button"
               onClick={addParticipant}
-              className="shrink-0 bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/30"
+              className="shrink-0 bg-section-soft hover:bg-section-medium text-section-soft border border-section"
             >
               <Plus size={16} />
             </Button>

@@ -104,7 +104,7 @@ export function DateRangePicker({ startDate, endDate, onChange }: DateRangePicke
         onClick={openCalendar}
         className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl bg-foreground/8 border border-foreground/10 hover:bg-foreground/12 active:bg-foreground/16 transition-all text-left"
       >
-        <CalendarDays size={18} className="text-indigo-400 shrink-0" />
+        <CalendarDays size={18} className="text-section shrink-0" />
 
         <div className="flex-1 flex items-center gap-3 min-w-0">
           <div className="flex-1 min-w-0">
@@ -119,7 +119,7 @@ export function DateRangePicker({ startDate, endDate, onChange }: DateRangePicke
         </div>
 
         {duration > 0 && (
-          <span className="text-xs px-2.5 py-1 rounded-full bg-indigo-500/20 text-indigo-300 font-bold tabular-nums shrink-0">
+          <span className="text-xs px-2.5 py-1 rounded-full bg-section-soft text-section-soft font-bold tabular-nums shrink-0">
             {duration}j
           </span>
         )}
@@ -207,23 +207,23 @@ export function DateRangePicker({ startDate, endDate, onChange }: DateRangePicke
                     className={cn(
                       "h-10 flex items-center justify-center text-sm font-medium transition-all relative select-none",
                       // Range fill (no border-radius on middle cells)
-                      inRange && "bg-indigo-500/15 text-indigo-100",
+                      inRange && "bg-section-tint text-slate-100",
                       // Start cap
-                      isStart && "bg-indigo-500 text-white rounded-l-full shadow-sm",
+                      isStart && "bg-section text-white rounded-l-full shadow-sm",
                       // End cap
-                      isEnd && "bg-indigo-500 text-white rounded-r-full shadow-sm",
+                      isEnd && "bg-section text-white rounded-r-full shadow-sm",
                       // Single day (start = end)
-                      isSingle && "bg-indigo-500 text-white rounded-full shadow-sm",
+                      isSingle && "bg-section text-white rounded-full shadow-sm",
                       // Default
                       !isStart && !isEnd && !isSingle && !inRange && [
                         "rounded-full hover:bg-foreground/10",
-                        isToday ? "text-indigo-300 font-bold" : "text-slate-300",
+                        isToday ? "text-section-soft font-bold" : "text-slate-300",
                       ]
                     )}
                   >
                     {day}
                     {isToday && !isStart && !isEnd && !isSingle && (
-                      <span className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-indigo-400" />
+                      <span className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-section" />
                     )}
                   </button>
                 );

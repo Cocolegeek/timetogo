@@ -73,7 +73,7 @@ export function DebtSettlements({
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.06 }}
               onClick={() => setPending(s)}
-              className="w-full glass-subtle border border-indigo-500/25 rounded-2xl px-5 py-4 flex flex-col gap-3 text-left active:scale-[0.98] transition-transform"
+              className="w-full glass-subtle border border-section rounded-2xl px-5 py-4 flex flex-col gap-3 text-left active:scale-[0.98] transition-transform"
             >
               {/* Participants */}
               <div className="flex items-center gap-3">
@@ -102,10 +102,10 @@ export function DebtSettlements({
 
               {/* Amount + hint */}
               <div className="flex items-end justify-between">
-                <span className="text-2xl font-bold text-indigo-300 tabular-nums">
+                <span className="text-2xl font-bold text-section-soft tabular-nums">
                   {formatCurrency(s.amount, currency)}
                 </span>
-                <span className="text-xs font-semibold text-indigo-300 mb-0.5 px-2 py-0.5 rounded-md bg-indigo-500/20 border border-indigo-400/30">
+                <span className="text-xs font-semibold text-section-soft mb-0.5 px-2 py-0.5 rounded-md bg-section-soft border border-section">
                   Régler ma dette
                 </span>
               </div>
@@ -136,7 +136,7 @@ export function DebtSettlements({
                   />
                   <span className="font-semibold text-slate-100">{pendingTo.name}</span>
                 </div>
-                <p className="text-2xl font-bold text-indigo-300 tabular-nums">
+                <p className="text-2xl font-bold text-section-soft tabular-nums">
                   {formatCurrency(pending.amount, currency)}
                 </p>
               </div>

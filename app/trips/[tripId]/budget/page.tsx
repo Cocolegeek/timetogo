@@ -220,7 +220,7 @@ export default function BudgetPage({ params }: BudgetPageProps) {
         <TabsContent value="settlements" className="mt-4">
           <GlassCard>
             <div className="flex items-center gap-2 mb-4">
-              <ArrowRightLeft size={15} className="text-indigo-400" />
+              <ArrowRightLeft size={15} className="text-section" />
               <h3 className="text-base font-semibold text-slate-200">
                 Remboursements simplifiés
               </h3>

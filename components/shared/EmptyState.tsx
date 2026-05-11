@@ -24,7 +24,7 @@ export function EmptyState({
       )}
     >
       <div className="w-16 h-16 rounded-2xl glass flex items-center justify-center">
-        <Icon size={30} className="text-indigo-400" />
+        <Icon size={30} className="text-section" />
       </div>
       <div className="space-y-1.5">
         <p className="text-lg font-semibold text-slate-100">{title}</p>

@@ -110,7 +110,7 @@ export function BudgetEditDialog({
       <DialogContent className="glass-strong border-foreground/10 max-w-sm">
         <DialogHeader>
           <DialogTitle className="text-slate-100 text-lg flex items-center gap-2">
-            <Wallet size={18} className="text-indigo-400" />
+            <Wallet size={18} className="text-section" />
             Budget prévisionnel
           </DialogTitle>
         </DialogHeader>
@@ -124,7 +124,7 @@ export function BudgetEditDialog({
               className={cn(
                 "py-2 rounded-md text-sm font-medium transition-all",
                 mode === "total"
-                  ? "bg-indigo-500/20 text-indigo-300"
+                  ? "bg-section-soft text-section-soft"
                   : "text-slate-400 hover:text-slate-200"
               )}
             >
@@ -136,7 +136,7 @@ export function BudgetEditDialog({
               className={cn(
                 "py-2 rounded-md text-sm font-medium transition-all",
                 mode === "per-person"
-                  ? "bg-indigo-500/20 text-indigo-300"
+                  ? "bg-section-soft text-section-soft"
                   : "text-slate-400 hover:text-slate-200"
               )}
               disabled={participantCount === 0}

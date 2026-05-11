@@ -292,7 +292,7 @@ export function ItineraryItemForm({
                     className={cn(
                       "px-3 py-1.5 rounded-full text-sm font-medium transition-all active:scale-95",
                       selected
-                        ? "bg-indigo-500/20 text-indigo-300 ring-1 ring-indigo-500/50"
+                        ? "bg-section-soft text-section-soft ring-1 ring-section"
                         : "bg-foreground/5 text-slate-400 hover:bg-foreground/10"
                     )}
                   >
@@ -376,7 +376,7 @@ export function ItineraryItemForm({
                   className={cn(
                     "px-3 py-1.5 rounded-full text-sm font-medium border transition-all active:scale-95",
                     allSelected
-                      ? "bg-indigo-500/15 text-indigo-300 border-indigo-500/40"
+                      ? "bg-section-soft text-section-soft border-section"
                       : "bg-foreground/5 text-slate-400 border-foreground/10 hover:bg-foreground/10"
                   )}
                 >
@@ -392,7 +392,7 @@ export function ItineraryItemForm({
                       className={cn(
                         "flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium transition-all active:scale-95",
                         sel
-                          ? "border-indigo-400 bg-indigo-500/15 text-indigo-200"
+                          ? "border-section bg-section-soft text-section-soft"
                           : "border-foreground/10 bg-foreground/5 text-slate-300 hover:bg-foreground/10"
                       )}
                     >
@@ -415,7 +415,7 @@ export function ItineraryItemForm({
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Ajouter une description"
               rows={2}
-              className="w-full bg-foreground/5 border border-foreground/10 rounded-lg px-3 py-2 text-base text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-3 focus:ring-indigo-500/40 resize-none"
+              className="w-full bg-foreground/5 border border-foreground/10 rounded-lg px-3 py-2 text-base text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-3 focus:ring-section resize-none"
             />
           </Row>
 
@@ -476,7 +476,7 @@ function DateInput({
       type="date"
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full bg-foreground/5 border border-foreground/10 rounded-lg px-3 h-10 text-base text-slate-100 [color-scheme:dark] focus:outline-none focus:ring-3 focus:ring-indigo-500/40 tabular-nums"
+      className="w-full bg-foreground/5 border border-foreground/10 rounded-lg px-3 h-10 text-base text-slate-100 [color-scheme:dark] focus:outline-none focus:ring-3 focus:ring-section tabular-nums"
     />
   );
 }
@@ -499,7 +499,7 @@ function TimeInput({
         type="time"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full bg-foreground/5 border border-foreground/10 rounded-lg pl-9 pr-3 h-10 text-base text-slate-100 [color-scheme:dark] focus:outline-none focus:ring-3 focus:ring-indigo-500/40 tabular-nums"
+        className="w-full bg-foreground/5 border border-foreground/10 rounded-lg pl-9 pr-3 h-10 text-base text-slate-100 [color-scheme:dark] focus:outline-none focus:ring-3 focus:ring-section tabular-nums"
       />
     </div>
   );
@@ -526,7 +526,7 @@ function NumberPill({
         value={value}
         onChange={(e) => onChange(e.target.value.replace(/[^0-9]/g, ""))}
         placeholder="0"
-        className="w-full bg-foreground/5 border border-foreground/10 rounded-lg px-3 h-10 text-base text-slate-100 placeholder:text-slate-500 tabular-nums focus:outline-none focus:ring-3 focus:ring-indigo-500/40 pr-12"
+        className="w-full bg-foreground/5 border border-foreground/10 rounded-lg px-3 h-10 text-base text-slate-100 placeholder:text-slate-500 tabular-nums focus:outline-none focus:ring-3 focus:ring-section pr-12"
       />
       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-500 pointer-events-none">
         {suffix}

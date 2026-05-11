@@ -35,8 +35,8 @@ function LoginForm() {
       <GlassCard className="space-y-6">
         {/* Logo */}
         <div className="text-center space-y-3">
-          <div className="w-16 h-16 rounded-2xl bg-indigo-500/15 flex items-center justify-center mx-auto">
-            <Plane size={32} className="text-indigo-400" />
+          <div className="w-16 h-16 rounded-2xl bg-section-soft flex items-center justify-center mx-auto">
+            <Plane size={32} className="text-section" />
           </div>
           <div>
             <h1 className="text-2xl font-bold gradient-text">Time to Go</h1>

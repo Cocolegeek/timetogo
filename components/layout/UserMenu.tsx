@@ -33,7 +33,7 @@ export function UserMenu() {
             className="w-full h-full object-cover"
           />
         ) : (
-          <span className="text-xs font-bold text-slate-300 bg-indigo-500/20 w-full h-full flex items-center justify-center">
+          <span className="text-xs font-bold text-slate-300 bg-section-soft w-full h-full flex items-center justify-center">
             {initials}
           </span>
         )}

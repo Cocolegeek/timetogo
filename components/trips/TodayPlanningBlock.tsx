@@ -113,7 +113,13 @@ export function TodayPlanningBlock({ trip }: TodayPlanningBlockProps) {
           {/* Body */}
           {loading ? (
             <div className="flex items-center justify-center py-8">
-              <div className="w-6 h-6 rounded-full border-2 border-indigo-500/40 border-t-indigo-400 animate-spin" />
+              <div
+                className="w-6 h-6 rounded-full border-2 animate-spin"
+                style={{
+                  borderColor: "var(--accent-border)",
+                  borderTopColor: "var(--accent-400)",
+                }}
+              />
             </div>
           ) : !relevantDay ? (
             <div className="px-4 py-6 text-center">

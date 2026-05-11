@@ -309,6 +309,15 @@ html, body {
 @utility bg-section-soft {
   background-color: var(--accent-soft);
 }
+@utility bg-section-tint {
+  background-color: oklch(0.60 var(--accent-c) var(--accent-h) / 10%);
+}
+@utility bg-section-medium {
+  background-color: oklch(0.60 var(--accent-c) var(--accent-h) / 30%);
+}
+@utility border-section-strong {
+  border-color: oklch(0.60 var(--accent-c) var(--accent-h) / 50%);
+}
 @utility border-section {
   border-color: var(--accent-border);
 }

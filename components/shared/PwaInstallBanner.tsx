@@ -54,9 +54,9 @@ export function PwaInstallBanner() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 mb-4">
-      <div className="flex items-center gap-3 px-4 py-3 rounded-2xl border border-indigo-500/20 bg-indigo-500/8 backdrop-blur-sm">
-        <div className="w-9 h-9 rounded-xl bg-indigo-500/15 flex items-center justify-center shrink-0">
-          <Download size={18} className="text-indigo-400" />
+      <div className="flex items-center gap-3 px-4 py-3 rounded-2xl border border-section bg-section-tint backdrop-blur-sm">
+        <div className="w-9 h-9 rounded-xl bg-section-soft flex items-center justify-center shrink-0">
+          <Download size={18} className="text-section" />
         </div>
 
         <div className="flex-1 min-w-0">
@@ -73,14 +73,14 @@ export function PwaInstallBanner() {
         {mode === "android" && (
           <button
             onClick={handleInstall}
-            className="shrink-0 px-3 py-1.5 rounded-lg bg-indigo-500 text-white text-xs font-semibold active:scale-95 transition-all"
+            className="shrink-0 px-3 py-1.5 rounded-lg bg-section text-white text-xs font-semibold active:scale-95 transition-all"
           >
             Installer
           </button>
         )}
 
         {mode === "ios" && (
-          <div className="shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-lg bg-indigo-500/15 text-indigo-300 text-xs font-medium">
+          <div className="shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-lg bg-section-soft text-section-soft text-xs font-medium">
             <Share size={13} />
             <span>Partager</span>
           </div>

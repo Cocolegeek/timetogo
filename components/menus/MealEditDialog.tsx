@@ -288,7 +288,7 @@ export function MealEditDialog({
                   className={cn(
                     "px-3 py-1.5 rounded-full text-sm font-medium border transition-all active:scale-95",
                     allEatersSelected
-                      ? "bg-indigo-500/15 text-indigo-300 border-indigo-500/40"
+                      ? "bg-section-soft text-section-soft border-section"
                       : "bg-foreground/5 text-slate-400 border-foreground/10 hover:bg-foreground/10"
                   )}
                 >
@@ -304,7 +304,7 @@ export function MealEditDialog({
                       className={cn(
                         "flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium transition-all active:scale-95",
                         sel
-                          ? "border-indigo-400 bg-indigo-500/15 text-indigo-200"
+                          ? "border-section bg-section-soft text-section-soft"
                           : "border-foreground/10 bg-foreground/5 text-slate-300 hover:bg-foreground/10"
                       )}
                     >
@@ -419,7 +419,7 @@ export function MealEditDialog({
                         onChange={(e) => setNotes(e.target.value)}
                         placeholder="Allergies, restos envisagés…"
                         rows={2}
-                        className="w-full bg-foreground/5 border border-foreground/10 rounded-lg px-3 py-2 text-base text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-3 focus:ring-indigo-500/40 resize-none"
+                        className="w-full bg-foreground/5 border border-foreground/10 rounded-lg px-3 py-2 text-base text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-3 focus:ring-section resize-none"
                       />
                     </div>
                   </div>

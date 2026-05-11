@@ -92,7 +92,13 @@ export default function MenusPage({ params }: MenusPageProps) {
 
       {loading ? (
         <div className="flex items-center justify-center py-20">
-          <div className="w-8 h-8 rounded-full border-2 border-indigo-500/50 border-t-indigo-400 animate-spin" />
+          <div
+            className="w-8 h-8 rounded-full border-2 animate-spin"
+            style={{
+              borderColor: "var(--accent-border)",
+              borderTopColor: "var(--accent-400)",
+            }}
+          />
         </div>
       ) : dates.length === 0 ? (
         <EmptyState

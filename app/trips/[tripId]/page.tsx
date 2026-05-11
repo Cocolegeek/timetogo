@@ -131,7 +131,7 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
           </button>
           <button
             onClick={() => setShareOpen(true)}
-            className="p-2 rounded-xl hover:bg-foreground/8 active:bg-foreground/12 text-indigo-300 transition-all"
+            className="p-2 rounded-xl hover:bg-foreground/8 active:bg-foreground/12 text-section-soft transition-all"
             title="Partager"
           >
             <Share2 size={18} />
@@ -191,7 +191,7 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
               <p className="text-sm text-slate-500 uppercase tracking-wider">
                 Identité
               </p>
-              <p className="text-base font-medium text-indigo-400">
+              <p className="text-base font-medium text-section">
                 Sélectionner mon identité
               </p>
             </div>
@@ -218,8 +218,8 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
             <GlassCard className="h-full hover:border-foreground/15 transition-colors" padding={false}>
               <div className="p-4 flex flex-col gap-2.5">
                 <div className="flex items-center gap-2">
-                  <div className="w-10 h-10 rounded-xl bg-indigo-500/15 flex items-center justify-center">
-                    <Wallet size={19} className="text-indigo-400" />
+                  <div className="w-10 h-10 rounded-xl bg-section-soft flex items-center justify-center">
+                    <Wallet size={19} className="text-section" />
                   </div>
                   <span className="text-base text-slate-300 font-medium">Budget</span>
                 </div>
@@ -247,7 +247,7 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
                       {budgetIsOver && " · dépassé"}
                     </p>
                   ) : (
-                    <p className="text-sm text-indigo-400 mt-1.5 font-medium">
+                    <p className="text-sm text-section mt-1.5 font-medium">
                       Définir un budget →
                     </p>
                   )}

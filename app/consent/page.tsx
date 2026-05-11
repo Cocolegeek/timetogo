@@ -44,8 +44,8 @@ export default function ConsentPage() {
         <GlassCard className="space-y-6">
           {/* Header */}
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center shrink-0">
-              <Shield size={20} className="text-indigo-400" />
+            <div className="w-10 h-10 rounded-xl bg-section-soft flex items-center justify-center shrink-0">
+              <Shield size={20} className="text-section" />
             </div>
             <div>
               <h1 className="text-lg font-bold text-slate-100">Confidentialité</h1>
@@ -84,7 +84,7 @@ export default function ConsentPage() {
                 className={cn(
                   "w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all",
                   checked
-                    ? "border-indigo-400 bg-indigo-500"
+                    ? "border-section bg-section"
                     : "border-slate-600 group-hover:border-slate-400"
                 )}
               >

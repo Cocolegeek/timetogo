@@ -24,8 +24,8 @@ export function IdentityPicker({
     <div className="space-y-3">
       {!compact && (
         <div className="flex items-center gap-3 pb-1">
-          <div className="w-9 h-9 rounded-xl bg-indigo-500/15 flex items-center justify-center shrink-0">
-            <UserCheck size={20} className="text-indigo-400" />
+          <div className="w-9 h-9 rounded-xl bg-section-soft flex items-center justify-center shrink-0">
+            <UserCheck size={20} className="text-section" />
           </div>
           <p className="text-lg font-semibold text-slate-100 leading-snug">
             Qui es-tu parmi les voyageurs ?
@@ -47,7 +47,7 @@ export function IdentityPicker({
               className={cn(
                 "flex items-center gap-3 p-3 rounded-xl border transition-all duration-200 text-left",
                 isSelected
-                  ? "border-indigo-500/60 bg-indigo-500/10 ring-1 ring-indigo-500/30"
+                  ? "border-section-strong bg-section-tint ring-1 ring-section"
                   : "border-foreground/8 bg-foreground/4 hover:border-foreground/15 hover:bg-foreground/8"
               )}
             >
@@ -56,17 +56,17 @@ export function IdentityPicker({
                 <p
                   className={cn(
                     "font-semibold text-base truncate",
-                    isSelected ? "text-indigo-200" : "text-slate-200"
+                    isSelected ? "text-section-soft" : "text-slate-200"
                   )}
                 >
                   {p.name}
                 </p>
                 {isSelected && (
-                  <p className="text-sm text-indigo-400">C'est moi</p>
+                  <p className="text-sm text-section">C&apos;est moi</p>
                 )}
               </div>
               {isSelected && (
-                <div className="w-2 h-2 rounded-full bg-indigo-400 shrink-0" />
+                <div className="w-2 h-2 rounded-full bg-section shrink-0" />
               )}
             </motion.button>
           );

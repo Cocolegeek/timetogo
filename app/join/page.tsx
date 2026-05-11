@@ -112,7 +112,7 @@ function JoinContent() {
   if (alreadyMember) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 size={28} className="animate-spin text-indigo-400" />
+        <Loader2 size={28} className="animate-spin text-section" />
       </div>
     );
   }
@@ -138,7 +138,7 @@ function JoinContent() {
   if (!tripPreview) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 size={28} className="animate-spin text-indigo-400" />
+        <Loader2 size={28} className="animate-spin text-section" />
       </div>
     );
   }
@@ -240,7 +240,7 @@ export default function JoinPage() {
           <Suspense
             fallback={
               <div className="flex items-center justify-center py-20">
-                <Loader2 size={28} className="animate-spin text-indigo-400" />
+                <Loader2 size={28} className="animate-spin text-section" />
               </div>
             }
           >

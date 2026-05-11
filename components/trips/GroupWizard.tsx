@@ -89,7 +89,7 @@ export function GroupWizard() {
         {/* Name + emoji */}
         <div className="space-y-1.5">
           <Label className="text-slate-300 text-sm font-medium">Nom du budget</Label>
-          <div className="flex items-stretch gap-2 bg-foreground/8 border border-foreground/10 rounded-lg focus-within:ring-3 focus-within:ring-indigo-500/40 transition-all overflow-hidden">
+          <div className="flex items-stretch gap-2 bg-foreground/8 border border-foreground/10 rounded-lg focus-within:ring-3 focus-within:ring-section transition-all overflow-hidden">
             <button
               type="button"
               onClick={() => setEmojiPickerOpen((v) => !v)}
@@ -127,7 +127,7 @@ export function GroupWizard() {
                       className={cn(
                         "w-10 h-10 rounded-lg text-xl transition-all",
                         selectedEmoji === e
-                          ? "bg-indigo-500/20 ring-1 ring-indigo-400/50"
+                          ? "bg-section-soft ring-1 ring-section"
                           : "hover:bg-foreground/8 active:bg-foreground/12"
                       )}
                     >
@@ -152,7 +152,7 @@ export function GroupWizard() {
                 className={cn(
                   "px-3 py-1.5 rounded-xl text-sm font-medium transition-all active:scale-95",
                   selectedCurrency === c
-                    ? "bg-indigo-500/20 text-indigo-300 ring-1 ring-indigo-500/50"
+                    ? "bg-section-soft text-section-soft ring-1 ring-section"
                     : "bg-foreground/5 text-slate-400 hover:bg-foreground/10"
                 )}
               >
@@ -201,13 +201,13 @@ export function GroupWizard() {
                 }
               }}
               placeholder="Ajouter un participant"
-              className="flex-1 bg-foreground/8 border border-foreground/10 rounded-lg px-3 py-2 text-base text-slate-100 placeholder:text-slate-500 outline-none focus:ring-3 focus:ring-indigo-500/40"
+              className="flex-1 bg-foreground/8 border border-foreground/10 rounded-lg px-3 py-2 text-base text-slate-100 placeholder:text-slate-500 outline-none focus:ring-3 focus:ring-section"
             />
             <Button
               type="button"
               onClick={addParticipant}
               disabled={!newParticipantName.trim()}
-              className="shrink-0 bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/30 disabled:opacity-40"
+              className="shrink-0 bg-section-soft hover:bg-section-medium text-section-soft border border-section disabled:opacity-40"
             >
               <Plus size={16} />
             </Button>
