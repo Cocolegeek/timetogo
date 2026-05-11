@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { computeShares } from "@/lib/budget/splits";
+import { useRevalidateOnFocus } from "@/hooks/useRevalidateOnFocus";
 import type { Expense, Payer } from "@/types";
 
 function rowToExpense(row: Record<string, unknown>): Expense {
@@ -44,6 +45,7 @@ export function useBudget(tripId: string) {
   }, [tripId]);
 
   useEffect(() => { fetchExpenses(); }, [fetchExpenses]);
+  useRevalidateOnFocus(fetchExpenses);
 
   const addExpense = async (
     data: Omit<Expense, "id" | "createdAt" | "updatedAt" | "amountInTripCurrency">

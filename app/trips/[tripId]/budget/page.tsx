@@ -1,7 +1,7 @@
 "use client";
 
 import { use, useState } from "react";
-import { Plus, Wallet, ArrowRightLeft, RefreshCw } from "lucide-react";
+import { Plus, Wallet, ArrowRightLeft } from "lucide-react";
 import { motion } from "framer-motion";
 import { GlassCard } from "@/components/layout/GlassCard";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -24,19 +24,17 @@ interface BudgetPageProps {
 
 export default function BudgetPage({ params }: BudgetPageProps) {
   const { tripId } = use(params);
-  const { trip, refetch: refetchTrip } = useTrip(tripId);
+  const { trip } = useTrip(tripId);
   const {
     expenses,
     addExpense,
     updateExpense,
     deleteExpense,
     totalSpent,
-    refetch: refetchBudget,
   } = useBudget(tripId);
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | undefined>();
-  const [refreshing, setRefreshing] = useState(false);
 
   const participants = trip?.participants ?? [];
   const currency = trip?.currency ?? "EUR";
@@ -108,12 +106,6 @@ export default function BudgetPage({ params }: BudgetPageProps) {
     });
   };
 
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    await Promise.all([refetchTrip(), refetchBudget()]);
-    setTimeout(() => setRefreshing(false), 400);
-  };
-
   if (!trip) {
     return (
       <Spinner />
@@ -122,17 +114,6 @@ export default function BudgetPage({ params }: BudgetPageProps) {
 
   return (
     <div className="space-y-5">
-      {/* Refresh action only — title is redundant with bottom nav */}
-      <div className="flex justify-end -mt-1 -mb-2">
-        <button
-          onClick={handleRefresh}
-          disabled={refreshing}
-          className="p-2 -mr-2 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-foreground/8 active:bg-foreground/12 transition-all"
-          title="Actualiser"
-        >
-          <RefreshCw size={18} className={refreshing ? "animate-spin" : ""} />
-        </button>
-      </div>
 
       {/* Total spent — hero pleine couleur, suit l'accent de la section */}
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}>

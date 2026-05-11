@@ -7,7 +7,6 @@ import {
   Clock,
   MapPin,
   Hourglass,
-  RefreshCw,
   MoreVertical,
   Pencil,
   Trash2,
@@ -57,7 +56,7 @@ export default function PlanningPage({ params }: PlanningPageProps) {
   const { tripId } = use(params);
   const router = useRouter();
   const { trip } = useTrip(tripId);
-  const { items, loading, addItem, updateItem, deleteItem, refetch } =
+  const { items, loading, addItem, updateItem, deleteItem } =
     useItinerary(tripId);
 
   useEffect(() => {
@@ -70,7 +69,6 @@ export default function PlanningPage({ params }: PlanningPageProps) {
   const [formDefaultDate, setFormDefaultDate] = useState<string | undefined>();
   const [editingItem, setEditingItem] = useState<ItineraryItem | undefined>();
   const [confirmDelete, setConfirmDelete] = useState<ItineraryItem | null>(null);
-  const [refreshing, setRefreshing] = useState(false);
 
   const today = useMemo(() => new Date().toISOString().split("T")[0], []);
   const todayRef = useRef<HTMLDivElement>(null);
@@ -104,12 +102,6 @@ export default function PlanningPage({ params }: PlanningPageProps) {
     setEditingItem(undefined);
   };
 
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    await refetch();
-    setTimeout(() => setRefreshing(false), 400);
-  };
-
   const performDelete = async () => {
     if (!confirmDelete) return;
     await deleteItem(confirmDelete.id);
@@ -126,17 +118,6 @@ export default function PlanningPage({ params }: PlanningPageProps) {
 
   return (
     <div className="space-y-5">
-      {/* Refresh action only — title is redundant with bottom nav */}
-      <div className="flex justify-end -mt-1 -mb-2">
-        <button
-          onClick={handleRefresh}
-          disabled={refreshing}
-          className="p-2 -mr-2 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-foreground/8 active:bg-foreground/12 transition-all"
-          title="Actualiser"
-        >
-          <RefreshCw size={18} className={refreshing ? "animate-spin" : ""} />
-        </button>
-      </div>
 
       {dates.length === 0 ? (
         <EmptyState

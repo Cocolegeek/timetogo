@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { buildDefaultMealRows, DEFAULT_SLOTS } from "@/lib/meals/slots";
+import { useRevalidateOnFocus } from "@/hooks/useRevalidateOnFocus";
 import type { Ingredient, Meal, MealCategory, MealSlot } from "@/types";
 
 function rowToMeal(row: Record<string, unknown>): Meal {
@@ -55,6 +56,7 @@ export function useMeals(
   }, [tripId, range?.startDate, range?.endDate]);
 
   useEffect(() => { fetchMeals(); }, [fetchMeals]);
+  useRevalidateOnFocus(fetchMeals);
 
   const updateMeal = async (
     id: string,

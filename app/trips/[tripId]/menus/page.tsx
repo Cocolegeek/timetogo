@@ -3,7 +3,7 @@
 import { use, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
-import { RefreshCw, UtensilsCrossed, ChefHat, Users, Plus, Trash2 } from "lucide-react";
+import { UtensilsCrossed, ChefHat, Users, Plus, Trash2 } from "lucide-react";
 import { GlassCard } from "@/components/layout/GlassCard";
 import { DayHeader } from "@/components/shared/DayHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -29,17 +29,10 @@ export default function MenusPage({ params }: MenusPageProps) {
   const dateRange = trip && isVoyage(trip)
     ? { startDate: trip.startDate, endDate: trip.endDate }
     : undefined;
-  const { meals, loading, refetch, addMeal, updateMeal, deleteMeal } = useMeals(tripId, dateRange);
+  const { meals, loading, addMeal, updateMeal, deleteMeal } = useMeals(tripId, dateRange);
 
-  const [refreshing, setRefreshing] = useState(false);
   const [editingMeal, setEditingMeal] = useState<Meal | null>(null);
   const todayRef = useRef<HTMLDivElement>(null);
-
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    await refetch();
-    setTimeout(() => setRefreshing(false), 400);
-  };
 
   const today = useMemo(() => new Date().toISOString().split("T")[0], []);
 
@@ -78,18 +71,6 @@ export default function MenusPage({ params }: MenusPageProps) {
 
   return (
     <div className="space-y-4">
-      {/* Refresh action */}
-      <div className="flex justify-end -mt-1 -mb-2">
-        <button
-          onClick={handleRefresh}
-          disabled={refreshing}
-          className="p-2 -mr-2 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-foreground/8 active:bg-foreground/12 transition-all"
-          title="Actualiser"
-        >
-          <RefreshCw size={18} className={refreshing ? "animate-spin" : ""} />
-        </button>
-      </div>
-
       {loading ? (
         <div className="flex items-center justify-center py-20">
           <div

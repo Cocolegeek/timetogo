@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Plus, Compass, RefreshCw, Wallet, Sparkles } from "lucide-react";
+import { Plus, Compass, Wallet, Sparkles } from "lucide-react";
 import { MeshGradientBackground } from "@/components/layout/MeshGradientBackground";
 import dynamic from "next/dynamic";
 import { TripCard } from "@/components/trips/TripCard";
@@ -28,7 +28,7 @@ import { isVoyage } from "@/lib/trip-features";
 import type { Trip, VoyageTrip } from "@/types";
 
 export default function TripsPage() {
-  const { trips, loading, refetch, deleteTrip } = useTrips();
+  const { trips, loading, refetch: refetchTrips, deleteTrip } = useTrips();
   const { profile } = useProfile();
 
   /** Sort voyages by status (en cours → planifié → passé), then chronological */
@@ -73,7 +73,6 @@ export default function TripsPage() {
     [sortedVoyages]
   );
 
-  const [refreshing, setRefreshing] = useState(false);
   const [editingTripId, setEditingTripId] = useState<string | null>(null);
   const [sharingTripId, setSharingTripId] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
@@ -87,12 +86,6 @@ export default function TripsPage() {
     if (!confirmDelete) return;
     await deleteTrip(confirmDelete);
     setConfirmDelete(null);
-  };
-
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    await refetch();
-    setTimeout(() => setRefreshing(false), 400);
   };
 
   const isEmpty = !loading && trips.length === 0;
@@ -114,17 +107,7 @@ export default function TripsPage() {
             <h1 className="text-xl font-bold gradient-text leading-none">
               Time to Go
             </h1>
-            <div className="flex items-center gap-1">
-              <button
-                onClick={handleRefresh}
-                disabled={refreshing}
-                className="p-2 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-foreground/8 active:bg-foreground/12 transition-all"
-                title="Actualiser"
-              >
-                <RefreshCw size={18} className={refreshing ? "animate-spin" : ""} />
-              </button>
-              <UserMenu />
-            </div>
+            <UserMenu />
           </div>
         </header>
 
@@ -235,7 +218,7 @@ export default function TripsPage() {
             tripId={editingTripId}
             onClose={async () => {
               setEditingTripId(null);
-              await refetch();
+              await refetchTrips();
             }}
           />
         )}

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useRevalidateOnFocus } from "@/hooks/useRevalidateOnFocus";
 import type { ItineraryItem, ItineraryType } from "@/types";
 
 function rowToItem(row: Record<string, unknown>): ItineraryItem {
@@ -44,6 +45,7 @@ export function useItinerary(tripId: string) {
   }, [tripId]);
 
   useEffect(() => { fetchItems(); }, [fetchItems]);
+  useRevalidateOnFocus(fetchItems);
 
   const addItem = async (
     data: Omit<ItineraryItem, "id" | "createdAt" | "tripId">

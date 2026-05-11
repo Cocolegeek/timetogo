@@ -10,7 +10,6 @@ import {
   Share2,
   UserCircle2,
   ChevronDown,
-  RefreshCw,
   Pencil,
   Clock,
 } from "lucide-react";
@@ -63,28 +62,19 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
   const { tripId } = use(params);
   const {
     trip,
-    refetch: refetchTrip,
     updateTrip,
     setMyParticipant,
     addParticipant,
     updateParticipant,
     deleteParticipant,
   } = useTrip(tripId);
-  const { expenses, totalSpent, refetch: refetchBudget } = useBudget(tripId);
-  const { items: itineraryItems, refetch: refetchItinerary } =
-    useItinerary(tripId);
+  const { expenses, totalSpent } = useBudget(tripId);
+  const { items: itineraryItems } = useItinerary(tripId);
 
   const [shareOpen, setShareOpen] = useState(false);
   const [identityOpen, setIdentityOpen] = useState(false);
   const [budgetOpen, setBudgetOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
-
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    await Promise.all([refetchTrip(), refetchBudget(), refetchItinerary()]);
-    setTimeout(() => setRefreshing(false), 400);
-  };
 
   if (!trip) {
     return (
@@ -125,14 +115,6 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
           <ArrowLeft size={20} />
         </Link>
         <div className="flex items-center gap-1">
-          <button
-            onClick={handleRefresh}
-            disabled={refreshing}
-            className="p-2 rounded-xl hover:bg-foreground/8 active:bg-foreground/12 text-slate-400 transition-all"
-            title="Actualiser"
-          >
-            <RefreshCw size={18} className={refreshing ? "animate-spin" : ""} />
-          </button>
           <button
             onClick={() => setEditOpen(true)}
             className="p-2 rounded-xl hover:bg-foreground/8 active:bg-foreground/12 text-slate-400 transition-all"

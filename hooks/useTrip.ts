@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { generateShareCode } from "@/lib/trip-share";
 import { buildDefaultMealRows } from "@/lib/meals/slots";
+import { useRevalidateOnFocus } from "@/hooks/useRevalidateOnFocus";
 import type { Trip, TripType, Participant } from "@/types";
 
 function rowsToTrip(
@@ -84,6 +85,7 @@ export function useTrips() {
   }, []);
 
   useEffect(() => { fetchTrips(); }, [fetchTrips]);
+  useRevalidateOnFocus(fetchTrips);
 
   const createTrip = async (
     data: {
@@ -189,6 +191,7 @@ export function useTrip(id: string) {
   }, [id]);
 
   useEffect(() => { fetchTrip(); }, [fetchTrip]);
+  useRevalidateOnFocus(fetchTrip);
 
   const updateTrip = async (
     data: Partial<{ name: string; destination: string; emoji: string; currency: string; startDate: string; endDate: string; totalBudget: number | null }>
