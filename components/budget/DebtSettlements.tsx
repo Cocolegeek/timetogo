@@ -106,7 +106,7 @@ export function DebtSettlements({
                   {formatCurrency(s.amount, currency)}
                 </span>
                 <span className="text-xs font-semibold text-indigo-300 mb-0.5 px-2 py-0.5 rounded-md bg-indigo-500/20 border border-indigo-400/30">
-                  Appuyer pour régler
+                  Régler ma dette
                 </span>
               </div>
             </motion.button>
