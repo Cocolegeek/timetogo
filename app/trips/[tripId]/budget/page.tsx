@@ -116,157 +116,163 @@ export default function BudgetPage({ params }: BudgetPageProps) {
   }
 
   return (
-    <div className="space-y-5">
-      <BackHomeBar />
+    <div
+      className="flex flex-col"
+      style={{
+        height: "calc(100dvh - env(safe-area-inset-top) - 1.25rem - var(--bottom-nav-top) - 1.5rem)",
+      }}
+    >
+      {/* ── Anchored top section — never scrolls ── */}
+      <div className="shrink-0">
+        <BackHomeBar />
 
-      {/* Total spent — hero teinte accent translucide sur glass */}
-      <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}>
-        <div className="relative overflow-hidden rounded-3xl p-6 glass-strong border border-section shadow-section">
-          {/* Translucent accent tint */}
-          <div
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              background:
-                "linear-gradient(135deg, oklch(0.55 var(--accent-c) var(--accent-h) / 55%), oklch(0.48 calc(var(--accent-c) + 0.03) calc(var(--accent-h) + 25) / 55%))",
-            }}
-          />
-          {/* Glossy highlight */}
-          <div
-            className="absolute inset-0 pointer-events-none opacity-50"
-            style={{
-              background:
-                "radial-gradient(ellipse 80% 60% at top, oklch(1 0 0 / 22%), transparent 70%)",
-            }}
-          />
-          {/* Decorative orb */}
-          <div
-            className="absolute -bottom-20 -right-20 w-56 h-56 rounded-full pointer-events-none"
-            style={{
-              background:
-                "radial-gradient(circle, oklch(1 0 0 / 18%), transparent 70%)",
-              filter: "blur(20px)",
-            }}
-          />
-          <div className="relative">
-            <div className="flex items-center gap-2 mb-3">
-              <Wallet size={16} className="text-white/80" />
-              <span className="text-xs text-white/80 uppercase tracking-widest font-bold">
-                Total dépensé
-              </span>
-            </div>
-            <p className="text-5xl font-bold text-white tabular-nums leading-none">
-              {new Intl.NumberFormat("fr-FR", {
-                style: "currency",
-                currency,
-                minimumFractionDigits: 2,
-              }).format(totalSpent)}
-            </p>
-            {trip.totalBudget && (
-              <p className="text-sm text-white/75 mt-3 font-medium">
-                sur{" "}
+        {/* Hero: total dépensé */}
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-4"
+        >
+          <div className="relative overflow-hidden rounded-3xl p-6 glass-strong border border-section shadow-section">
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background:
+                  "linear-gradient(135deg, oklch(0.55 var(--accent-c) var(--accent-h) / 55%), oklch(0.48 calc(var(--accent-c) + 0.03) calc(var(--accent-h) + 25) / 55%))",
+              }}
+            />
+            <div
+              className="absolute inset-0 pointer-events-none opacity-50"
+              style={{
+                background:
+                  "radial-gradient(ellipse 80% 60% at top, oklch(1 0 0 / 22%), transparent 70%)",
+              }}
+            />
+            <div
+              className="absolute -bottom-20 -right-20 w-56 h-56 rounded-full pointer-events-none"
+              style={{
+                background: "radial-gradient(circle, oklch(1 0 0 / 18%), transparent 70%)",
+                filter: "blur(20px)",
+              }}
+            />
+            <div className="relative">
+              <div className="flex items-center gap-2 mb-3">
+                <Wallet size={16} className="text-white/80" />
+                <span className="text-xs text-white/80 uppercase tracking-widest font-bold">
+                  Total dépensé
+                </span>
+              </div>
+              <p className="text-5xl font-bold text-white tabular-nums leading-none">
                 {new Intl.NumberFormat("fr-FR", {
                   style: "currency",
                   currency,
-                  minimumFractionDigits: 0,
-                }).format(trip.totalBudget)}
+                  minimumFractionDigits: 2,
+                }).format(totalSpent)}
               </p>
-            )}
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Tabs — pastille animée façon TabSwitcher home */}
-      <BudgetTabSwitcher active={activeTab} onChange={setActiveTab} />
-
-      <motion.div
-        key={activeTab}
-        initial={{ opacity: 0, y: 6 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.2 }}
-        className="mt-4"
-      >
-        {activeTab === "expenses" && (
-          <ExpenseList
-            expenses={expenses}
-            participants={participants}
-            currency={currency}
-            onDelete={handleDelete}
-            onEdit={handleEdit}
-          />
-        )}
-
-        {activeTab === "balances" && (
-          <div className="space-y-5">
-            {myParticipant && myBalance && (
-              <MyBalanceCard
-                balance={myBalance}
-                participant={myParticipant}
-                currency={currency}
-              />
-            )}
-
-            <div>
-              <SectionLabel count={balances.length}>
-                {myParticipant ? "Tous les soldes" : "Soldes"}
-              </SectionLabel>
-              <BalanceSummary
-                balances={balances}
-                participants={participants}
-                currency={currency}
-              />
+              {trip.totalBudget && (
+                <p className="text-sm text-white/75 mt-3 font-medium">
+                  sur{" "}
+                  {new Intl.NumberFormat("fr-FR", {
+                    style: "currency",
+                    currency,
+                    minimumFractionDigits: 0,
+                  }).format(trip.totalBudget)}
+                </p>
+              )}
             </div>
           </div>
-        )}
+        </motion.div>
 
-        {activeTab === "settlements" && (
-          <div className="space-y-5">
-            {/* Me concerne — boxé en glass-subtle avec bordure section pour
-                signaler la priorité, seul wrap restant côté Régler */}
-            {myParticipant && (
-              <div className="glass-subtle border border-section rounded-2xl p-4">
-                <SectionLabel count={mySettlements.length}>
-                  <span className="inline-flex items-center gap-2">
-                    <span
-                      className="w-2 h-2 rounded-full shrink-0"
-                      style={{ backgroundColor: myParticipant.color }}
-                      aria-hidden
-                    />
-                    Me concerne
-                  </span>
+        {/* Tab switcher */}
+        <BudgetTabSwitcher active={activeTab} onChange={setActiveTab} />
+      </div>
+
+      {/* ── Scrollable tab content ── */}
+      <div className="flex-1 overflow-y-auto mt-4 pb-4">
+        <motion.div
+          key={activeTab}
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          {activeTab === "expenses" && (
+            <ExpenseList
+              expenses={expenses}
+              participants={participants}
+              currency={currency}
+              onDelete={handleDelete}
+              onEdit={handleEdit}
+            />
+          )}
+
+          {activeTab === "balances" && (
+            <div className="space-y-5">
+              {myParticipant && myBalance && (
+                <MyBalanceCard
+                  balance={myBalance}
+                  participant={myParticipant}
+                  currency={currency}
+                />
+              )}
+              <div>
+                <SectionLabel count={balances.length}>
+                  {myParticipant ? "Tous les soldes" : "Soldes"}
                 </SectionLabel>
-                {mySettlements.length === 0 ? (
-                  <div className="flex items-center gap-2 text-base text-emerald-400 font-semibold py-1">
-                    <CheckCircle2 size={18} />
-                    <span>Tu es quitte ✓</span>
-                  </div>
-                ) : (
+                <BalanceSummary
+                  balances={balances}
+                  participants={participants}
+                  currency={currency}
+                />
+              </div>
+            </div>
+          )}
+
+          {activeTab === "settlements" && (
+            <div className="space-y-5">
+              {myParticipant && (
+                <div className="glass-subtle border border-section rounded-2xl p-4">
+                  <SectionLabel count={mySettlements.length}>
+                    <span className="inline-flex items-center gap-2">
+                      <span
+                        className="w-2 h-2 rounded-full shrink-0"
+                        style={{ backgroundColor: myParticipant.color }}
+                        aria-hidden
+                      />
+                      Me concerne
+                    </span>
+                  </SectionLabel>
+                  {mySettlements.length === 0 ? (
+                    <div className="flex items-center gap-2 text-base text-emerald-400 font-semibold py-1">
+                      <CheckCircle2 size={18} />
+                      <span>Tu es quitte ✓</span>
+                    </div>
+                  ) : (
+                    <DebtSettlements
+                      settlements={mySettlements}
+                      participants={participants}
+                      currency={currency}
+                      onSettle={handleSettle}
+                    />
+                  )}
+                </div>
+              )}
+
+              {(otherSettlements.length > 0 || !myParticipant) && (
+                <div>
+                  <SectionLabel count={myParticipant ? otherSettlements.length : settlements.length}>
+                    {myParticipant ? "Entre les autres" : "Remboursements simplifiés"}
+                  </SectionLabel>
                   <DebtSettlements
-                    settlements={mySettlements}
+                    settlements={myParticipant ? otherSettlements : settlements}
                     participants={participants}
                     currency={currency}
                     onSettle={handleSettle}
                   />
-                )}
-              </div>
-            )}
-
-            {/* Tous les règlements (ou seulement les autres si identité connue) */}
-            {(otherSettlements.length > 0 || !myParticipant) && (
-              <div>
-                <SectionLabel count={myParticipant ? otherSettlements.length : settlements.length}>
-                  {myParticipant ? "Entre les autres" : "Remboursements simplifiés"}
-                </SectionLabel>
-                <DebtSettlements
-                  settlements={myParticipant ? otherSettlements : settlements}
-                  participants={participants}
-                  currency={currency}
-                  onSettle={handleSettle}
-                />
-              </div>
-            )}
-          </div>
-        )}
-      </motion.div>
+                </div>
+              )}
+            </div>
+          )}
+        </motion.div>
+      </div>
 
       {/* Expense Form */}
       <ExpenseForm
