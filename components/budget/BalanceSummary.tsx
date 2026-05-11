@@ -1,7 +1,6 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { GlassCard } from "@/components/layout/GlassCard";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/format-currency";
 import type { Balance, Participant } from "@/types";
@@ -46,26 +45,26 @@ export function BalanceSummary({
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.04 }}
           >
-            <GlassCard className="relative overflow-hidden" padding={false}>
-              <div
-                className="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl"
-                style={{ backgroundColor: participant.color }}
-              />
-              <div className="px-4 py-3 pl-5 flex items-center justify-between gap-3">
-                <p className="font-semibold text-slate-100 text-base truncate">
+            <div className="glass-subtle rounded-2xl px-4 py-3.5 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <span
+                  className="w-2.5 h-2.5 rounded-full shrink-0"
+                  style={{ backgroundColor: participant.color }}
+                />
+                <p className="font-semibold text-slate-100 text-lg truncate">
                   {firstName(participant.name)}
                 </p>
-                <span
-                  className={cn(
-                    "font-bold text-base tabular-nums shrink-0",
-                    toneClass
-                  )}
-                >
-                  {sign}
-                  {formatCurrency(Math.abs(balance.net), currency)}
-                </span>
               </div>
-            </GlassCard>
+              <span
+                className={cn(
+                  "font-bold text-lg tabular-nums shrink-0",
+                  toneClass
+                )}
+              >
+                {sign}
+                {formatCurrency(Math.abs(balance.net), currency)}
+              </span>
+            </div>
           </motion.div>
         );
       })}

@@ -73,7 +73,7 @@ export function DebtSettlements({
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.06 }}
               onClick={() => setPending(s)}
-              className="w-full glass-subtle border border-section rounded-2xl px-5 py-4 flex flex-col gap-3 text-left active:scale-[0.98] transition-transform"
+              className="w-full glass-subtle border border-section rounded-2xl px-4 py-4 flex flex-col gap-3 text-left active:scale-[0.98] transition-transform"
             >
               {/* Participants */}
               <div className="flex items-center gap-3">
@@ -82,7 +82,7 @@ export function DebtSettlements({
                     className="w-3 h-3 rounded-full shrink-0"
                     style={{ backgroundColor: from.color }}
                   />
-                  <span className="text-base font-semibold text-slate-100 truncate">
+                  <span className="text-lg font-semibold text-slate-100 truncate">
                     {from.name}
                   </span>
                 </div>

@@ -2,22 +2,23 @@
 
 import { use, useState } from "react";
 import Link from "next/link";
-import { Plus, Wallet, ArrowRightLeft, ArrowLeft } from "lucide-react";
+import { Plus, Wallet, ArrowLeft, Receipt, Scale, ArrowRightLeft, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
-import { GlassCard } from "@/components/layout/GlassCard";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import dynamic from "next/dynamic";
 const ExpenseForm = dynamic(() => import("@/components/budget/ExpenseForm").then(m => ({ default: m.ExpenseForm })), { ssr: false });
 import { ExpenseList } from "@/components/budget/ExpenseList";
 import { Spinner } from "@/components/shared/Spinner";
+import { SectionLabel } from "@/components/shared/SectionLabel";
 import { BalanceSummary } from "@/components/budget/BalanceSummary";
 import { DebtSettlements } from "@/components/budget/DebtSettlements";
 import { MyBalanceCard } from "@/components/budget/MyBalanceCard";
-import { CheckCircle2 } from "lucide-react";
 import { useTrip } from "@/hooks/useTrip";
 import { useBudget } from "@/hooks/useBudget";
 import { useDebts } from "@/hooks/useDebts";
+import { cn } from "@/lib/utils";
 import type { Expense, Payer, Settlement } from "@/types";
+
+type BudgetTab = "expenses" | "balances" | "settlements";
 
 interface BudgetPageProps {
   params: Promise<{ tripId: string }>;
@@ -36,6 +37,7 @@ export default function BudgetPage({ params }: BudgetPageProps) {
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | undefined>();
+  const [activeTab, setActiveTab] = useState<BudgetTab>("expenses");
 
   const participants = trip?.participants ?? [];
   const currency = trip?.currency ?? "EUR";
@@ -126,15 +128,17 @@ export default function BudgetPage({ params }: BudgetPageProps) {
         </Link>
       </div>
 
-      {/* Total spent — hero pleine couleur, suit l'accent de la section */}
+      {/* Total spent — hero teinte accent translucide sur glass */}
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}>
-        <div
-          className="relative overflow-hidden rounded-3xl p-6 shadow-section-strong"
-          style={{
-            background:
-              "linear-gradient(135deg, var(--accent-500), oklch(0.50 calc(var(--accent-c) + 0.04) calc(var(--accent-h) + 25)))",
-          }}
-        >
+        <div className="relative overflow-hidden rounded-3xl p-6 glass-strong border border-section shadow-section">
+          {/* Translucent accent tint */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background:
+                "linear-gradient(135deg, oklch(0.55 var(--accent-c) var(--accent-h) / 55%), oklch(0.48 calc(var(--accent-c) + 0.03) calc(var(--accent-h) + 25) / 55%))",
+            }}
+          />
           {/* Glossy highlight */}
           <div
             className="absolute inset-0 pointer-events-none opacity-50"
@@ -180,30 +184,17 @@ export default function BudgetPage({ params }: BudgetPageProps) {
         </div>
       </motion.div>
 
-      {/* Tabs */}
-      <Tabs defaultValue="expenses">
-        <TabsList className="grid grid-cols-3 w-full bg-foreground/4 border border-foreground/8 h-11">
-          <TabsTrigger
-            value="expenses"
-            className="text-sm data-[state=active]:bg-section-soft data-[state=active]:text-section"
-          >
-            Dépenses
-          </TabsTrigger>
-          <TabsTrigger
-            value="balances"
-            className="text-sm data-[state=active]:bg-section-soft data-[state=active]:text-section"
-          >
-            Soldes
-          </TabsTrigger>
-          <TabsTrigger
-            value="settlements"
-            className="text-sm data-[state=active]:bg-section-soft data-[state=active]:text-section"
-          >
-            Régler
-          </TabsTrigger>
-        </TabsList>
+      {/* Tabs — pastille animée façon TabSwitcher home */}
+      <BudgetTabSwitcher active={activeTab} onChange={setActiveTab} />
 
-        <TabsContent value="expenses" className="mt-4">
+      <motion.div
+        key={activeTab}
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2 }}
+        className="mt-4"
+      >
+        {activeTab === "expenses" && (
           <ExpenseList
             expenses={expenses}
             participants={participants}
@@ -211,88 +202,80 @@ export default function BudgetPage({ params }: BudgetPageProps) {
             onDelete={handleDelete}
             onEdit={handleEdit}
           />
-        </TabsContent>
+        )}
 
-        <TabsContent value="balances" className="mt-4 space-y-5">
-          {myParticipant && myBalance && (
-            <MyBalanceCard
-              balance={myBalance}
-              participant={myParticipant}
-              currency={currency}
-            />
-          )}
+        {activeTab === "balances" && (
+          <div className="space-y-5">
+            {myParticipant && myBalance && (
+              <MyBalanceCard
+                balance={myBalance}
+                participant={myParticipant}
+                currency={currency}
+              />
+            )}
 
-          <div className="space-y-3">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">
-              {myParticipant ? "Tous les soldes" : "Soldes"}
-            </h3>
-            <BalanceSummary
-              balances={balances}
-              participants={participants}
-              currency={currency}
-            />
+            <div>
+              <SectionLabel count={balances.length}>
+                {myParticipant ? "Tous les soldes" : "Soldes"}
+              </SectionLabel>
+              <BalanceSummary
+                balances={balances}
+                participants={participants}
+                currency={currency}
+              />
+            </div>
           </div>
-        </TabsContent>
+        )}
 
-        <TabsContent value="settlements" className="mt-4 space-y-5">
-          {/* Me concerne — only when identity is set */}
-          {myParticipant && (
-            <GlassCard className="border-section">
-              <div className="flex items-center gap-2 mb-3">
-                <span
-                  className="w-2.5 h-2.5 rounded-full shrink-0"
-                  style={{ backgroundColor: myParticipant.color }}
-                  aria-hidden
-                />
-                <h3 className="text-base font-semibold text-slate-100">
-                  Me concerne
-                </h3>
-                {mySettlements.length > 0 && (
-                  <span className="text-[11px] font-bold tabular-nums px-1.5 py-0.5 rounded-full bg-section-soft text-section-soft">
-                    {mySettlements.length}
+        {activeTab === "settlements" && (
+          <div className="space-y-5">
+            {/* Me concerne — boxé en glass-subtle avec bordure section pour
+                signaler la priorité, seul wrap restant côté Régler */}
+            {myParticipant && (
+              <div className="glass-subtle border border-section rounded-2xl p-4">
+                <SectionLabel count={mySettlements.length}>
+                  <span className="inline-flex items-center gap-2">
+                    <span
+                      className="w-2 h-2 rounded-full shrink-0"
+                      style={{ backgroundColor: myParticipant.color }}
+                      aria-hidden
+                    />
+                    Me concerne
                   </span>
+                </SectionLabel>
+                {mySettlements.length === 0 ? (
+                  <div className="flex items-center gap-2 text-base text-emerald-400 font-semibold py-1">
+                    <CheckCircle2 size={18} />
+                    <span>Tu es quitte ✓</span>
+                  </div>
+                ) : (
+                  <DebtSettlements
+                    settlements={mySettlements}
+                    participants={participants}
+                    currency={currency}
+                    onSettle={handleSettle}
+                  />
                 )}
               </div>
-              {mySettlements.length === 0 ? (
-                <div className="flex items-center gap-2 text-base text-emerald-400 font-semibold py-1">
-                  <CheckCircle2 size={18} />
-                  <span>Tu es quitte ✓</span>
-                </div>
-              ) : (
+            )}
+
+            {/* Tous les règlements (ou seulement les autres si identité connue) */}
+            {(otherSettlements.length > 0 || !myParticipant) && (
+              <div>
+                <SectionLabel count={myParticipant ? otherSettlements.length : settlements.length}>
+                  {myParticipant ? "Entre les autres" : "Remboursements simplifiés"}
+                </SectionLabel>
                 <DebtSettlements
-                  settlements={mySettlements}
+                  settlements={myParticipant ? otherSettlements : settlements}
                   participants={participants}
                   currency={currency}
                   onSettle={handleSettle}
                 />
-              )}
-            </GlassCard>
-          )}
-
-          {/* Tous les règlements (ou seulement les autres si identité connue) */}
-          {(otherSettlements.length > 0 || !myParticipant) && (
-            <GlassCard>
-              <div className="flex items-center gap-2 mb-3">
-                <ArrowRightLeft size={15} className="text-section" />
-                <h3 className="text-base font-semibold text-slate-200">
-                  {myParticipant ? "Entre les autres" : "Remboursements simplifiés"}
-                </h3>
-                {myParticipant && otherSettlements.length > 0 && (
-                  <span className="text-[11px] font-bold tabular-nums px-1.5 py-0.5 rounded-full bg-foreground/10 text-slate-400">
-                    {otherSettlements.length}
-                  </span>
-                )}
               </div>
-              <DebtSettlements
-                settlements={myParticipant ? otherSettlements : settlements}
-                participants={participants}
-                currency={currency}
-                onSettle={handleSettle}
-              />
-            </GlassCard>
-          )}
-        </TabsContent>
-      </Tabs>
+            )}
+          </div>
+        )}
+      </motion.div>
 
       {/* Expense Form */}
       <ExpenseForm
@@ -322,3 +305,58 @@ export default function BudgetPage({ params }: BudgetPageProps) {
     </div>
   );
 }
+
+// ─── BudgetTabSwitcher ──────────────────────────────────────────────────────
+
+const TABS: { id: BudgetTab; label: string; icon: typeof Receipt }[] = [
+  { id: "expenses",    label: "Dépenses", icon: Receipt        },
+  { id: "balances",    label: "Soldes",   icon: Scale          },
+  { id: "settlements", label: "Régler",   icon: ArrowRightLeft },
+];
+
+function BudgetTabSwitcher({
+  active,
+  onChange,
+}: {
+  active: BudgetTab;
+  onChange: (tab: BudgetTab) => void;
+}) {
+  return (
+    <div className="relative flex items-center gap-1 p-1 rounded-2xl bg-foreground/5 border border-foreground/8">
+      {TABS.map((tab) => {
+        const isActive = active === tab.id;
+        const Icon = tab.icon;
+        return (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => onChange(tab.id)}
+            className={cn(
+              "relative flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl text-sm font-semibold transition-colors active:scale-[0.98]",
+              isActive ? "text-white" : "text-slate-400 hover:text-slate-200"
+            )}
+            aria-current={isActive ? "page" : undefined}
+          >
+            {isActive && (
+              <motion.span
+                layoutId="budget-tab-pill"
+                transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                className="absolute inset-0 rounded-xl"
+                style={{
+                  background:
+                    "linear-gradient(135deg, var(--accent-500), oklch(0.50 calc(var(--accent-c) + 0.03) calc(var(--accent-h) + 25)))",
+                  boxShadow: "0 6px 18px -6px var(--accent-glow)",
+                }}
+              />
+            )}
+            <span className="relative flex items-center gap-1.5">
+              <Icon size={15} strokeWidth={isActive ? 2.4 : 2} />
+              <span>{tab.label}</span>
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+

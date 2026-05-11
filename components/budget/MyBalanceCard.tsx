@@ -27,12 +27,16 @@ export function MyBalanceCard({ balance, participant, currency }: MyBalanceCardP
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="relative overflow-hidden rounded-2xl shadow-section-strong"
-      style={{
-        background:
-          "linear-gradient(135deg, var(--accent-500), oklch(0.50 calc(var(--accent-c) + 0.04) calc(var(--accent-h) + 25)))",
-      }}
+      className="relative overflow-hidden rounded-2xl glass-strong border border-section shadow-section"
     >
+      {/* Translucent accent tint over the glass blur — feels colored but soft */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            "linear-gradient(135deg, oklch(0.55 var(--accent-c) var(--accent-h) / 55%), oklch(0.48 calc(var(--accent-c) + 0.03) calc(var(--accent-h) + 25) / 55%))",
+        }}
+      />
       {/* Glossy highlight */}
       <div
         className="absolute inset-0 pointer-events-none opacity-40"

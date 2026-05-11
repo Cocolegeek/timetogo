@@ -58,7 +58,7 @@ export function ExpenseCard({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, x: -100 }}
       transition={{ duration: 0.2 }}
-      className="relative rounded-xl overflow-hidden"
+      className="relative rounded-2xl overflow-hidden"
     >
       {/* Red gradient background revealed by swipe */}
       <motion.div
@@ -92,7 +92,7 @@ export function ExpenseCard({
           if (!isDragging) onEdit(expense);
         }}
         className={cn(
-          "glass-subtle rounded-xl p-4 cursor-pointer touch-pan-y select-none",
+          "glass-subtle rounded-2xl px-4 py-3.5 cursor-pointer touch-pan-y select-none",
           "active:bg-foreground/8 transition-colors"
         )}
       >
