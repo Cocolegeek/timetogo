@@ -105,7 +105,9 @@ export function DebtSettlements({
                 <span className="text-2xl font-bold text-indigo-300 tabular-nums">
                   {formatCurrency(s.amount, currency)}
                 </span>
-                <span className="text-xs text-slate-500 mb-0.5">Appuyer pour régler</span>
+                <span className="text-xs font-semibold text-indigo-400/80 mb-0.5 px-2 py-0.5 rounded-md bg-indigo-500/10">
+                  Appuyer pour régler
+                </span>
               </div>
             </motion.button>
           );

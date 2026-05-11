@@ -130,7 +130,9 @@ export function useBudget(tripId: string) {
     if (error) { setExpenses(snapshot); throw error; }
   };
 
-  const totalSpent = expenses.reduce((acc, e) => acc + e.amountInTripCurrency, 0);
+  const totalSpent = expenses
+    .filter((e) => e.category !== "reimbursement")
+    .reduce((acc, e) => acc + e.amountInTripCurrency, 0);
 
   return { expenses, loading, refetch: fetchExpenses, addExpense, updateExpense, deleteExpense, totalSpent };
 }
