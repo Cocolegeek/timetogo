@@ -185,15 +185,15 @@ function MealCard({
         <button
           type="button"
           onClick={onTap}
-          className="w-full text-left px-3.5 py-3.5 rounded-2xl border border-dashed border-foreground/20 bg-foreground/4 hover:border-foreground/35 hover:bg-foreground/8 active:bg-foreground/10 transition-all"
+          className="w-full text-left px-3.5 py-3.5 rounded-2xl border border-dashed border-foreground/20 bg-foreground/4 hover:border-foreground/35 hover:bg-foreground/8 active:bg-foreground/10 transition-all flex items-center gap-3"
         >
-          <div className="flex items-center justify-between gap-2">
+          <Plus size={16} className="text-sky-400 shrink-0" />
+          <div>
             <span className={cn("text-sm px-2.5 py-0.5 rounded-full font-medium", slotCfg.bgClass, slotCfg.textClass)}>
               {slotCfg.shortLabel}
             </span>
-            <Plus size={16} className="text-sky-400 shrink-0" />
+            <p className="text-sm text-slate-400 mt-1.5">Rien de prévu — tap pour ajouter</p>
           </div>
-          <p className="text-sm text-slate-400 mt-2">Rien de prévu — tap pour ajouter</p>
         </button>
       </motion.div>
     );
@@ -251,15 +251,15 @@ function PlaceholderCard({ slot, onTap }: { slot: SlotConfig; onTap: () => void 
       <button
         type="button"
         onClick={onTap}
-        className="w-full text-left px-3.5 py-3.5 rounded-2xl border border-dashed border-foreground/20 bg-foreground/4 hover:border-foreground/35 hover:bg-foreground/8 active:bg-foreground/10 transition-all"
+        className="w-full text-left px-3.5 py-3.5 rounded-2xl border border-dashed border-foreground/20 bg-foreground/4 hover:border-foreground/35 hover:bg-foreground/8 active:bg-foreground/10 transition-all flex items-center gap-3"
       >
-        <div className="flex items-center justify-between gap-2">
+        <Plus size={16} className="text-sky-400 shrink-0" />
+        <div>
           <span className={cn("text-sm px-2.5 py-0.5 rounded-full font-medium", slot.bgClass, slot.textClass)}>
             {slot.shortLabel}
           </span>
-          <Plus size={16} className="text-sky-400 shrink-0" />
+          <p className="text-sm text-slate-400 mt-1.5">Rien de prévu — tap pour ajouter</p>
         </div>
-        <p className="text-sm text-slate-400 mt-2">Rien de prévu — tap pour ajouter</p>
       </button>
     </motion.div>
   );
