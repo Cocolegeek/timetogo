@@ -3,12 +3,12 @@
 import { use, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
-import Link from "next/link";
-import { UtensilsCrossed, ChefHat, Users, Plus, Trash2, ArrowLeft } from "lucide-react";
+import { UtensilsCrossed, ChefHat, Users, Plus, Trash2 } from "lucide-react";
 import { GlassCard } from "@/components/layout/GlassCard";
 import { DayHeader } from "@/components/shared/DayHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Spinner } from "@/components/shared/Spinner";
+import { BackHomeBar } from "@/components/shared/BackHomeBar";
 import dynamic from "next/dynamic";
 const MealEditDialog = dynamic(() => import("@/components/menus/MealEditDialog").then(m => ({ default: m.MealEditDialog })), { ssr: false });
 import { useTrip } from "@/hooks/useTrip";
@@ -72,16 +72,7 @@ export default function MenusPage({ params }: MenusPageProps) {
 
   return (
     <div className="space-y-4">
-      {/* Back to home */}
-      <div className="-mt-1 -mb-2">
-        <Link
-          href="/trips"
-          className="inline-flex items-center justify-center p-2 -ml-2 rounded-xl hover:bg-foreground/8 active:bg-foreground/12 text-slate-400 hover:text-slate-200 transition-all"
-          aria-label="Retour à l'accueil"
-        >
-          <ArrowLeft size={20} />
-        </Link>
-      </div>
+      <BackHomeBar />
 
       {loading ? (
         <div className="flex items-center justify-center py-20">
@@ -111,7 +102,7 @@ export default function MenusPage({ params }: MenusPageProps) {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: isPast ? 0.6 : 1, y: 0 }}
                 transition={{ delay: Math.min(idx * 0.02, 0.2) }}
-                className="scroll-mt-2"
+                className="scroll-mt-[calc(env(safe-area-inset-top)+4rem)]"
               >
                 <DayHeader date={d} isToday={isToday} isPast={isPast} />
                 <div className="relative pl-4 border-l border-foreground/8 space-y-3">

@@ -1,14 +1,14 @@
 "use client";
 
 import { use, useState } from "react";
-import Link from "next/link";
-import { Plus, Wallet, ArrowLeft, Receipt, Scale, ArrowRightLeft, CheckCircle2 } from "lucide-react";
+import { Plus, Wallet, Receipt, Scale, ArrowRightLeft, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
 const ExpenseForm = dynamic(() => import("@/components/budget/ExpenseForm").then(m => ({ default: m.ExpenseForm })), { ssr: false });
 import { ExpenseList } from "@/components/budget/ExpenseList";
 import { Spinner } from "@/components/shared/Spinner";
 import { SectionLabel } from "@/components/shared/SectionLabel";
+import { BackHomeBar } from "@/components/shared/BackHomeBar";
 import { BalanceSummary } from "@/components/budget/BalanceSummary";
 import { DebtSettlements } from "@/components/budget/DebtSettlements";
 import { MyBalanceCard } from "@/components/budget/MyBalanceCard";
@@ -117,16 +117,7 @@ export default function BudgetPage({ params }: BudgetPageProps) {
 
   return (
     <div className="space-y-5">
-      {/* Back to home */}
-      <div className="-mt-1 -mb-2">
-        <Link
-          href="/trips"
-          className="inline-flex items-center justify-center p-2 -ml-2 rounded-xl hover:bg-foreground/8 active:bg-foreground/12 text-slate-400 hover:text-slate-200 transition-all"
-          aria-label="Retour à l'accueil"
-        >
-          <ArrowLeft size={20} />
-        </Link>
-      </div>
+      <BackHomeBar />
 
       {/* Total spent — hero teinte accent translucide sur glass */}
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}>
@@ -294,9 +285,7 @@ export default function BudgetPage({ params }: BudgetPageProps) {
       <button
         onClick={handleOpenForm}
         className="fixed right-4 z-30 w-14 h-14 rounded-full gradient-primary text-white shadow-section-strong flex items-center justify-center active:scale-95 hover:scale-105 transition-all"
-        style={{
-          bottom: "calc(env(safe-area-inset-bottom) + 7rem)",
-        }}
+        style={{ bottom: "var(--fab-bottom)" }}
         aria-label="Nouvelle dépense"
         title="Nouvelle dépense"
       >

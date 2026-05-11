@@ -139,6 +139,17 @@ html, body {
   --sidebar-ring: oklch(0.60 0.22 264 / 60%);
 }
 
+/* ── Layout offsets (single source of truth so FABs stay above the nav) */
+:root {
+  /* Top of the bottom TripNav from the viewport bottom edge, including the
+   * iOS home-indicator safe area. Nav sits at safe + 0.75rem and is ~5rem tall,
+   * which is what this value captures with a tiny safety margin. */
+  --bottom-nav-top: calc(env(safe-area-inset-bottom) + 6rem);
+  /* Where every FAB inside a trip page (Budget, Planning…) should anchor.
+   * Adds a 1.5rem buffer above the nav so they never overlap. */
+  --fab-bottom: calc(var(--bottom-nav-top) + 1.5rem);
+}
+
 /* ── Glass + Mesh theme tokens (driven by .dark on <html>) ─────────── */
 :root {
   /* Glass surfaces */

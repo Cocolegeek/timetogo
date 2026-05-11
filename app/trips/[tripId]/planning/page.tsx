@@ -1,7 +1,6 @@
 "use client";
 
 import { use, useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
 import {
   Plus,
   Map,
@@ -11,7 +10,6 @@ import {
   MoreVertical,
   Pencil,
   Trash2,
-  ArrowLeft,
 } from "lucide-react";
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from "framer-motion";
 import { GlassCard } from "@/components/layout/GlassCard";
@@ -19,6 +17,7 @@ import { openLocation } from "@/lib/map-apps";
 import { ConfirmDeleteDialog } from "@/components/shared/ConfirmDeleteDialog";
 import { DayHeader } from "@/components/shared/DayHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { BackHomeBar } from "@/components/shared/BackHomeBar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -120,16 +119,7 @@ export default function PlanningPage({ params }: PlanningPageProps) {
 
   return (
     <div className="space-y-5">
-      {/* Back to home */}
-      <div className="-mt-1 -mb-2">
-        <Link
-          href="/trips"
-          className="inline-flex items-center justify-center p-2 -ml-2 rounded-xl hover:bg-foreground/8 active:bg-foreground/12 text-slate-400 hover:text-slate-200 transition-all"
-          aria-label="Retour à l'accueil"
-        >
-          <ArrowLeft size={20} />
-        </Link>
-      </div>
+      <BackHomeBar />
 
       {dates.length === 0 ? (
         <EmptyState
@@ -150,7 +140,7 @@ export default function PlanningPage({ params }: PlanningPageProps) {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: isPast ? 0.6 : 1, y: 0 }}
                 transition={{ delay: Math.min(idx * 0.02, 0.2) }}
-                className="scroll-mt-2"
+                className="scroll-mt-[calc(env(safe-area-inset-top)+4rem)]"
               >
                 <DayHeader date={d} isToday={isToday} isPast={isPast} />
                 <div className="relative pl-4 border-l border-foreground/8 space-y-3">
@@ -200,7 +190,7 @@ export default function PlanningPage({ params }: PlanningPageProps) {
       <button
         onClick={() => openForCreate()}
         className="fixed right-4 z-30 w-14 h-14 rounded-full gradient-primary text-white shadow-section-strong flex items-center justify-center active:scale-95 hover:scale-105 transition-all"
-        style={{ bottom: "calc(env(safe-area-inset-bottom) + 5.5rem)" }}
+        style={{ bottom: "var(--fab-bottom)" }}
         aria-label="Nouvelle étape"
       >
         <Plus size={26} strokeWidth={2.5} />

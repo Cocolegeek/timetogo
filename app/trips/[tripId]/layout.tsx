@@ -22,7 +22,7 @@ export default async function TripLayout({ children, params }: TripLayoutProps) 
           className="flex-1 max-w-3xl w-full mx-auto px-4"
           style={{
             paddingTop: "calc(env(safe-area-inset-top) + 1.25rem)",
-            paddingBottom: "calc(env(safe-area-inset-bottom) + 7.5rem)",
+            paddingBottom: "calc(var(--bottom-nav-top) + 1.5rem)",
           }}
         >
           {children}
