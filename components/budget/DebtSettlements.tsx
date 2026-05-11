@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
+import { ArrowDown, CheckCircle2, Loader2 } from "lucide-react";
 import { formatCurrency } from "@/lib/format-currency";
 import {
   Dialog,
@@ -60,47 +60,54 @@ export function DebtSettlements({
 
   return (
     <>
-      <div className="space-y-2">
+      <div className="space-y-3">
         {settlements.map((s, i) => {
           const from = participants.find((p) => p.id === s.fromId);
           const to = participants.find((p) => p.id === s.toId);
           if (!from || !to) return null;
 
           return (
-            <motion.div
+            <motion.button
               key={i}
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.06 }}
-              className="glass-subtle rounded-xl px-4 py-3 flex items-center gap-3"
+              onClick={() => setPending(s)}
+              className="w-full glass-subtle rounded-2xl px-5 py-4 flex flex-col gap-3 text-left active:scale-[0.98] transition-transform"
             >
-              <div className="flex-1 flex items-center gap-2 min-w-0">
-                <span
-                  className="w-2.5 h-2.5 rounded-full shrink-0"
-                  style={{ backgroundColor: from.color }}
-                />
-                <span className="text-base text-slate-100 font-semibold truncate">
-                  {from.name}
-                </span>
-                <ArrowRight size={14} className="text-slate-500 shrink-0" />
-                <span
-                  className="w-2.5 h-2.5 rounded-full shrink-0"
-                  style={{ backgroundColor: to.color }}
-                />
-                <span className="text-base text-slate-100 font-semibold truncate">
-                  {to.name}
-                </span>
+              {/* Participants */}
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span
+                    className="w-3 h-3 rounded-full shrink-0"
+                    style={{ backgroundColor: from.color }}
+                  />
+                  <span className="text-base font-semibold text-slate-100 truncate">
+                    {from.name}
+                  </span>
+                </div>
+
+                <ArrowDown size={14} className="text-slate-500 shrink-0 rotate-[-90deg]" />
+
+                <div className="flex items-center gap-2 min-w-0">
+                  <span
+                    className="w-3 h-3 rounded-full shrink-0"
+                    style={{ backgroundColor: to.color }}
+                  />
+                  <span className="text-base font-semibold text-slate-100 truncate">
+                    {to.name}
+                  </span>
+                </div>
               </div>
-              <span className="font-bold text-base text-indigo-300 shrink-0 tabular-nums">
-                {formatCurrency(s.amount, currency)}
-              </span>
-              <button
-                onClick={() => setPending(s)}
-                className="shrink-0 text-xs font-semibold px-3 py-1.5 rounded-lg bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/35 active:scale-95 transition-all"
-              >
-                Régler
-              </button>
-            </motion.div>
+
+              {/* Amount + hint */}
+              <div className="flex items-end justify-between">
+                <span className="text-2xl font-bold text-indigo-300 tabular-nums">
+                  {formatCurrency(s.amount, currency)}
+                </span>
+                <span className="text-xs text-slate-500 mb-0.5">Appuyer pour régler</span>
+              </div>
+            </motion.button>
           );
         })}
       </div>
@@ -113,24 +120,26 @@ export function DebtSettlements({
 
           {pendingFrom && pendingTo && pending && (
             <div className="py-2 space-y-4">
-              <div className="glass-subtle rounded-xl px-4 py-3 flex items-center gap-3">
-                <span
-                  className="w-3 h-3 rounded-full shrink-0"
-                  style={{ backgroundColor: pendingFrom.color }}
-                />
-                <span className="font-semibold text-slate-100">{pendingFrom.name}</span>
-                <ArrowRight size={14} className="text-slate-500 shrink-0" />
-                <span
-                  className="w-3 h-3 rounded-full shrink-0"
-                  style={{ backgroundColor: pendingTo.color }}
-                />
-                <span className="font-semibold text-slate-100">{pendingTo.name}</span>
-                <span className="ml-auto font-bold text-indigo-300 tabular-nums">
+              <div className="glass-subtle rounded-xl px-4 py-4 space-y-3">
+                <div className="flex items-center gap-2">
+                  <span
+                    className="w-3 h-3 rounded-full shrink-0"
+                    style={{ backgroundColor: pendingFrom.color }}
+                  />
+                  <span className="font-semibold text-slate-100">{pendingFrom.name}</span>
+                  <span className="text-slate-500 text-sm">rembourse</span>
+                  <span
+                    className="w-3 h-3 rounded-full shrink-0"
+                    style={{ backgroundColor: pendingTo.color }}
+                  />
+                  <span className="font-semibold text-slate-100">{pendingTo.name}</span>
+                </div>
+                <p className="text-2xl font-bold text-indigo-300 tabular-nums">
                   {formatCurrency(pending.amount, currency)}
-                </span>
+                </p>
               </div>
               <p className="text-sm text-slate-400">
-                Cela ajoutera un remboursement dans les dépenses et mettra les soldes à jour.
+                Un remboursement sera ajouté dans les dépenses et les soldes seront mis à jour.
               </p>
             </div>
           )}
@@ -148,7 +157,7 @@ export function DebtSettlements({
               disabled={loading}
               className="gradient-primary text-white border-0"
             >
-              {loading ? <Loader2 size={15} className="animate-spin" /> : "Confirmer"}
+              {loading ? <Loader2 size={15} className="animate-spin" /> : "Régler"}
             </Button>
           </DialogFooter>
         </DialogContent>
