@@ -45,14 +45,14 @@ export default function MenusPage({ params }: MenusPageProps) {
 
   // Auto-scroll to today's section once data is loaded
   useEffect(() => {
-    if (loading) return;
+    if (loading || !trip) return;
     const el = todayRef.current;
     if (!el) return;
     // Wait for next paint so the layout is stable
     requestAnimationFrame(() => {
       el.scrollIntoView({ behavior: "auto", block: "start" });
     });
-  }, [loading]);
+  }, [loading, trip?.id]);
 
   useEffect(() => {
     if (trip && !isVoyage(trip)) {

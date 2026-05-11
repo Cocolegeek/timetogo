@@ -57,7 +57,7 @@ export default function PlanningPage({ params }: PlanningPageProps) {
   const { tripId } = use(params);
   const router = useRouter();
   const { trip } = useTrip(tripId);
-  const { items, addItem, updateItem, deleteItem, refetch } =
+  const { items, loading, addItem, updateItem, deleteItem, refetch } =
     useItinerary(tripId);
 
   useEffect(() => {
@@ -76,13 +76,13 @@ export default function PlanningPage({ params }: PlanningPageProps) {
   const todayRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!trip) return;
+    if (loading || !trip) return;
     const el = todayRef.current;
     if (!el) return;
     requestAnimationFrame(() => {
       el.scrollIntoView({ behavior: "auto", block: "start" });
     });
-  }, [trip?.id]);
+  }, [loading, trip?.id]);
 
   const openForCreate = (date?: string) => {
     setEditingItem(undefined);
