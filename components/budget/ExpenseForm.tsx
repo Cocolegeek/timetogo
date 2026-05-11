@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CATEGORIES, CATEGORY_ORDER } from "@/lib/budget/categories";
 import { computeShares } from "@/lib/budget/splits";
+import { currencySymbol } from "@/lib/format-currency";
 import { cn } from "@/lib/utils";
 import type {
   Expense,
@@ -381,7 +382,7 @@ export function ExpenseForm({
               className="w-full text-center bg-transparent text-6xl font-bold text-slate-100 placeholder:text-slate-700 focus:outline-none tabular-nums"
               autoFocus={!isEdit}
             />
-            <p className="text-sm text-slate-500 mt-1">{currency}</p>
+            <p className="text-sm text-slate-500 mt-1">{currencySymbol(currency)}</p>
           </div>
 
           {/* Title */}
@@ -481,7 +482,7 @@ export function ExpenseForm({
                         onChange={(e) => setPayerAmount(payer.participantId, Number(e.target.value) || 0)}
                         className="w-20 text-right bg-foreground/8 border border-foreground/10 rounded-lg px-2 py-1 text-sm text-slate-100 focus:outline-none focus:border-section tabular-nums"
                       />
-                      <span className="text-xs text-slate-500 w-8">{currency.slice(0, 3)}</span>
+                      <span className="text-xs text-slate-500 w-8">{currencySymbol(currency)}</span>
                     </div>
                   );
                 })}
@@ -644,7 +645,7 @@ export function ExpenseForm({
                           className="w-20 text-right bg-foreground/8 border border-foreground/10 rounded-lg px-2 py-1 text-sm text-slate-100 focus:outline-none focus:border-section tabular-nums"
                         />
                         <span className="text-xs text-slate-500 w-6">
-                          {currency.slice(0, 3)}
+                          {currencySymbol(currency)}
                         </span>
                       </div>
                     )}
