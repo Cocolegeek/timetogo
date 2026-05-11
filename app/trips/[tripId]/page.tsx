@@ -15,7 +15,6 @@ import {
   Clock,
 } from "lucide-react";
 import { GlassCard } from "@/components/layout/GlassCard";
-import { Button } from "@/components/ui/button";
 import { getBudgetColor, getBudgetTextColor } from "@/lib/budget/budget-color";
 import { ShareModal } from "@/components/trips/ShareModal";
 import { IdentityPicker } from "@/components/trips/IdentityPicker";
@@ -197,8 +196,8 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
         />
       </motion.button>
 
-      {/* Quick stats — large, vertical cards */}
-      <div className="grid grid-cols-2 gap-3">
+      {/* Quick stats — stacked cards */}
+      <div className="flex flex-col gap-3">
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -316,22 +315,22 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
                   )}
                 </div>
                 {relevantDay ? (
-                  <div className="flex-1 space-y-1">
+                  <div className="flex-1 space-y-2">
                     {relevantDay.items.slice(0, 3).map((item) => (
                       <div
                         key={item.id}
-                        className="flex items-center gap-1.5 text-base"
+                        className="flex items-center gap-2 text-base"
                       >
-                        <span className="shrink-0">
+                        <span className="shrink-0 text-lg">
                           {ITINERARY_EMOJI[item.type]}
                         </span>
                         {item.time && (
                           <span className="text-sm text-slate-500 tabular-nums shrink-0 flex items-center gap-0.5">
-                            <Clock size={11} />
+                            <Clock size={12} />
                             {item.time}
                           </span>
                         )}
-                        <span className="text-slate-200 truncate">
+                        <span className="text-slate-200">
                           {item.title}
                         </span>
                       </div>
