@@ -1,7 +1,6 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { GlassCard } from "@/components/layout/GlassCard";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/format-currency";
@@ -13,13 +12,17 @@ interface BalanceSummaryProps {
   currency: string;
 }
 
+function firstName(name: string): string {
+  return name.trim().split(/\s+/)[0] ?? name;
+}
+
 export function BalanceSummary({
   balances,
   participants,
   currency,
 }: BalanceSummaryProps) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
       {balances.map((balance, i) => {
         const participant = participants.find(
           (p) => p.id === balance.participantId
@@ -29,57 +32,38 @@ export function BalanceSummary({
         const isCreditor = balance.net > 0.005;
         const isDebtor = balance.net < -0.005;
 
+        const sign = isCreditor ? "+" : isDebtor ? "-" : "";
+        const toneClass = isCreditor
+          ? "text-emerald-400"
+          : isDebtor
+            ? "text-red-400"
+            : "text-slate-500";
+
         return (
           <motion.div
             key={balance.participantId}
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: i * 0.05 }}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.04 }}
           >
             <GlassCard className="relative overflow-hidden" padding={false}>
-              {/* Colored left accent */}
               <div
                 className="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl"
                 style={{ backgroundColor: participant.color }}
               />
-
-              <div className="p-4 pl-5 flex items-center gap-3">
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-slate-100 text-base truncate">
-                    {participant.name}
-                  </p>
-                  <p className="text-base text-slate-400 mt-1">
-                    Payé{" "}
-                    <span className="text-slate-200">
-                      {formatCurrency(Math.abs(balance.paid), currency)}
-                    </span>{" "}
-                    · Doit{" "}
-                    <span className="text-slate-200">
-                      {formatCurrency(Math.abs(balance.owes), currency)}
-                    </span>
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-1.5 shrink-0">
-                  {isCreditor ? (
-                    <TrendingUp size={16} className="text-emerald-400" />
-                  ) : isDebtor ? (
-                    <TrendingDown size={16} className="text-red-400" />
-                  ) : (
-                    <Minus size={16} className="text-slate-500" />
+              <div className="px-4 py-3 pl-5 flex items-center justify-between gap-3">
+                <p className="font-semibold text-slate-100 text-base truncate">
+                  {firstName(participant.name)}
+                </p>
+                <span
+                  className={cn(
+                    "font-bold text-base tabular-nums shrink-0",
+                    toneClass
                   )}
-                  <span
-                    className={cn(
-                      "font-bold text-base tabular-nums",
-                      isCreditor && "text-emerald-400",
-                      isDebtor && "text-red-400",
-                      !isCreditor && !isDebtor && "text-slate-500"
-                    )}
-                  >
-                    {isCreditor ? "+" : isDebtor ? "-" : ""}
-                    {formatCurrency(Math.abs(balance.net), currency)}
-                  </span>
-                </div>
+                >
+                  {sign}
+                  {formatCurrency(Math.abs(balance.net), currency)}
+                </span>
               </div>
             </GlassCard>
           </motion.div>
