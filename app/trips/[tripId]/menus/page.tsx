@@ -1,8 +1,8 @@
 "use client";
 
 import { use, useEffect, useMemo, useRef, useState } from "react";
-import { motion } from "framer-motion";
-import { RefreshCw, UtensilsCrossed, ChefHat, Users, Plus } from "lucide-react";
+import { motion, useMotionValue, useTransform, animate } from "framer-motion";
+import { RefreshCw, UtensilsCrossed, ChefHat, Users, Plus, Trash2 } from "lucide-react";
 import { GlassCard } from "@/components/layout/GlassCard";
 import { DayHeader } from "@/components/shared/DayHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -23,7 +23,7 @@ interface MenusPageProps {
 export default function MenusPage({ params }: MenusPageProps) {
   const { tripId } = use(params);
   const { trip } = useTrip(tripId);
-  const { meals, loading, refetch, addMeal, updateMeal } = useMeals(
+  const { meals, loading, refetch, addMeal, updateMeal, deleteMeal } = useMeals(
     tripId,
     trip ? { startDate: trip.startDate, endDate: trip.endDate } : undefined
   );
@@ -111,6 +111,7 @@ export default function MenusPage({ params }: MenusPageProps) {
                         meal={meal}
                         participants={trip.participants}
                         onTap={() => setEditingMeal(meal)}
+                        onDelete={() => deleteMeal(meal.id)}
                       />
                     ) : (
                       <PlaceholderCard
@@ -146,18 +147,38 @@ export default function MenusPage({ params }: MenusPageProps) {
   );
 }
 
+const SWIPE_THRESHOLD = -110;
+
 function MealCard({
   meal,
   participants,
   onTap,
+  onDelete,
 }: {
   meal: Meal;
   participants: Participant[];
   onTap: () => void;
+  onDelete: () => void;
 }) {
   const slotCfg = SLOT_CONFIG[meal.slot];
   const catCfg = CATEGORY_CONFIG[meal.category];
   const isEmpty = !meal.title.trim();
+  const x = useMotionValue(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const bgOpacity = useTransform(x, [SWIPE_THRESHOLD, -10, 0], [1, 0.2, 0]);
+  const trashScale = useTransform(x, [SWIPE_THRESHOLD - 20, -40, 0], [1.2, 0.9, 0.6]);
+
+  const handleDragEnd = () => {
+    setIsDragging(false);
+    if (x.get() <= SWIPE_THRESHOLD) {
+      animate(x, -window.innerWidth, {
+        duration: 0.25,
+        onComplete: () => onDelete(),
+      });
+    } else {
+      animate(x, 0, { type: "spring", stiffness: 400, damping: 30 });
+    }
+  };
 
   const cooks = participants.filter((p) => meal.cookIds.includes(p.id));
   const cookLabel =
@@ -202,44 +223,66 @@ function MealCard({
     <motion.div
       initial={{ opacity: 0, x: -10 }}
       animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -10 }}
+      exit={{ opacity: 0 }}
+      className="relative rounded-2xl overflow-hidden"
     >
-      <GlassCard padding={false}>
-        <div
-          role="button"
-          tabIndex={0}
-          onClick={onTap}
-          onKeyDown={(e) => { if (e.key === "Enter") onTap(); }}
-          className="p-3.5 cursor-pointer active:bg-foreground/4 transition-colors"
-        >
-          {/* Tags row */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className={cn("text-sm px-2.5 py-0.5 rounded-full font-medium", slotCfg.bgClass, slotCfg.textClass)}>
-              {slotCfg.shortLabel}
-            </span>
-            <span className={cn("text-sm px-2.5 py-0.5 rounded-full font-medium", catCfg.badgeClass)}>
-              {catCfg.label}
-            </span>
-          </div>
+      {/* Red gradient revealed on swipe */}
+      <motion.div
+        className="absolute inset-0 flex items-center justify-end pr-6 pointer-events-none"
+        style={{
+          background: "linear-gradient(90deg, rgba(239,68,68,0.0) 0%, rgba(239,68,68,0.45) 60%, rgba(220,38,38,0.85) 100%)",
+          opacity: bgOpacity,
+        }}
+      >
+        <motion.div className="flex items-center gap-2 text-white" style={{ scale: trashScale }}>
+          <Trash2 size={18} />
+          <span className="text-sm font-semibold">Supprimer</span>
+        </motion.div>
+      </motion.div>
 
-          <p className="text-xl font-semibold text-slate-100 leading-tight mt-2">
-            {meal.title}
-          </p>
-
-          <div className="flex items-center gap-3 mt-1.5 text-base text-slate-400">
-            {cookLabel && (
-              <span className="flex items-center gap-1.5">
-                <ChefHat size={13} className="text-amber-400" />
-                {cookLabel}
+      {/* Draggable card */}
+      <motion.div
+        data-no-tab-swipe
+        drag="x"
+        dragConstraints={{ left: -200, right: 0 }}
+        dragElastic={{ left: 0.2, right: 0 }}
+        dragDirectionLock
+        style={{ x }}
+        onDragStart={() => setIsDragging(true)}
+        onDragEnd={handleDragEnd}
+      >
+        <GlassCard padding={false}>
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={() => { if (!isDragging) onTap(); }}
+            onKeyDown={(e) => { if (e.key === "Enter") onTap(); }}
+            className="p-3.5 cursor-pointer active:bg-foreground/4 transition-colors touch-pan-y select-none"
+          >
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className={cn("text-sm px-2.5 py-0.5 rounded-full font-medium", slotCfg.bgClass, slotCfg.textClass)}>
+                {slotCfg.shortLabel}
               </span>
-            )}
-            <span className="flex items-center gap-1.5">
-              <Users size={13} />
-              {eaterLabel}
-            </span>
+              <span className={cn("text-sm px-2.5 py-0.5 rounded-full font-medium", catCfg.badgeClass)}>
+                {catCfg.label}
+              </span>
+            </div>
+            <p className="text-xl font-semibold text-slate-100 leading-tight mt-2">{meal.title}</p>
+            <div className="flex items-center gap-3 mt-1.5 text-base text-slate-400">
+              {cookLabel && (
+                <span className="flex items-center gap-1.5">
+                  <ChefHat size={13} className="text-amber-400" />
+                  {cookLabel}
+                </span>
+              )}
+              <span className="flex items-center gap-1.5">
+                <Users size={13} />
+                {eaterLabel}
+              </span>
+            </div>
           </div>
-        </div>
-      </GlassCard>
+        </GlassCard>
+      </motion.div>
     </motion.div>
   );
 }

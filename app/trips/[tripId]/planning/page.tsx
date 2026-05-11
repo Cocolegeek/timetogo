@@ -12,7 +12,7 @@ import {
   Pencil,
   Trash2,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue, useTransform, animate } from "framer-motion";
 import { GlassCard } from "@/components/layout/GlassCard";
 import { ConfirmDeleteDialog } from "@/components/shared/ConfirmDeleteDialog";
 import { DayHeader } from "@/components/shared/DayHeader";
@@ -159,6 +159,7 @@ export default function PlanningPage({ params }: PlanningPageProps) {
                         participants={trip?.participants ?? []}
                         onEdit={() => openForEdit(item)}
                         onDelete={() => setConfirmDelete(item)}
+                        onSwipeDelete={async () => { await deleteItem(item.id); }}
                       />
                     ))}
                   </AnimatePresence>
@@ -220,21 +221,40 @@ export default function PlanningPage({ params }: PlanningPageProps) {
   );
 }
 
+const SWIPE_THRESHOLD = -110;
+
 function ItineraryCard({
   item,
   participants,
   onEdit,
   onDelete,
+  onSwipeDelete,
 }: {
   item: ItineraryItem;
   participants: Participant[];
   onEdit: () => void;
   onDelete: () => void;
+  onSwipeDelete: () => void;
 }) {
   const cfg = TYPE_CONFIG[item.type];
   const durationLabel = formatDuration(item.durationMinutes);
+  const x = useMotionValue(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const bgOpacity = useTransform(x, [SWIPE_THRESHOLD, -10, 0], [1, 0.2, 0]);
+  const trashScale = useTransform(x, [SWIPE_THRESHOLD - 20, -40, 0], [1.2, 0.9, 0.6]);
 
-  // Resolve participants involved in this step
+  const handleDragEnd = () => {
+    setIsDragging(false);
+    if (x.get() <= SWIPE_THRESHOLD) {
+      animate(x, -window.innerWidth, {
+        duration: 0.25,
+        onComplete: () => onSwipeDelete(),
+      });
+    } else {
+      animate(x, 0, { type: "spring", stiffness: 400, damping: 30 });
+    }
+  };
+
   const involved =
     item.participantIds && item.participantIds.length > 0
       ? participants.filter((p) => item.participantIds.includes(p.id))
@@ -245,103 +265,108 @@ function ItineraryCard({
     <motion.div
       initial={{ opacity: 0, x: -10 }}
       animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -10 }}
+      exit={{ opacity: 0 }}
+      className="relative rounded-xl overflow-hidden"
     >
-      <GlassCard padding={false}>
-        <div
-          role="button"
-          tabIndex={0}
-          onClick={onEdit}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") onEdit();
-          }}
-          className="p-3.5 flex items-start gap-3 cursor-pointer active:bg-foreground/4 transition-colors"
-        >
-          <div className="flex-1 min-w-0 pr-1">
-            {/* Tags row */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <span
-                className={cn(
-                  "text-sm px-2.5 py-0.5 rounded-full font-medium",
-                  cfg.bg,
-                  cfg.color
+      {/* Red gradient revealed on swipe */}
+      <motion.div
+        className="absolute inset-0 flex items-center justify-end pr-6 pointer-events-none"
+        style={{
+          background: "linear-gradient(90deg, rgba(239,68,68,0.0) 0%, rgba(239,68,68,0.45) 60%, rgba(220,38,38,0.85) 100%)",
+          opacity: bgOpacity,
+        }}
+      >
+        <motion.div className="flex items-center gap-2 text-white" style={{ scale: trashScale }}>
+          <Trash2 size={18} />
+          <span className="text-sm font-semibold">Supprimer</span>
+        </motion.div>
+      </motion.div>
+
+      {/* Draggable card */}
+      <motion.div
+        data-no-tab-swipe
+        drag="x"
+        dragConstraints={{ left: -200, right: 0 }}
+        dragElastic={{ left: 0.2, right: 0 }}
+        dragDirectionLock
+        style={{ x }}
+        onDragStart={() => setIsDragging(true)}
+        onDragEnd={handleDragEnd}
+      >
+        <GlassCard padding={false}>
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={() => { if (!isDragging) onEdit(); }}
+            onKeyDown={(e) => { if (e.key === "Enter") onEdit(); }}
+            className="p-3.5 flex items-start gap-3 cursor-pointer active:bg-foreground/4 transition-colors touch-pan-y select-none"
+          >
+            <div className="flex-1 min-w-0 pr-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className={cn("text-sm px-2.5 py-0.5 rounded-full font-medium", cfg.bg, cfg.color)}>
+                  {cfg.label}
+                </span>
+                {item.time && (
+                  <span className="flex items-center gap-1.5 text-base text-slate-300 font-medium tabular-nums">
+                    <Clock size={13} />
+                    {item.time}
+                  </span>
                 )}
-              >
-                {cfg.label}
-              </span>
-              {item.time && (
-                <span className="flex items-center gap-1.5 text-base text-slate-300 font-medium tabular-nums">
-                  <Clock size={13} />
-                  {item.time}
-                </span>
+                {durationLabel && (
+                  <span className="flex items-center gap-1.5 text-base text-slate-300">
+                    <Hourglass size={13} />
+                    {durationLabel}
+                  </span>
+                )}
+              </div>
+              <p className="text-xl font-semibold text-slate-100 leading-tight mt-2">{item.title}</p>
+              {item.location && (
+                <p className="flex items-center gap-1.5 text-base text-slate-400 mt-1.5">
+                  <MapPin size={13} className="shrink-0" />
+                  <span className="truncate">{item.location}</span>
+                </p>
               )}
-              {durationLabel && (
-                <span className="flex items-center gap-1.5 text-base text-slate-300">
-                  <Hourglass size={13} />
-                  {durationLabel}
-                </span>
+              {item.description && (
+                <p className="text-base text-slate-400 mt-1.5">{item.description}</p>
+              )}
+              {involved.length > 0 && (
+                <div className="mt-2.5">
+                  <ParticipantStack participants={involved} everyone={everyone} />
+                </div>
               )}
             </div>
 
-            <p className="text-xl font-semibold text-slate-100 leading-tight mt-2">
-              {item.title}
-            </p>
-
-            {item.location && (
-              <p className="flex items-center gap-1.5 text-base text-slate-400 mt-1.5">
-                <MapPin size={13} className="shrink-0" />
-                <span className="truncate">{item.location}</span>
-              </p>
-            )}
-            {item.description && (
-              <p className="text-base text-slate-400 mt-1.5">{item.description}</p>
-            )}
-
-            {/* Participants — visible avatar stack */}
-            {involved.length > 0 && (
-              <div className="mt-2.5">
-                <ParticipantStack
-                  participants={involved}
-                  everyone={everyone}
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Actions menu — stop click from bubbling to the card */}
-          <div onClick={(e) => e.stopPropagation()}>
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                className="p-2 rounded-xl text-slate-500 hover:text-slate-200 hover:bg-foreground/8 active:bg-foreground/12 transition-all focus:outline-none"
-                aria-label="Actions"
-              >
-                <MoreVertical size={16} />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                className="glass-strong border-foreground/10 text-slate-200 min-w-44 bg-slate-900/95 backdrop-blur"
-              >
-                <DropdownMenuItem
-                  className="gap-2 cursor-pointer"
-                  onClick={onEdit}
+            <div onClick={(e) => e.stopPropagation()}>
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  className="p-2 rounded-xl text-slate-500 hover:text-slate-200 hover:bg-foreground/8 active:bg-foreground/12 transition-all focus:outline-none"
+                  aria-label="Actions"
                 >
-                  <Pencil size={14} className="text-slate-400" />
-                  Modifier
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  className="gap-2 cursor-pointer text-red-400"
-                  onClick={onDelete}
-                  variant="destructive"
+                  <MoreVertical size={16} />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  className="glass-strong border-foreground/10 text-slate-200 min-w-44 bg-slate-900/95 backdrop-blur"
                 >
-                  <Trash2 size={14} />
-                  Supprimer
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  <DropdownMenuItem className="gap-2 cursor-pointer" onClick={onEdit}>
+                    <Pencil size={14} className="text-slate-400" />
+                    Modifier
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="gap-2 cursor-pointer text-red-400"
+                    onClick={onDelete}
+                    variant="destructive"
+                  >
+                    <Trash2 size={14} />
+                    Supprimer
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
-        </div>
-      </GlassCard>
+        </GlassCard>
+      </motion.div>
     </motion.div>
   );
 }
