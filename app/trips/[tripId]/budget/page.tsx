@@ -14,7 +14,7 @@ import { DebtSettlements } from "@/components/budget/DebtSettlements";
 import { useTrip } from "@/hooks/useTrip";
 import { useBudget } from "@/hooks/useBudget";
 import { useDebts } from "@/hooks/useDebts";
-import type { Expense, Payer } from "@/types";
+import type { Expense, Payer, Settlement } from "@/types";
 
 interface BudgetPageProps {
   params: Promise<{ tripId: string }>;
@@ -73,6 +73,27 @@ export default function BudgetPage({ params }: BudgetPageProps) {
   const handleOpenForm = () => {
     setEditingExpense(undefined);
     setFormOpen(true);
+  };
+
+  const handleSettle = async (s: Settlement) => {
+    const from = participants.find((p) => p.id === s.fromId);
+    const to = participants.find((p) => p.id === s.toId);
+    await addExpense({
+      tripId,
+      title: `Remboursement ${from?.name ?? ""} → ${to?.name ?? ""}`,
+      amount: s.amount,
+      currency,
+      exchangeRate: 1,
+      category: "reimbursement",
+      payers: [{ participantId: s.fromId, amount: s.amount }],
+      date: new Date().toISOString().slice(0, 10),
+      splitMode: "fixed",
+      splits: participants.map((p) => ({
+        participantId: p.id,
+        excluded: p.id !== s.toId,
+        fixedAmount: p.id === s.toId ? s.amount : 0,
+      })),
+    });
   };
 
   const handleRefresh = async () => {
@@ -192,6 +213,7 @@ export default function BudgetPage({ params }: BudgetPageProps) {
               settlements={settlements}
               participants={participants}
               currency={currency}
+              onSettle={handleSettle}
             />
           </GlassCard>
         </TabsContent>

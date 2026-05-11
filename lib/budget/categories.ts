@@ -5,6 +5,7 @@ import {
   Car,
   Bed,
   Package,
+  ArrowLeftRight,
   type LucideIcon,
 } from "lucide-react";
 import type { ExpenseCategory } from "@/types";
@@ -62,6 +63,13 @@ export const CATEGORIES: Record<ExpenseCategory, CategoryConfig> = {
     color: "text-slate-400",
     bg: "bg-slate-500/15",
     ring: "ring-slate-500/40",
+  },
+  reimbursement: {
+    label: "Remboursement",
+    icon: ArrowLeftRight,
+    color: "text-indigo-400",
+    bg: "bg-indigo-500/15",
+    ring: "ring-indigo-500/40",
   },
 };
 

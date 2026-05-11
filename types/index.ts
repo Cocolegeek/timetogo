@@ -73,7 +73,8 @@ export type ExpenseCategory =
   | "activities"
   | "transport"
   | "accommodation"
-  | "other";
+  | "other"
+  | "reimbursement";
 
 export interface ParticipantSplit {
   participantId: string;
