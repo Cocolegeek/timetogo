@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { ArrowLeft, Plane, Wallet } from "lucide-react";
+import { ArrowLeft, Compass, Wallet } from "lucide-react";
 import { motion } from "framer-motion";
 import { MeshGradientBackground } from "@/components/layout/MeshGradientBackground";
 import { GlassCard } from "@/components/layout/GlassCard";
@@ -15,14 +15,14 @@ const TYPE_OPTIONS: {
   type: TripType;
   title: string;
   description: string;
-  icon: typeof Plane;
+  icon: typeof Compass;
   accent: string;
 }[] = [
   {
     type: "trip",
     title: "Voyage",
     description: "Destination, dates, planning, menus et budget partagé",
-    icon: Plane,
+    icon: Compass,
     accent: "from-violet-500/30 to-indigo-500/15 ring-violet-400/40 text-violet-300",
   },
   {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, Plane } from "lucide-react";
+import { Loader2, Compass } from "lucide-react";
 import { motion } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import { MeshGradientBackground } from "@/components/layout/MeshGradientBackground";
@@ -36,7 +36,7 @@ function LoginForm() {
         {/* Logo */}
         <div className="text-center space-y-3">
           <div className="w-16 h-16 rounded-2xl bg-section-soft flex items-center justify-center mx-auto">
-            <Plane size={32} className="text-section" />
+            <Compass size={32} className="text-section" />
           </div>
           <div>
             <h1 className="text-2xl font-bold gradient-text">Time to Go</h1>

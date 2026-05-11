@@ -3,7 +3,7 @@
 import { Suspense, useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Plane, AlertCircle, Loader2 } from "lucide-react";
+import { Compass, AlertCircle, Loader2 } from "lucide-react";
 import { MeshGradientBackground } from "@/components/layout/MeshGradientBackground";
 import { GlassCard } from "@/components/layout/GlassCard";
 import { IdentityPicker } from "@/components/trips/IdentityPicker";
@@ -204,7 +204,7 @@ function JoinContent() {
             <Loader2 size={18} className="animate-spin" />
           ) : (
             <>
-              <Plane size={18} />
+              <Compass size={18} />
               Rejoindre le voyage
             </>
           )}

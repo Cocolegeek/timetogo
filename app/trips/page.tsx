@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Plus, Plane, RefreshCw, Wallet, Sparkles } from "lucide-react";
+import { Plus, Compass, RefreshCw, Wallet, Sparkles } from "lucide-react";
 import { MeshGradientBackground } from "@/components/layout/MeshGradientBackground";
 import { TripCard } from "@/components/trips/TripCard";
 import { TripEditWrapper } from "@/components/trips/TripEditWrapper";
@@ -160,7 +160,7 @@ export default function TripsPage() {
                     {activeTab === "voyages" ? (
                       sortedVoyages.length === 0 ? (
                         <SectionEmpty
-                          icon={Plane}
+                          icon={Compass}
                           text="Aucun voyage pour l'instant"
                           ctaLabel="Créer un voyage"
                           href="/trips/new"
@@ -371,7 +371,7 @@ function TabSwitcher({
   groupCount: number;
 }) {
   const tabs = [
-    { id: "voyages" as const, label: "Voyages", icon: Plane, count: voyageCount },
+    { id: "voyages" as const, label: "Voyages", icon: Compass, count: voyageCount },
     { id: "budgets" as const, label: "Budgets", icon: Wallet, count: groupCount },
   ];
 
@@ -431,7 +431,7 @@ function SectionEmpty({
   ctaLabel,
   href,
 }: {
-  icon: typeof Plane;
+  icon: typeof Compass;
   text: string;
   ctaLabel: string;
   href: string;
@@ -466,7 +466,7 @@ function FirstTimeEmptyState() {
     >
       <div className="glass rounded-3xl p-8 text-center space-y-5">
         <div className="w-16 h-16 mx-auto rounded-2xl bg-section-soft flex items-center justify-center">
-          <Plane size={32} className="text-section" />
+          <Compass size={32} className="text-section" />
         </div>
         <div className="space-y-1.5">
           <h3 className="text-xl font-bold text-slate-100">
