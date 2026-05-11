@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Copy, Check, Share2, Link2 } from "lucide-react";
+import { Copy, Check, Share2, Link2, ExternalLink } from "lucide-react";
 import { motion } from "framer-motion";
 import {
   Dialog,
@@ -69,20 +69,28 @@ export function ShareModal({ open, onOpenChange, trip }: ShareModalProps) {
 
   const canShare = typeof navigator !== "undefined" && !!navigator.share;
 
+  const entityLabel = trip.type === "group" ? "budget" : "voyage";
+  const participantLabel = trip.type === "group" ? "participant" : "voyageur";
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="glass-strong border-foreground/10 max-w-sm">
-        <DialogHeader>
-          <DialogTitle className="text-slate-100">Partager le voyage</DialogTitle>
+      <DialogContent
+        className="glass-strong border-foreground/10 w-[calc(100vw-2rem)] max-w-md p-0 max-h-[92vh] flex flex-col overflow-hidden"
+        showCloseButton={false}
+      >
+        <DialogHeader className="px-5 pt-5 pb-3 border-b border-foreground/8 shrink-0">
+          <DialogTitle className="text-slate-100 text-lg">
+            Partager {trip.type === "group" ? "le budget" : "le voyage"}
+          </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-5 pt-1">
+        <div className="flex-1 overflow-y-auto px-5 py-5 space-y-5">
           {/* Trip info */}
           <div className="flex items-center gap-3 p-3 glass-subtle rounded-xl">
-            <span className="text-2xl">{trip.emoji}</span>
-            <div>
-              <p className="font-medium text-slate-200 text-sm">{trip.name}</p>
-              <p className="text-xs text-slate-500">
+            <span className="text-2xl shrink-0">{trip.emoji}</span>
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold text-slate-100 text-sm truncate">{trip.name}</p>
+              <p className="text-xs text-slate-500 truncate">
                 {trip.type === "trip" ? trip.destination : "Budget partagé"}
               </p>
             </div>
@@ -90,18 +98,18 @@ export function ShareModal({ open, onOpenChange, trip }: ShareModalProps) {
 
           {/* Code */}
           <div className="space-y-2">
-            <p className="text-sm text-slate-300 uppercase tracking-wider font-semibold">
-              Code d'accès
+            <p className="text-xs text-slate-400 uppercase tracking-wider font-semibold">
+              Code d&apos;accès
             </p>
-            <div className="flex items-center gap-3">
-              <div className="flex-1 flex items-center justify-center gap-1.5 py-3 glass-subtle rounded-xl">
+            <div className="flex items-center gap-2">
+              <div className="flex-1 min-w-0 flex items-center justify-center gap-1 sm:gap-1.5 py-3 px-2 glass-subtle rounded-xl overflow-hidden">
                 {trip.shareCode.split("").map((char, i) => (
                   <motion.span
                     key={i}
                     initial={{ opacity: 0, y: -6 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.05 }}
-                    className="font-mono text-2xl font-bold tracking-widest text-section-soft"
+                    className="font-mono text-xl sm:text-2xl font-bold tracking-widest text-section-soft"
                   >
                     {char}
                   </motion.span>
@@ -111,44 +119,57 @@ export function ShareModal({ open, onOpenChange, trip }: ShareModalProps) {
                 variant="ghost"
                 size="icon"
                 onClick={copyCode}
-                className="text-slate-400 hover:text-slate-200 shrink-0"
+                className="text-slate-400 hover:text-slate-200 shrink-0 h-11 w-11"
+                aria-label="Copier le code"
               >
                 {copiedCode ? (
-                  <Check size={16} className="text-emerald-400" />
+                  <Check size={18} className="text-emerald-400" />
                 ) : (
-                  <Copy size={16} />
+                  <Copy size={18} />
                 )}
               </Button>
             </div>
           </div>
 
-          {/* Share URL */}
+          {/* Share URL — clickable */}
           <div className="space-y-2">
-            <p className="text-sm text-slate-300 uppercase tracking-wider font-semibold">
+            <p className="text-xs text-slate-400 uppercase tracking-wider font-semibold">
               Lien de partage
             </p>
-            <div className="flex items-center gap-2 p-3 glass-subtle rounded-xl">
+            <a
+              href={shareUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 p-3 glass-subtle rounded-xl hover:bg-foreground/8 active:bg-foreground/12 transition-colors group"
+            >
               <Link2 size={14} className="text-slate-500 shrink-0" />
-              <p className="text-sm text-slate-300 truncate flex-1 font-mono">
+              <p className="text-sm text-section-soft truncate flex-1 font-mono underline decoration-section/40 decoration-from-font underline-offset-2 group-hover:decoration-section">
                 {shareUrl.replace(/^https?:\/\//, "")}
               </p>
-            </div>
-            <div className="flex gap-2">
+              <ExternalLink size={13} className="text-slate-500 shrink-0 group-hover:text-section transition-colors" />
+            </a>
+
+            <div className="flex gap-2 flex-wrap">
               <Button
                 onClick={copyUrl}
-                className="flex-1 bg-section-soft hover:bg-section-medium text-section-soft border border-section"
+                className="flex-1 min-w-[10rem] bg-section-soft hover:bg-section-medium text-section-soft border border-section"
               >
                 {copiedUrl ? (
-                  <Check size={15} className="text-emerald-400" />
+                  <>
+                    <Check size={15} className="text-emerald-400" />
+                    Copié !
+                  </>
                 ) : (
-                  <Copy size={15} />
+                  <>
+                    <Copy size={15} />
+                    Copier le lien
+                  </>
                 )}
-                {copiedUrl ? "Copié !" : "Copier le lien"}
               </Button>
               {canShare && (
                 <Button
                   onClick={nativeShare}
-                  className="bg-violet-500/20 hover:bg-violet-500/30 text-violet-300 border border-violet-500/30"
+                  className="flex-1 min-w-[8rem] bg-violet-500/20 hover:bg-violet-500/30 text-violet-300 border border-violet-500/30"
                 >
                   <Share2 size={15} />
                   Partager
@@ -163,11 +184,26 @@ export function ShareModal({ open, onOpenChange, trip }: ShareModalProps) {
               Les personnes qui ouvrent ce lien devront se connecter avec Google,
               puis choisir qui elles sont parmi les{" "}
               <span className="text-slate-200 font-medium">
-                {trip.participants.length} voyageur{trip.participants.length !== 1 ? "s" : ""}
+                {trip.participants.length} {participantLabel}
+                {trip.participants.length !== 1 ? "s" : ""}
               </span>{" "}
-              du voyage. Elles pourront ensuite tout voir et modifier.
+              du {entityLabel}. Elles pourront ensuite tout voir et modifier.
             </p>
           </div>
+        </div>
+
+        {/* Footer */}
+        <div
+          className="px-5 py-3 border-t border-foreground/8 bg-slate-900/50 shrink-0"
+          style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 0.75rem)" }}
+        >
+          <Button
+            onClick={() => onOpenChange(false)}
+            variant="ghost"
+            className="w-full text-slate-300 hover:text-slate-100 hover:bg-foreground/8"
+          >
+            Fermer
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

@@ -7,6 +7,7 @@ import { Plus, Compass, RefreshCw, Wallet, Sparkles } from "lucide-react";
 import { MeshGradientBackground } from "@/components/layout/MeshGradientBackground";
 import { TripCard } from "@/components/trips/TripCard";
 import { TripEditWrapper } from "@/components/trips/TripEditWrapper";
+import { ShareModal } from "@/components/trips/ShareModal";
 import { ConfirmDeleteDialog } from "@/components/shared/ConfirmDeleteDialog";
 import { Spinner } from "@/components/shared/Spinner";
 import { UserMenu } from "@/components/layout/UserMenu";
@@ -66,6 +67,7 @@ export default function TripsPage() {
 
   const [refreshing, setRefreshing] = useState(false);
   const [editingTripId, setEditingTripId] = useState<string | null>(null);
+  const [sharingTripId, setSharingTripId] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"voyages" | "budgets">("voyages");
 
@@ -193,6 +195,7 @@ export default function TripsPage() {
                             trip={trip}
                             onEdit={(t) => setEditingTripId(t.id)}
                             onDelete={handleDelete}
+                            onShare={(t) => setSharingTripId(t.id)}
                             index={i}
                           />
                         ))}
@@ -228,6 +231,18 @@ export default function TripsPage() {
             }}
           />
         )}
+
+        {sharingTripId && (() => {
+          const tripToShare = trips.find((t) => t.id === sharingTripId);
+          if (!tripToShare) return null;
+          return (
+            <ShareModal
+              open={true}
+              onOpenChange={(open) => { if (!open) setSharingTripId(null); }}
+              trip={tripToShare}
+            />
+          );
+        })()}
 
         {confirmDelete && (
           <ConfirmDeleteDialog

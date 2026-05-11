@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { MoreVertical, Pencil, Trash2, Calendar, Users, Wallet } from "lucide-react";
+import { MoreVertical, Pencil, Trash2, Calendar, Users, Wallet, Share2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,6 +19,7 @@ interface TripCardProps {
   trip: Trip;
   onEdit: (trip: Trip) => void;
   onDelete: (id: string) => void;
+  onShare?: (trip: Trip) => void;
   index: number;
 }
 
@@ -30,7 +31,7 @@ const ACCENT_GRADIENTS = [
   "from-amber-500/25 to-orange-500/15",
 ];
 
-export function TripCard({ trip, onEdit, onDelete, index }: TripCardProps) {
+export function TripCard({ trip, onEdit, onDelete, onShare, index }: TripCardProps) {
   const gradient = ACCENT_GRADIENTS[index % ACCENT_GRADIENTS.length];
 
   // Status badge — only meaningful for voyages with dates.
@@ -152,6 +153,15 @@ export function TripCard({ trip, onEdit, onDelete, index }: TripCardProps) {
               <Pencil size={14} className="text-slate-400" />
               Modifier
             </DropdownMenuItem>
+            {onShare && (
+              <DropdownMenuItem
+                className="gap-2 cursor-pointer"
+                onClick={() => onShare(trip)}
+              >
+                <Share2 size={14} className="text-section" />
+                Partager
+              </DropdownMenuItem>
+            )}
             <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={() => onDelete(trip.id)}
