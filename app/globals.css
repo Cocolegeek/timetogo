@@ -234,18 +234,18 @@ html, body {
   --mesh-orb-3: oklch(0.50 0.20 245 / 20%);
 }
 
-/* Menus — warm rose/amber */
+/* Menus — jaune doré discret */
 [data-section="menus"] {
-  --accent-h: 18;
-  --accent-c: 0.22;
-  --mesh-orb-1: oklch(0.65 0.22 18 / 22%);
-  --mesh-orb-2: oklch(0.72 0.20 40 / 18%);
-  --mesh-orb-3: oklch(0.65 0.20 350 / 14%);
+  --accent-h: 90;
+  --accent-c: 0.16;
+  --mesh-orb-1: oklch(0.78 0.16 90 / 18%);
+  --mesh-orb-2: oklch(0.80 0.14 75 / 14%);
+  --mesh-orb-3: oklch(0.75 0.13 105 / 12%);
 }
 .dark[data-section="menus"] {
-  --mesh-orb-1: oklch(0.55 0.24 18 / 40%);
-  --mesh-orb-2: oklch(0.55 0.22 40 / 30%);
-  --mesh-orb-3: oklch(0.50 0.22 350 / 20%);
+  --mesh-orb-1: oklch(0.65 0.18 90 / 30%);
+  --mesh-orb-2: oklch(0.62 0.16 75 / 22%);
+  --mesh-orb-3: oklch(0.58 0.14 105 / 16%);
 }
 
 /* ── Custom Glass Utilities ───────────────────────────────────────────── */
