@@ -122,24 +122,40 @@ export default function BudgetPage({ params }: BudgetPageProps) {
         </button>
       </div>
 
-      {/* Total spent */}
+      {/* Total spent — hero pleine couleur, suit l'accent de la section */}
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}>
-        <GlassCard className="relative overflow-hidden" padding={false}>
+        <div
+          className="relative overflow-hidden rounded-3xl p-6 shadow-section-strong"
+          style={{
+            background:
+              "linear-gradient(135deg, var(--accent-500), oklch(0.50 calc(var(--accent-c) + 0.04) calc(var(--accent-h) + 25)))",
+          }}
+        >
+          {/* Glossy highlight */}
           <div
-            className="absolute inset-0 opacity-20"
+            className="absolute inset-0 pointer-events-none opacity-50"
             style={{
               background:
-                "radial-gradient(ellipse at top left, oklch(0.55 0.25 264), transparent 60%)",
+                "radial-gradient(ellipse 80% 60% at top, oklch(1 0 0 / 22%), transparent 70%)",
             }}
           />
-          <div className="relative p-5">
-            <div className="flex items-center gap-2 mb-2">
-              <Wallet size={15} className="text-slate-300" />
-              <span className="text-sm text-slate-300 uppercase tracking-wider font-semibold">
+          {/* Decorative orb */}
+          <div
+            className="absolute -bottom-20 -right-20 w-56 h-56 rounded-full pointer-events-none"
+            style={{
+              background:
+                "radial-gradient(circle, oklch(1 0 0 / 18%), transparent 70%)",
+              filter: "blur(20px)",
+            }}
+          />
+          <div className="relative">
+            <div className="flex items-center gap-2 mb-3">
+              <Wallet size={16} className="text-white/80" />
+              <span className="text-xs text-white/80 uppercase tracking-widest font-bold">
                 Total dépensé
               </span>
             </div>
-            <p className="text-4xl font-bold text-slate-100 tabular-nums">
+            <p className="text-5xl font-bold text-white tabular-nums leading-none">
               {new Intl.NumberFormat("fr-FR", {
                 style: "currency",
                 currency,
@@ -147,7 +163,7 @@ export default function BudgetPage({ params }: BudgetPageProps) {
               }).format(totalSpent)}
             </p>
             {trip.totalBudget && (
-              <p className="text-sm text-slate-400 mt-1.5">
+              <p className="text-sm text-white/75 mt-3 font-medium">
                 sur{" "}
                 {new Intl.NumberFormat("fr-FR", {
                   style: "currency",
@@ -157,7 +173,7 @@ export default function BudgetPage({ params }: BudgetPageProps) {
               </p>
             )}
           </div>
-        </GlassCard>
+        </div>
       </motion.div>
 
       {/* Tabs */}
@@ -165,19 +181,19 @@ export default function BudgetPage({ params }: BudgetPageProps) {
         <TabsList className="grid grid-cols-3 w-full bg-foreground/4 border border-foreground/8 h-11">
           <TabsTrigger
             value="expenses"
-            className="text-sm data-[state=active]:bg-indigo-500/20 data-[state=active]:text-indigo-300"
+            className="text-sm data-[state=active]:bg-section-soft data-[state=active]:text-section"
           >
             Dépenses
           </TabsTrigger>
           <TabsTrigger
             value="balances"
-            className="text-sm data-[state=active]:bg-indigo-500/20 data-[state=active]:text-indigo-300"
+            className="text-sm data-[state=active]:bg-section-soft data-[state=active]:text-section"
           >
             Soldes
           </TabsTrigger>
           <TabsTrigger
             value="settlements"
-            className="text-sm data-[state=active]:bg-indigo-500/20 data-[state=active]:text-indigo-300"
+            className="text-sm data-[state=active]:bg-section-soft data-[state=active]:text-section"
           >
             Régler
           </TabsTrigger>
@@ -235,9 +251,9 @@ export default function BudgetPage({ params }: BudgetPageProps) {
       {/* FAB — Add expense (sits above bottom nav) */}
       <button
         onClick={handleOpenForm}
-        className="fixed right-4 z-30 w-14 h-14 rounded-full gradient-primary text-white shadow-lg shadow-indigo-500/30 flex items-center justify-center active:scale-95 hover:scale-105 transition-all"
+        className="fixed right-4 z-30 w-14 h-14 rounded-full gradient-primary text-white shadow-section-strong flex items-center justify-center active:scale-95 hover:scale-105 transition-all"
         style={{
-          bottom: "calc(env(safe-area-inset-bottom) + 5.5rem)",
+          bottom: "calc(env(safe-area-inset-bottom) + 7rem)",
         }}
         aria-label="Nouvelle dépense"
         title="Nouvelle dépense"

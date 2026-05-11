@@ -294,26 +294,32 @@ html, body {
  * Hardcoded semantic colors (matin/midi/soir, categories…) MUST NOT use
  * these — they have their own fixed Tailwind classes.
  */
-@utility text-accent {
+@utility text-section {
   color: var(--accent-400);
 }
-@utility text-accent-soft {
+@utility text-section-strong {
+  color: var(--accent-500);
+}
+@utility text-section-soft {
   color: var(--accent-300);
 }
-@utility bg-accent {
+@utility bg-section {
   background-color: var(--accent-500);
 }
-@utility bg-accent-soft {
+@utility bg-section-soft {
   background-color: var(--accent-soft);
 }
-@utility border-accent {
+@utility border-section {
   border-color: var(--accent-border);
 }
-@utility ring-accent {
+@utility ring-section {
   --tw-ring-color: var(--accent-glow);
 }
-@utility shadow-accent {
+@utility shadow-section {
   box-shadow: 0 10px 30px -10px var(--accent-glow);
+}
+@utility shadow-section-strong {
+  box-shadow: 0 14px 40px -8px var(--accent-glow);
 }
 
 /* ── Slate scale inversion for light mode ──────────────────────────────

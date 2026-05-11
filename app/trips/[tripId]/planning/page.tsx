@@ -206,7 +206,7 @@ export default function PlanningPage({ params }: PlanningPageProps) {
       {/* FAB */}
       <button
         onClick={() => openForCreate()}
-        className="fixed right-4 z-30 w-14 h-14 rounded-full gradient-primary text-white shadow-lg shadow-indigo-500/30 flex items-center justify-center active:scale-95 hover:scale-105 transition-all"
+        className="fixed right-4 z-30 w-14 h-14 rounded-full gradient-primary text-white shadow-section-strong flex items-center justify-center active:scale-95 hover:scale-105 transition-all"
         style={{ bottom: "calc(env(safe-area-inset-bottom) + 5.5rem)" }}
         aria-label="Nouvelle étape"
       >

@@ -172,7 +172,7 @@ export default function TripsPage() {
         {!loading && trips.length > 0 && (
           <Link
             href="/trips/new"
-            className="fixed right-4 z-40 w-14 h-14 rounded-full gradient-primary text-white shadow-lg shadow-indigo-500/30 flex items-center justify-center active:scale-95 hover:scale-105 transition-all"
+            className="fixed right-4 z-40 w-14 h-14 rounded-full gradient-primary text-white shadow-section-strong flex items-center justify-center active:scale-95 hover:scale-105 transition-all"
             style={{
               bottom: "calc(env(safe-area-inset-bottom) + 1.25rem)",
             }}
