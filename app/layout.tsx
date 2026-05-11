@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { PwaRegister } from "./pwa-register";
+import { IosInstallBanner } from "@/components/shared/IosInstallBanner";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -66,6 +67,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col">
         <PwaRegister />
+        <IosInstallBanner />
         {children}
       </body>
     </html>

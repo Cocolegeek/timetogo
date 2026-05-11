@@ -27,25 +27,44 @@ export function ShareModal({ open, onOpenChange, trip }: ShareModalProps) {
       ? `${window.location.origin}/join?code=${trip.shareCode}`
       : `/join?code=${trip.shareCode}`;
 
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      const el = document.createElement("textarea");
+      el.value = text;
+      el.style.cssText = "position:fixed;opacity:0;pointer-events:none";
+      document.body.appendChild(el);
+      el.focus();
+      el.select();
+      document.execCommand("copy");
+      document.body.removeChild(el);
+    }
+  };
+
   const copyUrl = async () => {
-    await navigator.clipboard.writeText(shareUrl);
+    await copyToClipboard(shareUrl);
     setCopiedUrl(true);
     setTimeout(() => setCopiedUrl(false), 2000);
   };
 
   const copyCode = async () => {
-    await navigator.clipboard.writeText(trip.shareCode);
+    await copyToClipboard(trip.shareCode);
     setCopiedCode(true);
     setTimeout(() => setCopiedCode(false), 2000);
   };
 
   const nativeShare = async () => {
     if (!navigator.share) return;
-    await navigator.share({
-      title: `Rejoins ${trip.name} sur Time to Go`,
-      text: `Utilise ce lien pour rejoindre notre voyage "${trip.name}"`,
-      url: shareUrl,
-    });
+    try {
+      await navigator.share({
+        title: `Rejoins ${trip.name} sur Time to Go`,
+        text: `Code : ${trip.shareCode} — ou utilise ce lien pour rejoindre "${trip.name}"`,
+        url: shareUrl,
+      });
+    } catch (e) {
+      if (e instanceof Error && e.name !== "AbortError") throw e;
+    }
   };
 
   const canShare = typeof navigator !== "undefined" && !!navigator.share;
