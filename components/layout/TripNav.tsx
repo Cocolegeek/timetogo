@@ -53,12 +53,15 @@ export function TripNav({ tripId, tripType }: TripNavProps) {
                 className={cn(
                   "flex-1 flex flex-col items-center justify-center gap-1.5 py-3 transition-all relative active:scale-95",
                   isActive
-                    ? "text-indigo-400"
+                    ? "text-accent"
                     : "text-slate-400 hover:text-slate-200"
                 )}
               >
                 {isActive && (
-                  <span className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-0.5 bg-indigo-400 rounded-b-full" />
+                  <span
+                    className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-0.5 rounded-b-full"
+                    style={{ backgroundColor: "var(--accent-400)" }}
+                  />
                 )}
                 <Icon size={26} strokeWidth={isActive ? 2.4 : 2} />
                 <span

@@ -151,9 +151,6 @@ html, body {
 
   /* Page mesh background — light mode */
   --mesh-bg: oklch(0.97 0.005 240);
-  --mesh-orb-1: oklch(0.65 0.20 264 / 22%);
-  --mesh-orb-2: oklch(0.70 0.22 295 / 18%);
-  --mesh-orb-3: oklch(0.65 0.18 200 / 14%);
   --mesh-grid: oklch(0.18 0.02 264);
 }
 .dark {
@@ -165,12 +162,90 @@ html, body {
   --glass-border-strong: oklch(1 0 0 / 12%);
   --glass-border-subtle: oklch(1 0 0 / 6%);
 
-  /* Page mesh background — dark mode (the original look) */
+  /* Page mesh background — dark mode */
   --mesh-bg: oklch(0.05 0.015 264);
-  --mesh-orb-1: oklch(0.45 0.22 264 / 40%);
-  --mesh-orb-2: oklch(0.40 0.28 295 / 30%);
-  --mesh-orb-3: oklch(0.50 0.20 264 / 20%);
   --mesh-grid: oklch(1 0 0);
+}
+
+/* ── Section accents ───────────────────────────────────────────────────
+ * `data-section` is set on <html> by SectionThemeController based on the
+ * route. Each block below overrides the accent hue/chroma and mesh-orb
+ * colors. Everything else (semantic colors: meal slots, expense categories,
+ * participant colors, status badges…) stays untouched.
+ *
+ * Variables exposed:
+ *   --accent-h           hue (oklch)
+ *   --accent-c           chroma (oklch)
+ *   --accent-500..-300   color stops
+ *   --accent-soft        20% alpha (chip bg)
+ *   --accent-border      30% alpha
+ *   --accent-glow        40% alpha (shadows, ring)
+ *   --mesh-orb-1/-2/-3   gradient orbs in the background
+ */
+:root {
+  /* Default: violet/pourpre — used for overview, neutral, budget */
+  --accent-h: 295;
+  --accent-c: 0.25;
+  --accent-500: oklch(0.60 var(--accent-c) var(--accent-h));
+  --accent-400: oklch(0.70 var(--accent-c) var(--accent-h));
+  --accent-300: oklch(0.78 calc(var(--accent-c) * 0.7) var(--accent-h));
+  --accent-soft: oklch(0.60 var(--accent-c) var(--accent-h) / 20%);
+  --accent-border: oklch(0.60 var(--accent-c) var(--accent-h) / 30%);
+  --accent-glow: oklch(0.60 var(--accent-c) var(--accent-h) / 40%);
+
+  /* Mesh orbs default — violet/pourpre */
+  --mesh-orb-1: oklch(0.65 0.22 295 / 22%);
+  --mesh-orb-2: oklch(0.70 0.24 305 / 18%);
+  --mesh-orb-3: oklch(0.65 0.20 280 / 14%);
+}
+.dark {
+  --mesh-orb-1: oklch(0.50 0.25 295 / 40%);
+  --mesh-orb-2: oklch(0.45 0.28 310 / 30%);
+  --mesh-orb-3: oklch(0.50 0.22 280 / 20%);
+}
+
+/* Budget — magenta/violet pop */
+[data-section="budget"] {
+  --accent-h: 305;
+  --accent-c: 0.27;
+  --mesh-orb-1: oklch(0.65 0.24 305 / 22%);
+  --mesh-orb-2: oklch(0.70 0.26 320 / 18%);
+  --mesh-orb-3: oklch(0.65 0.22 285 / 14%);
+}
+.dark [data-section="budget"],
+[data-section="budget"].dark,
+.dark[data-section="budget"] {
+  --mesh-orb-1: oklch(0.50 0.27 305 / 40%);
+  --mesh-orb-2: oklch(0.45 0.30 320 / 30%);
+  --mesh-orb-3: oklch(0.50 0.24 285 / 20%);
+}
+
+/* Planning — sky blue */
+[data-section="planning"] {
+  --accent-h: 230;
+  --accent-c: 0.20;
+  --mesh-orb-1: oklch(0.65 0.20 230 / 22%);
+  --mesh-orb-2: oklch(0.70 0.18 215 / 18%);
+  --mesh-orb-3: oklch(0.65 0.18 245 / 14%);
+}
+.dark[data-section="planning"] {
+  --mesh-orb-1: oklch(0.50 0.22 230 / 40%);
+  --mesh-orb-2: oklch(0.45 0.20 215 / 30%);
+  --mesh-orb-3: oklch(0.50 0.20 245 / 20%);
+}
+
+/* Menus — warm rose/amber */
+[data-section="menus"] {
+  --accent-h: 18;
+  --accent-c: 0.22;
+  --mesh-orb-1: oklch(0.65 0.22 18 / 22%);
+  --mesh-orb-2: oklch(0.72 0.20 40 / 18%);
+  --mesh-orb-3: oklch(0.65 0.20 350 / 14%);
+}
+.dark[data-section="menus"] {
+  --mesh-orb-1: oklch(0.55 0.24 18 / 40%);
+  --mesh-orb-2: oklch(0.55 0.22 40 / 30%);
+  --mesh-orb-3: oklch(0.50 0.22 350 / 20%);
 }
 
 /* ── Custom Glass Utilities ───────────────────────────────────────────── */
@@ -196,14 +271,49 @@ html, body {
 }
 
 @utility gradient-primary {
-  background: linear-gradient(135deg, oklch(0.55 0.25 264), oklch(0.50 0.28 295));
+  background: linear-gradient(
+    135deg,
+    oklch(0.55 var(--accent-c) var(--accent-h)),
+    oklch(0.50 calc(var(--accent-c) + 0.03) calc(var(--accent-h) + 25))
+  );
 }
 
 @utility gradient-text {
-  background: linear-gradient(135deg, oklch(0.75 0.18 264), oklch(0.70 0.22 295));
+  background: linear-gradient(
+    135deg,
+    oklch(0.78 calc(var(--accent-c) * 0.7) var(--accent-h)),
+    oklch(0.72 calc(var(--accent-c) * 0.85) calc(var(--accent-h) + 20))
+  );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+/* ── Section-aware accent utilities ────────────────────────────────────
+ * Use these on elements that should follow the current section color.
+ * Hardcoded semantic colors (matin/midi/soir, categories…) MUST NOT use
+ * these — they have their own fixed Tailwind classes.
+ */
+@utility text-accent {
+  color: var(--accent-400);
+}
+@utility text-accent-soft {
+  color: var(--accent-300);
+}
+@utility bg-accent {
+  background-color: var(--accent-500);
+}
+@utility bg-accent-soft {
+  background-color: var(--accent-soft);
+}
+@utility border-accent {
+  border-color: var(--accent-border);
+}
+@utility ring-accent {
+  --tw-ring-color: var(--accent-glow);
+}
+@utility shadow-accent {
+  box-shadow: 0 10px 30px -10px var(--accent-glow);
 }
 
 /* ── Slate scale inversion for light mode ──────────────────────────────
