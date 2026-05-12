@@ -15,9 +15,12 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://voyou.app";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: "Voyou",
-  description: "L'application de voyage ultime — Budget, Planning, Menus",
+  description: "Ton complice de voyage — Budget, Planning, Menus",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -28,6 +31,19 @@ export const metadata: Metadata = {
     icon: "/icons/icon.png",
     apple: [{ url: "/icons/icon.png", sizes: "192x192" }],
     shortcut: "/icons/icon.png",
+  },
+  openGraph: {
+    title: "Voyou",
+    description: "Ton complice de voyage — Budget, Planning, Menus",
+    url: siteUrl,
+    siteName: "Voyou",
+    locale: "fr_FR",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Voyou",
+    description: "Ton complice de voyage — Budget, Planning, Menus",
   },
 };
 
