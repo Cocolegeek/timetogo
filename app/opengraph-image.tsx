@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
-export const alt = "Voyou — L'application de voyage ultime";
+export const alt = "Voyou — Ton complice de voyage";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -77,7 +77,7 @@ export default async function OpengraphImage() {
             letterSpacing: "-0.01em",
           }}
         >
-          Budget, planning et menus — pour des voyages sans embrouilles.
+          Ton complice de voyage — Budget, planning et menus sans embrouilles.
         </div>
 
         <div
@@ -87,7 +87,7 @@ export default async function OpengraphImage() {
             marginTop: "48px",
           }}
         >
-          {["Budget partagé", "Planning", "Menus", "Tricount"].map((tag) => (
+          {["Budget partagé", "Planning", "Menus"].map((tag) => (
             <div
               key={tag}
               style={{
