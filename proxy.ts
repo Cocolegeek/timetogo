@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
-const PUBLIC_ROUTES = ["/login", "/auth/callback"];
+const PUBLIC_ROUTES = ["/login", "/auth/callback", "/join", "/consent"];
 const CONSENT_COOKIE = "gdpr_ok";
 
 export default async function proxy(req: NextRequest) {
@@ -41,7 +41,7 @@ export default async function proxy(req: NextRequest) {
   if (!isPublic && !user) {
     const loginUrl = req.nextUrl.clone();
     loginUrl.pathname = "/login";
-    loginUrl.searchParams.set("redirect_to", pathname);
+    loginUrl.searchParams.set("redirect_to", pathname + req.nextUrl.search);
     return NextResponse.redirect(loginUrl);
   }
 
