@@ -1,7 +1,7 @@
 {
   "name": "Voyou",
   "short_name": "Voyou",
-  "description": "L'application de voyage ultime — Budget, Planning, Menus",
+  "description": "Ton complice de voyage — Budget, Planning, Menus",
   "start_url": "/trips",
   "display": "standalone",
   "background_color": "#0a0c14",
@@ -18,9 +18,17 @@
       "src": "/icons/icon.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
+  "screenshots": [],
   "categories": ["travel", "finance", "productivity"],
-  "lang": "fr"
+  "lang": "fr",
+  "dir": "ltr"
 }

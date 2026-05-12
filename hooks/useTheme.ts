@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 
 export type Theme = "light" | "dark";
 
-const STORAGE_KEY = "time-to-go-theme";
+const STORAGE_KEY = "voyou-theme";
 
 /** Read the current theme from <html>.classList — kept in sync with the
  *  no-FOUC inline script that runs before React. */

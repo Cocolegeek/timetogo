@@ -25,7 +25,9 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
   },
   icons: {
-    apple: "/icons/icon.png",
+    icon: "/icons/icon.png",
+    apple: [{ url: "/icons/icon.png", sizes: "192x192" }],
+    shortcut: "/icons/icon.png",
   },
 };
 
@@ -42,7 +44,7 @@ export const viewport: Viewport = {
 const themeScript = `
   (function() {
     try {
-      var t = localStorage.getItem('time-to-go-theme');
+      var t = localStorage.getItem('voyou-theme') || localStorage.getItem('time-to-go-theme');
       if (t === 'light') {
         document.documentElement.classList.remove('dark');
       } else {
