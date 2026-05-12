@@ -8,7 +8,6 @@ const ExpenseForm = dynamic(() => import("@/components/budget/ExpenseForm").then
 import { ExpenseList } from "@/components/budget/ExpenseList";
 import { Spinner } from "@/components/shared/Spinner";
 import { SectionLabel } from "@/components/shared/SectionLabel";
-import { BackHomeBar } from "@/components/shared/BackHomeBar";
 import { BalanceSummary } from "@/components/budget/BalanceSummary";
 import { DebtSettlements } from "@/components/budget/DebtSettlements";
 import { MyBalanceCard } from "@/components/budget/MyBalanceCard";
@@ -126,7 +125,7 @@ export default function BudgetPage({ params }: BudgetPageProps) {
     >
       {/* ── Anchored top section — never scrolls ── */}
       <div className="shrink-0">
-        <BackHomeBar />
+        
 
         {/* Hero: total dépensé */}
         <motion.div

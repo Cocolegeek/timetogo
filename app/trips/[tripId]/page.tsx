@@ -4,7 +4,6 @@ import { use, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
-  ArrowLeft,
   Wallet,
   Map,
   Share2,
@@ -106,14 +105,8 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
 
   return (
     <div className="space-y-5">
-      {/* Header — back / actions */}
-      <div className="flex items-center justify-between -mt-1">
-        <Link
-          href="/trips"
-          className="p-2 -ml-2 rounded-xl hover:bg-foreground/8 active:bg-foreground/12 text-slate-400 transition-all"
-        >
-          <ArrowLeft size={20} />
-        </Link>
+      {/* Header — actions */}
+      <div className="flex items-center justify-end -mt-1">
         <div className="flex items-center gap-1">
           <button
             onClick={() => setEditOpen(true)}

@@ -18,7 +18,7 @@ const ShareModal = dynamic(
   { ssr: false }
 );
 import { Spinner } from "@/components/shared/Spinner";
-import { UserMenu } from "@/components/layout/UserMenu";
+import { AppHeader } from "@/components/layout/AppHeader";
 import { useTrips } from "@/hooks/useTrip";
 import { useProfile } from "@/hooks/useProfile";
 import { PwaInstallBanner } from "@/components/shared/PwaInstallBanner";
@@ -110,18 +110,7 @@ export default function TripsPage() {
       <MeshGradientBackground />
 
       <div className="min-h-screen">
-        {/* ─── Sticky header — minimal brand bar ─────────────────────── */}
-        <header
-          className="sticky top-0 z-30 glass-strong border-b border-foreground/8"
-          style={{ paddingTop: "env(safe-area-inset-top)" }}
-        >
-          <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
-            <h1 className="text-xl font-bold gradient-text leading-none">
-              Voyou
-            </h1>
-            <UserMenu />
-          </div>
-        </header>
+        <AppHeader />
 
         <PwaInstallBanner />
 

@@ -1,4 +1,5 @@
 import { MeshGradientBackground } from "@/components/layout/MeshGradientBackground";
+import { AppHeader } from "@/components/layout/AppHeader";
 import { TripNav } from "@/components/layout/TripNav";
 import { createClient } from "@/lib/supabase/server";
 import type { TripType } from "@/types";
@@ -18,10 +19,11 @@ export default async function TripLayout({ children, params }: TripLayoutProps) 
     <>
       <MeshGradientBackground />
       <div className="min-h-screen flex flex-col">
+        <AppHeader />
         <main
           className="flex-1 max-w-3xl w-full mx-auto px-4"
           style={{
-            paddingTop: "calc(env(safe-area-inset-top) + 1.25rem)",
+            paddingTop: "1.25rem",
             paddingBottom: "calc(var(--bottom-nav-top) + 1.5rem)",
           }}
         >

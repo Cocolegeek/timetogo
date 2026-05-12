@@ -1,10 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { motion } from "framer-motion";
 import {
-  ArrowLeft,
   Save,
   Loader2,
   User,
@@ -13,6 +11,7 @@ import {
   Sun,
   LogOut,
 } from "lucide-react";
+import { AppHeader } from "@/components/layout/AppHeader";
 import { MeshGradientBackground } from "@/components/layout/MeshGradientBackground";
 import { Spinner } from "@/components/shared/Spinner";
 import { GlassCard } from "@/components/layout/GlassCard";
@@ -66,22 +65,7 @@ export default function SettingsPage() {
     <>
       <MeshGradientBackground />
       <div className="min-h-screen">
-        {/* Header */}
-        <header className="glass-strong border-b border-foreground/8 sticky top-0 z-40">
-          <div
-            className="max-w-lg mx-auto px-4 py-4 flex items-center gap-3"
-            style={{ paddingTop: "calc(env(safe-area-inset-top) + 1rem)" }}
-          >
-            <Link
-              href="/trips"
-              className="p-2 -ml-1 rounded-xl hover:bg-foreground/8 active:bg-foreground/12 text-slate-400 hover:text-slate-200 transition-all"
-              aria-label="Retour"
-            >
-              <ArrowLeft size={20} />
-            </Link>
-            <h1 className="text-xl font-bold text-slate-100">Paramètres</h1>
-          </div>
-        </header>
+        <AppHeader />
 
         <main
           className="max-w-lg mx-auto px-4 py-5 space-y-7"

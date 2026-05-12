@@ -8,7 +8,6 @@ import { GlassCard } from "@/components/layout/GlassCard";
 import { DayHeader } from "@/components/shared/DayHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Spinner } from "@/components/shared/Spinner";
-import { BackHomeBar } from "@/components/shared/BackHomeBar";
 import dynamic from "next/dynamic";
 const MealEditDialog = dynamic(() => import("@/components/menus/MealEditDialog").then(m => ({ default: m.MealEditDialog })), { ssr: false });
 import { useTrip } from "@/hooks/useTrip";
@@ -72,7 +71,7 @@ export default function MenusPage({ params }: MenusPageProps) {
 
   return (
     <div className="space-y-4">
-      <BackHomeBar />
+      
 
       {loading ? (
         <div className="flex items-center justify-center py-20">

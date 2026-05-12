@@ -17,7 +17,6 @@ import { openLocation } from "@/lib/map-apps";
 import { ConfirmDeleteDialog } from "@/components/shared/ConfirmDeleteDialog";
 import { DayHeader } from "@/components/shared/DayHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
-import { BackHomeBar } from "@/components/shared/BackHomeBar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -119,7 +118,7 @@ export default function PlanningPage({ params }: PlanningPageProps) {
 
   return (
     <div className="space-y-5">
-      <BackHomeBar />
+      
 
       {dates.length === 0 ? (
         <EmptyState
