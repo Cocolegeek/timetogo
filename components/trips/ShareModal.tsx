@@ -55,8 +55,8 @@ export function ShareModal({ open, onOpenChange, trip }: ShareModalProps) {
     if (!navigator.share) return;
     try {
       await navigator.share({
-        title: `Rejoins la bande sur "${trip.name}" 🎒`,
-        text: `Hey ! Je t'invite sur Voyou pour "${trip.name}". Code : ${trip.shareCode}`,
+        title: "Voyou — Rejoins la bande",
+        text: `Rejoins la bande sur Voyou pour "${trip.name}" 🎒`,
         url: shareUrl,
       });
     } catch (e) {

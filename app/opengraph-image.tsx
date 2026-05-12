@@ -1,11 +1,15 @@
 import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
-export const alt = "Voyou — Ton complice de voyage";
+export const alt = "Voyou — Rejoins la bande";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://voyou.app";
+
 export default async function OpengraphImage() {
+  const iconUrl = `${SITE_URL}/icons/icon.png`;
+
   return new ImageResponse(
     (
       <div
@@ -13,97 +17,91 @@ export default async function OpengraphImage() {
           height: "100%",
           width: "100%",
           display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          alignItems: "flex-start",
-          padding: "80px",
+          alignItems: "center",
+          padding: "0 90px",
+          gap: "70px",
           background:
-            "radial-gradient(ellipse 80% 60% at 20% 0%, #4f6bff33 0%, transparent 60%), radial-gradient(ellipse 70% 50% at 100% 100%, #8b5cf633 0%, transparent 60%), #0a0c14",
+            "radial-gradient(ellipse 70% 60% at 25% 30%, rgba(99,102,241,0.30) 0%, transparent 60%), radial-gradient(ellipse 60% 50% at 85% 90%, rgba(139,92,246,0.25) 0%, transparent 60%), #0a0c14",
           color: "#ffffff",
           fontFamily: "system-ui, -apple-system, sans-serif",
         }}
       >
+        {/* ── Logo oYo ── */}
         <div
           style={{
             display: "flex",
-            alignItems: "center",
-            gap: "20px",
-            marginBottom: "32px",
+            width: 280,
+            height: 280,
+            borderRadius: 60,
+            overflow: "hidden",
+            flexShrink: 0,
+            boxShadow:
+              "0 30px 80px -20px rgba(99,102,241,0.55), 0 0 0 1px rgba(255,255,255,0.06)",
+          }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={iconUrl}
+            alt="Voyou"
+            width={280}
+            height={280}
+            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+          />
+        </div>
+
+        {/* ── Texte ── */}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 18,
+            flex: 1,
+            minWidth: 0,
           }}
         >
           <div
             style={{
-              fontSize: "44px",
-              filter: "drop-shadow(0 4px 16px rgba(79,107,255,0.4))",
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+              fontSize: 24,
+              fontWeight: 700,
+              color: "#a5b4fc",
+              textTransform: "uppercase",
+              letterSpacing: "0.18em",
             }}
           >
-            ✈️
+            <span>✈️</span>
+            <span>voyou.app</span>
           </div>
+
           <div
             style={{
-              fontSize: "28px",
+              fontSize: 96,
+              fontWeight: 900,
+              lineHeight: 1,
+              letterSpacing: "-0.04em",
+              background:
+                "linear-gradient(135deg, #ffffff 0%, #c5cdfa 50%, #b794ff 100%)",
+              backgroundClip: "text",
+              color: "transparent",
+            }}
+          >
+            Rejoins la bande
+          </div>
+
+          <div
+            style={{
+              fontSize: 32,
               fontWeight: 500,
-              color: "#a0a8c0",
-              letterSpacing: "0.02em",
+              color: "#d4d8e8",
+              lineHeight: 1.3,
+              letterSpacing: "-0.01em",
+              marginTop: 6,
             }}
           >
-            voyou.app
+            Budget, planning, menus — voyages entre potes sans embrouilles.
           </div>
-        </div>
-
-        <div
-          style={{
-            fontSize: "180px",
-            fontWeight: 900,
-            lineHeight: 0.95,
-            letterSpacing: "-0.04em",
-            background:
-              "linear-gradient(135deg, #ffffff 0%, #c5cdfa 50%, #b794ff 100%)",
-            backgroundClip: "text",
-            color: "transparent",
-            marginBottom: "32px",
-          }}
-        >
-          Voyou
-        </div>
-
-        <div
-          style={{
-            fontSize: "40px",
-            fontWeight: 500,
-            color: "#d4d8e8",
-            lineHeight: 1.2,
-            maxWidth: "900px",
-            letterSpacing: "-0.01em",
-          }}
-        >
-          Ton complice de voyage — Budget, planning et menus sans embrouilles.
-        </div>
-
-        <div
-          style={{
-            display: "flex",
-            gap: "16px",
-            marginTop: "48px",
-          }}
-        >
-          {["Budget partagé", "Planning", "Menus"].map((tag) => (
-            <div
-              key={tag}
-              style={{
-                display: "flex",
-                padding: "12px 24px",
-                borderRadius: "999px",
-                border: "1px solid rgba(255,255,255,0.15)",
-                background: "rgba(255,255,255,0.05)",
-                color: "#e0e4f0",
-                fontSize: "22px",
-                fontWeight: 500,
-              }}
-            >
-              {tag}
-            </div>
-          ))}
         </div>
       </div>
     ),

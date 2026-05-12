@@ -39,15 +39,15 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: "Voyou",
-    title: "Voyou — Ton complice de voyage",
-    description: "Budget partagé, planning et menus — pour des voyages entre potes sans embrouilles.",
+    title: "Voyou — Rejoins la bande",
+    description: "Budget, planning, menus — voyages entre potes sans embrouilles.",
     locale: "fr_FR",
     url: siteUrl,
   },
   twitter: {
     card: "summary_large_image",
-    title: "Voyou — Ton complice de voyage",
-    description: "Budget partagé, planning et menus — pour des voyages entre potes sans embrouilles.",
+    title: "Voyou — Rejoins la bande",
+    description: "Budget, planning, menus — voyages entre potes sans embrouilles.",
   },
 };
 
