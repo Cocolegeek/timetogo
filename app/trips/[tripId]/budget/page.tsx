@@ -12,6 +12,7 @@ import { BackHomeBar } from "@/components/shared/BackHomeBar";
 import { BalanceSummary } from "@/components/budget/BalanceSummary";
 import { DebtSettlements } from "@/components/budget/DebtSettlements";
 import { MyBalanceCard } from "@/components/budget/MyBalanceCard";
+import { AllSettledEmpty } from "@/components/budget/AllSettledEmpty";
 import { useTrip } from "@/hooks/useTrip";
 import { useBudget } from "@/hooks/useBudget";
 import { useDebts } from "@/hooks/useDebts";
@@ -206,23 +207,29 @@ export default function BudgetPage({ params }: BudgetPageProps) {
 
           {activeTab === "balances" && (
             <div className="space-y-5">
-              {myParticipant && myBalance && (
-                <MyBalanceCard
-                  balance={myBalance}
-                  participant={myParticipant}
-                  currency={currency}
-                />
+              {settlements.length === 0 ? (
+                <AllSettledEmpty />
+              ) : (
+                <>
+                  {myParticipant && myBalance && (
+                    <MyBalanceCard
+                      balance={myBalance}
+                      participant={myParticipant}
+                      currency={currency}
+                    />
+                  )}
+                  <div>
+                    <SectionLabel count={balances.length}>
+                      {myParticipant ? "Tous les soldes" : "Soldes"}
+                    </SectionLabel>
+                    <BalanceSummary
+                      balances={balances}
+                      participants={participants}
+                      currency={currency}
+                    />
+                  </div>
+                </>
               )}
-              <div>
-                <SectionLabel count={balances.length}>
-                  {myParticipant ? "Tous les soldes" : "Soldes"}
-                </SectionLabel>
-                <BalanceSummary
-                  balances={balances}
-                  participants={participants}
-                  currency={currency}
-                />
-              </div>
             </div>
           )}
 
