@@ -9,25 +9,24 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/icons/icon.png",
+      "src": "/pwa-icon?size=192",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icons/icon.png",
+      "src": "/pwa-icon?size=512",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icons/icon.png",
+      "src": "/pwa-icon?size=512",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
     }
   ],
-  "screenshots": [],
   "categories": ["travel", "finance", "productivity"],
   "lang": "fr",
   "dir": "ltr"

@@ -28,9 +28,9 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
   },
   icons: {
-    icon: "/icons/icon.png",
-    apple: [{ url: "/icons/icon.png", sizes: "192x192" }],
-    shortcut: "/icons/icon.png",
+    icon: [{ url: "/pwa-icon?size=192", sizes: "192x192", type: "image/png" }],
+    apple: [{ url: "/pwa-icon?size=192", sizes: "192x192", type: "image/png" }],
+    shortcut: "/pwa-icon?size=192",
   },
   openGraph: {
     title: "Voyou",
