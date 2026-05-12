@@ -108,11 +108,8 @@ export function useTrips() {
     const user = session?.user;
     if (!user) throw new Error("Not authenticated");
 
-    // Diagnostic : compare ce que la session locale dit vs ce que Postgres voit
-    const { data: serverUid } = await supabase.rpc("debug_whoami").catch(() => ({ data: null }));
     console.log("[trip-create] session.user.id:", user.id);
     console.log("[trip-create] access_token present:", !!session.access_token);
-    console.log("[trip-create] server auth.uid():", serverUid);
 
     const { data: trip, error: tripError } = await supabase
       .from("trips")
