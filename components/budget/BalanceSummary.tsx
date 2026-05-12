@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
+import { cn, firstName } from "@/lib/utils";
 import { formatCurrency } from "@/lib/format-currency";
 import type { Balance, Participant } from "@/types";
 
@@ -9,10 +9,6 @@ interface BalanceSummaryProps {
   balances: Balance[];
   participants: Participant[];
   currency: string;
-}
-
-function firstName(name: string): string {
-  return name.trim().split(/\s+/)[0] ?? name;
 }
 
 export function BalanceSummary({

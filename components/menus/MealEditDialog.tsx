@@ -18,7 +18,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { SLOT_CONFIG } from "@/lib/meals/slots";
 import { CATEGORY_CONFIG, CATEGORY_ORDER } from "@/lib/meals/categories";
 import { cn } from "@/lib/utils";

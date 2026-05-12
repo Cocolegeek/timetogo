@@ -54,8 +54,6 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
     updateTrip,
     setMyParticipant,
     addParticipant,
-    updateParticipant,
-    deleteParticipant,
   } = useTrip(tripId);
   const { expenses, totalSpent } = useBudget(tripId);
   const { items: itineraryItems } = useItinerary(tripId);

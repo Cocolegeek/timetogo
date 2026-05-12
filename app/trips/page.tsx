@@ -25,7 +25,7 @@ import { PwaInstallBanner } from "@/components/shared/PwaInstallBanner";
 import { daysUntil } from "@/lib/format-date";
 import { cn } from "@/lib/utils";
 import { isVoyage } from "@/lib/trip-features";
-import type { Trip, VoyageTrip, GroupTrip } from "@/types";
+import type { VoyageTrip, GroupTrip } from "@/types";
 
 export default function TripsPage() {
   const { trips, loading, refetch: refetchTrips, deleteTrip } = useTrips();

@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@/lib/utils";
+import { cn, firstName } from "@/lib/utils";
 import { formatCurrency } from "@/lib/format-currency";
 import type { Balance, Participant } from "@/types";
 
@@ -8,10 +8,6 @@ interface MyBalanceCardProps {
   balance: Balance;
   participant: Participant;
   currency: string;
-}
-
-function firstName(name: string) {
-  return name.trim().split(/\s+/)[0] ?? name;
 }
 
 export function MyBalanceCard({ balance, participant, currency }: MyBalanceCardProps) {
