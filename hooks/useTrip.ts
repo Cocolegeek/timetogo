@@ -108,68 +108,32 @@ export function useTrips() {
     const user = session?.user;
     if (!user) throw new Error("Not authenticated");
 
-    console.log("[trip-create] session.user.id:", user.id);
-    console.log("[trip-create] access_token present:", !!session.access_token);
-
-    const whoami = await supabase.rpc("whoami");
-    console.log("[trip-create] whoami result:", whoami);
-
-    const { data: trip, error: tripError } = await supabase
-      .from("trips")
-      .insert({
-        name: data.name,
-        type: data.type,
-        destination: data.type === "trip" ? (data.destination ?? null) : null,
-        emoji: data.emoji,
-        currency: data.currency,
-        start_date: data.startDate ?? null,
-        end_date: data.endDate ?? null,
-        total_budget: data.totalBudget ?? null,
-        share_code: generateShareCode(),
-        owner_id: user.id,
-      })
-      .select()
-      .single();
-
-    if (tripError || !trip) throw tripError;
-
-    const { error: memberError } = await supabase.from("trip_members").insert({
-      trip_id: trip.id, user_id: user.id, participant_id: null, role: "owner",
+    const { data: tripId, error: rpcError } = await supabase.rpc("create_trip_with_owner", {
+      p_name: data.name,
+      p_type: data.type,
+      p_destination: data.type === "trip" ? (data.destination ?? null) : null,
+      p_emoji: data.emoji,
+      p_currency: data.currency,
+      p_start_date: data.startDate ?? null,
+      p_end_date: data.endDate ?? null,
+      p_total_budget: data.totalBudget ?? null,
+      p_share_code: generateShareCode(),
+      p_participants: data.participants.map((p) => ({
+        name: p.name,
+        color: p.color,
+        avatar: p.avatar ?? null,
+      })),
     });
-    if (memberError) throw memberError;
 
-    const { data: insertedParticipants, error: participantsError } = await supabase
-      .from("participants")
-      .insert(
-        data.participants.map((p) => {
-          const row: { trip_id: string; name: string; color: string; avatar?: string } = {
-            trip_id: trip.id,
-            name: p.name,
-            color: p.color,
-          };
-          if (p.avatar) row.avatar = p.avatar;
-          return row;
-        }),
-      )
-      .select();
-    if (participantsError) throw participantsError;
-
-    const { data: profile } = await supabase.from("profiles").select("name").eq("id", user.id).single();
-    const matched = insertedParticipants?.find(
-      (p) => p.name.toLowerCase() === (profile?.name ?? "").toLowerCase()
-    );
-    if (matched) {
-      await supabase.from("trip_members").update({ participant_id: matched.id })
-        .eq("trip_id", trip.id).eq("user_id", user.id);
-    }
+    if (rpcError || !tripId) throw rpcError ?? new Error("Trip creation failed");
 
     if (data.type === "trip" && data.startDate && data.endDate) {
-      const mealRows = buildDefaultMealRows(trip.id, data.startDate, data.endDate);
+      const mealRows = buildDefaultMealRows(tripId as string, data.startDate, data.endDate);
       if (mealRows.length > 0) await supabase.from("meals").insert(mealRows);
     }
 
     await fetchTrips();
-    return trip.id;
+    return tripId as string;
   };
 
   const deleteTrip = async (id: string): Promise<void> => {
