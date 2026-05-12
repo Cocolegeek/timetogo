@@ -111,6 +111,9 @@ export function useTrips() {
     console.log("[trip-create] session.user.id:", user.id);
     console.log("[trip-create] access_token present:", !!session.access_token);
 
+    const whoami = await supabase.rpc("whoami");
+    console.log("[trip-create] whoami result:", whoami);
+
     const { data: trip, error: tripError } = await supabase
       .from("trips")
       .insert({
