@@ -6,10 +6,8 @@ import { motion } from "framer-motion";
 import {
   Wallet,
   Map,
-  Share2,
   UserCircle2,
   ChevronDown,
-  Pencil,
   Clock,
 } from "lucide-react";
 import dynamic from "next/dynamic";
@@ -17,16 +15,8 @@ import { GlassCard } from "@/components/layout/GlassCard";
 import { getBudgetColor, getBudgetTextColor } from "@/lib/budget/budget-color";
 import { IdentityPicker } from "@/components/trips/IdentityPicker";
 
-const ShareModal = dynamic(
-  () => import("@/components/trips/ShareModal").then((m) => ({ default: m.ShareModal })),
-  { ssr: false }
-);
 const BudgetEditDialog = dynamic(
   () => import("@/components/trips/BudgetEditDialog").then((m) => ({ default: m.BudgetEditDialog })),
-  { ssr: false }
-);
-const TripEditDialog = dynamic(
-  () => import("@/components/trips/TripEditDialog").then((m) => ({ default: m.TripEditDialog })),
   { ssr: false }
 );
 import { ParticipantAvatar } from "@/components/shared/ParticipantAvatar";
@@ -70,10 +60,8 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
   const { expenses, totalSpent } = useBudget(tripId);
   const { items: itineraryItems } = useItinerary(tripId);
 
-  const [shareOpen, setShareOpen] = useState(false);
   const [identityOpen, setIdentityOpen] = useState(false);
   const [budgetOpen, setBudgetOpen] = useState(false);
-  const [editOpen, setEditOpen] = useState(false);
 
   if (!trip) {
     return (
@@ -105,26 +93,6 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
 
   return (
     <div className="space-y-5">
-      {/* Header — actions */}
-      <div className="flex items-center justify-end -mt-1">
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => setEditOpen(true)}
-            className="p-2 rounded-xl hover:bg-foreground/8 active:bg-foreground/12 text-slate-400 transition-all"
-            title="Modifier le voyage"
-          >
-            <Pencil size={18} />
-          </button>
-          <button
-            onClick={() => setShareOpen(true)}
-            className="p-2 rounded-xl hover:bg-foreground/8 active:bg-foreground/12 text-section-soft transition-all"
-            title="Partager"
-          >
-            <Share2 size={18} />
-          </button>
-        </div>
-      </div>
-
       {/* Trip title */}
       <motion.div
         initial={{ opacity: 0, y: -8 }}
@@ -360,20 +328,6 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
         )}
       </div>
 
-      {/* Trip Edit */}
-      <TripEditDialog
-        open={editOpen}
-        onOpenChange={setEditOpen}
-        trip={trip}
-        onSaveTrip={async (data) => {
-          await updateTrip(data);
-        }}
-        onSaveIcon={(iconUrl) => updateTrip({ iconUrl })}
-        onAddParticipant={addParticipant}
-        onUpdateParticipant={updateParticipant}
-        onDeleteParticipant={deleteParticipant}
-      />
-
       {/* Budget Edit */}
       <BudgetEditDialog
         open={budgetOpen}
@@ -385,9 +339,6 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
           await updateTrip({ totalBudget: val });
         }}
       />
-
-      {/* Share Modal */}
-      <ShareModal open={shareOpen} onOpenChange={setShareOpen} trip={trip} />
 
       {/* Identity Dialog */}
       <Dialog open={identityOpen} onOpenChange={setIdentityOpen}>
