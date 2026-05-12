@@ -178,11 +178,9 @@ html, body {
   --mesh-grid: oklch(1 0 0);
 }
 
-/* ── Section accents ───────────────────────────────────────────────────
- * `data-section` is set on <html> by SectionThemeController based on the
- * route. Each block below overrides the accent hue/chroma and mesh-orb
- * colors. Everything else (semantic colors: meal slots, expense categories,
- * participant colors, status badges…) stays untouched.
+/* ── Voyou brand accent (single color across the whole app) ────────────
+ * Couleur unique = indigo Voyou (#6366f1 ≈ oklch(0.61 0.20 275)). Plus
+ * de variation par onglet : tout reste cohérent visuellement.
  *
  * Variables exposed:
  *   --accent-h           hue (oklch)
@@ -194,9 +192,8 @@ html, body {
  *   --mesh-orb-1/-2/-3   gradient orbs in the background
  */
 :root {
-  /* Default: violet/pourpre — used for overview, neutral, budget */
-  --accent-h: 295;
-  --accent-c: 0.25;
+  --accent-h: 270;
+  --accent-c: 0.22;
   --accent-500: oklch(0.60 var(--accent-c) var(--accent-h));
   --accent-400: oklch(0.70 var(--accent-c) var(--accent-h));
   --accent-300: oklch(0.78 calc(var(--accent-c) * 0.7) var(--accent-h));
@@ -204,59 +201,15 @@ html, body {
   --accent-border: oklch(0.60 var(--accent-c) var(--accent-h) / 30%);
   --accent-glow: oklch(0.60 var(--accent-c) var(--accent-h) / 40%);
 
-  /* Mesh orbs default — violet/pourpre */
-  --mesh-orb-1: oklch(0.65 0.22 295 / 22%);
-  --mesh-orb-2: oklch(0.70 0.24 305 / 18%);
-  --mesh-orb-3: oklch(0.65 0.20 280 / 14%);
+  /* Mesh orbs — variations subtiles autour de l'indigo Voyou */
+  --mesh-orb-1: oklch(0.65 0.22 270 / 22%);
+  --mesh-orb-2: oklch(0.70 0.20 285 / 16%);
+  --mesh-orb-3: oklch(0.65 0.18 255 / 12%);
 }
 .dark {
-  --mesh-orb-1: oklch(0.50 0.25 295 / 40%);
-  --mesh-orb-2: oklch(0.45 0.28 310 / 30%);
-  --mesh-orb-3: oklch(0.50 0.22 280 / 20%);
-}
-
-/* Budget — magenta/violet pop */
-[data-section="budget"] {
-  --accent-h: 305;
-  --accent-c: 0.27;
-  --mesh-orb-1: oklch(0.65 0.24 305 / 22%);
-  --mesh-orb-2: oklch(0.70 0.26 320 / 18%);
-  --mesh-orb-3: oklch(0.65 0.22 285 / 14%);
-}
-.dark [data-section="budget"],
-[data-section="budget"].dark,
-.dark[data-section="budget"] {
-  --mesh-orb-1: oklch(0.50 0.27 305 / 40%);
-  --mesh-orb-2: oklch(0.45 0.30 320 / 30%);
-  --mesh-orb-3: oklch(0.50 0.24 285 / 20%);
-}
-
-/* Planning — sky blue */
-[data-section="planning"] {
-  --accent-h: 230;
-  --accent-c: 0.20;
-  --mesh-orb-1: oklch(0.65 0.20 230 / 22%);
-  --mesh-orb-2: oklch(0.70 0.18 215 / 18%);
-  --mesh-orb-3: oklch(0.65 0.18 245 / 14%);
-}
-.dark[data-section="planning"] {
-  --mesh-orb-1: oklch(0.50 0.22 230 / 40%);
-  --mesh-orb-2: oklch(0.45 0.20 215 / 30%);
-  --mesh-orb-3: oklch(0.50 0.20 245 / 20%);
-}
-
-/* Menus — jaune doré discret */
-[data-section="menus"] {
-  --accent-h: 90;
-  --accent-c: 0.16;
-  --mesh-orb-1: oklch(0.78 0.16 90 / 18%);
-  --mesh-orb-2: oklch(0.80 0.14 75 / 14%);
-  --mesh-orb-3: oklch(0.75 0.13 105 / 12%);
-}
-.dark[data-section="menus"] {
-  --mesh-orb-1: oklch(0.65 0.18 90 / 30%);
-  --mesh-orb-2: oklch(0.62 0.16 75 / 22%);
-  --mesh-orb-3: oklch(0.58 0.14 105 / 16%);
+  --mesh-orb-1: oklch(0.50 0.25 270 / 40%);
+  --mesh-orb-2: oklch(0.45 0.22 285 / 26%);
+  --mesh-orb-3: oklch(0.50 0.20 255 / 18%);
 }
 
 /* ── Custom Glass Utilities ───────────────────────────────────────────── */
