@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Shield } from "lucide-react";
 import { motion } from "framer-motion";
 import { GlassCard } from "@/components/layout/GlassCard";
@@ -8,7 +9,14 @@ import { MeshGradientBackground } from "@/components/layout/MeshGradientBackgrou
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-export default function ConsentPage() {
+function ConsentContent() {
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirect_to");
+  const safeRedirect =
+    redirectTo && redirectTo.startsWith("/") && !redirectTo.startsWith("//")
+      ? redirectTo
+      : "/trips";
+
   const [checked, setChecked] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
@@ -24,7 +32,7 @@ export default function ConsentPage() {
         console.error("[consent]", res.status, body);
         throw new Error(body?.error ?? "unknown");
       }
-      window.location.href = "/trips";
+      window.location.href = safeRedirect;
     } catch (e) {
       console.error("[consent] catch", e);
       setError(true);
@@ -124,5 +132,13 @@ export default function ConsentPage() {
         </GlassCard>
       </motion.div>
     </div>
+  );
+}
+
+export default function ConsentPage() {
+  return (
+    <Suspense fallback={null}>
+      <ConsentContent />
+    </Suspense>
   );
 }

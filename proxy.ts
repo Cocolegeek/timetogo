@@ -56,10 +56,18 @@ export default async function proxy(req: NextRequest) {
   }
 
   // RGPD: redirect authenticated users without consent to /consent
-  if (user && pathname !== "/consent" && !pathname.startsWith("/api/")) {
+  // Skip /join so the share-link preview stays accessible (it doesn't read user data)
+  if (
+    user &&
+    pathname !== "/consent" &&
+    pathname !== "/join" &&
+    !pathname.startsWith("/api/")
+  ) {
     const hasConsent = req.cookies.get(CONSENT_COOKIE)?.value === "1";
     if (!hasConsent) {
-      return NextResponse.redirect(new URL("/consent", req.nextUrl));
+      const consentUrl = new URL("/consent", req.nextUrl);
+      consentUrl.searchParams.set("redirect_to", pathname + req.nextUrl.search);
+      return NextResponse.redirect(consentUrl);
     }
   }
 
