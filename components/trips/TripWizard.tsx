@@ -99,12 +99,22 @@ export function TripWizard() {
       router.push(`/trips/${id}/budget`);
     } catch (err) {
       console.error("[trip-create]", err);
-      const msg =
-        err instanceof Error ? err.message : "Erreur inconnue à la création.";
-      setSubmitError(`Impossible de créer le voyage. ${msg}`);
+      setSubmitError(`Impossible de créer le voyage. ${formatError(err)}`);
       setIsSubmitting(false);
     }
   };
+
+  function formatError(err: unknown): string {
+    if (!err) return "Erreur inconnue.";
+    if (typeof err === "string") return err;
+    if (typeof err === "object") {
+      const e = err as { message?: string; details?: string; hint?: string; code?: string };
+      const parts = [e.message, e.details, e.hint, e.code ? `[${e.code}]` : null].filter(Boolean);
+      if (parts.length > 0) return parts.join(" — ");
+      try { return JSON.stringify(err); } catch { return String(err); }
+    }
+    return String(err);
+  }
 
   return (
     <form onSubmit={handleSubmit(onSubmit as never)} className="space-y-6">
