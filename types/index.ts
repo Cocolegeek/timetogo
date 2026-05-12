@@ -64,6 +64,8 @@ export interface VoyageTrip extends BaseTrip {
 
 export interface GroupTrip extends BaseTrip {
   type: "group";
+  startDate?: string;
+  endDate?: string;
 }
 
 export type Trip = VoyageTrip | GroupTrip;

@@ -25,7 +25,7 @@ import { PwaInstallBanner } from "@/components/shared/PwaInstallBanner";
 import { daysUntil } from "@/lib/format-date";
 import { cn } from "@/lib/utils";
 import { isVoyage } from "@/lib/trip-features";
-import type { Trip, VoyageTrip } from "@/types";
+import type { Trip, VoyageTrip, GroupTrip } from "@/types";
 
 export default function TripsPage() {
   const { trips, loading, refetch: refetchTrips, deleteTrip } = useTrips();
@@ -52,16 +52,28 @@ export default function TripsPage() {
     });
   }, [trips]);
 
-  const sortedGroups = useMemo(
-    () =>
-      trips
-        .filter((t) => t.type === "group")
-        .sort(
-          (a, b) =>
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        ),
-    [trips]
-  );
+  const sortedGroups = useMemo(() => {
+    const groups = trips.filter((t): t is GroupTrip => t.type === "group");
+    // 0 = permanent (no date), 1 = planifié, 2 = en cours, 3 = passé
+    const bucket = (t: GroupTrip): 0 | 1 | 2 | 3 => {
+      if (!t.startDate) return 0;
+      const startDays = daysUntil(t.startDate);
+      const endDays = daysUntil(t.endDate ?? t.startDate);
+      if (startDays > 0) return 1;
+      if (endDays >= 0) return 2;
+      return 3;
+    };
+    return [...groups].sort((a, b) => {
+      const ba = bucket(a);
+      const bb = bucket(b);
+      if (ba !== bb) return ba - bb;
+      if (ba === 0) return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      const sa = new Date(a.startDate!).getTime();
+      const sb = new Date(b.startDate!).getTime();
+      if (ba === 1) return sa - sb;
+      return sb - sa;
+    });
+  }, [trips]);
 
   const ongoingCount = useMemo(
     () =>
@@ -105,7 +117,7 @@ export default function TripsPage() {
         >
           <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
             <h1 className="text-xl font-bold gradient-text leading-none">
-              Time to Go
+              Voyou
             </h1>
             <UserMenu />
           </div>
@@ -154,7 +166,7 @@ export default function TripsPage() {
                       sortedVoyages.length === 0 ? (
                         <SectionEmpty
                           icon={Compass}
-                          text="Aucun voyage pour l'instant"
+                          text="Pas encore de voyage à l'horizon"
                           ctaLabel="Créer un voyage"
                           href="/trips/new"
                         />
@@ -174,7 +186,7 @@ export default function TripsPage() {
                     ) : sortedGroups.length === 0 ? (
                       <SectionEmpty
                         icon={Wallet}
-                        text="Aucun budget partagé"
+                        text="Pas encore de cagnotte partagée"
                         ctaLabel="Créer un budget"
                         href="/trips/new"
                       />
@@ -330,7 +342,7 @@ function HeroGreeting({
 
         <div className="flex-1 min-w-0">
           <p className="text-xs uppercase tracking-widest font-bold text-white/70 mb-1">
-            Bonjour
+            Hello
           </p>
           <h2 className="text-2xl sm:text-3xl font-bold text-white leading-tight truncate">
             {firstName ?? "Voyageur"} 👋
@@ -476,7 +488,7 @@ function FirstTimeEmptyState() {
         </div>
         <div className="space-y-1.5">
           <h3 className="text-xl font-bold text-slate-100">
-            Bienvenue dans Time to Go
+            Bienvenue dans la bande des utilisateurs de Voyou !
           </h3>
           <p className="text-sm text-slate-400 max-w-xs mx-auto leading-relaxed">
             Crée ton premier voyage pour planifier ton itinéraire, partager le

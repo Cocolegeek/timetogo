@@ -34,11 +34,13 @@ const ACCENT_GRADIENTS = [
 export function TripCard({ trip, onEdit, onDelete, onShare, index }: TripCardProps) {
   const gradient = ACCENT_GRADIENTS[index % ACCENT_GRADIENTS.length];
 
-  // Status badge — only meaningful for voyages with dates.
+  // Status badge — voyages always have dates; groups only when a date was set.
   let badge: { label: string; className: string } | null = null;
-  if (isVoyage(trip)) {
-    const endDays = daysUntil(trip.endDate);
-    const startDays = daysUntil(trip.startDate);
+  const badgeStart = isVoyage(trip) ? trip.startDate : trip.startDate;
+  const badgeEnd = isVoyage(trip) ? trip.endDate : (trip.endDate ?? trip.startDate);
+  if (badgeStart) {
+    const endDays = daysUntil(badgeEnd!);
+    const startDays = daysUntil(badgeStart);
     if (endDays < 0) {
       badge = { label: "Passé", className: "bg-red-500/15 text-red-300 border border-red-500/20" };
     } else if (startDays > 0) {
@@ -127,10 +129,17 @@ export function TripCard({ trip, onEdit, onDelete, onShare, index }: TripCardPro
               <span className="text-slate-700">·</span>
               <span>{tripDuration(trip.startDate, trip.endDate)} j</span>
             </>
+          ) : trip.startDate ? (
+            <span className="flex items-center gap-1.5">
+              <Calendar size={13} />
+              {trip.endDate && trip.endDate !== trip.startDate
+                ? formatDateRange(trip.startDate, trip.endDate)
+                : formatDateRange(trip.startDate, trip.startDate)}
+            </span>
           ) : (
             <span className="flex items-center gap-1.5">
               <Wallet size={13} />
-              Budget partagé
+              Budget permanent
             </span>
           )}
           <span className="text-slate-700">·</span>

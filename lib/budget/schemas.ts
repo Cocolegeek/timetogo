@@ -92,20 +92,39 @@ export const tripSchema = z.object({
 
 export type TripFormValues = z.infer<typeof tripSchema>;
 
-export const groupSchema = z.object({
-  name: z.string().min(1, "Le nom du budget est requis"),
-  emoji: z.string().min(1),
-  currency: z.string().min(1),
-  participants: z
-    .array(
-      z.object({
-        id: z.string(),
-        name: z.string().min(1, "Nom requis"),
-        color: z.string(),
-      })
-    )
-    .min(1, "Au moins un participant est requis"),
-  totalBudget: z.number().positive().optional(),
-});
+export const GROUP_DATE_MODES = ["permanent", "date_fixe", "creneau"] as const;
+export type GroupDateMode = (typeof GROUP_DATE_MODES)[number];
+
+export const groupSchema = z
+  .object({
+    name: z.string().min(1, "Le nom du budget est requis"),
+    emoji: z.string().min(1),
+    currency: z.string().min(1),
+    dateMode: z.enum(GROUP_DATE_MODES).default("permanent"),
+    startDate: z.string().optional(),
+    endDate: z.string().optional(),
+    participants: z
+      .array(
+        z.object({
+          id: z.string(),
+          name: z.string().min(1, "Nom requis"),
+          color: z.string(),
+        })
+      )
+      .min(1, "Au moins un participant est requis"),
+    totalBudget: z.number().positive().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.dateMode === "date_fixe" && !data.startDate) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "La date est requise", path: ["startDate"] });
+    }
+    if (data.dateMode === "creneau") {
+      if (!data.startDate) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "La date de début est requise", path: ["startDate"] });
+      if (!data.endDate) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "La date de fin est requise", path: ["endDate"] });
+      if (data.startDate && data.endDate && data.endDate < data.startDate) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "La fin doit être après le début", path: ["endDate"] });
+      }
+    }
+  });
 
 export type GroupFormValues = z.infer<typeof groupSchema>;

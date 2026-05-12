@@ -4,12 +4,12 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { Plus, X, Loader2 } from "lucide-react";
+import { Plus, X, Loader2, Infinity, CalendarDays, CalendarRange } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { GlassCard } from "@/components/layout/GlassCard";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { groupSchema, type GroupFormValues } from "@/lib/budget/schemas";
+import { groupSchema, type GroupFormValues, type GroupDateMode } from "@/lib/budget/schemas";
 import { useTrips } from "@/hooks/useTrip";
 import { cn } from "@/lib/utils";
 
@@ -43,11 +43,15 @@ export function GroupWizard() {
       emoji: "💰",
       currency: "EUR",
       participants: [],
+      dateMode: "permanent",
     },
   });
 
   const selectedEmoji = watch("emoji");
   const selectedCurrency = watch("currency");
+  const dateMode = watch("dateMode");
+  const startDate = watch("startDate");
+  const endDate = watch("endDate");
 
   const addParticipant = () => {
     const name = newParticipantName.trim();
@@ -69,12 +73,16 @@ export function GroupWizard() {
   const onSubmit = async (data: GroupFormValues) => {
     setIsSubmitting(true);
     try {
+      const resolvedStart = data.dateMode === "permanent" ? undefined : data.startDate;
+      const resolvedEnd = data.dateMode === "date_fixe" ? data.startDate : data.dateMode === "creneau" ? data.endDate : undefined;
       const id = await createTrip({
         type: "group",
         name: data.name,
         emoji: data.emoji,
         currency: data.currency,
         totalBudget: data.totalBudget,
+        startDate: resolvedStart,
+        endDate: resolvedEnd,
         participants,
       });
       router.push(`/trips/${id}/budget`);
@@ -162,6 +170,84 @@ export function GroupWizard() {
           </div>
         </div>
 
+        {/* Date mode */}
+        <div className="space-y-2">
+          <Label className="text-slate-300 text-sm font-medium">Période</Label>
+          <div className="flex gap-2">
+            {(
+              [
+                { mode: "permanent" as GroupDateMode, label: "Permanent", icon: Infinity },
+                { mode: "date_fixe" as GroupDateMode, label: "Date fixe", icon: CalendarDays },
+                { mode: "creneau" as GroupDateMode, label: "Créneau", icon: CalendarRange },
+              ] as const
+            ).map(({ mode, label, icon: Icon }) => (
+              <button
+                key={mode}
+                type="button"
+                onClick={() => {
+                  setValue("dateMode", mode);
+                  setValue("startDate", undefined);
+                  setValue("endDate", undefined);
+                }}
+                className={cn(
+                  "flex-1 flex flex-col items-center gap-1 py-2.5 px-2 rounded-xl text-xs font-medium transition-all active:scale-95",
+                  dateMode === mode
+                    ? "bg-section-soft text-section-soft ring-1 ring-section"
+                    : "bg-foreground/5 text-slate-400 hover:bg-foreground/10"
+                )}
+              >
+                <Icon size={16} />
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Date inputs */}
+        <AnimatePresence initial={false}>
+          {dateMode !== "permanent" && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.15 }}
+              className="overflow-hidden"
+            >
+              <div className={cn("pt-1", dateMode === "creneau" ? "grid grid-cols-2 gap-2" : "")}>
+                <div className="space-y-1">
+                  <Label className="text-xs text-slate-400">
+                    {dateMode === "creneau" ? "Début" : "Date"}
+                  </Label>
+                  <input
+                    type="date"
+                    value={startDate ?? ""}
+                    onChange={(e) => setValue("startDate", e.target.value || undefined)}
+                    className="w-full bg-foreground/8 border border-foreground/10 rounded-lg px-3 py-2 text-sm text-slate-100 outline-none focus:ring-2 focus:ring-section"
+                  />
+                  {errors.startDate && (
+                    <p className="text-xs text-red-400">{errors.startDate.message}</p>
+                  )}
+                </div>
+                {dateMode === "creneau" && (
+                  <div className="space-y-1">
+                    <Label className="text-xs text-slate-400">Fin</Label>
+                    <input
+                      type="date"
+                      value={endDate ?? ""}
+                      onChange={(e) => setValue("endDate", e.target.value || undefined)}
+                      min={startDate ?? undefined}
+                      className="w-full bg-foreground/8 border border-foreground/10 rounded-lg px-3 py-2 text-sm text-slate-100 outline-none focus:ring-2 focus:ring-section"
+                    />
+                    {errors.endDate && (
+                      <p className="text-xs text-red-400">{errors.endDate.message}</p>
+                    )}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Participants */}
         <div className="space-y-3">
           <Label className="text-slate-300 text-sm font-medium">
@@ -200,7 +286,7 @@ export function GroupWizard() {
                   addParticipant();
                 }
               }}
-              placeholder="Ajouter un participant"
+              placeholder="Embarquer quelqu'un"
               className="flex-1 bg-foreground/8 border border-foreground/10 rounded-lg px-3 py-2 text-base text-slate-100 placeholder:text-slate-500 outline-none focus:ring-3 focus:ring-section"
             />
             <Button
@@ -226,7 +312,7 @@ export function GroupWizard() {
         {isSubmitting ? (
           <Loader2 size={16} className="animate-spin" />
         ) : (
-          "Créer le budget"
+          "C'est parti"
         )}
       </Button>
     </form>

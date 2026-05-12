@@ -30,7 +30,9 @@ function rowsToTrip(
   };
 
   if (type === "group") {
-    return { ...base, type: "group" };
+    const startDate = (tripRow.start_date as string | null) ?? undefined;
+    const endDate = (tripRow.end_date as string | null) ?? undefined;
+    return { ...base, type: "group", startDate, endDate };
   }
   return {
     ...base,
@@ -114,8 +116,8 @@ export function useTrips() {
         destination: data.type === "trip" ? (data.destination ?? null) : null,
         emoji: data.emoji,
         currency: data.currency,
-        start_date: data.type === "trip" ? (data.startDate ?? null) : null,
-        end_date: data.type === "trip" ? (data.endDate ?? null) : null,
+        start_date: data.startDate ?? null,
+        end_date: data.endDate ?? null,
         total_budget: data.totalBudget ?? null,
         share_code: generateShareCode(),
         owner_id: user.id,
@@ -200,8 +202,8 @@ export function useTrip(id: string) {
       destination: string;
       emoji: string;
       currency: string;
-      startDate: string;
-      endDate: string;
+      startDate: string | null;
+      endDate: string | null;
       totalBudget: number | null;
       iconUrl: string | null;
     }>
@@ -215,15 +217,18 @@ export function useTrip(id: string) {
         ...(data.iconUrl !== undefined && { iconUrl: data.iconUrl }),
         totalBudget: data.totalBudget ?? trip.totalBudget,
       };
+      const datePatch = {
+        ...(data.startDate !== undefined && { startDate: data.startDate ?? undefined }),
+        ...(data.endDate !== undefined && { endDate: data.endDate ?? undefined }),
+      };
       const next: Trip = trip.type === "trip"
         ? {
             ...trip,
             ...sharedPatch,
             ...(data.destination !== undefined && { destination: data.destination }),
-            ...(data.startDate !== undefined && { startDate: data.startDate }),
-            ...(data.endDate !== undefined && { endDate: data.endDate }),
+            ...datePatch,
           }
-        : { ...trip, ...sharedPatch };
+        : { ...trip, ...sharedPatch, ...datePatch };
       setTrip(next);
     }
 
