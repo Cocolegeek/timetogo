@@ -213,15 +213,27 @@ export default function BudgetPage({ params }: BudgetPageProps) {
               ) : (
                 <>
                   {myParticipant && myBalance && (
-                    Math.abs(myBalance.net) < 0.005 ? (
-                      <IAmSettledEmpty />
-                    ) : (
-                      <MyBalanceCard
-                        balance={myBalance}
-                        participant={myParticipant}
-                        currency={currency}
-                      />
-                    )
+                    <div className="glass-subtle border border-section rounded-2xl p-4">
+                      <SectionLabel>
+                        <span className="inline-flex items-center gap-2">
+                          <span
+                            className="w-2 h-2 rounded-full shrink-0"
+                            style={{ backgroundColor: myParticipant.color }}
+                            aria-hidden
+                          />
+                          Me concerne
+                        </span>
+                      </SectionLabel>
+                      {Math.abs(myBalance.net) < 0.005 ? (
+                        <IAmSettledEmpty />
+                      ) : (
+                        <MyBalanceCard
+                          balance={myBalance}
+                          participant={myParticipant}
+                          currency={currency}
+                        />
+                      )}
+                    </div>
                   )}
                   <div>
                     <SectionLabel count={balances.length}>
