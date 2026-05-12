@@ -17,6 +17,10 @@ const ShareModal = dynamic(
   () => import("@/components/trips/ShareModal").then((m) => ({ default: m.ShareModal })),
   { ssr: false }
 );
+const OnboardingModal = dynamic(
+  () => import("@/components/trips/OnboardingModal").then((m) => ({ default: m.OnboardingModal })),
+  { ssr: false }
+);
 import { Spinner } from "@/components/shared/Spinner";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { useTrips } from "@/hooks/useTrip";
@@ -167,6 +171,7 @@ export default function TripsPage() {
                               trip={trip}
                               onEdit={(t) => setEditingTripId(t.id)}
                               onDelete={handleDelete}
+                              onShare={(t) => setSharingTripId(t.id)}
                               index={i}
                             />
                           ))}
@@ -235,6 +240,8 @@ export default function TripsPage() {
             />
           );
         })()}
+
+        <OnboardingModal />
 
         {confirmDelete && (
           <ConfirmDeleteDialog
