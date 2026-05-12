@@ -31,6 +31,7 @@ export function TripWizard() {
   const router = useRouter();
   const { createTrip } = useTrips();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [newParticipantName, setNewParticipantName] = useState("");
   const [participants, setParticipants] = useState<ParticipantInput[]>([]);
   const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
@@ -78,6 +79,7 @@ export function TripWizard() {
 
   const onSubmit = async (data: TripFormValues) => {
     setIsSubmitting(true);
+    setSubmitError(null);
     try {
       const parsedBudget = budgetEnabled
         ? Number(budgetStr.replace(",", "."))
@@ -95,7 +97,11 @@ export function TripWizard() {
         participants,
       });
       router.push(`/trips/${id}/budget`);
-    } finally {
+    } catch (err) {
+      console.error("[trip-create]", err);
+      const msg =
+        err instanceof Error ? err.message : "Erreur inconnue à la création.";
+      setSubmitError(`Impossible de créer le voyage. ${msg}`);
       setIsSubmitting(false);
     }
   };
@@ -338,6 +344,12 @@ export function TripWizard() {
           )}
         </div>
       </GlassCard>
+
+      {submitError && (
+        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          {submitError}
+        </div>
+      )}
 
       <Button
         type="submit"

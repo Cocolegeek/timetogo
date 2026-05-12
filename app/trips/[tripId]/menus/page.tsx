@@ -70,7 +70,7 @@ export default function MenusPage({ params }: MenusPageProps) {
   for (const m of meals) mealMap.set(`${m.date}#${m.slot}`, m);
 
   return (
-    <div className="space-y-4 pt-2">
+    <div className="space-y-4 pt-4">
       {loading ? (
         <div className="flex items-center justify-center py-20">
           <div

@@ -447,12 +447,6 @@ function WelcomeFlow({
 
           {/* Info row */}
           <div className="flex flex-wrap items-center gap-2 pt-1">
-            {trip.type === "trip" && trip.destination && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/15 border border-white/20 text-sm text-white">
-                <MapPin size={11} />
-                {trip.destination}
-              </span>
-            )}
             {duration && (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/15 border border-white/20 text-sm text-white">
                 <Calendar size={11} />

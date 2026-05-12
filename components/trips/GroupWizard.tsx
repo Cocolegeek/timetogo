@@ -28,6 +28,7 @@ export function GroupWizard() {
   const router = useRouter();
   const { createTrip } = useTrips();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [newParticipantName, setNewParticipantName] = useState("");
   const [participants, setParticipants] = useState<ParticipantInput[]>([]);
   const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
@@ -73,6 +74,7 @@ export function GroupWizard() {
 
   const onSubmit = async (data: GroupFormValues) => {
     setIsSubmitting(true);
+    setSubmitError(null);
     try {
       const resolvedStart = data.dateMode === "permanent" ? undefined : data.startDate;
       const resolvedEnd = data.dateMode === "date_fixe" ? data.startDate : data.dateMode === "creneau" ? data.endDate : undefined;
@@ -87,7 +89,10 @@ export function GroupWizard() {
         participants,
       });
       router.push(`/trips/${id}/budget`);
-    } finally {
+    } catch (err) {
+      console.error("[group-create]", err);
+      const msg = err instanceof Error ? err.message : "Erreur inconnue à la création.";
+      setSubmitError(`Impossible de créer le budget. ${msg}`);
       setIsSubmitting(false);
     }
   };
@@ -305,6 +310,12 @@ export function GroupWizard() {
           )}
         </div>
       </GlassCard>
+
+      {submitError && (
+        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          {submitError}
+        </div>
+      )}
 
       <Button
         type="submit"

@@ -134,7 +134,17 @@ export function useTrips() {
 
     const { data: insertedParticipants, error: participantsError } = await supabase
       .from("participants")
-      .insert(data.participants.map((p) => ({ trip_id: trip.id, name: p.name, color: p.color, avatar: p.avatar ?? null })))
+      .insert(
+        data.participants.map((p) => {
+          const row: { trip_id: string; name: string; color: string; avatar?: string } = {
+            trip_id: trip.id,
+            name: p.name,
+            color: p.color,
+          };
+          if (p.avatar) row.avatar = p.avatar;
+          return row;
+        }),
+      )
       .select();
     if (participantsError) throw participantsError;
 
