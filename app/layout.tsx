@@ -15,10 +15,18 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://voyou.app";
+
 export const metadata: Metadata = {
-  title: "Voyou",
-  description: "L'application de voyage ultime — Budget, Planning, Menus",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "Voyou — Voyages sans embrouilles",
+    template: "%s · Voyou",
+  },
+  description:
+    "L'app de voyage entre potes : budget partagé, planning, menus. Style Tricount, en mieux.",
   manifest: "/manifest.json",
+  applicationName: "Voyou",
   appleWebApp: {
     capable: true,
     title: "Voyou",
@@ -26,6 +34,21 @@ export const metadata: Metadata = {
   },
   icons: {
     apple: "/icons/icon.png",
+  },
+  openGraph: {
+    type: "website",
+    siteName: "Voyou",
+    title: "Voyou — Voyages sans embrouilles",
+    description:
+      "Budget, planning et menus partagés. Pour des voyages entre potes sans calculs douloureux.",
+    locale: "fr_FR",
+    url: siteUrl,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Voyou — Voyages sans embrouilles",
+    description:
+      "Budget, planning et menus partagés. Pour des voyages entre potes sans calculs douloureux.",
   },
 };
 
