@@ -1,7 +1,7 @@
 "use client";
 
 import { use, useState } from "react";
-import { Plus, Wallet, Receipt, Scale, ArrowRightLeft, CheckCircle2 } from "lucide-react";
+import { Plus, Wallet, Receipt, Scale, ArrowRightLeft } from "lucide-react";
 import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
 const ExpenseForm = dynamic(() => import("@/components/budget/ExpenseForm").then(m => ({ default: m.ExpenseForm })), { ssr: false });
@@ -13,6 +13,7 @@ import { BalanceSummary } from "@/components/budget/BalanceSummary";
 import { DebtSettlements } from "@/components/budget/DebtSettlements";
 import { MyBalanceCard } from "@/components/budget/MyBalanceCard";
 import { AllSettledEmpty } from "@/components/budget/AllSettledEmpty";
+import { IAmSettledEmpty } from "@/components/budget/IAmSettledEmpty";
 import { useTrip } from "@/hooks/useTrip";
 import { useBudget } from "@/hooks/useBudget";
 import { useDebts } from "@/hooks/useDebts";
@@ -212,11 +213,15 @@ export default function BudgetPage({ params }: BudgetPageProps) {
               ) : (
                 <>
                   {myParticipant && myBalance && (
-                    <MyBalanceCard
-                      balance={myBalance}
-                      participant={myParticipant}
-                      currency={currency}
-                    />
+                    Math.abs(myBalance.net) < 0.005 ? (
+                      <IAmSettledEmpty />
+                    ) : (
+                      <MyBalanceCard
+                        balance={myBalance}
+                        participant={myParticipant}
+                        currency={currency}
+                      />
+                    )
                   )}
                   <div>
                     <SectionLabel count={balances.length}>
@@ -248,10 +253,7 @@ export default function BudgetPage({ params }: BudgetPageProps) {
                     </span>
                   </SectionLabel>
                   {mySettlements.length === 0 ? (
-                    <div className="flex items-center gap-2 text-base text-emerald-400 font-semibold py-1">
-                      <CheckCircle2 size={18} />
-                      <span>Tu es quitte ✓</span>
-                    </div>
+                    <IAmSettledEmpty />
                   ) : (
                     <DebtSettlements
                       settlements={mySettlements}
