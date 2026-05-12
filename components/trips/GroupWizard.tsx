@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { Plus, X, Loader2, Infinity, CalendarDays, CalendarRange } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { GlassCard } from "@/components/layout/GlassCard";
+import { DateRangePicker } from "@/components/shared/DateRangePicker";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { groupSchema, type GroupFormValues, type GroupDateMode } from "@/lib/budget/schemas";
@@ -213,33 +214,34 @@ export function GroupWizard() {
               transition={{ duration: 0.15 }}
               className="overflow-hidden"
             >
-              <div className={cn("pt-1", dateMode === "creneau" ? "grid grid-cols-2 gap-2" : "")}>
-                <div className="space-y-1">
-                  <Label className="text-xs text-slate-400">
-                    {dateMode === "creneau" ? "Début" : "Date"}
-                  </Label>
-                  <input
-                    type="date"
-                    value={startDate ?? ""}
-                    onChange={(e) => setValue("startDate", e.target.value || undefined)}
-                    className="w-full bg-foreground/8 border border-foreground/10 rounded-lg px-3 py-2 text-sm text-slate-100 outline-none focus:ring-2 focus:ring-section"
-                  />
-                  {errors.startDate && (
-                    <p className="text-xs text-red-400">{errors.startDate.message}</p>
-                  )}
-                </div>
-                {dateMode === "creneau" && (
+              <div className="pt-1">
+                {dateMode === "creneau" ? (
+                  <>
+                    <DateRangePicker
+                      startDate={startDate ?? ""}
+                      endDate={endDate ?? ""}
+                      onChange={(start, end) => {
+                        setValue("startDate", start || undefined);
+                        setValue("endDate", end || undefined);
+                      }}
+                    />
+                    {(errors.startDate || errors.endDate) && (
+                      <p className="text-xs text-red-400 mt-1">
+                        {errors.startDate?.message ?? errors.endDate?.message}
+                      </p>
+                    )}
+                  </>
+                ) : (
                   <div className="space-y-1">
-                    <Label className="text-xs text-slate-400">Fin</Label>
+                    <Label className="text-xs text-slate-400">Date</Label>
                     <input
                       type="date"
-                      value={endDate ?? ""}
-                      onChange={(e) => setValue("endDate", e.target.value || undefined)}
-                      min={startDate ?? undefined}
+                      value={startDate ?? ""}
+                      onChange={(e) => setValue("startDate", e.target.value || undefined)}
                       className="w-full bg-foreground/8 border border-foreground/10 rounded-lg px-3 py-2 text-sm text-slate-100 outline-none focus:ring-2 focus:ring-section"
                     />
-                    {errors.endDate && (
-                      <p className="text-xs text-red-400">{errors.endDate.message}</p>
+                    {errors.startDate && (
+                      <p className="text-xs text-red-400">{errors.startDate.message}</p>
                     )}
                   </div>
                 )}
