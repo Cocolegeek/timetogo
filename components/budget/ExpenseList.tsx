@@ -27,7 +27,7 @@ export function ExpenseList({
       <EmptyState
         icon={Receipt}
         title="Aucune dépense encore"
-        description="Ajoute restos, transports, hébergement… Time to Go calcule automatiquement qui doit quoi à qui, et simplifie les remboursements."
+        description="Ajoute restos, transports, hébergement… Voyou calcule automatiquement qui doit quoi à qui, et simplifie les remboursements."
       />
     );
   }

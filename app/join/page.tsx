@@ -279,7 +279,7 @@ export default function JoinPage() {
           >
             <span className="text-2xl">✈️</span>
             <div>
-              <h1 className="text-lg font-bold text-slate-100">Time to Go</h1>
+              <h1 className="text-lg font-bold text-slate-100">Voyou</h1>
               <p className="text-sm text-slate-500">Rejoindre un voyage</p>
             </div>
           </div>

@@ -347,7 +347,7 @@ export function TripWizard() {
         {isSubmitting ? (
           <Loader2 size={18} className="animate-spin" />
         ) : (
-          "Créer le voyage 🚀"
+          "On embarque 🚀"
         )}
       </Button>
     </form>

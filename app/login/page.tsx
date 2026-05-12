@@ -39,7 +39,7 @@ function LoginForm() {
             <Compass size={32} className="text-section" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold gradient-text">Time to Go</h1>
+            <h1 className="text-2xl font-bold gradient-text">Voyou</h1>
             <p className="text-base text-slate-400 mt-1">
               Planifie, partage et gère tes voyages
             </p>

@@ -73,7 +73,7 @@ export function AppInstallBanner() {
       >
         <div className="flex items-center gap-3 px-4 py-3.5">
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-slate-100">Installer Time to Go</p>
+            <p className="text-sm font-semibold text-slate-100">Installer Voyou</p>
             {platform === "ios" ? (
               <p className="text-sm text-slate-400 mt-0.5 leading-snug">
                 Dans Safari, appuie sur{" "}

@@ -49,7 +49,7 @@ export function DebtSettlements({
           <span>Tout le monde est quitte !</span>
         </div>
         <p className="text-sm text-slate-400 leading-relaxed">
-          Dès que des dépenses sont ajoutées, Time to Go calcule ici le minimum de virements pour solder les comptes entre vous.
+          Dès que des dépenses sont ajoutées, Voyou calcule ici le minimum de virements pour solder les comptes entre vous.
         </p>
       </div>
     );

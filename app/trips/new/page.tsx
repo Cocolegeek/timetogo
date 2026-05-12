@@ -73,7 +73,7 @@ export default function NewTripPage() {
           {!chosen ? (
             <div className="space-y-3">
               <p className="text-base text-slate-400 mb-4 px-1">
-                Time to Go peut gérer un voyage complet ou simplement un budget partagé entre amis.
+                Voyou peut gérer un voyage complet ou simplement un budget partagé entre amis.
               </p>
               {TYPE_OPTIONS.map((opt, i) => {
                 const Icon = opt.icon;

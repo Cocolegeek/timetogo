@@ -22,7 +22,7 @@ export const SECTION_LABELS: Record<Section, string> = {
   budget: "Budget",
   planning: "Planning",
   menus: "Menus",
-  neutral: "Time to Go",
+  neutral: "Voyou",
 };
 
 export function getSection(pathname: string): Section {

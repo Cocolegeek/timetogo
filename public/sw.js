@@ -1,4 +1,4 @@
-const CACHE = 'timetogo-v1';
+const CACHE = 'voyou-v1';
 
 // Static assets to pre-cache
 const PRECACHE = ['/'];

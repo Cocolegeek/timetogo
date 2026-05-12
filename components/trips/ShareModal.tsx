@@ -58,7 +58,7 @@ export function ShareModal({ open, onOpenChange, trip }: ShareModalProps) {
     if (!navigator.share) return;
     try {
       await navigator.share({
-        title: `Rejoins ${trip.name} sur Time to Go`,
+        title: `Rejoins la bande sur ${trip.name}`,
         text: `Code : ${trip.shareCode} — ou utilise ce lien pour rejoindre "${trip.name}"`,
         url: shareUrl,
       });

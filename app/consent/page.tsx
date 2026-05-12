@@ -56,7 +56,7 @@ export default function ConsentPage() {
           {/* Body */}
           <div className="space-y-3 text-sm text-slate-400 leading-relaxed">
             <p>
-              Pour utiliser Time to Go, nous traitons certaines de tes données
+              Pour utiliser Voyou, nous traitons certaines de tes données
               personnelles : ton nom, ton adresse e-mail et les informations de
               voyage que tu crées.
             </p>

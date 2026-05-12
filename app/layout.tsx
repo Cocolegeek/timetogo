@@ -16,12 +16,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Time to Go",
+  title: "Voyou",
   description: "L'application de voyage ultime — Budget, Planning, Menus",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
-    title: "TimeToGo",
+    title: "Voyou",
     statusBarStyle: "black-translucent",
   },
   icons: {

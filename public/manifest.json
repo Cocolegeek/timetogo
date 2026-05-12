@@ -1,6 +1,6 @@
 {
-  "name": "Time to Go",
-  "short_name": "TimeToGo",
+  "name": "Voyou",
+  "short_name": "Voyou",
   "description": "L'application de voyage ultime — Budget, Planning, Menus",
   "start_url": "/trips",
   "display": "standalone",
