@@ -5,6 +5,7 @@ import { Loader2, Compass } from "lucide-react";
 import { motion } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import { MeshGradientBackground } from "@/components/layout/MeshGradientBackground";
+import { VoyouLogo } from "@/components/layout/VoyouLogo";
 import { GlassCard } from "@/components/layout/GlassCard";
 import { Button } from "@/components/ui/button";
 import { useSearchParams } from "next/navigation";
@@ -39,7 +40,7 @@ function LoginForm() {
             <Compass size={32} className="text-section" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold gradient-text">Voyou</h1>
+            <VoyouLogo />
             <p className="text-base text-slate-400 mt-1">
               Planifie, partage et gère tes voyages
             </p>

@@ -16,6 +16,7 @@ import {
   Home,
 } from "lucide-react";
 import { MeshGradientBackground } from "@/components/layout/MeshGradientBackground";
+import { VoyouLogo } from "@/components/layout/VoyouLogo";
 import { GlassCard } from "@/components/layout/GlassCard";
 import { IdentityPicker } from "@/components/trips/IdentityPicker";
 import { Button } from "@/components/ui/button";
@@ -576,7 +577,7 @@ export default function JoinPage() {
             className="max-w-md mx-auto px-4 py-4 flex items-center gap-3"
             style={{ paddingTop: "calc(env(safe-area-inset-top) + 1rem)" }}
           >
-            <h1 className="text-xl font-bold gradient-text leading-none">Voyou</h1>
+            <VoyouLogo />
             <p className="text-sm text-slate-500 ml-auto">Rejoindre une aventure</p>
           </div>
         </header>
