@@ -117,9 +117,7 @@ export default function PlanningPage({ params }: PlanningPageProps) {
   const dates = trip && isVoyage(trip) ? eachDate(trip.startDate, trip.endDate) : [];
 
   return (
-    <div className="space-y-5">
-      
-
+    <div className="space-y-5 pt-2">
       {dates.length === 0 ? (
         <EmptyState
           icon={Map}
