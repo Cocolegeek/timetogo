@@ -44,14 +44,16 @@ proxy.ts                 → middleware: enforces auth on all routes except /log
 ## Component Map
 ```
 components/
-  budget/     BalanceSummary, DebtSettlements, ExpenseCard, ExpenseForm, ExpenseList
-  layout/     GlassCard, MeshGradientBackground, TripNav, UserMenu
+  budget/     AllSettledEmpty, BalanceSummary, DebtSettlements, ExpenseCard, ExpenseForm,
+              ExpenseList, IAmSettledEmpty, MyBalanceCard
+  layout/     AppHeader, GlassCard, MeshGradientBackground, SectionThemeController,
+              TripAppHeader, TripNav, UserMenu, VoyouLogo
   menus/      MealEditDialog
   planning/   ItineraryItemForm
-  shared/     ConfirmDeleteDialog, CurrencyInput, DateRangePicker, DayHeader, EmptyState,
-              IosInstallBanner, LocationAutocomplete, ParticipantAvatar, ParticipantStack,
-              PwaInstallBanner, Spinner
-  trips/      BudgetEditDialog, GroupWizard, IdentityPicker, ShareModal, TodayPlanningBlock,
+  shared/     AvatarUpload, ConfirmDeleteDialog, DateRangePicker, DayHeader, EmptyState,
+              ImageCropDialog, IosInstallBanner, LocationAutocomplete, ParticipantAvatar,
+              ParticipantStack, PwaInstallBanner, SectionLabel, Spinner
+  trips/      BudgetEditDialog, GroupWizard, IdentityPicker, OnboardingModal, ShareModal,
               TripCard, TripEditDialog, TripEditWrapper, TripWizard
   ui/         shadcn primitives (button, card, dialog, dropdown-menu, input, label,
               progress, select, separator, sheet, tabs, textarea, badge)
@@ -59,44 +61,55 @@ components/
 
 ## Hooks (all `"use client"`, call `createClient()` internally)
 ```typescript
-useTrips()      → { trips, loading, refetch, createTrip, deleteTrip }
-useTrip(id)     → { trip, loading, refetch, updateTrip, setMyParticipant, addParticipant, updateParticipant, deleteParticipant }
-useBudget(id)   → { expenses, loading, refetch, addExpense, updateExpense, deleteExpense, totalSpent }
-useMeals(id)    → { meals, loading, refetch, updateMeal, deleteMeal }
-useItinerary(id)→ { items, loading, refetch, addItem, updateItem, deleteItem }
-useProfile()    → { profile, loading, refetch, updateProfile, signOut }
-useDebts(id)    → computed balances/settlements (no direct DB)
-useTheme()      → localStorage toggle (key: "time-to-go-theme")
+useTrips()              → { trips, loading, refetch, createTrip, deleteTrip }           // hooks/useTrip.ts
+useTrip(id)             → { trip, loading, refetch, updateTrip, setMyParticipant,
+                            addParticipant, updateParticipant, deleteParticipant }       // hooks/useTrip.ts
+useBudget(id)           → { expenses, loading, refetch, addExpense, updateExpense,
+                            deleteExpense, totalSpent }
+useMeals(id)            → { meals, loading, refetch, updateMeal, deleteMeal }
+useItinerary(id)        → { items, loading, refetch, addItem, updateItem, deleteItem }
+useProfile()            → { profile, loading, refetch, updateProfile, signOut }
+useDebts(id)            → computed balances/settlements (no direct DB)
+useTheme()              → localStorage toggle (key: "time-to-go-theme")
+useUserId()             → current user uuid (fast, no extra fetch)
+useRevalidateOnFocus()  → re-calls refetch on window focus (pass a refetch fn)
 ```
 
 ## Lib / Utils
 ```
 lib/
-  supabase/client.ts   → createBrowserClient() — use in hooks/client components
-  supabase/server.ts   → createServerClient() with cookies — use in server components/API routes
-  supabase/schema.sql  → canonical schema with RLS
-  supabase/migrations/ → 001..010_*.sql (008: RGPD, 009: multi-payer, 010: trip type)
-  trip-features.ts     → tripFeatures(trip), isVoyage(t), isGroup(t), TRIP_TYPE_LABELS
-  budget/splits.ts     → computeShares(equal|percentage|fixed)
-  budget/debts.ts      → computeBalances(), simplifyDebts() (greedy O(n log n))
-  budget/categories.ts → courses|restaurant|activities|transport|accommodation|other
-  budget/schemas.ts    → Zod schemas for expenses
+  supabase/client.ts    → createBrowserClient() — use in hooks/client components
+  supabase/server.ts    → createServerClient() with cookies — use in server components/API routes
+  supabase/schema.sql   → canonical schema with RLS (up to migration 015)
+  supabase/migrations/  → 001..015_*.sql (008: RGPD, 009: multi-payer, 010: trip type,
+                          011: lock join lookups, 012: join_trip RPC, 013: custom avatars,
+                          014: anon join preview, 015: create_trip_with_owner RPC)
+  trip-features.ts      → tripFeatures(trip), isVoyage(t), isGroup(t), TRIP_TYPE_LABELS
+  budget/splits.ts      → computeShares(equal|percentage|fixed)
+  budget/debts.ts       → computeBalances(), simplifyDebts() (greedy O(n log n))
+  budget/categories.ts  → courses|restaurant|activities|transport|accommodation|other
+  budget/schemas.ts     → Zod schemas for expenses
   budget/budget-color.ts → getBudgetColor(pct), getBudgetTextColor(pct)
-  map-apps.ts            → sélecteur d'app de navigation (Maps/Waze/Google Maps) pour lieux cliquables
-  meals/slots.ts       → DEFAULT_SLOTS, eachDate(), buildDefaultMealRows()
-  meals/categories.ts  → home|picnic|restaurant
-  utils.ts             → cn() (clsx + tailwind-merge)
-  format-date.ts       → date formatting
-  planning-day.ts      → itinerary day grouping
-  trip-share.ts        → generateShareCode(), buildShareUrl()
+  format-currency.ts    → formatCurrency(amount, currency)
+  format-date.ts        → date formatting
+  image-crop.ts         → getCroppedImg() for AvatarUpload / ImageCropDialog
+  map-apps.ts           → sélecteur d'app de navigation (Maps/Waze/Google Maps) pour lieux cliquables
+  meals/slots.ts        → DEFAULT_SLOTS, eachDate(), buildDefaultMealRows()
+  meals/categories.ts   → home|picnic|restaurant
+  planning-day.ts       → itinerary day grouping
+  section-theme.ts      → getSection() → maps pathname to CSS section token (used by SectionThemeController)
+  trip-share.ts         → generateShareCode(), buildShareUrl()
+  utils.ts              → cn() (clsx + tailwind-merge)
 ```
 
 ## DB Schema (key tables)
 ```
-profiles          id, name, avatar_url, email, gdpr_consent: bool
-trips             id, name, type ('trip'|'group'), destination?, emoji, currency, start_date?, end_date?,
-                  total_budget, share_code(UNIQUE), owner_id  // dest/dates nullable for type='group'
-participants      id, trip_id, name, color
+profiles          id, name, avatar_url, custom_avatar_url, email,
+                  gdpr_consented_at, gdpr_consent_version, gdpr_consent_proof
+trips             id, name, type ('trip'|'group'), destination?, emoji, icon_url?,
+                  currency, start_date?, end_date?, total_budget, share_code(UNIQUE), owner_id
+                  // destination/start_date/end_date nullable for type='group'
+participants      id, trip_id, name, color, avatar?
 trip_members      trip_id + user_id (composite PK), participant_id, role: owner|contributor
 expenses          id, trip_id, title, amount, currency, exchange_rate, amount_in_trip_currency,
                   category, paid_by_id (legacy), payers: jsonb[], date, split_mode, splits: jsonb[], notes
@@ -104,6 +117,7 @@ meals             id, trip_id, date, slot: breakfast|lunch|dinner, title, catego
                   participant_ids: uuid[], cook_ids: uuid[], ingredients: json[], position
 itinerary_items   id, trip_id, date, time, title, location, type, duration_minutes, participant_ids: uuid[]
 ```
+RPCs: `create_trip_with_owner`, `join_trip`, `get_join_preview` (all SECURITY DEFINER — see schema.sql).
 DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip()` / `rowToExpense()` etc. for conversion.
 
 ## Coding Conventions

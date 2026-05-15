@@ -1,24 +1,27 @@
 # Time to Go
 
-Application de planification de voyage collaborative — budget partagé, checklist, planning d'itinéraire.
+Application de planification de voyage collaborative — budget partagé, planning d'itinéraire, menus.
 
 ## Stack
 
-- **Next.js 16** (App Router) + React 19 + TypeScript
-- **Tailwind CSS 4** + shadcn/ui (base-ui)
+- **Next.js** (App Router) + React 19 + TypeScript
+- **Tailwind CSS 4** + shadcn/ui (style: base-nova)
 - **Supabase** (PostgreSQL + Auth Google OAuth + Row Level Security)
 - **Vercel** pour l'hébergement
 
 ## Fonctionnalités
 
 - Authentification Google
-- Création de voyages avec participants, devise, budget
+- **Voyages** : destination, dates, participants, devise, budget, planning jour par jour, menus
+- **Groupes** (style Tricount) : budget partagé sans dates ni destination
 - Suivi des dépenses avec répartition (équitable / pourcentage / montant fixe)
+- Multi-payeurs par dépense
 - Calcul automatique des soldes et remboursements simplifiés
-- Checklist par catégories (documents, vêtements, santé…)
 - Planning d'itinéraire jour par jour
+- Menus (petit-déj, déjeuner, dîner) avec liste de courses
 - Partage par code 6 caractères — les contributeurs peuvent tout voir et modifier
-- Profil utilisateur (nom, photo Google)
+- Profil utilisateur (nom, photo, avatar custom)
+- PWA installable (iOS + Android)
 
 ## Lancer en local
 
@@ -26,7 +29,7 @@ Application de planification de voyage collaborative — budget partagé, checkl
 # 1. Installer les dépendances
 npm install
 
-# 2. Copier le template d'env et le remplir avec tes clés Supabase
+# 2. Copier le template d'env et remplir avec tes clés Supabase
 cp .env.local.example .env.local
 
 # 3. Lancer
@@ -45,6 +48,7 @@ Ouvre http://localhost:3000.
    - Site URL : ton URL de production
    - Redirect URLs : ajoute `<URL_PROD>/auth/callback`
 5. Récupère `Project URL` et `anon key` dans **Settings → API**
+6. Crée deux buckets Storage **publics** : `trip-icons` et `profile-avatars`
 
 ### 2. Vercel
 1. Importe ce repo sur [vercel.com](https://vercel.com)
@@ -63,13 +67,14 @@ Ouvre http://localhost:3000.
 app/                      # Routes (App Router)
   ├── login/              # Page de connexion Google
   ├── auth/callback/      # Callback OAuth
-  ├── profile/            # Gestion du profil
+  ├── consent/            # GDPR consent (une seule fois après connexion)
+  ├── settings/           # Profil utilisateur + thème
   ├── join/               # Rejoindre un voyage via code
-  └── trips/[tripId]/     # Voyage : budget, planning, checklist
+  └── trips/[tripId]/     # Voyage : budget, planning, menus
 components/               # Composants UI
-hooks/                    # Hooks Supabase (useTrip, useBudget, useChecklist…)
+hooks/                    # Hooks Supabase (useTrip, useBudget, useMeals…)
 lib/
-  ├── supabase/           # Clients Supabase + schema.sql
+  ├── supabase/           # Clients Supabase + schema.sql + migrations
   └── budget/             # Logique métier (splits, debts)
 proxy.ts                  # Protection des routes (équivalent middleware)
 ```
