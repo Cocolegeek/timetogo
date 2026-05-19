@@ -1,9 +1,10 @@
-export type MapAppId = "google" | "apple" | "waze";
+export type MapAppId = "google" | "apple" | "waze" | "citymapper";
 
 export const MAP_APPS: { id: MapAppId; name: string; emoji: string }[] = [
   { id: "google", name: "Google Maps", emoji: "🗺️" },
   { id: "apple", name: "Plans", emoji: "🍎" },
   { id: "waze", name: "Waze", emoji: "🚗" },
+  { id: "citymapper", name: "CityMapper", emoji: "🚇" },
 ];
 
 export const MAP_PREF_KEY = "preferred-map-app";
@@ -19,6 +20,8 @@ function buildMapUrl(appId: MapAppId, query: string): string {
       return isIos ? `maps://?q=${q}` : `https://maps.apple.com/?q=${q}`;
     case "waze":
       return `https://waze.com/ul?q=${q}&navigate=yes`;
+    case "citymapper":
+      return `https://citymapper.com/directions?endaddress=${q}&endname=${q}`;
   }
 }
 

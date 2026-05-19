@@ -3,6 +3,33 @@ interface IconProps {
   className?: string;
 }
 
+export function CityMapperIcon({ size = 32, className }: IconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 48 48"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+    >
+      <rect width="48" height="48" rx="11" fill="#00D2D3" />
+      {/* Metro lines */}
+      <circle cx="10" cy="24" r="3.5" fill="white" />
+      <rect x="13" y="22.5" width="10" height="3" fill="white" />
+      <circle cx="26" cy="24" r="3.5" fill="white" />
+      <rect x="29" y="22.5" width="9" height="3" fill="white" />
+      <circle cx="38" cy="24" r="3.5" fill="white" />
+      {/* Top branch */}
+      <circle cx="26" cy="13" r="3.5" fill="white" opacity="0.8" />
+      <rect x="24.5" y="13" width="3" height="11.5" fill="white" opacity="0.8" />
+      {/* Bottom branch */}
+      <circle cx="26" cy="35" r="3.5" fill="white" opacity="0.8" />
+      <rect x="24.5" y="23.5" width="3" height="12" fill="white" opacity="0.8" />
+    </svg>
+  );
+}
+
 export function GoogleMapsIcon({ size = 32, className }: IconProps) {
   return (
     <svg

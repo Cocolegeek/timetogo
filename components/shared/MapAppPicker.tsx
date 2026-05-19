@@ -2,7 +2,12 @@
 
 import { createContext, useCallback, useContext, useState } from "react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
-import { GoogleMapsIcon, WazeIcon, AppleMapsIcon } from "@/components/shared/MapAppIcons";
+import {
+  GoogleMapsIcon,
+  WazeIcon,
+  AppleMapsIcon,
+  CityMapperIcon,
+} from "@/components/shared/MapAppIcons";
 import type { MapAppId } from "@/lib/map-apps";
 
 type OpenFn = (query: string) => void;
@@ -24,6 +29,8 @@ function buildUrl(appId: MapAppId, query: string): string {
       return isIos ? `maps://?q=${q}` : `https://maps.apple.com/?q=${q}`;
     case "waze":
       return `https://waze.com/ul?q=${q}&navigate=yes`;
+    case "citymapper":
+      return `https://citymapper.com/directions?endaddress=${q}&endname=${q}`;
   }
 }
 
@@ -38,6 +45,12 @@ const APPS: {
     name: "Google Maps",
     description: "Ouvrir dans Google Maps",
     Icon: GoogleMapsIcon,
+  },
+  {
+    id: "citymapper",
+    name: "CityMapper",
+    description: "Transports en commun & multimodal",
+    Icon: CityMapperIcon,
   },
   {
     id: "waze",

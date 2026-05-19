@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { LocationAutocomplete } from "@/components/shared/LocationAutocomplete";
+import { GoogleMapsIcon, CityMapperIcon } from "@/components/shared/MapAppIcons";
 import { cn } from "@/lib/utils";
 import type { ItineraryItem, JourneyMode, Participant } from "@/types";
 import type { ItineraryFormValues } from "./ItineraryItemForm";
@@ -349,18 +350,29 @@ export function JourneyForm({
             ) : (
               <div className="space-y-3">
                 {from.trim().length > 2 && to.trim().length > 2 && (
-                  <a
-                    href={buildGoogleMapsUrl(from, to, mode)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-foreground/8 text-slate-200 hover:bg-foreground/12 active:scale-95 transition-all"
-                  >
-                    <Navigation size={14} />
-                    Voir l'itinéraire sur Maps
-                  </a>
+                  <div className="flex gap-2 flex-wrap">
+                    <a
+                      href={buildGoogleMapsUrl(from, to, mode)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-sm font-semibold bg-foreground/8 text-slate-200 hover:bg-foreground/12 active:scale-95 transition-all"
+                    >
+                      <GoogleMapsIcon size={18} />
+                      Google Maps
+                    </a>
+                    <a
+                      href={`https://citymapper.com/directions?startaddress=${encodeURIComponent(from)}&endaddress=${encodeURIComponent(to)}&startname=${encodeURIComponent(from)}&endname=${encodeURIComponent(to)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-sm font-semibold bg-foreground/8 text-slate-200 hover:bg-foreground/12 active:scale-95 transition-all"
+                    >
+                      <CityMapperIcon size={18} />
+                      CityMapper
+                    </a>
+                  </div>
                 )}
                 <p className="text-xs text-slate-500">
-                  Renseigne la durée manuellement après avoir consulté l'itinéraire.
+                  Consulte l'itinéraire puis renseigne la durée ci-dessous.
                 </p>
                 <ManualDuration durationH={durationH} durationM={durationM} setDurationH={setDurationH} setDurationM={setDurationM} />
               </div>
@@ -421,15 +433,11 @@ export function JourneyForm({
   );
 }
 
-const GMAPS_TRAVEL_MODE: Record<string, string> = {
-  transit: "r",
-  plane: "f",
-};
-
 function buildGoogleMapsUrl(from: string, to: string, mode: JourneyMode): string {
-  const base = "https://www.google.com/maps/dir/";
-  const tmode = GMAPS_TRAVEL_MODE[mode] ?? "r";
-  return `${base}${encodeURIComponent(from)}/${encodeURIComponent(to)}/?travelmode=${tmode === "f" ? "driving" : "transit"}`;
+  const f = encodeURIComponent(from);
+  const t = encodeURIComponent(to);
+  const travelmode = mode === "plane" ? "driving" : "transit";
+  return `https://www.google.com/maps/dir/?api=1&origin=${f}&destination=${t}&travelmode=${travelmode}`;
 }
 
 function formatDuration(minutes: number): string {
