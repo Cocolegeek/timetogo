@@ -42,7 +42,7 @@ export function buildShareText({
   } else {
     lines.push(`Rembourser ${recipientName}`);
   }
-  if (iban) lines.push(formatIban(iban));
+  if (iban) lines.push(iban.replace(/\s+/g, "").toUpperCase());
   if (phone) lines.push(phone);
   return lines.join("\n");
 }

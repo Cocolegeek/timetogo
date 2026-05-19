@@ -232,7 +232,7 @@ function PaymentDetails({
           icon={<CreditCard size={14} />}
           label="IBAN"
           value={formatIban(info.iban)}
-          rawValue={formatIban(info.iban)}
+          rawValue={info.iban}
           monospace
         />
       )}
