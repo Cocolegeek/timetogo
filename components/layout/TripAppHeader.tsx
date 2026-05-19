@@ -34,10 +34,8 @@ export function TripAppHeader({ tripId }: { tripId: string }) {
           <VoyouLogo />
         </Link>
 
-        {/* Trip name — centered, truncated */}
-        <p className="flex-1 text-xs font-semibold text-slate-400 truncate text-center min-w-0 px-1">
-          {trip ? `${trip.emoji} ${trip.name}` : ""}
-        </p>
+        {/* Spacer */}
+        <div className="flex-1" />
 
         {/* Actions */}
         <div className="flex items-center gap-0.5 shrink-0">
