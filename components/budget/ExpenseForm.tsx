@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Lock } from "lucide-react";
 import { CATEGORIES, CATEGORY_ORDER } from "@/lib/budget/categories";
 import { computeShares } from "@/lib/budget/splits";
 import { currencySymbol } from "@/lib/format-currency";
@@ -91,6 +92,7 @@ export function ExpenseForm({
    * can manually decide whether they should benefit from the expense.
    */
   const [newMemberIds, setNewMemberIds] = useState<Set<string>>(new Set());
+  const [pinnedIds, setPinnedIds] = useState<Set<string>>(new Set());
   const [submitting, setSubmitting] = useState(false);
 
   // Hydrate when opened or when participants change
@@ -126,6 +128,7 @@ export function ExpenseForm({
         };
       });
       setSplits(merged);
+      setPinnedIds(new Set());
       setNewMemberIds(
         new Set(
           participants
@@ -140,6 +143,7 @@ export function ExpenseForm({
       setDate(new Date().toISOString().split("T")[0]);
       setPayers(participants[0] ? [{ participantId: participants[0].id, amount: 0 }] : []);
       setSplitMode("equal");
+      setPinnedIds(new Set());
       setNewMemberIds(new Set());
       setSplits(
         participants.map((p) => ({
@@ -224,8 +228,12 @@ export function ExpenseForm({
     });
   };
 
-  // Toggle inclusion
   const toggleInclusion = (participantId: string) => {
+    setPinnedIds((prev) => {
+      const next = new Set(prev);
+      next.delete(participantId);
+      return next;
+    });
     setSplits((prev) =>
       prev.map((s) =>
         s.participantId === participantId ? { ...s, excluded: !s.excluded } : s
@@ -243,44 +251,58 @@ export function ExpenseForm({
     );
   };
 
-  /**
-   * In "fixed" mode: when user edits one participant's amount,
-   * auto-rebalance the OTHER active participants so the total
-   * matches `amount` (Tricount-style behaviour).
-   */
   const setFixedAmount = (participantId: string, value: number) => {
     const newValue = Math.max(0, value);
+    const newPinned = new Set([...pinnedIds, participantId]);
+    setPinnedIds(newPinned);
     setSplits((prev) => {
       const active = prev.filter((s) => !s.excluded);
-      const others = active.filter((s) => s.participantId !== participantId);
-      const remaining = Math.max(0, amount - newValue);
-      const distributed = distributeCents(remaining, others.length);
-
-      // Build a quick lookup for "others"
-      let i = 0;
-      const otherAmounts = new Map<string, number>();
-      for (const s of others) {
-        otherAmounts.set(s.participantId, distributed[i] ?? 0);
-        i++;
-      }
-
+      const pinnedOthers = active.filter(
+        (s) => newPinned.has(s.participantId) && s.participantId !== participantId
+      );
+      const freeActive = active.filter((s) => !newPinned.has(s.participantId));
+      const pinnedSum =
+        pinnedOthers.reduce((sum, s) => sum + (s.fixedAmount ?? 0), 0) + newValue;
+      const remaining = Math.max(0, amount - pinnedSum);
+      const distributed = distributeCents(remaining, freeActive.length);
+      const freeAmounts = new Map(
+        freeActive.map((s, i) => [s.participantId, distributed[i] ?? 0])
+      );
       return prev.map((s) => {
         if (s.excluded) return s;
-        if (s.participantId === participantId) {
-          return { ...s, fixedAmount: newValue };
-        }
-        return {
-          ...s,
-          fixedAmount: otherAmounts.get(s.participantId) ?? s.fixedAmount ?? 0,
-        };
+        if (s.participantId === participantId) return { ...s, fixedAmount: newValue };
+        if (freeAmounts.has(s.participantId))
+          return { ...s, fixedAmount: freeAmounts.get(s.participantId)! };
+        return s;
       });
     });
   };
 
-  // Auto-redistribute equally when switching to percentage/fixed for the first time
+  const unpinParticipant = (participantId: string) => {
+    const newPinned = new Set(pinnedIds);
+    newPinned.delete(participantId);
+    setPinnedIds(newPinned);
+    setSplits((prev) => {
+      const active = prev.filter((s) => !s.excluded);
+      const pinned = active.filter((s) => newPinned.has(s.participantId));
+      const free = active.filter((s) => !newPinned.has(s.participantId));
+      const pinnedSum = pinned.reduce((sum, s) => sum + (s.fixedAmount ?? 0), 0);
+      const remaining = Math.max(0, amount - pinnedSum);
+      const distributed = distributeCents(remaining, free.length);
+      const freeAmounts = new Map(
+        free.map((s, i) => [s.participantId, distributed[i] ?? 0])
+      );
+      return prev.map((s) => {
+        if (s.excluded || newPinned.has(s.participantId)) return s;
+        return { ...s, fixedAmount: freeAmounts.get(s.participantId) ?? s.fixedAmount ?? 0 };
+      });
+    });
+  };
+
   const handleSplitModeChange = (mode: string) => {
     const newMode = mode as SplitMode;
     setSplitMode(newMode);
+    setPinnedIds(new Set());
     if (newMode === "percentage") {
       const active = splits.filter((s) => !s.excluded);
       const equalPct = active.length > 0 ? 100 / active.length : 0;
@@ -313,10 +335,11 @@ export function ExpenseForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [amount]);
 
-  // When the total amount changes in fixed mode, rebalance to keep totals consistent
+  // When the total amount changes in fixed mode, reset pins and redistribute equally
   useEffect(() => {
     if (splitMode !== "fixed") return;
     if (!amount) return;
+    setPinnedIds(new Set());
     setSplits((prev) => {
       const active = prev.filter((s) => !s.excluded);
       if (active.length === 0) return prev;
@@ -632,7 +655,17 @@ export function ExpenseForm({
                     )}
 
                     {splitMode === "fixed" && (
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5">
+                        {pinnedIds.has(p.id) && (
+                          <button
+                            type="button"
+                            onClick={() => unpinParticipant(p.id)}
+                            className="text-section opacity-70 hover:opacity-100 transition-opacity shrink-0"
+                            title="Désancrer"
+                          >
+                            <Lock size={13} />
+                          </button>
+                        )}
                         <input
                           type="number"
                           inputMode="decimal"
@@ -642,7 +675,12 @@ export function ExpenseForm({
                           onChange={(e) =>
                             setFixedAmount(p.id, Number(e.target.value) || 0)
                           }
-                          className="w-20 text-right bg-foreground/8 border border-foreground/10 rounded-lg px-2 py-1 text-sm text-slate-100 focus:outline-none focus:border-section tabular-nums"
+                          className={cn(
+                            "w-20 text-right border rounded-lg px-2 py-1 text-sm text-slate-100 focus:outline-none focus:border-section tabular-nums",
+                            pinnedIds.has(p.id)
+                              ? "bg-section/10 border-section/40"
+                              : "bg-foreground/8 border-foreground/10"
+                          )}
                         />
                         <span className="text-xs text-slate-500 w-6">
                           {currencySymbol(currency)}
