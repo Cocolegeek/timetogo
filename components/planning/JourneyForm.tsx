@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { LocationAutocomplete } from "@/components/shared/LocationAutocomplete";
-import { GoogleMapsIcon, WazeIcon, CityMapperIcon } from "@/components/shared/MapAppIcons";
+import { GoogleMapsIcon, WazeIcon, CityMapperIcon, GoogleFlightsIcon } from "@/components/shared/MapAppIcons";
 import { cn } from "@/lib/utils";
 import type { ItineraryItem, JourneyMode, Participant } from "@/types";
 import type { ItineraryFormValues } from "./ItineraryItemForm";
@@ -345,9 +345,9 @@ export function JourneyForm({
                       href={buildWazeUrl(to, coords.to)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold bg-foreground/8 text-slate-200 hover:bg-foreground/12 active:scale-95 transition-all"
+                      className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold bg-foreground/8 text-slate-200 hover:bg-foreground/12 active:scale-95 transition-all"
                     >
-                      <WazeIcon size={18} />
+                      <AppIconBadge><WazeIcon size={20} /></AppIconBadge>
                       Waze
                     </a>
                   )}
@@ -381,9 +381,9 @@ export function JourneyForm({
                         href={`https://www.google.com/travel/flights?hl=fr&q=${encodeURIComponent(`vols ${from} ${to}`)}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-sm font-semibold bg-foreground/8 text-slate-200 hover:bg-foreground/12 active:scale-95 transition-all"
+                        className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold bg-foreground/8 text-slate-200 hover:bg-foreground/12 active:scale-95 transition-all"
                       >
-                        <GoogleMapsIcon size={18} />
+                        <AppIconBadge><GoogleFlightsIcon size={20} /></AppIconBadge>
                         Google Flights
                       </a>
                     ) : (
@@ -392,18 +392,18 @@ export function JourneyForm({
                           href={buildGoogleMapsUrl(from, to, coords.from, coords.to)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-sm font-semibold bg-foreground/8 text-slate-200 hover:bg-foreground/12 active:scale-95 transition-all"
+                          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold bg-foreground/8 text-slate-200 hover:bg-foreground/12 active:scale-95 transition-all"
                         >
-                          <GoogleMapsIcon size={18} />
+                          <AppIconBadge><GoogleMapsIcon size={20} /></AppIconBadge>
                           Google Maps
                         </a>
                         <a
                           href={buildCityMapperUrl(from, to, coords.from, coords.to)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-sm font-semibold bg-foreground/8 text-slate-200 hover:bg-foreground/12 active:scale-95 transition-all"
+                          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold bg-foreground/8 text-slate-200 hover:bg-foreground/12 active:scale-95 transition-all"
                         >
-                          <CityMapperIcon size={18} />
+                          <AppIconBadge><CityMapperIcon size={20} /></AppIconBadge>
                           CityMapper
                         </a>
                       </>
@@ -473,6 +473,14 @@ export function JourneyForm({
 }
 
 type Coord = { lat: number; lon: number };
+
+function AppIconBadge({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="w-7 h-7 rounded-full bg-white flex items-center justify-center shrink-0 p-1 shadow-sm">
+      {children}
+    </span>
+  );
+}
 
 function buildGoogleMapsUrl(
   from: string, to: string,
