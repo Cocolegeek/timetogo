@@ -1,5 +1,5 @@
 -- ============================================================
--- Voyou — Supabase Schema (canonical, up to migration 019)
+-- Voyou — Supabase Schema (canonical, up to migration 020)
 -- Run this in the Supabase SQL editor after creating your project.
 -- Already-deployed DBs: apply individual migrations in lib/supabase/migrations/.
 -- ============================================================
@@ -216,13 +216,13 @@ CREATE TABLE IF NOT EXISTS public.meals (
   id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   trip_id         uuid NOT NULL REFERENCES public.trips(id) ON DELETE CASCADE,
   date            date NOT NULL,
-  slot            text NOT NULL,                          -- 'breakfast' | 'lunch' | 'dinner'
+  slot            text NOT NULL,                          -- 'breakfast' | 'lunch' | 'snack' | 'dinner'
   category        text NOT NULL DEFAULT 'home',           -- 'home' | 'picnic' | 'restaurant'
-  title           text NOT NULL,
+  title           text,                                   -- optional note (migration 020)
   notes           text,
   participant_ids jsonb NOT NULL DEFAULT '[]'::jsonb,
   cook_ids        jsonb NOT NULL DEFAULT '[]'::jsonb,
-  ingredients     jsonb NOT NULL DEFAULT '[]'::jsonb,     -- [{id, name, quantity}]
+  dishes          jsonb NOT NULL DEFAULT '[]'::jsonb,     -- [{id, course, name, ingredients:[{id,name,quantity}]}]
   position        integer NOT NULL DEFAULT 0,
   created_at      timestamptz DEFAULT now() NOT NULL
 );

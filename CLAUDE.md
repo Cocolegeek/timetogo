@@ -127,8 +127,12 @@ participants      id, trip_id, name, color, avatar?
 trip_members      trip_id + user_id (composite PK), participant_id, role: owner|contributor
 expenses          id, trip_id, title, amount, currency, exchange_rate, amount_in_trip_currency,
                   category, paid_by_id (legacy), payers: jsonb[], date, split_mode, splits: jsonb[], notes
-meals             id, trip_id, date, slot: breakfast|lunch|dinner, title, category,
-                  participant_ids: uuid[], cook_ids: uuid[], ingredients: json[], position
+meals             id, trip_id, date, slot: breakfast|lunch|snack|dinner, title?, category,
+                  participant_ids: uuid[], cook_ids: uuid[],
+                  dishes: [{id, course: starter|main|cheese|dessert|other, name, ingredients:[{id,name,quantity}]}],
+                  position
+                  // title est une note optionnelle (ex "Chez Léa") depuis 020. Les plats vivent dans dishes[].
+                  // Meals créés à la demande via la page menus (plus de pré-remplissage matin/midi/soir).
 itinerary_items   id, trip_id, date, time, title, location, type, duration_minutes, participant_ids: uuid[]
                   // type: 'accommodation'|'activity'|'food'|'other'|'journey'
                   // journey extras: destination (text), journey_mode ('car'|'foot'|'bike'|'transit'|'plane')

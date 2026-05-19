@@ -2,21 +2,24 @@
 
 import { use, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion, useMotionValue, useTransform, animate } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue, useTransform, animate } from "framer-motion";
 import { UtensilsCrossed, ChefHat, Users, Plus, Trash2 } from "lucide-react";
 import { GlassCard } from "@/components/layout/GlassCard";
 import { DayHeader } from "@/components/shared/DayHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Spinner } from "@/components/shared/Spinner";
 import dynamic from "next/dynamic";
-const MealEditDialog = dynamic(() => import("@/components/menus/MealEditDialog").then(m => ({ default: m.MealEditDialog })), { ssr: false });
+const MealEditDialog = dynamic(
+  () => import("@/components/menus/MealEditDialog").then((m) => ({ default: m.MealEditDialog })),
+  { ssr: false }
+);
 import { useTrip } from "@/hooks/useTrip";
 import { useMeals } from "@/hooks/useMeals";
-import { DEFAULT_SLOTS, SLOT_CONFIG, eachDate, type SlotConfig } from "@/lib/meals/slots";
+import { DEFAULT_SLOTS, SLOT_CONFIG, eachDate } from "@/lib/meals/slots";
 import { CATEGORY_CONFIG } from "@/lib/meals/categories";
 import { cn } from "@/lib/utils";
 import { isVoyage } from "@/lib/trip-features";
-import type { Meal, Participant } from "@/types";
+import type { Meal, MealSlot, Participant } from "@/types";
 
 interface MenusPageProps {
   params: Promise<{ tripId: string }>;
@@ -26,22 +29,17 @@ export default function MenusPage({ params }: MenusPageProps) {
   const { tripId } = use(params);
   const router = useRouter();
   const { trip } = useTrip(tripId);
-  const dateRange = trip && isVoyage(trip)
-    ? { startDate: trip.startDate, endDate: trip.endDate }
-    : undefined;
-  const { meals, loading, addMeal, updateMeal, deleteMeal } = useMeals(tripId, dateRange);
+  const { meals, loading, addMeal, updateMeal, deleteMeal } = useMeals(tripId);
 
   const [editingMeal, setEditingMeal] = useState<Meal | null>(null);
   const todayRef = useRef<HTMLDivElement>(null);
 
   const today = useMemo(() => new Date().toISOString().split("T")[0], []);
 
-  // Auto-scroll to today's section once data is loaded
   useEffect(() => {
     if (loading || !trip) return;
     const el = todayRef.current;
     if (!el) return;
-    // Wait for next paint so the layout is stable
     requestAnimationFrame(() => {
       el.scrollIntoView({ behavior: "auto", block: "start" });
     });
@@ -53,21 +51,22 @@ export default function MenusPage({ params }: MenusPageProps) {
     }
   }, [trip, tripId, router]);
 
-  if (!trip) {
-    return (
-      <Spinner />
-    );
-  }
-
-  if (!isVoyage(trip)) {
-    return <Spinner />;
-  }
+  if (!trip || !isVoyage(trip)) return <Spinner />;
 
   const dates = eachDate(trip.startDate, trip.endDate);
 
-  // Index meals by `${date}#${slot}` for O(1) lookup
-  const mealMap = new Map<string, Meal>();
-  for (const m of meals) mealMap.set(`${m.date}#${m.slot}`, m);
+  // Group meals by date
+  const mealsByDate = new Map<string, Meal[]>();
+  for (const m of meals) {
+    const list = mealsByDate.get(m.date) ?? [];
+    list.push(m);
+    mealsByDate.set(m.date, list);
+  }
+
+  const handleAddMeal = async (date: string, slot: MealSlot) => {
+    const newMeal = await addMeal(date, slot);
+    setEditingMeal(newMeal);
+  };
 
   return (
     <div className="space-y-4 pt-4">
@@ -85,13 +84,21 @@ export default function MenusPage({ params }: MenusPageProps) {
         <EmptyState
           icon={UtensilsCrossed}
           title="Aucun jour de voyage"
-          description="Vérifie les dates du voyage pour générer les repas."
+          description="Vérifie les dates du voyage pour ajouter des repas."
         />
       ) : (
         <div className="space-y-6">
           {dates.map((d, idx) => {
             const isToday = d === today;
             const isPast = d < today;
+            const dayMeals = (mealsByDate.get(d) ?? []).sort(
+              (a, b) => a.position - b.position
+            );
+            const usedSlots = new Set(dayMeals.map((m) => m.slot));
+            const availableSlots = DEFAULT_SLOTS.filter(
+              (s) => !usedSlots.has(s.slot)
+            );
+
             return (
               <motion.section
                 key={d}
@@ -102,10 +109,9 @@ export default function MenusPage({ params }: MenusPageProps) {
                 className="scroll-mt-[calc(env(safe-area-inset-top)+4rem)]"
               >
                 <DayHeader date={d} isToday={isToday} isPast={isPast} />
-                <div className="relative pl-4 border-l border-foreground/8 space-y-3">
-                  {DEFAULT_SLOTS.map((slot) => {
-                    const meal = mealMap.get(`${d}#${slot.slot}`);
-                    return meal ? (
+                <div className="relative pl-4 border-l border-foreground/8 space-y-2.5">
+                  <AnimatePresence initial={false}>
+                    {dayMeals.map((meal) => (
                       <MealCard
                         key={meal.id}
                         meal={meal}
@@ -113,17 +119,15 @@ export default function MenusPage({ params }: MenusPageProps) {
                         onTap={() => setEditingMeal(meal)}
                         onDelete={() => deleteMeal(meal.id)}
                       />
-                    ) : (
-                      <PlaceholderCard
-                        key={slot.slot}
-                        slot={slot}
-                        onTap={async () => {
-                          const newMeal = await addMeal(d, slot.slot);
-                          setEditingMeal(newMeal);
-                        }}
-                      />
-                    );
-                  })}
+                    ))}
+                  </AnimatePresence>
+
+                  {availableSlots.length > 0 && (
+                    <AddMealRow
+                      availableSlots={availableSlots.map((s) => s.slot)}
+                      onPick={(slot) => handleAddMeal(d, slot)}
+                    />
+                  )}
                 </div>
               </motion.section>
             );
@@ -133,9 +137,7 @@ export default function MenusPage({ params }: MenusPageProps) {
 
       <MealEditDialog
         open={editingMeal !== null}
-        onOpenChange={(open) => {
-          if (!open) setEditingMeal(null);
-        }}
+        onOpenChange={(open) => { if (!open) setEditingMeal(null); }}
         meal={editingMeal}
         participants={trip.participants}
         onSave={async (data) => {
@@ -146,6 +148,70 @@ export default function MenusPage({ params }: MenusPageProps) {
     </div>
   );
 }
+
+// ─── AddMealRow ──────────────────────────────────────────────────────────────
+
+function AddMealRow({
+  availableSlots,
+  onPick,
+}: {
+  availableSlots: MealSlot[];
+  onPick: (slot: MealSlot) => void;
+}) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="w-full text-left px-3.5 py-3 rounded-2xl border border-dashed border-foreground/15 bg-foreground/3 hover:border-section/40 hover:bg-section/5 active:bg-foreground/10 transition-all flex items-center gap-2.5 text-slate-400 hover:text-section-soft"
+      >
+        <Plus size={16} className="shrink-0" />
+        <span className="text-sm font-medium">Ajouter un repas</span>
+      </button>
+
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.18 }}
+            className="overflow-hidden"
+          >
+            <div className="flex gap-1.5 flex-wrap pt-2">
+              {availableSlots.map((slot) => {
+                const cfg = SLOT_CONFIG[slot];
+                return (
+                  <button
+                    key={slot}
+                    type="button"
+                    onClick={() => {
+                      setOpen(false);
+                      onPick(slot);
+                    }}
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border transition-all active:scale-95",
+                      cfg.bgClass,
+                      cfg.textClass,
+                      "border-current/30 hover:opacity-100"
+                    )}
+                  >
+                    <span className="text-base leading-none">{cfg.emoji}</span>
+                    <span>{cfg.shortLabel}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ─── MealCard ────────────────────────────────────────────────────────────────
 
 const SWIPE_THRESHOLD = -110;
 
@@ -162,7 +228,6 @@ function MealCard({
 }) {
   const slotCfg = SLOT_CONFIG[meal.slot];
   const catCfg = CATEGORY_CONFIG[meal.category];
-  const isEmpty = !meal.title.trim();
   const x = useMotionValue(0);
   const [isDragging, setIsDragging] = useState(false);
   const bgOpacity = useTransform(x, [SWIPE_THRESHOLD, -10, 0], [1, 0.2, 0]);
@@ -196,28 +261,18 @@ function MealCard({
       ? "Tous"
       : `${eatersCount} pers.`;
 
-  if (isEmpty) {
-    return (
-      <motion.div
-        initial={{ opacity: 0, x: -10 }}
-        animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: -10 }}
-      >
-        <button
-          type="button"
-          onClick={onTap}
-          className="w-full text-left px-3.5 py-3.5 rounded-2xl border border-dashed border-foreground/20 bg-foreground/4 hover:border-foreground/35 hover:bg-foreground/8 active:bg-foreground/10 transition-all flex items-center gap-3"
-        >
-          <Plus size={16} className="text-sky-400 shrink-0" />
-          <div>
-            <span className={cn("text-sm px-2.5 py-0.5 rounded-full font-medium", slotCfg.bgClass, slotCfg.textClass)}>
-              {slotCfg.shortLabel}
-            </span>
-          </div>
-        </button>
-      </motion.div>
-    );
-  }
+  const dishNames = meal.dishes
+    .map((d) => d.name.trim())
+    .filter((n) => n.length > 0);
+  const primaryLabel =
+    dishNames.length > 0
+      ? dishNames.join(" · ")
+      : meal.title?.trim()
+        ? meal.title.trim()
+        : meal.category === "restaurant"
+          ? "Restaurant"
+          : "Repas à compléter";
+  const subLabel = dishNames.length > 0 && meal.title?.trim() ? meal.title.trim() : null;
 
   return (
     <motion.div
@@ -226,11 +281,11 @@ function MealCard({
       exit={{ opacity: 0 }}
       className="relative rounded-2xl overflow-hidden"
     >
-      {/* Red gradient revealed on swipe */}
       <motion.div
         className="absolute inset-0 flex items-center justify-end pr-6 pointer-events-none"
         style={{
-          background: "linear-gradient(90deg, rgba(239,68,68,0.0) 0%, rgba(239,68,68,0.45) 60%, rgba(220,38,38,0.85) 100%)",
+          background:
+            "linear-gradient(90deg, rgba(239,68,68,0.0) 0%, rgba(239,68,68,0.45) 60%, rgba(220,38,38,0.85) 100%)",
           opacity: bgOpacity,
         }}
       >
@@ -240,7 +295,6 @@ function MealCard({
         </motion.div>
       </motion.div>
 
-      {/* Draggable card */}
       <motion.div
         data-no-tab-swipe
         drag="x"
@@ -261,13 +315,18 @@ function MealCard({
           >
             <div className="flex items-center gap-2 flex-wrap">
               <span className={cn("text-sm px-2.5 py-0.5 rounded-full font-medium", slotCfg.bgClass, slotCfg.textClass)}>
-                {slotCfg.shortLabel}
+                {slotCfg.emoji} {slotCfg.shortLabel}
               </span>
               <span className={cn("text-sm px-2.5 py-0.5 rounded-full font-medium", catCfg.badgeClass)}>
                 {catCfg.label}
               </span>
             </div>
-            <p className="text-xl font-semibold text-slate-100 leading-tight mt-2">{meal.title}</p>
+            <p className="text-lg font-semibold text-slate-100 leading-snug mt-2">
+              {primaryLabel}
+            </p>
+            {subLabel && (
+              <p className="text-sm text-slate-400 mt-0.5">{subLabel}</p>
+            )}
             <div className="flex items-center gap-3 mt-1.5 text-base text-slate-400">
               {cookLabel && (
                 <span className="flex items-center gap-1.5">
@@ -283,26 +342,6 @@ function MealCard({
           </div>
         </GlassCard>
       </motion.div>
-    </motion.div>
-  );
-}
-
-function PlaceholderCard({ slot, onTap }: { slot: SlotConfig; onTap: () => void }) {
-  return (
-    <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}>
-      <button
-        type="button"
-        onClick={onTap}
-        className="w-full text-left px-3.5 py-3.5 rounded-2xl border border-dashed border-foreground/20 bg-foreground/4 hover:border-foreground/35 hover:bg-foreground/8 active:bg-foreground/10 transition-all flex items-center gap-3"
-      >
-        <Plus size={16} className="text-sky-400 shrink-0" />
-        <div>
-          <span className={cn("text-sm px-2.5 py-0.5 rounded-full font-medium", slot.bgClass, slot.textClass)}>
-            {slot.shortLabel}
-          </span>
-          <p className="text-sm text-slate-400 mt-1.5">Rien de prévu — tap pour ajouter</p>
-        </div>
-      </button>
     </motion.div>
   );
 }

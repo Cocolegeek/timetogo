@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { generateShareCode } from "@/lib/trip-share";
-import { buildDefaultMealRows } from "@/lib/meals/slots";
 import { useRevalidateOnFocus } from "@/hooks/useRevalidateOnFocus";
 import type { Trip, TripType, Participant } from "@/types";
 
@@ -126,11 +125,6 @@ export function useTrips() {
     });
 
     if (rpcError || !tripId) throw rpcError ?? new Error("Trip creation failed");
-
-    if (data.type === "trip" && data.startDate && data.endDate) {
-      const mealRows = buildDefaultMealRows(tripId as string, data.startDate, data.endDate);
-      if (mealRows.length > 0) await supabase.from("meals").insert(mealRows);
-    }
 
     await fetchTrips();
     return tripId as string;

@@ -22,11 +22,34 @@ import { SLOT_CONFIG } from "@/lib/meals/slots";
 import { CATEGORY_CONFIG, CATEGORY_ORDER } from "@/lib/meals/categories";
 import { cn } from "@/lib/utils";
 import type {
+  Dish,
+  DishCourse,
   Ingredient,
   Meal,
   MealCategory,
   Participant,
 } from "@/types";
+
+const COURSES: { id: DishCourse; label: string; emoji: string }[] = [
+  { id: "starter", label: "Entrée",   emoji: "🥗" },
+  { id: "main",    label: "Plat",     emoji: "🍽️" },
+  { id: "cheese",  label: "Fromage",  emoji: "🧀" },
+  { id: "dessert", label: "Dessert",  emoji: "🍰" },
+  { id: "other",   label: "Autre",    emoji: "🍴" },
+];
+
+const COURSE_BY_ID: Record<DishCourse, (typeof COURSES)[number]> =
+  Object.fromEntries(COURSES.map((c) => [c.id, c])) as never;
+
+const COURSE_ORDER: DishCourse[] = ["starter", "main", "cheese", "dessert", "other"];
+
+function newDish(course: DishCourse = "main"): Dish {
+  return { id: uuidv4(), course, name: "", ingredients: [] };
+}
+
+function newIngredient(): Ingredient {
+  return { id: uuidv4(), name: "", quantity: "" };
+}
 
 interface MealEditDialogProps {
   open: boolean;
@@ -34,12 +57,12 @@ interface MealEditDialogProps {
   meal: Meal | null;
   participants: Participant[];
   onSave: (data: {
-    title: string;
+    title: string | null;
     category: MealCategory;
-    notes?: string;
+    notes?: string | null;
     participantIds: string[];
     cookIds: string[];
-    ingredients: Ingredient[];
+    dishes: Dish[];
   }) => Promise<void>;
 }
 
@@ -55,34 +78,30 @@ export function MealEditDialog({
   const [notes, setNotes] = useState("");
   const [eaterIds, setEaterIds] = useState<string[]>([]);
   const [cookIds, setCookIds] = useState<string[]>([]);
-  const [ingredients, setIngredients] = useState<Ingredient[]>([]);
-  const [showLogistics, setShowLogistics] = useState(false);
+  const [dishes, setDishes] = useState<Dish[]>([]);
+  const [expandedDish, setExpandedDish] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // Hydrate when dialog opens
   useEffect(() => {
     if (!open || !meal) return;
-    setTitle(meal.title);
+    setTitle(meal.title ?? "");
     setCategory(meal.category);
     setNotes(meal.notes ?? "");
-    // Default behaviour: empty `participant_ids` means "tout le monde" → check all in form
     setEaterIds(
       meal.participantIds.length === 0
         ? participants.map((p) => p.id)
         : meal.participantIds
     );
     setCookIds(meal.cookIds ?? []);
-    setIngredients(meal.ingredients ?? []);
-    setShowLogistics(
-      (meal.ingredients?.length ?? 0) > 0 || !!meal.notes
-    );
+    setDishes(meal.dishes ?? []);
+    setExpandedDish(meal.dishes?.[0]?.id ?? null);
     setErrorMsg(null);
   }, [open, meal, participants]);
 
   const slotCfg = meal ? SLOT_CONFIG[meal.slot] : null;
+  const isRestaurant = category === "restaurant";
 
-  // ───── eaters / cooks toggles ─────
   const toggleEater = (id: string) => {
     setEaterIds((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
@@ -99,47 +118,92 @@ export function MealEditDialog({
   const toggleAllEaters = () =>
     setEaterIds(allEatersSelected ? [] : participants.map((p) => p.id));
 
-  // ───── ingredients management ─────
-  const addIngredient = () =>
-    setIngredients((prev) => [
-      ...prev,
-      { id: uuidv4(), name: "", quantity: "" },
-    ]);
+  // ── Dish management ─────────────────────────────────────────────────────
+  const addDish = () => {
+    const existingCourses = new Set(dishes.map((d) => d.course));
+    const nextCourse =
+      COURSE_ORDER.find((c) => !existingCourses.has(c)) ?? "other";
+    const dish = newDish(nextCourse);
+    setDishes((prev) => [...prev, dish]);
+    setExpandedDish(dish.id);
+  };
+
+  const updateDish = (id: string, patch: Partial<Dish>) => {
+    setDishes((prev) => prev.map((d) => (d.id === id ? { ...d, ...patch } : d)));
+  };
+
+  const removeDish = (id: string) => {
+    setDishes((prev) => prev.filter((d) => d.id !== id));
+    if (expandedDish === id) setExpandedDish(null);
+  };
+
+  const addIngredient = (dishId: string) => {
+    updateDish(dishId, {
+      ingredients: [
+        ...(dishes.find((d) => d.id === dishId)?.ingredients ?? []),
+        newIngredient(),
+      ],
+    });
+  };
+
   const updateIngredient = (
-    id: string,
+    dishId: string,
+    ingId: string,
     field: "name" | "quantity",
     value: string
-  ) =>
-    setIngredients((prev) =>
-      prev.map((ing) => (ing.id === id ? { ...ing, [field]: value } : ing))
-    );
-  const removeIngredient = (id: string) =>
-    setIngredients((prev) => prev.filter((ing) => ing.id !== id));
+  ) => {
+    const dish = dishes.find((d) => d.id === dishId);
+    if (!dish) return;
+    updateDish(dishId, {
+      ingredients: dish.ingredients.map((ing) =>
+        ing.id === ingId ? { ...ing, [field]: value } : ing
+      ),
+    });
+  };
 
+  const removeIngredient = (dishId: string, ingId: string) => {
+    const dish = dishes.find((d) => d.id === dishId);
+    if (!dish) return;
+    updateDish(dishId, {
+      ingredients: dish.ingredients.filter((ing) => ing.id !== ingId),
+    });
+  };
+
+  // ── Save ────────────────────────────────────────────────────────────────
   const handleSave = async () => {
-    if (!title.trim()) return;
     setSaving(true);
     setErrorMsg(null);
     try {
-      // If everyone is selected, store [] to keep semantic "tout le monde"
       const cleanedEaters =
         eaterIds.length === participants.length ? [] : eaterIds;
-      // Drop empty ingredient rows
-      const cleanedIngredients = ingredients
-        .filter((i) => i.name.trim().length > 0)
-        .map((i) => ({
-          ...i,
-          name: i.name.trim(),
-          quantity: i.quantity.trim(),
-        }));
+
+      const cleanedDishes: Dish[] = isRestaurant
+        ? []
+        : dishes
+            .filter(
+              (d) =>
+                d.name.trim().length > 0 ||
+                d.ingredients.some((ing) => ing.name.trim().length > 0)
+            )
+            .map((d) => ({
+              ...d,
+              name: d.name.trim(),
+              ingredients: d.ingredients
+                .filter((ing) => ing.name.trim().length > 0)
+                .map((ing) => ({
+                  ...ing,
+                  name: ing.name.trim(),
+                  quantity: ing.quantity.trim(),
+                })),
+            }));
 
       await onSave({
-        title: title.trim(),
+        title: title.trim() || null,
         category,
-        notes: notes.trim() || undefined,
+        notes: notes.trim() || null,
         participantIds: cleanedEaters,
         cookIds,
-        ingredients: cleanedIngredients,
+        dishes: cleanedDishes,
       });
       onOpenChange(false);
     } catch (e) {
@@ -159,18 +223,16 @@ export function MealEditDialog({
       <DialogContent
         showCloseButton={false}
         className={cn(
-          // Mobile: full-screen sheet
           "!fixed !top-0 !left-0 !translate-x-0 !translate-y-0",
           "!w-full !max-w-full !h-[100dvh]",
           "!rounded-none !p-0 !gap-0 !border-0",
-          // Desktop: centered modal
           "sm:!top-1/2 sm:!left-1/2 sm:!-translate-x-1/2 sm:!-translate-y-1/2",
           "sm:!max-w-md sm:!h-auto sm:!max-h-[92vh]",
           "sm:!rounded-2xl sm:!border sm:!border-foreground/10",
           "glass-strong flex flex-col overflow-hidden"
         )}
       >
-        {/* Top app bar */}
+        {/* App bar */}
         <div
           className="flex items-center justify-between gap-3 px-3 py-2.5 border-b border-foreground/8"
           style={{ paddingTop: "calc(env(safe-area-inset-top) + 0.625rem)" }}
@@ -190,7 +252,7 @@ export function MealEditDialog({
           <button
             type="button"
             onClick={handleSave}
-            disabled={!title.trim() || saving}
+            disabled={saving}
             className={cn(
               "px-4 h-10 rounded-full text-sm font-semibold transition-all",
               "gradient-primary text-white",
@@ -204,18 +266,7 @@ export function MealEditDialog({
 
         {/* Body */}
         <div className="flex-1 overflow-y-auto">
-          {/* Title — big */}
-          <div className="px-5 pt-5 pb-4">
-            <input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Ajouter un titre"
-              className="w-full bg-transparent border-0 outline-none text-2xl font-bold text-slate-100 placeholder:text-slate-600 placeholder:font-normal"
-              autoFocus
-            />
-          </div>
-
-          {/* Category — three colored buttons */}
+          {/* Category */}
           <Section label="Catégorie">
             <div className="grid grid-cols-3 gap-2">
               {CATEGORY_ORDER.map((cat) => {
@@ -240,37 +291,31 @@ export function MealEditDialog({
             </div>
           </Section>
 
+          {/* Optional note */}
+          <Section label="Note" hint="optionnel">
+            <Input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder={
+                isRestaurant ? "Le bistrot de Léa…" : "Ex: chez Léa, repas léger…"
+              }
+              className="bg-foreground/5 border-foreground/10 text-slate-100 placeholder:text-slate-500"
+            />
+          </Section>
+
           {/* Cook — optional */}
-          {participants.length > 0 && (
+          {participants.length > 0 && !isRestaurant && (
             <Section
               icon={<ChefHat size={14} className="text-amber-400/80" />}
               label="Qui gère ?"
               hint="optionnel"
             >
-              <div className="flex gap-1.5 flex-wrap">
-                {participants.map((p) => {
-                  const sel = cookIds.includes(p.id);
-                  return (
-                    <button
-                      key={p.id}
-                      type="button"
-                      onClick={() => toggleCook(p.id)}
-                      className={cn(
-                        "flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium transition-all active:scale-95",
-                        sel
-                          ? "border-amber-400 bg-amber-500/15 text-amber-200"
-                          : "border-foreground/10 bg-foreground/5 text-slate-300 hover:bg-foreground/10"
-                      )}
-                    >
-                      <span
-                        className="w-2.5 h-2.5 rounded-full shrink-0"
-                        style={{ backgroundColor: p.color }}
-                      />
-                      {p.name}
-                    </button>
-                  );
-                })}
-              </div>
+              <PeoplePills
+                participants={participants}
+                selected={cookIds}
+                onToggle={toggleCook}
+                selectedTone="amber"
+              />
             </Section>
           )}
 
@@ -319,121 +364,60 @@ export function MealEditDialog({
             </Section>
           )}
 
-          {/* Logistics — collapsed by default */}
-          <div className="border-t border-foreground/8">
-            <button
-              type="button"
-              onClick={() => setShowLogistics((v) => !v)}
-              className="w-full flex items-center justify-between gap-2 px-5 py-3.5 text-sm font-medium text-slate-300 hover:bg-foreground/4 active:bg-foreground/8 transition-colors"
-            >
-              <span>Détails logistiques</span>
-              <ChevronDown
-                size={16}
-                className={cn(
-                  "text-slate-500 transition-transform",
-                  showLogistics && "rotate-180"
-                )}
-              />
-            </button>
-            <AnimatePresence initial={false}>
-              {showLogistics && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  className="overflow-hidden"
+          {/* Dishes — hidden when restaurant */}
+          {!isRestaurant && (
+            <Section label="Plats" hint={dishes.length > 0 ? `${dishes.length}` : undefined}>
+              <div className="space-y-2">
+                <AnimatePresence initial={false}>
+                  {dishes.map((dish) => (
+                    <DishRow
+                      key={dish.id}
+                      dish={dish}
+                      expanded={expandedDish === dish.id}
+                      onToggle={() =>
+                        setExpandedDish((prev) => (prev === dish.id ? null : dish.id))
+                      }
+                      onUpdate={(patch) => updateDish(dish.id, patch)}
+                      onRemove={() => removeDish(dish.id)}
+                      onAddIngredient={() => addIngredient(dish.id)}
+                      onUpdateIngredient={(ingId, field, value) =>
+                        updateIngredient(dish.id, ingId, field, value)
+                      }
+                      onRemoveIngredient={(ingId) => removeIngredient(dish.id, ingId)}
+                    />
+                  ))}
+                </AnimatePresence>
+
+                <button
+                  type="button"
+                  onClick={addDish}
+                  className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-dashed border-foreground/15 text-sm text-slate-400 hover:border-section/40 hover:text-section-soft hover:bg-section/5 transition-colors"
                 >
-                  <div className="px-5 pb-5 space-y-4">
-                    {/* Ingredients table — pas pertinent au resto */}
-                    {category !== "restaurant" && (
-                      <div className="space-y-2">
-                        <div className="grid grid-cols-[1fr_120px_36px] gap-2 px-1">
-                          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                            Ingrédient
-                          </p>
-                          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                            Quantité
-                          </p>
-                          <span />
-                        </div>
+                  <Plus size={14} />
+                  Ajouter un plat
+                </button>
+              </div>
+            </Section>
+          )}
 
-                        <AnimatePresence initial={false}>
-                          {ingredients.map((ing) => (
-                            <motion.div
-                              key={ing.id}
-                              layout
-                              initial={{ opacity: 0, y: -6 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              exit={{ opacity: 0, y: -6 }}
-                              className="grid grid-cols-[1fr_120px_36px] gap-2 items-center"
-                            >
-                              <Input
-                                value={ing.name}
-                                onChange={(e) =>
-                                  updateIngredient(ing.id, "name", e.target.value)
-                                }
-                                placeholder="Tomates"
-                                className="bg-foreground/5 border-foreground/10 text-slate-100 placeholder:text-slate-500"
-                              />
-                              <Input
-                                value={ing.quantity}
-                                onChange={(e) =>
-                                  updateIngredient(
-                                    ing.id,
-                                    "quantity",
-                                    e.target.value
-                                  )
-                                }
-                                placeholder="500g"
-                                className="bg-foreground/5 border-foreground/10 text-slate-100 placeholder:text-slate-500"
-                              />
-                              <button
-                                type="button"
-                                onClick={() => removeIngredient(ing.id)}
-                                className="h-9 w-9 rounded-lg flex items-center justify-center text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                                aria-label="Retirer l'ingrédient"
-                              >
-                                <Trash2 size={14} />
-                              </button>
-                            </motion.div>
-                          ))}
-                        </AnimatePresence>
+          {/* Notes */}
+          <Section
+            label={isRestaurant ? "Réservation / notes" : "Notes"}
+            hint="optionnel"
+          >
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder={
+                isRestaurant
+                  ? "Nom du resto, horaire, n° de réservation…"
+                  : "Allergies, idées de courses…"
+              }
+              rows={2}
+              className="w-full bg-foreground/5 border border-foreground/10 rounded-lg px-3 py-2 text-base text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-3 focus:ring-section resize-none"
+            />
+          </Section>
 
-                        <button
-                          type="button"
-                          onClick={addIngredient}
-                          className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-dashed border-foreground/15 text-sm text-slate-400 hover:border-foreground/25 hover:text-slate-200 hover:bg-foreground/4 transition-colors"
-                        >
-                          <Plus size={14} />
-                          Ajouter un ingrédient
-                        </button>
-                      </div>
-                    )}
-
-                    {/* Notes */}
-                    <div className="space-y-1.5">
-                      <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 px-1">
-                        {category === "restaurant" ? "Réservation / notes" : "Notes"}
-                      </p>
-                      <textarea
-                        value={notes}
-                        onChange={(e) => setNotes(e.target.value)}
-                        placeholder={
-                          category === "restaurant"
-                            ? "Nom du resto, horaire, n° de réservation…"
-                            : "Allergies, restos envisagés…"
-                        }
-                        rows={2}
-                        className="w-full bg-foreground/5 border border-foreground/10 rounded-lg px-3 py-2 text-base text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-3 focus:ring-section resize-none"
-                      />
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          {/* Error */}
           {errorMsg && (
             <div className="px-5 py-3">
               <p className="text-sm text-red-300 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
@@ -452,6 +436,172 @@ export function MealEditDialog({
   );
 }
 
+// ─── DishRow ────────────────────────────────────────────────────────────────
+
+function DishRow({
+  dish,
+  expanded,
+  onToggle,
+  onUpdate,
+  onRemove,
+  onAddIngredient,
+  onUpdateIngredient,
+  onRemoveIngredient,
+}: {
+  dish: Dish;
+  expanded: boolean;
+  onToggle: () => void;
+  onUpdate: (patch: Partial<Dish>) => void;
+  onRemove: () => void;
+  onAddIngredient: () => void;
+  onUpdateIngredient: (id: string, field: "name" | "quantity", value: string) => void;
+  onRemoveIngredient: (id: string) => void;
+}) {
+  const courseCfg = COURSE_BY_ID[dish.course];
+
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, height: 0 }}
+      animate={{ opacity: 1, height: "auto" }}
+      exit={{ opacity: 0, height: 0 }}
+      transition={{ duration: 0.18 }}
+      className="rounded-xl border border-foreground/8 bg-foreground/4 overflow-hidden"
+    >
+      <div className="flex items-stretch">
+        <button
+          type="button"
+          onClick={onToggle}
+          className="flex-1 flex items-center gap-2.5 px-3 py-2.5 text-left hover:bg-foreground/4 transition-colors min-w-0"
+        >
+          <span className="text-base shrink-0">{courseCfg.emoji}</span>
+          <span className="text-xs font-semibold uppercase tracking-wider text-slate-400 shrink-0">
+            {courseCfg.label}
+          </span>
+          {dish.name && (
+            <span className="text-sm text-slate-200 truncate">— {dish.name}</span>
+          )}
+          <span className="flex-1" />
+          <ChevronDown
+            size={14}
+            className={cn(
+              "text-slate-500 transition-transform shrink-0",
+              expanded && "rotate-180"
+            )}
+          />
+        </button>
+        <button
+          type="button"
+          onClick={onRemove}
+          className="px-3 text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+          aria-label="Retirer le plat"
+        >
+          <Trash2 size={14} />
+        </button>
+      </div>
+
+      <AnimatePresence initial={false}>
+        {expanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden border-t border-foreground/8"
+          >
+            <div className="p-3 space-y-3">
+              {/* Course select */}
+              <div className="flex gap-1.5 flex-wrap">
+                {COURSES.map((c) => {
+                  const sel = c.id === dish.course;
+                  return (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => onUpdate({ course: c.id })}
+                      className={cn(
+                        "flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border transition-all active:scale-95",
+                        sel
+                          ? "border-section bg-section-soft text-section-soft"
+                          : "border-foreground/10 bg-foreground/4 text-slate-400 hover:bg-foreground/8"
+                      )}
+                    >
+                      <span>{c.emoji}</span>
+                      <span>{c.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Dish name */}
+              <Input
+                value={dish.name}
+                onChange={(e) => onUpdate({ name: e.target.value })}
+                placeholder="Nom du plat (ex: œufs mimosa)"
+                className="bg-foreground/5 border-foreground/10 text-slate-100 placeholder:text-slate-500"
+              />
+
+              {/* Ingredients */}
+              <div className="space-y-1.5">
+                <p className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold px-1">
+                  Ingrédients
+                </p>
+                <AnimatePresence initial={false}>
+                  {dish.ingredients.map((ing) => (
+                    <motion.div
+                      key={ing.id}
+                      layout
+                      initial={{ opacity: 0, y: -4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -4 }}
+                      className="grid grid-cols-[1fr_90px_30px] gap-1.5 items-center"
+                    >
+                      <Input
+                        value={ing.name}
+                        onChange={(e) =>
+                          onUpdateIngredient(ing.id, "name", e.target.value)
+                        }
+                        placeholder="Tomates"
+                        className="bg-foreground/5 border-foreground/10 text-slate-100 placeholder:text-slate-500 h-9 text-sm"
+                      />
+                      <Input
+                        value={ing.quantity}
+                        onChange={(e) =>
+                          onUpdateIngredient(ing.id, "quantity", e.target.value)
+                        }
+                        placeholder="500g"
+                        className="bg-foreground/5 border-foreground/10 text-slate-100 placeholder:text-slate-500 h-9 text-sm"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => onRemoveIngredient(ing.id)}
+                        className="h-8 w-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                        aria-label="Retirer l'ingrédient"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+
+                <button
+                  type="button"
+                  onClick={onAddIngredient}
+                  className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg border border-dashed border-foreground/10 text-xs text-slate-500 hover:border-foreground/20 hover:text-slate-300 transition-colors"
+                >
+                  <Plus size={12} />
+                  Ingrédient
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+}
+
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
 function Section({
   icon,
   label,
@@ -464,7 +614,7 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <div className="px-5 py-4 border-t border-foreground/8 space-y-2.5">
+    <div className="px-5 py-4 border-t border-foreground/8 space-y-2.5 first:border-t-0">
       <div className="flex items-center gap-1.5">
         {icon}
         <p className="text-xs font-semibold uppercase tracking-wider text-slate-300">
@@ -477,6 +627,49 @@ function Section({
         )}
       </div>
       {children}
+    </div>
+  );
+}
+
+function PeoplePills({
+  participants,
+  selected,
+  onToggle,
+  selectedTone,
+}: {
+  participants: Participant[];
+  selected: string[];
+  onToggle: (id: string) => void;
+  selectedTone: "amber" | "section";
+}) {
+  const tones = {
+    amber: "border-amber-400 bg-amber-500/15 text-amber-200",
+    section: "border-section bg-section-soft text-section-soft",
+  };
+  return (
+    <div className="flex gap-1.5 flex-wrap">
+      {participants.map((p) => {
+        const sel = selected.includes(p.id);
+        return (
+          <button
+            key={p.id}
+            type="button"
+            onClick={() => onToggle(p.id)}
+            className={cn(
+              "flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium transition-all active:scale-95",
+              sel
+                ? tones[selectedTone]
+                : "border-foreground/10 bg-foreground/5 text-slate-300 hover:bg-foreground/10"
+            )}
+          >
+            <span
+              className="w-2.5 h-2.5 rounded-full shrink-0"
+              style={{ backgroundColor: p.color }}
+            />
+            {p.name}
+          </button>
+        );
+      })}
     </div>
   );
 }

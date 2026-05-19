@@ -14,7 +14,7 @@ export interface SlotConfig {
   bgClass: string;
 }
 
-/** Three fixed slots auto-generated for every day of a trip. */
+/** Available slots that can be added to a day. The order also drives sort. */
 export const DEFAULT_SLOTS: SlotConfig[] = [
   {
     slot: "breakfast",
@@ -35,9 +35,18 @@ export const DEFAULT_SLOTS: SlotConfig[] = [
     bgClass: "bg-sky-400/10",
   },
   {
+    slot: "snack",
+    shortLabel: "Goûter",
+    position: 2,
+    emoji: "🍪",
+    stripClass: "bg-pink-500",
+    textClass: "text-pink-400",
+    bgClass: "bg-pink-400/10",
+  },
+  {
     slot: "dinner",
     shortLabel: "Soir",
-    position: 2,
+    position: 3,
     emoji: "🍽️",
     stripClass: "bg-violet-500",
     textClass: "text-violet-400",
@@ -61,45 +70,4 @@ export function eachDate(startISO: string, endISO: string): string[] {
     cursor.setDate(cursor.getDate() + 1);
   }
   return out;
-}
-
-/**
- * Build the rows (snake_case for Supabase) to insert in `meals` for a fresh trip.
- * Titles are intentionally left blank so the UI shows "non renseigné" until
- * the user actually names the meal.
- */
-export function buildDefaultMealRows(
-  tripId: string,
-  startDate: string,
-  endDate: string
-) {
-  const rows: Array<{
-    trip_id: string;
-    date: string;
-    slot: MealSlot;
-    title: string;
-    category: "home";
-    position: number;
-    participant_ids: string[];
-    cook_ids: string[];
-    ingredients: never[];
-  }> = [];
-
-  for (const date of eachDate(startDate, endDate)) {
-    for (const slot of DEFAULT_SLOTS) {
-      rows.push({
-        trip_id: tripId,
-        date,
-        slot: slot.slot,
-        title: "",
-        category: "home",
-        position: slot.position,
-        participant_ids: [],
-        cook_ids: [],
-        ingredients: [],
-      });
-    }
-  }
-
-  return rows;
 }
