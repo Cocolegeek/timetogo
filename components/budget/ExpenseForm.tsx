@@ -414,6 +414,7 @@ export function ExpenseForm({
               placeholder={`0,00 ${sym}`}
               className="w-full text-center bg-transparent text-6xl font-bold text-slate-100 placeholder:text-slate-700 focus:outline-none tabular-nums"
               autoFocus={!isEdit}
+              onFocus={(e) => e.target.select()}
             />
           </div>
 
@@ -486,6 +487,7 @@ export function ExpenseForm({
                             Number(e.target.value) || 0
                           )
                         }
+                        onFocus={(e) => e.target.select()}
                         className="w-20 text-right bg-foreground/8 border border-foreground/10 rounded-lg px-2 py-1 text-sm text-slate-100 focus:outline-none focus:border-section tabular-nums"
                       />
                       <span className="text-xs text-slate-500 w-8">{sym}</span>
@@ -645,6 +647,7 @@ export function ExpenseForm({
                           onChange={(e) =>
                             setPercentage(p.id, Number(e.target.value) || 0)
                           }
+                          onFocus={(e) => e.target.select()}
                           className={cn(
                             "w-16 text-right border rounded-lg px-2 py-1 text-sm text-slate-100 focus:outline-none focus:border-section tabular-nums",
                             split.pinned && !split.excluded
@@ -680,6 +683,7 @@ export function ExpenseForm({
                           onChange={(e) =>
                             setFixedAmount(p.id, Number(e.target.value) || 0)
                           }
+                          onFocus={(e) => e.target.select()}
                           className={cn(
                             "w-20 text-right border rounded-lg px-2 py-1 text-sm text-slate-100 focus:outline-none focus:border-section tabular-nums",
                             split.pinned && !split.excluded

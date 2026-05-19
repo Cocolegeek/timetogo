@@ -13,6 +13,7 @@ import { DebtSettlements } from "@/components/budget/DebtSettlements";
 import { MyBalanceCard } from "@/components/budget/MyBalanceCard";
 import { AllSettledEmpty } from "@/components/budget/AllSettledEmpty";
 import { IAmSettledEmpty } from "@/components/budget/IAmSettledEmpty";
+import { ExpenseDetailSheet } from "@/components/budget/ExpenseDetailSheet";
 import { useTrip } from "@/hooks/useTrip";
 import { useBudget } from "@/hooks/useBudget";
 import { useDebts } from "@/hooks/useDebts";
@@ -39,6 +40,7 @@ export default function BudgetPage({ params }: BudgetPageProps) {
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | undefined>();
+  const [detailExpense, setDetailExpense] = useState<Expense | null>(null);
   const [activeTab, setActiveTab] = useState<BudgetTab>("expenses");
 
   const participants = trip?.participants ?? [];
@@ -87,9 +89,23 @@ export default function BudgetPage({ params }: BudgetPageProps) {
     }
   };
 
-  const handleEdit = (expense: Expense) => {
-    setEditingExpense(expense);
+  // Tap → detail sheet (not directly to edit form)
+  const handleTap = (expense: Expense) => {
+    setDetailExpense(expense);
+  };
+
+  // From detail sheet → edit form
+  const handleEditFromDetail = () => {
+    if (!detailExpense) return;
+    setEditingExpense(detailExpense);
+    setDetailExpense(null);
     setFormOpen(true);
+  };
+
+  const handleDeleteFromDetail = async () => {
+    if (!detailExpense) return;
+    await deleteExpense(detailExpense.id);
+    setDetailExpense(null);
   };
 
   const handleDelete = async (id: string) => {
@@ -241,7 +257,7 @@ export default function BudgetPage({ params }: BudgetPageProps) {
               participants={participants}
               currency={currency}
               onDelete={handleDelete}
-              onEdit={handleEdit}
+              onEdit={handleTap}
             />
           )}
 
@@ -324,6 +340,17 @@ export default function BudgetPage({ params }: BudgetPageProps) {
           )}
         </motion.div>
       </div>
+
+      {/* Expense Detail — tap on card opens this first */}
+      <ExpenseDetailSheet
+        expense={detailExpense}
+        participants={participants}
+        currency={currency}
+        open={detailExpense !== null}
+        onOpenChange={(open) => { if (!open) setDetailExpense(null); }}
+        onEdit={handleEditFromDetail}
+        onDelete={handleDeleteFromDetail}
+      />
 
       {/* Expense Form */}
       <ExpenseForm
