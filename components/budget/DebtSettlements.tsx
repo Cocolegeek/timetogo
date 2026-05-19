@@ -10,6 +10,7 @@ import {
   CreditCard,
   Phone,
   Share2,
+  Euro,
 } from "lucide-react";
 import { formatCurrency, currencySymbol } from "@/lib/format-currency";
 import {
@@ -218,6 +219,14 @@ function PaymentDetails({
         Payer {recipientName}
       </p>
 
+      <PaymentRow
+        icon={<Euro size={14} />}
+        label="Montant"
+        value={formatCurrency(amount, currency)}
+        rawValue={amount.toFixed(2)}
+        monospace
+      />
+
       {info.iban && (
         <PaymentRow
           icon={<CreditCard size={14} />}
@@ -244,13 +253,6 @@ function PaymentDetails({
         amount={amount}
         currency={currency}
       />
-
-      <p className="text-xs text-slate-500">
-        Montant à transférer :{" "}
-        <span className="text-slate-300 font-semibold tabular-nums">
-          {formatCurrency(amount, currency)}
-        </span>
-      </p>
     </div>
   );
 }
