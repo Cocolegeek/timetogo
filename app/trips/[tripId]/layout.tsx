@@ -1,6 +1,7 @@
 import { MeshGradientBackground } from "@/components/layout/MeshGradientBackground";
 import { TripAppHeader } from "@/components/layout/TripAppHeader";
 import { TripNav } from "@/components/layout/TripNav";
+import { TripClientProviders } from "@/components/layout/TripClientProviders";
 import { createClient } from "@/lib/supabase/server";
 import type { TripType } from "@/types";
 
@@ -16,7 +17,7 @@ export default async function TripLayout({ children, params }: TripLayoutProps) 
   const tripType: TripType = (data?.type as TripType | undefined) ?? "trip";
 
   return (
-    <>
+    <TripClientProviders>
       <MeshGradientBackground />
       <div className="min-h-screen flex flex-col">
         <TripAppHeader tripId={tripId} />
@@ -31,6 +32,6 @@ export default async function TripLayout({ children, params }: TripLayoutProps) 
         </main>
         <TripNav tripId={tripId} tripType={tripType} />
       </div>
-    </>
+    </TripClientProviders>
   );
 }

@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from "framer-motion";
 import { GlassCard } from "@/components/layout/GlassCard";
-import { openLocation } from "@/lib/map-apps";
+import { useOpenLocation } from "@/components/shared/MapAppPicker";
 import { ConfirmDeleteDialog } from "@/components/shared/ConfirmDeleteDialog";
 import { DayHeader } from "@/components/shared/DayHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -309,6 +309,7 @@ function ItineraryCard({
   onDelete: () => void;
   onSwipeDelete: () => void;
 }) {
+  const openLocation = useOpenLocation();
   const cfg = TYPE_CONFIG[item.type];
   const durationLabel = formatDuration(item.durationMinutes);
   const x = useMotionValue(0);
@@ -376,9 +377,9 @@ function ItineraryCard({
             className="p-3.5 flex items-start gap-3 cursor-pointer active:bg-foreground/4 transition-colors touch-pan-y select-none"
           >
             {isJourney ? (
-              <JourneyCardContent item={item} involved={involved} everyone={everyone} />
+              <JourneyCardContent item={item} involved={involved} everyone={everyone} openLocation={openLocation} />
             ) : (
-              <EventCardContent item={item} cfg={cfg} durationLabel={durationLabel} involved={involved} everyone={everyone} />
+              <EventCardContent item={item} cfg={cfg} durationLabel={durationLabel} involved={involved} everyone={everyone} openLocation={openLocation} />
             )}
 
             <div onClick={(e) => e.stopPropagation()}>
@@ -422,12 +423,14 @@ function EventCardContent({
   durationLabel,
   involved,
   everyone,
+  openLocation,
 }: {
   item: ItineraryItem;
   cfg: { label: string; color: string; bg: string };
   durationLabel: string | undefined;
   involved: Participant[];
   everyone: boolean;
+  openLocation: (q: string) => void;
 }) {
   return (
     <div className="flex-1 min-w-0 pr-1">
@@ -475,10 +478,12 @@ function JourneyCardContent({
   item,
   involved,
   everyone,
+  openLocation,
 }: {
   item: ItineraryItem;
   involved: Participant[];
   everyone: boolean;
+  openLocation: (q: string) => void;
 }) {
   const ModeIcon = item.journeyMode ? JOURNEY_MODE_ICON[item.journeyMode] : Route;
   const durationLabel = formatDuration(item.durationMinutes) || undefined;
