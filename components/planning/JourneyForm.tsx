@@ -56,7 +56,6 @@ export function JourneyForm({
 }: JourneyFormProps) {
   const isEdit = !!initialValues;
 
-  const [title, setTitle]   = useState("");
   const [date, setDate]     = useState("");
   const [time, setTime]     = useState("");
   const [from, setFrom]     = useState("");
@@ -75,7 +74,6 @@ export function JourneyForm({
   useEffect(() => {
     if (!open) return;
     if (initialValues) {
-      setTitle(initialValues.title);
       setDate(initialValues.date);
       setTime(initialValues.time ?? "");
       setFrom(initialValues.location ?? "");
@@ -87,7 +85,6 @@ export function JourneyForm({
       setDurationM(dm ? String(dm) : "");
       setSelectedParticipantIds(initialValues.participantIds ?? []);
     } else {
-      setTitle("");
       setDate(defaultDate);
       setTime("");
       setFrom("");
@@ -151,9 +148,8 @@ export function JourneyForm({
     setSaving(true);
     setErrorMsg(null);
     try {
-      const autoTitle = title.trim() || `${from.trim()} → ${to.trim()}`;
       await onSubmit({
-        title: autoTitle,
+        title: `${from.trim()} → ${to.trim()}`,
         date,
         time: time || undefined,
         location: from.trim(),
@@ -217,17 +213,6 @@ export function JourneyForm({
         </div>
 
         <div className="flex-1 overflow-y-auto">
-          {/* Title — optional, auto-generated */}
-          <div className="px-5 pt-5 pb-4">
-            <input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder={from && to ? `${from} → ${to}` : "Titre (optionnel)"}
-              className="w-full bg-transparent border-0 outline-none text-2xl font-bold text-slate-100 placeholder:text-slate-600 placeholder:font-normal placeholder:text-xl"
-              autoFocus={!isEdit}
-            />
-          </div>
-
           {/* Date + time */}
           <Row icon={<Calendar size={18} />}>
             <div className="grid grid-cols-2 gap-3">
@@ -353,11 +338,19 @@ export function JourneyForm({
               </div>
             ) : (
               <div className="space-y-3">
+                {from.trim().length > 2 && to.trim().length > 2 && (
+                  <a
+                    href={buildGoogleMapsUrl(from, to, mode)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-foreground/8 text-slate-200 hover:bg-foreground/12 active:scale-95 transition-all"
+                  >
+                    <Navigation size={14} />
+                    Voir l'itinéraire sur Maps
+                  </a>
+                )}
                 <p className="text-xs text-slate-500">
-                  {mode === "plane"
-                    ? "Le calcul automatique n'est pas disponible pour l'avion."
-                    : "Le calcul automatique n'est pas disponible pour les transports en commun."}
-                  {" "}Renseigne la durée manuellement.
+                  Renseigne la durée manuellement après avoir consulté l'itinéraire.
                 </p>
                 <ManualDuration durationH={durationH} durationM={durationM} setDurationH={setDurationH} setDurationM={setDurationM} />
               </div>
@@ -416,6 +409,17 @@ export function JourneyForm({
       </DialogContent>
     </Dialog>
   );
+}
+
+const GMAPS_TRAVEL_MODE: Record<string, string> = {
+  transit: "r",
+  plane: "f",
+};
+
+function buildGoogleMapsUrl(from: string, to: string, mode: JourneyMode): string {
+  const base = "https://www.google.com/maps/dir/";
+  const tmode = GMAPS_TRAVEL_MODE[mode] ?? "r";
+  return `${base}${encodeURIComponent(from)}/${encodeURIComponent(to)}/?travelmode=${tmode === "f" ? "driving" : "transit"}`;
 }
 
 function formatDuration(minutes: number): string {
