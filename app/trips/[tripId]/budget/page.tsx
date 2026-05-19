@@ -178,6 +178,7 @@ export default function BudgetPage({ params }: BudgetPageProps) {
         }}
         participants={participants}
         currency={currency}
+        defaultPayerId={myId}
         onSubmit={handleSubmit}
         initialValues={editingExpense}
       />

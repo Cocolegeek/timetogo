@@ -89,6 +89,8 @@ interface ExpenseFormProps {
   onOpenChange: (open: boolean) => void;
   participants: Participant[];
   currency: string;
+  /** Participant ID pre-selected as payer in create mode (typically the current user). */
+  defaultPayerId?: string | null;
   initialValues?: Expense;
   onSubmit: (data: {
     title: string;
@@ -108,6 +110,7 @@ export function ExpenseForm({
   onOpenChange,
   participants,
   currency,
+  defaultPayerId,
   initialValues,
   onSubmit,
 }: ExpenseFormProps) {
@@ -174,10 +177,12 @@ export function ExpenseForm({
       setDate(new Date().toISOString().split("T")[0]);
       setSplitMode("equal");
       setNewMemberIds(new Set());
+      // Default payer = current user's participant if known, else first participant
+      const defaultPayer =
+        (defaultPayerId && participants.find((p) => p.id === defaultPayerId)) ||
+        participants[0];
       setPayers(
-        participants[0]
-          ? [{ participantId: participants[0].id, amount: 0 }]
-          : []
+        defaultPayer ? [{ participantId: defaultPayer.id, amount: 0 }] : []
       );
       setSplits(
         participants.map((p) => ({
@@ -190,7 +195,7 @@ export function ExpenseForm({
         }))
       );
     }
-  }, [open, initialValues, participants]);
+  }, [open, initialValues, participants, defaultPayerId]);
 
   // ── Derived ────────────────────────────────────────────────────────────────
 
