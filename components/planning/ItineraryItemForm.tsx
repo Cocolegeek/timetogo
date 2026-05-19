@@ -17,7 +17,7 @@ import {
   DialogContent,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { LocationAutocomplete } from "@/components/shared/LocationAutocomplete";
+import { LocationPickerSheet } from "@/components/shared/LocationPickerSheet";
 import { cn } from "@/lib/utils";
 import type { ItineraryItem, ItineraryType, JourneyMode, Participant } from "@/types";
 
@@ -353,11 +353,11 @@ export function ItineraryItemForm({
 
           {/* Location */}
           <Row icon={<MapPin size={18} />}>
-            <LocationAutocomplete
+            <LocationPickerSheet
               value={location}
               onChange={setLocation}
               placeholder="Ajouter un lieu"
-              className="bg-foreground/5 border-foreground/10 text-slate-100 placeholder:text-slate-500"
+              className="bg-foreground/5 border-foreground/10"
             />
           </Row>
 

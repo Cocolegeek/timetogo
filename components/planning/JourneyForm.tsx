@@ -17,7 +17,8 @@ import {
   TriangleAlert,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { LocationAutocomplete } from "@/components/shared/LocationAutocomplete";
+import { LocationPickerSheet } from "@/components/shared/LocationPickerSheet";
+import type { LocationCoord } from "@/components/shared/LocationPickerSheet";
 import { GoogleMapsIcon, WazeIcon, CityMapperIcon, GoogleFlightsIcon } from "@/components/shared/MapAppIcons";
 import { cn } from "@/lib/utils";
 import type { ItineraryItem, JourneyMode, Participant } from "@/types";
@@ -73,8 +74,8 @@ export function JourneyForm({
   const [routeError, setRouteError]     = useState<string | null>(null);
 
   const [coords, setCoords] = useState<{
-    from: { lat: number; lon: number } | null;
-    to: { lat: number; lon: number } | null;
+    from: LocationCoord | null;
+    to: LocationCoord | null;
   }>({ from: null, to: null });
 
   useEffect(() => {
@@ -111,25 +112,7 @@ export function JourneyForm({
     setRouteError(null);
   }, [mode]);
 
-  // Geocode from/to in background for CityMapper coordinate-based URL
-  useEffect(() => {
-    const fromTrim = from.trim();
-    const toTrim = to.trim();
-    if (fromTrim.length < 3 || toTrim.length < 3) {
-      setCoords({ from: null, to: null });
-      return;
-    }
-    let cancelled = false;
-    const run = async () => {
-      const [resFrom, resTo] = await Promise.all([
-        fetch(`/api/geocode?q=${encodeURIComponent(fromTrim)}`).then((r) => r.ok ? r.json() : null).catch(() => null),
-        fetch(`/api/geocode?q=${encodeURIComponent(toTrim)}`).then((r) => r.ok ? r.json() : null).catch(() => null),
-      ]);
-      if (!cancelled) setCoords({ from: resFrom, to: resTo });
-    };
-    const t = setTimeout(run, 600);
-    return () => { cancelled = true; clearTimeout(t); };
-  }, [from, to]);
+  // Coords are now set directly from LocationPickerSheet selection (no extra geocoding needed)
 
   const totalMinutes = (Number(durationH) || 0) * 60 + (Number(durationM) || 0);
   const currentMode = MODES.find((m) => m.id === mode)!;
@@ -263,21 +246,23 @@ export function JourneyForm({
           {/* From → To */}
           <Row icon={<Navigation size={18} />} label="Itinéraire">
             <div className="space-y-2">
-              <LocationAutocomplete
+              <LocationPickerSheet
                 value={from}
-                onChange={setFrom}
+                onChange={(v) => { setFrom(v); setCoords((c) => ({ ...c, from: null })); }}
+                onChangeCoord={(coord) => setCoords((c) => ({ ...c, from: coord }))}
                 placeholder="Départ"
-                className="bg-foreground/5 border-foreground/10 text-slate-100 placeholder:text-slate-500"
+                className="bg-foreground/5 border-foreground/10"
               />
               <div className="flex items-center gap-2 px-1">
                 <ArrowDown size={14} className="text-slate-600" />
                 <div className="flex-1 h-px bg-foreground/8" />
               </div>
-              <LocationAutocomplete
+              <LocationPickerSheet
                 value={to}
-                onChange={setTo}
+                onChange={(v) => { setTo(v); setCoords((c) => ({ ...c, to: null })); }}
+                onChangeCoord={(coord) => setCoords((c) => ({ ...c, to: coord }))}
                 placeholder="Arrivée"
-                className="bg-foreground/5 border-foreground/10 text-slate-100 placeholder:text-slate-500"
+                className="bg-foreground/5 border-foreground/10"
               />
             </div>
           </Row>
@@ -472,8 +457,6 @@ export function JourneyForm({
   );
 }
 
-type Coord = { lat: number; lon: number };
-
 function AppIconBadge({ children }: { children: React.ReactNode }) {
   return (
     <span className="w-7 h-7 rounded-full bg-white flex items-center justify-center shrink-0 p-1 shadow-sm">
@@ -484,7 +467,7 @@ function AppIconBadge({ children }: { children: React.ReactNode }) {
 
 function buildGoogleMapsUrl(
   from: string, to: string,
-  fromCoord: Coord | null, toCoord: Coord | null,
+  fromCoord: LocationCoord | null, toCoord: LocationCoord | null,
 ): string {
   const travelmode = "transit";
   if (fromCoord && toCoord) {
@@ -493,7 +476,7 @@ function buildGoogleMapsUrl(
   return `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(from)}&destination=${encodeURIComponent(to)}&travelmode=${travelmode}`;
 }
 
-function buildWazeUrl(to: string, toCoord: Coord | null): string {
+function buildWazeUrl(to: string, toCoord: LocationCoord | null): string {
   // Waze routes from GPS position — only destination can be specified via URL
   if (toCoord) return `https://waze.com/ul?ll=${toCoord.lat},${toCoord.lon}&navigate=yes`;
   return `https://waze.com/ul?q=${encodeURIComponent(to)}&navigate=yes`;
@@ -501,7 +484,7 @@ function buildWazeUrl(to: string, toCoord: Coord | null): string {
 
 function buildCityMapperUrl(
   fromName: string, toName: string,
-  fromCoord: Coord | null, toCoord: Coord | null,
+  fromCoord: LocationCoord | null, toCoord: LocationCoord | null,
 ): string {
   const base = "https://citymapper.com/directions";
   const startname = encodeURIComponent(fromName);

@@ -10,7 +10,7 @@ import { GlassCard } from "@/components/layout/GlassCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LocationAutocomplete } from "@/components/shared/LocationAutocomplete";
+import { LocationPickerSheet } from "@/components/shared/LocationPickerSheet";
 import { DateRangePicker } from "@/components/shared/DateRangePicker";
 import { tripSchema, type TripFormValues } from "@/lib/budget/schemas";
 import { useTrips } from "@/hooks/useTrip";
@@ -181,7 +181,7 @@ export function TripWizard() {
             <Label className="text-slate-300 text-sm font-medium">
               Destination
             </Label>
-            <LocationAutocomplete
+            <LocationPickerSheet
               value={destination}
               onChange={(v) =>
                 setValue("destination", v, {
@@ -190,7 +190,7 @@ export function TripWizard() {
                 })
               }
               placeholder="Rome, Italie"
-              className="bg-foreground/8 border-foreground/10 text-slate-100 placeholder:text-slate-500 focus-visible:ring-section"
+              className="bg-foreground/8 border-foreground/10"
             />
             {errors.destination && (
               <p className="text-xs text-red-400">{errors.destination.message}</p>
