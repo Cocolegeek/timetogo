@@ -1,15 +1,15 @@
 import { NextResponse } from "next/server";
 
-const OSRM_PROFILES: Record<string, string> = {
-  car: "driving",
-  foot: "walking",
-  bike: "cycling",
+const OSRM_ENDPOINTS: Record<string, string> = {
+  car:  "https://routing.openstreetmap.de/routed-car/route/v1/driving",
+  foot: "https://routing.openstreetmap.de/routed-foot/route/v1/walking",
+  bike: "https://routing.openstreetmap.de/routed-bike/route/v1/cycling",
 };
 
 async function geocode(address: string): Promise<[number, number] | null> {
   const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1&accept-language=fr`;
   const res = await fetch(url, {
-    headers: { "User-Agent": "time-to-go/1.0" },
+    headers: { "User-Agent": "time-to-go/1.0 (contact: corentin.nicolas03@gmail.com)" },
   });
   if (!res.ok) return null;
   const data = await res.json();
@@ -27,8 +27,8 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Paramètres manquants" }, { status: 400 });
   }
 
-  const osrmProfile = OSRM_PROFILES[mode];
-  if (!osrmProfile) {
+  const osrmEndpoint = OSRM_ENDPOINTS[mode];
+  if (!osrmEndpoint) {
     return NextResponse.json({ error: "Mode non supporté pour le calcul automatique" }, { status: 400 });
   }
 
@@ -41,9 +41,11 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: `Lieu d'arrivée introuvable : ${to}` }, { status: 404 });
   }
 
-  const osrmUrl = `https://router.project-osrm.org/route/v1/${osrmProfile}/${fromCoords[0]},${fromCoords[1]};${toCoords[0]},${toCoords[1]}?overview=false`;
+  const osrmUrl = `${osrmEndpoint}/${fromCoords[0]},${fromCoords[1]};${toCoords[0]},${toCoords[1]}?overview=false`;
 
-  const osrmRes = await fetch(osrmUrl);
+  const osrmRes = await fetch(osrmUrl, {
+    headers: { "User-Agent": "time-to-go/1.0 (contact: corentin.nicolas03@gmail.com)" },
+  });
   if (!osrmRes.ok) {
     return NextResponse.json({ error: "Erreur du service de routing" }, { status: 502 });
   }

@@ -352,7 +352,15 @@ export function JourneyForm({
                 )}
               </div>
             ) : (
-              <ManualDuration durationH={durationH} durationM={durationM} setDurationH={setDurationH} setDurationM={setDurationM} />
+              <div className="space-y-3">
+                <p className="text-xs text-slate-500">
+                  {mode === "plane"
+                    ? "Le calcul automatique n'est pas disponible pour l'avion."
+                    : "Le calcul automatique n'est pas disponible pour les transports en commun."}
+                  {" "}Renseigne la durée manuellement.
+                </p>
+                <ManualDuration durationH={durationH} durationM={durationM} setDurationH={setDurationH} setDurationM={setDurationM} />
+              </div>
             )}
           </Row>
 
