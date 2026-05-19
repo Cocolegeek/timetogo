@@ -25,12 +25,70 @@ import type {
   SplitMode,
 } from "@/types";
 
+// ─── Local split state type ───────────────────────────────────────────────────
+// `pinned` is UI-only: it tracks which rows the user manually edited.
+// Stripped before calling onSubmit.
+type SplitState = ParticipantSplit & { pinned: boolean };
+
+// ─── Pure rebalance helpers ───────────────────────────────────────────────────
+// These are called inside setSplits updaters so they must be pure functions.
+
+function rebalanceFixed(splits: SplitState[], amount: number): SplitState[] {
+  const active = splits.filter((s) => !s.excluded);
+  const pinned = active.filter((s) => s.pinned);
+  const free = active.filter((s) => !s.pinned);
+  const pinnedSum = pinned.reduce((sum, s) => sum + (s.fixedAmount ?? 0), 0);
+  const remaining = Math.max(0, amount - pinnedSum);
+  const distributed = distributeCents(remaining, free.length);
+  const freeMap = new Map(free.map((s, i) => [s.participantId, distributed[i] ?? 0]));
+  return splits.map((s) => {
+    if (s.excluded || s.pinned) return s;
+    return { ...s, fixedAmount: freeMap.get(s.participantId) ?? 0 };
+  });
+}
+
+function rebalancePct(splits: SplitState[]): SplitState[] {
+  const active = splits.filter((s) => !s.excluded);
+  const pinned = active.filter((s) => s.pinned);
+  const free = active.filter((s) => !s.pinned);
+  const pinnedSum = pinned.reduce((sum, s) => sum + (s.percentage ?? 0), 0);
+  const remaining = Math.max(0, 100 - pinnedSum);
+  const freePct =
+    free.length > 0 ? Math.round((remaining / free.length) * 100) / 100 : 0;
+  return splits.map((s) => {
+    if (s.excluded || s.pinned) return s;
+    return { ...s, percentage: freePct };
+  });
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+const formatCurrency = (n: number, currency: string) =>
+  new Intl.NumberFormat("fr-FR", {
+    style: "currency",
+    currency,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(n);
+
+function distributeCents(total: number, count: number): number[] {
+  if (count === 0) return [];
+  const cents = Math.round(total * 100);
+  const baseCents = Math.floor(cents / count);
+  const remainder = cents - baseCents * count;
+  return Array.from(
+    { length: count },
+    (_, i) => (baseCents + (i < remainder ? 1 : 0)) / 100
+  );
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
+
 interface ExpenseFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   participants: Participant[];
   currency: string;
-  /** If provided, the form is in edit mode */
   initialValues?: Expense;
   onSubmit: (data: {
     title: string;
@@ -43,30 +101,6 @@ interface ExpenseFormProps {
     splitMode: SplitMode;
     splits: ParticipantSplit[];
   }) => Promise<void>;
-}
-
-const formatCurrency = (n: number, currency: string) =>
-  new Intl.NumberFormat("fr-FR", {
-    style: "currency",
-    currency,
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(n);
-
-/**
- * Distribute `total` into `count` parts so that the sum of cents
- * equals `total` exactly (no rounding errors). Extra cents are
- * spread on the first participants.
- */
-function distributeCents(total: number, count: number): number[] {
-  if (count === 0) return [];
-  const cents = Math.round(total * 100);
-  const baseCents = Math.floor(cents / count);
-  const remainder = cents - baseCents * count;
-  return Array.from(
-    { length: count },
-    (_, i) => (baseCents + (i < remainder ? 1 : 0)) / 100
-  );
 }
 
 export function ExpenseForm({
@@ -85,17 +119,15 @@ export function ExpenseForm({
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [payers, setPayers] = useState<Payer[]>([]);
   const [splitMode, setSplitMode] = useState<SplitMode>("equal");
-  const [splits, setSplits] = useState<ParticipantSplit[]>([]);
-  /**
-   * IDs of participants who joined the trip AFTER this expense was created.
-   * They are surfaced with a "NOUVEAU" badge and start unchecked so the user
-   * can manually decide whether they should benefit from the expense.
-   */
+  const [splits, setSplits] = useState<SplitState[]>([]);
   const [newMemberIds, setNewMemberIds] = useState<Set<string>>(new Set());
-  const [pinnedIds, setPinnedIds] = useState<Set<string>>(new Set());
   const [submitting, setSubmitting] = useState(false);
 
-  // Hydrate when opened or when participants change
+  // ── Hydration ──────────────────────────────────────────────────────────────
+  // Edit mode: existing splits are ALL pinned so the amount-change effect
+  // never overwrites them. The user unpins manually if needed.
+  // Create mode: all free (pinned: false) so the amount effect distributes
+  // automatically as the user types the total.
   useEffect(() => {
     if (!open) return;
 
@@ -104,31 +136,32 @@ export function ExpenseForm({
       setAmountStr(initialValues.amount.toString().replace(".", ","));
       setCategory(initialValues.category);
       setDate(initialValues.date);
-      setPayers(initialValues.payers.map(p => ({ ...p, amount: p.amount / (initialValues.exchangeRate || 1) })));
       setSplitMode(initialValues.splitMode);
+      setPayers(
+        initialValues.payers.map((p) => ({
+          ...p,
+          amount: p.amount / (initialValues.exchangeRate || 1),
+        }))
+      );
 
-      // ── Reconciliation with the current trip member list ──
-      // 1. Keep splits for participants still in the trip (drops "ghosts").
-      // 2. Add any trip member missing from the saved splits as `excluded`,
-      //    so the user can manually opt them in if relevant.
       const existingByParticipant = new Map(
         initialValues.splits
           .filter((s) => participants.some((p) => p.id === s.participantId))
           .map((s) => [s.participantId, s])
       );
-      const merged: ParticipantSplit[] = participants.map((p) => {
+      const merged: SplitState[] = participants.map((p) => {
         const existing = existingByParticipant.get(p.id);
-        if (existing) return existing;
+        if (existing) return { ...existing, pinned: true }; // preserve existing values
         return {
           participantId: p.id,
           excluded: true,
           percentage: 0,
           fixedAmount: 0,
           share: 0,
+          pinned: false,
         };
       });
       setSplits(merged);
-      setPinnedIds(new Set());
       setNewMemberIds(
         new Set(
           participants
@@ -141,22 +174,27 @@ export function ExpenseForm({
       setAmountStr("");
       setCategory("other");
       setDate(new Date().toISOString().split("T")[0]);
-      setPayers(participants[0] ? [{ participantId: participants[0].id, amount: 0 }] : []);
       setSplitMode("equal");
-      setPinnedIds(new Set());
       setNewMemberIds(new Set());
+      setPayers(
+        participants[0]
+          ? [{ participantId: participants[0].id, amount: 0 }]
+          : []
+      );
       setSplits(
         participants.map((p) => ({
           participantId: p.id,
           excluded: false,
-          percentage:
-            participants.length > 0 ? 100 / participants.length : 0,
+          percentage: participants.length > 0 ? 100 / participants.length : 0,
           fixedAmount: 0,
           share: 0,
+          pinned: false,
         }))
       );
     }
   }, [open, initialValues, participants]);
+
+  // ── Derived ────────────────────────────────────────────────────────────────
 
   const amount = useMemo(() => {
     const cleaned = amountStr.replace(",", ".").trim();
@@ -164,13 +202,17 @@ export function ExpenseForm({
     return Number.isFinite(n) && n > 0 ? n : 0;
   }, [amountStr]);
 
-  // Live computed shares for display
   const computedSplits = useMemo(
-    () => computeShares(amount, splits, splitMode),
+    () =>
+      computeShares(
+        amount,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        splits.map(({ pinned: _pinned, ...s }) => s),
+        splitMode
+      ),
     [amount, splits, splitMode]
   );
 
-  // Validation
   const splitTotal = useMemo(() => {
     const active = splits.filter((s) => !s.excluded);
     if (splitMode === "percentage")
@@ -191,21 +233,44 @@ export function ExpenseForm({
       : Math.abs(splitTotal - amount) < 0.01);
 
   const payerTotal = payers.reduce((acc, p) => acc + p.amount, 0);
-  const payerValid = payers.length > 0 && (payers.length === 1 || Math.abs(payerTotal - amount) < 0.01);
+  const payerValid =
+    payers.length > 0 &&
+    (payers.length === 1 || Math.abs(payerTotal - amount) < 0.01);
 
   const formValid =
-    title.trim().length > 0 &&
-    amount > 0 &&
-    payerValid &&
-    splitValid;
+    title.trim().length > 0 && amount > 0 && payerValid && splitValid;
+
+  // ── Amount effect (fixed mode) ─────────────────────────────────────────────
+  // Only auto-distributes when NO participant is pinned (i.e., the user hasn't
+  // manually set any amount yet). Once at least one is pinned, the effect is
+  // a no-op and pinned values are preserved across total changes.
+  useEffect(() => {
+    if (splitMode !== "fixed" || !amount) return;
+    setSplits((prev) => {
+      const hasPins = prev.some((s) => !s.excluded && s.pinned);
+      if (hasPins) return prev;
+      return rebalanceFixed(prev, amount);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [amount, splitMode]);
+
+  // ── Payer effect ───────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (payers.length <= 1 || !amount) return;
+    const distributed = distributeCents(amount, payers.length);
+    setPayers((prev) => prev.map((p, i) => ({ ...p, amount: distributed[i] ?? 0 })));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [amount]);
+
+  // ── Handlers ───────────────────────────────────────────────────────────────
 
   const togglePayer = (participantId: string) => {
-    setPayers(prev => {
-      const exists = prev.some(p => p.participantId === participantId);
+    setPayers((prev) => {
+      const exists = prev.some((p) => p.participantId === participantId);
       let next: Payer[];
       if (exists) {
         if (prev.length <= 1) return prev;
-        next = prev.filter(p => p.participantId !== participantId);
+        next = prev.filter((p) => p.participantId !== participantId);
       } else {
         next = [...prev, { participantId, amount: 0 }];
       }
@@ -215,153 +280,98 @@ export function ExpenseForm({
   };
 
   const setPayerAmount = (participantId: string, value: number) => {
-    const newValue = Math.max(0, value);
-    setPayers(prev => {
-      const others = prev.filter(p => p.participantId !== participantId);
+    setPayers((prev) => {
+      const others = prev.filter((p) => p.participantId !== participantId);
+      const newValue = Math.max(0, value);
       const remaining = Math.max(0, amount - newValue);
       const distributed = distributeCents(remaining, others.length);
-      return prev.map(p => {
+      return prev.map((p) => {
         if (p.participantId === participantId) return { ...p, amount: newValue };
-        const idx = others.findIndex(o => o.participantId === p.participantId);
+        const idx = others.findIndex((o) => o.participantId === p.participantId);
         return { ...p, amount: distributed[idx] ?? 0 };
       });
     });
   };
 
+  // Toggling inclusion clears the pin so the participant rejoins the free pool
   const toggleInclusion = (participantId: string) => {
-    setPinnedIds((prev) => {
-      const next = new Set(prev);
-      next.delete(participantId);
-      return next;
-    });
-    setSplits((prev) =>
-      prev.map((s) =>
-        s.participantId === participantId ? { ...s, excluded: !s.excluded } : s
-      )
-    );
-  };
-
-  const setPercentage = (participantId: string, value: number) => {
-    setSplits((prev) =>
-      prev.map((s) =>
+    setSplits((prev) => {
+      const toggled = prev.map((s) =>
         s.participantId === participantId
-          ? { ...s, percentage: Math.max(0, Math.min(100, value)) }
+          ? { ...s, excluded: !s.excluded, pinned: false }
           : s
-      )
-    );
+      );
+      if (splitMode === "fixed") return rebalanceFixed(toggled, amount);
+      if (splitMode === "percentage") return rebalancePct(toggled);
+      return toggled;
+    });
   };
 
+  // Fixed mode: pin on edit, rebalance free participants
   const setFixedAmount = (participantId: string, value: number) => {
-    const newValue = Math.max(0, value);
-    const newPinned = new Set([...pinnedIds, participantId]);
-    setPinnedIds(newPinned);
     setSplits((prev) => {
-      const active = prev.filter((s) => !s.excluded);
-      const pinnedOthers = active.filter(
-        (s) => newPinned.has(s.participantId) && s.participantId !== participantId
+      const withPin = prev.map((s) =>
+        s.participantId === participantId
+          ? { ...s, fixedAmount: Math.max(0, value), pinned: true }
+          : s
       );
-      const freeActive = active.filter((s) => !newPinned.has(s.participantId));
-      const pinnedSum =
-        pinnedOthers.reduce((sum, s) => sum + (s.fixedAmount ?? 0), 0) + newValue;
-      const remaining = Math.max(0, amount - pinnedSum);
-      const distributed = distributeCents(remaining, freeActive.length);
-      const freeAmounts = new Map(
-        freeActive.map((s, i) => [s.participantId, distributed[i] ?? 0])
-      );
-      return prev.map((s) => {
-        if (s.excluded) return s;
-        if (s.participantId === participantId) return { ...s, fixedAmount: newValue };
-        if (freeAmounts.has(s.participantId))
-          return { ...s, fixedAmount: freeAmounts.get(s.participantId)! };
-        return s;
-      });
+      return rebalanceFixed(withPin, amount);
     });
   };
 
-  const unpinParticipant = (participantId: string) => {
-    const newPinned = new Set(pinnedIds);
-    newPinned.delete(participantId);
-    setPinnedIds(newPinned);
+  const unpinFixed = (participantId: string) => {
     setSplits((prev) => {
-      const active = prev.filter((s) => !s.excluded);
-      const pinned = active.filter((s) => newPinned.has(s.participantId));
-      const free = active.filter((s) => !newPinned.has(s.participantId));
-      const pinnedSum = pinned.reduce((sum, s) => sum + (s.fixedAmount ?? 0), 0);
-      const remaining = Math.max(0, amount - pinnedSum);
-      const distributed = distributeCents(remaining, free.length);
-      const freeAmounts = new Map(
-        free.map((s, i) => [s.participantId, distributed[i] ?? 0])
+      const unpinned = prev.map((s) =>
+        s.participantId === participantId ? { ...s, pinned: false } : s
       );
-      return prev.map((s) => {
-        if (s.excluded || newPinned.has(s.participantId)) return s;
-        return { ...s, fixedAmount: freeAmounts.get(s.participantId) ?? s.fixedAmount ?? 0 };
-      });
+      return rebalanceFixed(unpinned, amount);
     });
   };
 
+  // Percentage mode: pin on edit, rebalance free participants
+  const setPercentage = (participantId: string, value: number) => {
+    setSplits((prev) => {
+      const withPin = prev.map((s) =>
+        s.participantId === participantId
+          ? { ...s, percentage: Math.max(0, Math.min(100, value)), pinned: true }
+          : s
+      );
+      return rebalancePct(withPin);
+    });
+  };
+
+  const unpinPct = (participantId: string) => {
+    setSplits((prev) => {
+      const unpinned = prev.map((s) =>
+        s.participantId === participantId ? { ...s, pinned: false } : s
+      );
+      return rebalancePct(unpinned);
+    });
+  };
+
+  // Switching mode resets all pins and redistributes equally
   const handleSplitModeChange = (mode: string) => {
     const newMode = mode as SplitMode;
     setSplitMode(newMode);
-    setPinnedIds(new Set());
-    if (newMode === "percentage") {
-      const active = splits.filter((s) => !s.excluded);
-      const equalPct = active.length > 0 ? 100 / active.length : 0;
-      setSplits((prev) =>
-        prev.map((s) =>
-          s.excluded ? s : { ...s, percentage: equalPct }
-        )
-      );
-    } else if (newMode === "fixed") {
-      const active = splits.filter((s) => !s.excluded);
-      const distributed = distributeCents(amount, active.length);
-      let i = 0;
-      setSplits((prev) =>
-        prev.map((s) => {
-          if (s.excluded) return s;
-          const next = distributed[i] ?? 0;
-          i++;
-          return { ...s, fixedAmount: next };
-        })
-      );
-    }
-  };
-
-  // When amount changes with multiple payers, redistribute equally
-  useEffect(() => {
-    if (payers.length <= 1) return;
-    if (!amount) return;
-    const distributed = distributeCents(amount, payers.length);
-    setPayers(prev => prev.map((p, i) => ({ ...p, amount: distributed[i] ?? 0 })));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [amount]);
-
-  // When the total amount changes in fixed mode, reset pins and redistribute equally
-  useEffect(() => {
-    if (splitMode !== "fixed") return;
-    if (!amount) return;
-    setPinnedIds(new Set());
     setSplits((prev) => {
-      const active = prev.filter((s) => !s.excluded);
-      if (active.length === 0) return prev;
-      const distributed = distributeCents(amount, active.length);
-      let i = 0;
-      return prev.map((s) => {
-        if (s.excluded) return s;
-        const next = distributed[i] ?? 0;
-        i++;
-        return { ...s, fixedAmount: next };
-      });
+      const cleared = prev.map((s) => ({ ...s, pinned: false }));
+      if (newMode === "percentage") return rebalancePct(cleared);
+      if (newMode === "fixed") return rebalanceFixed(cleared, amount);
+      return cleared;
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [amount, splitMode]);
+  };
 
   const handleSubmit = async () => {
     if (!formValid) return;
     setSubmitting(true);
     try {
-      const finalPayers = payers.length === 1
-        ? [{ participantId: payers[0].participantId, amount }]
-        : payers;
+      const finalPayers =
+        payers.length === 1
+          ? [{ participantId: payers[0].participantId, amount }]
+          : payers;
+      // Strip the `pinned` field before persisting
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const cleanSplits: ParticipantSplit[] = splits.map(({ pinned: _p, ...s }) => s);
       await onSubmit({
         title: title.trim(),
         amount,
@@ -371,13 +381,15 @@ export function ExpenseForm({
         payers: finalPayers,
         date,
         splitMode,
-        splits,
+        splits: cleanSplits,
       });
       onOpenChange(false);
     } finally {
       setSubmitting(false);
     }
   };
+
+  // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -392,7 +404,7 @@ export function ExpenseForm({
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto px-5 py-5 space-y-6">
-          {/* Amount — large, focal */}
+          {/* Amount */}
           <div className="text-center">
             <input
               type="text"
@@ -463,7 +475,7 @@ export function ExpenseForm({
             <Label className="text-slate-300 text-sm font-medium">Payé par</Label>
             <div className="flex gap-2 flex-wrap">
               {participants.map((p) => {
-                const selected = payers.some(py => py.participantId === p.id);
+                const selected = payers.some((py) => py.participantId === p.id);
                 return (
                   <button
                     key={p.id}
@@ -486,33 +498,53 @@ export function ExpenseForm({
               })}
             </div>
 
-            {/* Amount inputs per payer when multiple selected */}
             {payers.length > 1 && (
               <div className="space-y-1.5 mt-1">
                 {payers.map((payer) => {
-                  const p = participants.find(part => part.id === payer.participantId);
+                  const p = participants.find(
+                    (part) => part.id === payer.participantId
+                  );
                   if (!p) return null;
                   return (
-                    <div key={payer.participantId} className="flex items-center gap-3 px-3 py-2 rounded-xl border border-foreground/8 bg-foreground/4">
-                      <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: p.color }} />
-                      <span className="text-sm text-slate-200 flex-1 truncate">{p.name}</span>
+                    <div
+                      key={payer.participantId}
+                      className="flex items-center gap-3 px-3 py-2 rounded-xl border border-foreground/8 bg-foreground/4"
+                    >
+                      <span
+                        className="w-2.5 h-2.5 rounded-full shrink-0"
+                        style={{ backgroundColor: p.color }}
+                      />
+                      <span className="text-sm text-slate-200 flex-1 truncate">
+                        {p.name}
+                      </span>
                       <input
                         type="number"
                         inputMode="decimal"
                         step="0.01"
                         min="0"
                         value={payer.amount}
-                        onChange={(e) => setPayerAmount(payer.participantId, Number(e.target.value) || 0)}
+                        onChange={(e) =>
+                          setPayerAmount(
+                            payer.participantId,
+                            Number(e.target.value) || 0
+                          )
+                        }
                         className="w-20 text-right bg-foreground/8 border border-foreground/10 rounded-lg px-2 py-1 text-sm text-slate-100 focus:outline-none focus:border-section tabular-nums"
                       />
-                      <span className="text-xs text-slate-500 w-8">{currencySymbol(currency)}</span>
+                      <span className="text-xs text-slate-500 w-8">
+                        {currencySymbol(currency)}
+                      </span>
                     </div>
                   );
                 })}
-                <p className={cn(
-                  "text-center text-xs",
-                  Math.abs(payerTotal - amount) < 0.01 ? "text-emerald-400" : "text-amber-400"
-                )}>
+                <p
+                  className={cn(
+                    "text-center text-xs",
+                    Math.abs(payerTotal - amount) < 0.01
+                      ? "text-emerald-400"
+                      : "text-amber-400"
+                  )}
+                >
                   {Math.abs(payerTotal - amount) < 0.01
                     ? "Répartition correcte ✓"
                     : `Total payeurs : ${formatCurrency(payerTotal, currency)} / ${formatCurrency(amount, currency)}`}
@@ -521,11 +553,10 @@ export function ExpenseForm({
             )}
           </div>
 
-          {/* Split mode */}
+          {/* Split section */}
           <div className="space-y-3">
             <Label className="text-slate-300 text-sm font-medium">Pour qui ?</Label>
 
-            {/* Heads-up banner when new members joined the trip after this expense */}
             {newMemberIds.size > 0 && (
               <div className="px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-xs text-amber-200 flex items-start gap-2">
                 <span className="text-base leading-none">👋</span>
@@ -560,7 +591,6 @@ export function ExpenseForm({
               </TabsList>
             </Tabs>
 
-            {/* Per-participant rows */}
             <div className="space-y-1.5">
               {participants.map((p) => {
                 const split = splits.find((s) => s.participantId === p.id);
@@ -583,24 +613,18 @@ export function ExpenseForm({
                         : "border-foreground/8 bg-foreground/4"
                     )}
                   >
+                    {/* Equal: checkbox */}
                     {splitMode === "equal" && (
                       <button
                         type="button"
                         onClick={() => toggleInclusion(p.id)}
                         className={cn(
                           "w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all",
-                          split.excluded
-                            ? "border-slate-600"
-                            : "border-section bg-section"
+                          split.excluded ? "border-slate-600" : "border-section bg-section"
                         )}
                       >
                         {!split.excluded && (
-                          <svg
-                            width="11"
-                            height="11"
-                            viewBox="0 0 16 16"
-                            fill="none"
-                          >
+                          <svg width="11" height="11" viewBox="0 0 16 16" fill="none">
                             <path
                               d="M3 8l3 3 7-7"
                               stroke="white"
@@ -617,9 +641,7 @@ export function ExpenseForm({
                       className="w-2.5 h-2.5 rounded-full shrink-0"
                       style={{ backgroundColor: p.color }}
                     />
-                    <span className="text-sm text-slate-200 truncate">
-                      {p.name}
-                    </span>
+                    <span className="text-sm text-slate-200 truncate">{p.name}</span>
                     {isNew && (
                       <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0">
                         Nouveau
@@ -634,7 +656,17 @@ export function ExpenseForm({
                     )}
 
                     {splitMode === "percentage" && (
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5">
+                        {split.pinned && !split.excluded && (
+                          <button
+                            type="button"
+                            onClick={() => unpinPct(p.id)}
+                            title="Désancrer"
+                            className="text-section opacity-70 hover:opacity-100 transition-opacity shrink-0"
+                          >
+                            <Lock size={13} />
+                          </button>
+                        )}
                         <input
                           type="number"
                           inputMode="decimal"
@@ -645,7 +677,12 @@ export function ExpenseForm({
                           onChange={(e) =>
                             setPercentage(p.id, Number(e.target.value) || 0)
                           }
-                          className="w-16 text-right bg-foreground/8 border border-foreground/10 rounded-lg px-2 py-1 text-sm text-slate-100 focus:outline-none focus:border-section tabular-nums"
+                          className={cn(
+                            "w-16 text-right border rounded-lg px-2 py-1 text-sm text-slate-100 focus:outline-none focus:border-section tabular-nums",
+                            split.pinned && !split.excluded
+                              ? "bg-section/10 border-section/40"
+                              : "bg-foreground/8 border-foreground/10"
+                          )}
                         />
                         <span className="text-xs text-slate-500">%</span>
                         <span className="text-xs text-slate-400 w-16 text-right tabular-nums">
@@ -656,12 +693,12 @@ export function ExpenseForm({
 
                     {splitMode === "fixed" && (
                       <div className="flex items-center gap-1.5">
-                        {pinnedIds.has(p.id) && (
+                        {split.pinned && !split.excluded && (
                           <button
                             type="button"
-                            onClick={() => unpinParticipant(p.id)}
-                            className="text-section opacity-70 hover:opacity-100 transition-opacity shrink-0"
+                            onClick={() => unpinFixed(p.id)}
                             title="Désancrer"
+                            className="text-section opacity-70 hover:opacity-100 transition-opacity shrink-0"
                           >
                             <Lock size={13} />
                           </button>
@@ -677,7 +714,7 @@ export function ExpenseForm({
                           }
                           className={cn(
                             "w-20 text-right border rounded-lg px-2 py-1 text-sm text-slate-100 focus:outline-none focus:border-section tabular-nums",
-                            pinnedIds.has(p.id)
+                            split.pinned && !split.excluded
                               ? "bg-section/10 border-section/40"
                               : "bg-foreground/8 border-foreground/10"
                           )}
@@ -692,7 +729,6 @@ export function ExpenseForm({
               })}
             </div>
 
-            {/* Live total feedback */}
             <SplitTotalFeedback
               mode={splitMode}
               splitTotal={splitTotal}
@@ -703,7 +739,7 @@ export function ExpenseForm({
           </div>
         </div>
 
-        {/* Sticky footer */}
+        {/* Footer */}
         <div
           className="px-5 py-3 border-t border-foreground/8 bg-slate-900/50"
           style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 0.75rem)" }}
@@ -729,6 +765,8 @@ export function ExpenseForm({
     </Dialog>
   );
 }
+
+// ─── SplitTotalFeedback ───────────────────────────────────────────────────────
 
 function SplitTotalFeedback({
   mode,
@@ -782,10 +820,10 @@ function SplitTotalFeedback({
           <>Total : 100% ✓</>
         ) : (
           <>
-            Total : {Math.round(splitTotal)}%
+            Total : {Math.round(splitTotal * 10) / 10}%
             <span className="text-slate-500">
               ({diff > 0 ? "+" : ""}
-              {Math.round(diff)}%)
+              {Math.round(diff * 10) / 10}%)
             </span>
           </>
         )}
