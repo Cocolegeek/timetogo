@@ -9,10 +9,14 @@ import {
   Check,
   CreditCard,
   Phone,
-  ExternalLink,
+  Share2,
 } from "lucide-react";
-import { formatCurrency } from "@/lib/format-currency";
-import { lydiaLink, weroLink, formatIban } from "@/lib/payment-links";
+import { formatCurrency, currencySymbol } from "@/lib/format-currency";
+import {
+  formatIban,
+  sharePaymentInfo,
+  canNativeShare,
+} from "@/lib/payment-links";
 import { usePaymentInfo, type PaymentInfo } from "@/hooks/usePaymentInfo";
 import { AllSettledEmpty } from "./AllSettledEmpty";
 import {
@@ -208,9 +212,6 @@ function PaymentDetails({
     );
   }
 
-  const lydia = lydiaLink(info.phone);
-  const wero = weroLink(info.phone);
-
   return (
     <div className="space-y-2">
       <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
@@ -236,32 +237,13 @@ function PaymentDetails({
         />
       )}
 
-      {(lydia || wero) && (
-        <div className="flex gap-2 pt-1">
-          {lydia && (
-            <a
-              href={lydia}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium border border-foreground/10 bg-foreground/4 text-slate-200 hover:bg-foreground/8 transition-colors"
-            >
-              <span>Lydia</span>
-              <ExternalLink size={12} className="text-slate-500" />
-            </a>
-          )}
-          {wero && (
-            <a
-              href={wero}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium border border-foreground/10 bg-foreground/4 text-slate-200 hover:bg-foreground/8 transition-colors"
-            >
-              <span>Wero</span>
-              <ExternalLink size={12} className="text-slate-500" />
-            </a>
-          )}
-        </div>
-      )}
+      <ShareButton
+        recipientName={recipientName}
+        iban={info.iban}
+        phone={info.phone}
+        amount={amount}
+        currency={currency}
+      />
 
       <p className="text-xs text-slate-500">
         Montant à transférer :{" "}
@@ -270,6 +252,54 @@ function PaymentDetails({
         </span>
       </p>
     </div>
+  );
+}
+
+function ShareButton({
+  recipientName,
+  iban,
+  phone,
+  amount,
+  currency,
+}: {
+  recipientName: string;
+  iban: string | null;
+  phone: string | null;
+  amount: number;
+  currency: string;
+}) {
+  const [feedback, setFeedback] = useState<null | "shared" | "copied">(null);
+
+  const handleShare = async () => {
+    const result = await sharePaymentInfo({
+      recipientName,
+      iban,
+      phone,
+      amount,
+      currencyLabel: currencySymbol(currency),
+    });
+    if (result === "shared" || result === "copied") {
+      setFeedback(result);
+      setTimeout(() => setFeedback(null), 1800);
+    }
+  };
+
+  const isNative = canNativeShare();
+
+  return (
+    <button
+      type="button"
+      onClick={handleShare}
+      className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-sm font-semibold border border-section bg-section-soft text-section-soft hover:bg-section-medium transition-colors active:scale-[0.99]"
+    >
+      {feedback === "shared" ? (
+        <><Check size={14} /> Partagé</>
+      ) : feedback === "copied" ? (
+        <><Check size={14} /> Copié dans le presse-papiers</>
+      ) : (
+        <><Share2 size={14} /> {isNative ? "Partager pour rembourser" : "Copier toutes les infos"}</>
+      )}
+    </button>
   );
 }
 

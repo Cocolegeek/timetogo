@@ -1,42 +1,75 @@
 /**
- * Génère les deep links pour les apps de remboursement.
+ * Helpers pour partager les infos de paiement via la share sheet native.
  *
- * Notes :
- * - Lydia : universal link `https://lydia-app.com/collect/{e164}`
- *   (intercepté par l'app sur mobile, ouvre une page web sinon).
- * - Wero : pas de schéma officiel public ; on tente
- *   `https://wero.eu/pay?phone={e164}` qui redirige vers la landing
- *   à défaut d'ouvrir l'app.
- *
- * Les liens cassent si Lydia / Wero changent leur API — c'est
- * accepté comme contrepartie d'avoir des liens directs.
+ * Sur mobile (iOS/Android), `navigator.share()` ouvre le sélecteur
+ * d'apps natif : l'utilisateur choisit son app bancaire, WhatsApp,
+ * SMS, etc. Sur desktop (où l'API est limitée), on bascule sur une
+ * copie dans le presse-papiers.
  */
-
-function normalizePhone(raw: string | null | undefined): string | null {
-  if (!raw) return null;
-  const trimmed = raw.replace(/[^\d+]/g, "");
-  if (!trimmed) return null;
-  if (trimmed.startsWith("+")) return trimmed;
-  if (trimmed.startsWith("00")) return `+${trimmed.slice(2)}`;
-  if (trimmed.startsWith("0") && trimmed.length === 10) {
-    return `+33${trimmed.slice(1)}`;
-  }
-  return trimmed;
-}
-
-export function lydiaLink(phone: string | null | undefined): string | null {
-  const e164 = normalizePhone(phone);
-  if (!e164) return null;
-  return `https://lydia-app.com/collect/${e164.replace("+", "")}`;
-}
-
-export function weroLink(phone: string | null | undefined): string | null {
-  const e164 = normalizePhone(phone);
-  if (!e164) return null;
-  return `https://wero.eu/pay?phone=${encodeURIComponent(e164)}`;
-}
 
 export function formatIban(iban: string | null | undefined): string {
   if (!iban) return "";
   return iban.replace(/\s+/g, "").toUpperCase().replace(/(.{4})/g, "$1 ").trim();
+}
+
+export function canNativeShare(): boolean {
+  if (typeof navigator === "undefined") return false;
+  return typeof navigator.share === "function";
+}
+
+interface BuildShareParams {
+  recipientName: string;
+  iban?: string | null;
+  phone?: string | null;
+  amount?: number | null;
+  currencyLabel?: string;
+}
+
+export function buildShareText({
+  recipientName,
+  iban,
+  phone,
+  amount,
+  currencyLabel,
+}: BuildShareParams): string {
+  const lines: string[] = [];
+  if (amount != null && Number.isFinite(amount)) {
+    lines.push(
+      `Rembourser ${recipientName} — ${amount
+        .toFixed(2)
+        .replace(".", ",")}${currencyLabel ? ` ${currencyLabel}` : ""}`
+    );
+  } else {
+    lines.push(`Rembourser ${recipientName}`);
+  }
+  if (iban) lines.push(`IBAN : ${formatIban(iban)}`);
+  if (phone) lines.push(`Tél : ${phone}`);
+  return lines.join("\n");
+}
+
+/**
+ * Lance la share sheet native. Retourne `true` si l'utilisateur
+ * a déclenché un partage (ou un fallback presse-papiers), `false`
+ * s'il a annulé. Ne lève jamais d'erreur visible.
+ */
+export async function sharePaymentInfo(params: BuildShareParams): Promise<"shared" | "copied" | "cancelled"> {
+  const text = buildShareText(params);
+
+  if (canNativeShare()) {
+    try {
+      await navigator.share({ title: "Remboursement", text });
+      return "shared";
+    } catch (err) {
+      if ((err as Error)?.name === "AbortError") return "cancelled";
+      // Some browsers throw if share isn't actually available
+      // → fall through to clipboard fallback
+    }
+  }
+
+  try {
+    await navigator.clipboard.writeText(text);
+    return "copied";
+  } catch {
+    return "cancelled";
+  }
 }

@@ -2,9 +2,13 @@
 
 import { useState } from "react";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
-import { Copy, Check, CreditCard, Phone, ExternalLink, Loader2 } from "lucide-react";
+import { Copy, Check, CreditCard, Phone, Loader2, Share2 } from "lucide-react";
 import { usePaymentInfo } from "@/hooks/usePaymentInfo";
-import { formatIban, lydiaLink, weroLink } from "@/lib/payment-links";
+import {
+  formatIban,
+  sharePaymentInfo,
+  canNativeShare,
+} from "@/lib/payment-links";
 import { ParticipantAvatar } from "@/components/shared/ParticipantAvatar";
 import type { Participant } from "@/types";
 
@@ -20,9 +24,6 @@ export function ParticipantPaymentSheet({
   participant,
 }: ParticipantPaymentSheetProps) {
   const { info, loading } = usePaymentInfo(open ? participant?.id ?? null : null);
-
-  const lydia = lydiaLink(info?.phone);
-  const wero = weroLink(info?.phone);
   const hasInfo = !!(info && (info.iban || info.phone));
 
   return (
@@ -75,37 +76,56 @@ export function ParticipantPaymentSheet({
                   raw={info.phone}
                 />
               )}
-              {(lydia || wero) && (
-                <div className="flex gap-2 pt-1">
-                  {lydia && (
-                    <a
-                      href={lydia}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg text-sm font-medium border border-foreground/10 bg-foreground/4 text-slate-200 hover:bg-foreground/8 transition-colors"
-                    >
-                      <span>Ouvrir Lydia</span>
-                      <ExternalLink size={12} className="text-slate-500" />
-                    </a>
-                  )}
-                  {wero && (
-                    <a
-                      href={wero}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg text-sm font-medium border border-foreground/10 bg-foreground/4 text-slate-200 hover:bg-foreground/8 transition-colors"
-                    >
-                      <span>Ouvrir Wero</span>
-                      <ExternalLink size={12} className="text-slate-500" />
-                    </a>
-                  )}
-                </div>
+              {participant && (
+                <ShareButton
+                  recipientName={participant.name}
+                  iban={info?.iban ?? null}
+                  phone={info?.phone ?? null}
+                />
               )}
             </>
           )}
         </div>
       </SheetContent>
     </Sheet>
+  );
+}
+
+function ShareButton({
+  recipientName,
+  iban,
+  phone,
+}: {
+  recipientName: string;
+  iban: string | null;
+  phone: string | null;
+}) {
+  const [feedback, setFeedback] = useState<null | "shared" | "copied">(null);
+
+  const handleShare = async () => {
+    const result = await sharePaymentInfo({ recipientName, iban, phone });
+    if (result === "shared" || result === "copied") {
+      setFeedback(result);
+      setTimeout(() => setFeedback(null), 1800);
+    }
+  };
+
+  const isNative = canNativeShare();
+
+  return (
+    <button
+      type="button"
+      onClick={handleShare}
+      className="w-full flex items-center justify-center gap-2 px-3 py-3 rounded-xl text-sm font-semibold border border-section bg-section-soft text-section-soft hover:bg-section-medium transition-colors active:scale-[0.99]"
+    >
+      {feedback === "shared" ? (
+        <><Check size={15} /> Partagé</>
+      ) : feedback === "copied" ? (
+        <><Check size={15} /> Copié dans le presse-papiers</>
+      ) : (
+        <><Share2 size={15} /> {isNative ? "Partager dans une app" : "Copier toutes les infos"}</>
+      )}
+    </button>
   );
 }
 
