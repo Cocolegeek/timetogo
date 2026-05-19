@@ -1,6 +1,6 @@
-# Time to Go
+# Voyou
 
-Application de planification de voyage collaborative — budget partagé, planning d'itinéraire, menus.
+Application de planification de voyage collaborative — budget partagé, planning d'itinéraire, menus. Disponible sur [voyou.app](https://voyou.app).
 
 ## Stack
 

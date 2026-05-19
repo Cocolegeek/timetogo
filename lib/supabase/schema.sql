@@ -1,5 +1,5 @@
 -- ============================================================
--- Time to Go — Supabase Schema (canonical, up to migration 015)
+-- Voyou — Supabase Schema (canonical, up to migration 016)
 -- Run this in the Supabase SQL editor after creating your project.
 -- Already-deployed DBs: apply individual migrations in lib/supabase/migrations/.
 -- ============================================================

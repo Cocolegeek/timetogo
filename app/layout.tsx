@@ -64,7 +64,7 @@ export const viewport: Viewport = {
 const themeScript = `
   (function() {
     try {
-      var t = localStorage.getItem('voyou-theme') || localStorage.getItem('time-to-go-theme');
+      var t = localStorage.getItem('voyou-theme');
       if (t === 'light') {
         document.documentElement.classList.remove('dark');
       } else {

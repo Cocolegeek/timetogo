@@ -7,7 +7,7 @@ export async function GET(request: Request) {
 
   const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1&accept-language=fr`;
   const res = await fetch(url, {
-    headers: { "User-Agent": "time-to-go/1.0 (contact: corentin.nicolas03@gmail.com)" },
+    headers: { "User-Agent": "voyou/1.0 (contact: corentin.nicolas03@gmail.com)" },
   });
   if (!res.ok) return NextResponse.json({ error: "Geocoding failed" }, { status: 502 });
 

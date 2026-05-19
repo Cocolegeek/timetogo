@@ -9,7 +9,7 @@ const OSRM_ENDPOINTS: Record<string, string> = {
 async function geocode(address: string): Promise<[number, number] | null> {
   const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1&accept-language=fr`;
   const res = await fetch(url, {
-    headers: { "User-Agent": "time-to-go/1.0 (contact: corentin.nicolas03@gmail.com)" },
+    headers: { "User-Agent": "voyou/1.0 (contact: corentin.nicolas03@gmail.com)" },
   });
   if (!res.ok) return null;
   const data = await res.json();
@@ -44,7 +44,7 @@ export async function GET(request: Request) {
   const osrmUrl = `${osrmEndpoint}/${fromCoords[0]},${fromCoords[1]};${toCoords[0]},${toCoords[1]}?overview=false`;
 
   const osrmRes = await fetch(osrmUrl, {
-    headers: { "User-Agent": "time-to-go/1.0 (contact: corentin.nicolas03@gmail.com)" },
+    headers: { "User-Agent": "voyou/1.0 (contact: corentin.nicolas03@gmail.com)" },
   });
   if (!osrmRes.ok) {
     return NextResponse.json({ error: "Erreur du service de routing" }, { status: 502 });

@@ -1,6 +1,6 @@
 @AGENTS.md
 
-# Time to Go — Project Context
+# Voyou — Project Context
 
 ## Stack
 - **Next.js 16 / React 19** — App Router, TypeScript, no Pages Router
@@ -81,7 +81,7 @@ useMeals(id)            → { meals, loading, refetch, updateMeal, deleteMeal }
 useItinerary(id)        → { items, loading, refetch, addItem, updateItem, deleteItem }
 useProfile()            → { profile, loading, refetch, updateProfile, signOut }
 useDebts(id)            → computed balances/settlements (no direct DB)
-useTheme()              → localStorage toggle (key: "time-to-go-theme")
+useTheme()              → localStorage toggle (key: "voyou-theme")
 useUserId()             → current user uuid (fast, no extra fetch)
 useRevalidateOnFocus()  → re-calls refetch on window focus (pass a refetch fn)
 ```
