@@ -12,7 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { LocationAutocomplete } from "@/components/shared/LocationAutocomplete";
+import { LocationPickerSheet } from "@/components/shared/LocationPickerSheet";
 import { DateRangePicker } from "@/components/shared/DateRangePicker";
 import { AvatarUpload } from "@/components/shared/AvatarUpload";
 import { useUserId } from "@/hooks/useUserId";
@@ -288,11 +288,11 @@ export function TripEditDialog({
           {features.hasDestination && (
             <div className="space-y-1.5">
               <Label className="text-slate-300 text-sm font-medium">Destination</Label>
-              <LocationAutocomplete
+              <LocationPickerSheet
                 value={destination}
                 onChange={setDestination}
                 placeholder="Rome, Italie"
-                className="bg-foreground/8 border-foreground/10 text-slate-100 placeholder:text-slate-500 focus-visible:ring-section"
+                className="bg-foreground/8 border-foreground/10"
               />
             </div>
           )}

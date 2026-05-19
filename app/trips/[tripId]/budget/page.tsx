@@ -1,7 +1,7 @@
 "use client";
 
-import { use, useState } from "react";
-import { Plus, Wallet, Receipt, Scale, ArrowRightLeft } from "lucide-react";
+import { use, useMemo, useState } from "react";
+import { Plus, Wallet, Receipt, Scale } from "lucide-react";
 import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
 const ExpenseForm = dynamic(() => import("@/components/budget/ExpenseForm").then(m => ({ default: m.ExpenseForm })), { ssr: false });
@@ -13,13 +13,15 @@ import { DebtSettlements } from "@/components/budget/DebtSettlements";
 import { MyBalanceCard } from "@/components/budget/MyBalanceCard";
 import { AllSettledEmpty } from "@/components/budget/AllSettledEmpty";
 import { IAmSettledEmpty } from "@/components/budget/IAmSettledEmpty";
+import { ExpenseDetailSheet } from "@/components/budget/ExpenseDetailSheet";
 import { useTrip } from "@/hooks/useTrip";
 import { useBudget } from "@/hooks/useBudget";
 import { useDebts } from "@/hooks/useDebts";
+import { CATEGORIES } from "@/lib/budget/categories";
 import { cn } from "@/lib/utils";
-import type { Expense, Payer, Settlement } from "@/types";
+import type { Expense, ExpenseCategory, Payer, Settlement } from "@/types";
 
-type BudgetTab = "expenses" | "balances" | "settlements";
+type BudgetTab = "expenses" | "balances";
 
 interface BudgetPageProps {
   params: Promise<{ tripId: string }>;
@@ -38,6 +40,7 @@ export default function BudgetPage({ params }: BudgetPageProps) {
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | undefined>();
+  const [detailExpense, setDetailExpense] = useState<Expense | null>(null);
   const [activeTab, setActiveTab] = useState<BudgetTab>("expenses");
 
   const participants = trip?.participants ?? [];
@@ -54,6 +57,18 @@ export default function BudgetPage({ params }: BudgetPageProps) {
   const otherSettlements = myId
     ? settlements.filter((s) => s.fromId !== myId && s.toId !== myId)
     : settlements;
+
+  // Category breakdown for hero card
+  const categoryBreakdown = useMemo(() => {
+    const byCategory: Partial<Record<ExpenseCategory, number>> = {};
+    for (const e of expenses) {
+      if (e.category === "reimbursement") continue;
+      byCategory[e.category] = (byCategory[e.category] ?? 0) + e.amountInTripCurrency;
+    }
+    return Object.entries(byCategory)
+      .sort(([, a], [, b]) => (b as number) - (a as number))
+      .filter(([, amount]) => (amount as number) > 0) as [ExpenseCategory, number][];
+  }, [expenses]);
 
   const handleSubmit = async (data: {
     title: string;
@@ -74,13 +89,26 @@ export default function BudgetPage({ params }: BudgetPageProps) {
     }
   };
 
-  const handleEdit = (expense: Expense) => {
-    setEditingExpense(expense);
+  // Tap → detail sheet (not directly to edit form)
+  const handleTap = (expense: Expense) => {
+    setDetailExpense(expense);
+  };
+
+  // From detail sheet → edit form
+  const handleEditFromDetail = () => {
+    if (!detailExpense) return;
+    setEditingExpense(detailExpense);
+    setDetailExpense(null);
     setFormOpen(true);
   };
 
+  const handleDeleteFromDetail = async () => {
+    if (!detailExpense) return;
+    await deleteExpense(detailExpense.id);
+    setDetailExpense(null);
+  };
+
   const handleDelete = async (id: string) => {
-    // Swipe gesture is the confirmation, no extra prompt
     await deleteExpense(id);
   };
 
@@ -111,9 +139,7 @@ export default function BudgetPage({ params }: BudgetPageProps) {
   };
 
   if (!trip) {
-    return (
-      <Spinner />
-    );
+    return <Spinner />;
   }
 
   return (
@@ -123,10 +149,8 @@ export default function BudgetPage({ params }: BudgetPageProps) {
         height: "calc(100dvh - env(safe-area-inset-top) - 1.25rem - var(--bottom-nav-top) - 1.5rem)",
       }}
     >
-      {/* ── Anchored top section — never scrolls ── */}
+      {/* ── Anchored top section ── */}
       <div className="shrink-0">
-        
-
         {/* Hero: total dépensé */}
         <motion.div
           initial={{ opacity: 0, y: -8 }}
@@ -169,15 +193,47 @@ export default function BudgetPage({ params }: BudgetPageProps) {
                   minimumFractionDigits: 2,
                 }).format(totalSpent)}
               </p>
-              {trip.totalBudget && (
-                <p className="text-sm text-white/75 mt-3 font-medium">
-                  sur{" "}
-                  {new Intl.NumberFormat("fr-FR", {
-                    style: "currency",
-                    currency,
-                    minimumFractionDigits: 0,
-                  }).format(trip.totalBudget)}
-                </p>
+
+              {/* Budget progress bar */}
+              {trip.totalBudget ? (
+                <>
+                  <div className="mt-3 h-1 rounded-full bg-white/20 overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-white/80 transition-all duration-500"
+                      style={{
+                        width: `${Math.min(100, (totalSpent / trip.totalBudget) * 100)}%`,
+                      }}
+                    />
+                  </div>
+                  <p className="text-sm text-white/75 mt-1.5 font-medium">
+                    {Math.round((totalSpent / trip.totalBudget) * 100)}% sur{" "}
+                    {new Intl.NumberFormat("fr-FR", {
+                      style: "currency",
+                      currency,
+                      minimumFractionDigits: 0,
+                    }).format(trip.totalBudget)}
+                  </p>
+                </>
+              ) : null}
+
+              {/* Category breakdown pills */}
+              {categoryBreakdown.length > 1 && totalSpent > 0 && (
+                <div className="flex gap-1.5 mt-3 flex-wrap">
+                  {categoryBreakdown.slice(0, 5).map(([cat, amount]) => {
+                    const cfg = CATEGORIES[cat];
+                    const Icon = cfg.icon;
+                    const pct = Math.round((amount / totalSpent) * 100);
+                    return (
+                      <span
+                        key={cat}
+                        className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-white/10 text-white/65 border border-white/10"
+                      >
+                        <Icon size={10} />
+                        <span>{pct}%</span>
+                      </span>
+                    );
+                  })}
+                </div>
               )}
             </div>
           </div>
@@ -201,7 +257,7 @@ export default function BudgetPage({ params }: BudgetPageProps) {
               participants={participants}
               currency={currency}
               onDelete={handleDelete}
-              onEdit={handleEdit}
+              onEdit={handleTap}
             />
           )}
 
@@ -211,8 +267,9 @@ export default function BudgetPage({ params }: BudgetPageProps) {
                 <AllSettledEmpty />
               ) : (
                 <>
+                  {/* Me concerne card: my balance + my settlements */}
                   {myParticipant && myBalance && (
-                    <div className="glass-subtle border border-section rounded-2xl p-4">
+                    <div className="glass-subtle border border-section rounded-2xl p-4 space-y-4">
                       <SectionLabel>
                         <span className="inline-flex items-center gap-2">
                           <span
@@ -232,8 +289,18 @@ export default function BudgetPage({ params }: BudgetPageProps) {
                           currency={currency}
                         />
                       )}
+                      {mySettlements.length > 0 && (
+                        <DebtSettlements
+                          settlements={mySettlements}
+                          participants={participants}
+                          currency={currency}
+                          onSettle={handleSettle}
+                        />
+                      )}
                     </div>
                   )}
+
+                  {/* All balances */}
                   <div>
                     <SectionLabel count={balances.length}>
                       {myParticipant ? "Tous les soldes" : "Soldes"}
@@ -244,55 +311,46 @@ export default function BudgetPage({ params }: BudgetPageProps) {
                       currency={currency}
                     />
                   </div>
-                </>
-              )}
-            </div>
-          )}
 
-          {activeTab === "settlements" && (
-            <div className="space-y-5">
-              {myParticipant && (
-                <div className="glass-subtle border border-section rounded-2xl p-4">
-                  <SectionLabel count={mySettlements.length}>
-                    <span className="inline-flex items-center gap-2">
-                      <span
-                        className="w-2 h-2 rounded-full shrink-0"
-                        style={{ backgroundColor: myParticipant.color }}
-                        aria-hidden
+                  {/* Other settlements (or all if no myParticipant) */}
+                  {(otherSettlements.length > 0 || !myParticipant) && (
+                    <div>
+                      <SectionLabel
+                        count={
+                          myParticipant
+                            ? otherSettlements.length
+                            : settlements.length
+                        }
+                      >
+                        {myParticipant ? "Entre les autres" : "Remboursements"}
+                      </SectionLabel>
+                      <DebtSettlements
+                        settlements={
+                          myParticipant ? otherSettlements : settlements
+                        }
+                        participants={participants}
+                        currency={currency}
+                        onSettle={handleSettle}
                       />
-                      Me concerne
-                    </span>
-                  </SectionLabel>
-                  {mySettlements.length === 0 ? (
-                    <IAmSettledEmpty />
-                  ) : (
-                    <DebtSettlements
-                      settlements={mySettlements}
-                      participants={participants}
-                      currency={currency}
-                      onSettle={handleSettle}
-                    />
+                    </div>
                   )}
-                </div>
-              )}
-
-              {(otherSettlements.length > 0 || !myParticipant) && (
-                <div>
-                  <SectionLabel count={myParticipant ? otherSettlements.length : settlements.length}>
-                    {myParticipant ? "Entre les autres" : "Remboursements simplifiés"}
-                  </SectionLabel>
-                  <DebtSettlements
-                    settlements={myParticipant ? otherSettlements : settlements}
-                    participants={participants}
-                    currency={currency}
-                    onSettle={handleSettle}
-                  />
-                </div>
+                </>
               )}
             </div>
           )}
         </motion.div>
       </div>
+
+      {/* Expense Detail — tap on card opens this first */}
+      <ExpenseDetailSheet
+        expense={detailExpense}
+        participants={participants}
+        currency={currency}
+        open={detailExpense !== null}
+        onOpenChange={(open) => { if (!open) setDetailExpense(null); }}
+        onEdit={handleEditFromDetail}
+        onDelete={handleDeleteFromDetail}
+      />
 
       {/* Expense Form */}
       <ExpenseForm
@@ -307,7 +365,7 @@ export default function BudgetPage({ params }: BudgetPageProps) {
         initialValues={editingExpense}
       />
 
-      {/* FAB — Add expense (sits above bottom nav) */}
+      {/* FAB */}
       <button
         onClick={handleOpenForm}
         className="fixed right-4 z-30 w-14 h-14 rounded-full gradient-primary text-white shadow-section-strong flex items-center justify-center active:scale-95 hover:scale-105 transition-all"
@@ -324,9 +382,8 @@ export default function BudgetPage({ params }: BudgetPageProps) {
 // ─── BudgetTabSwitcher ──────────────────────────────────────────────────────
 
 const TABS: { id: BudgetTab; label: string; icon: typeof Receipt }[] = [
-  { id: "expenses",    label: "Dépenses", icon: Receipt        },
-  { id: "balances",    label: "Soldes",   icon: Scale          },
-  { id: "settlements", label: "Régler",   icon: ArrowRightLeft },
+  { id: "expenses", label: "Dépenses", icon: Receipt },
+  { id: "balances", label: "Soldes",   icon: Scale   },
 ];
 
 function BudgetTabSwitcher({
@@ -374,4 +431,3 @@ function BudgetTabSwitcher({
     </div>
   );
 }
-
