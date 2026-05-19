@@ -10,6 +10,8 @@ import {
   Moon,
   Sun,
   LogOut,
+  CreditCard,
+  Phone,
 } from "lucide-react";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { MeshGradientBackground } from "@/components/layout/MeshGradientBackground";
@@ -31,8 +33,12 @@ export default function SettingsPage() {
   const userId = useUserId();
 
   const [name, setName] = useState("");
+  const [iban, setIban] = useState("");
+  const [phone, setPhone] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [savingPayment, setSavingPayment] = useState(false);
+  const [savedPayment, setSavedPayment] = useState(false);
   const [mapApp, setMapAppState] = useState<MapAppId>("google");
 
   useEffect(() => {
@@ -45,10 +51,14 @@ export default function SettingsPage() {
     setMapAppState(id);
   };
 
-  // Sync name once profile loads
+  // Sync fields once profile loads
   useEffect(() => {
-    if (profile?.name && !name) setName(profile.name);
-  }, [profile, name]);
+    if (!profile) return;
+    if (profile.name && !name) setName(profile.name);
+    if (profile.iban && !iban) setIban(profile.iban);
+    if (profile.phone && !phone) setPhone(profile.phone);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile]);
 
   const handleSave = async () => {
     if (!name.trim()) return;
@@ -58,6 +68,21 @@ export default function SettingsPage() {
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
+
+  const handleSavePayment = async () => {
+    setSavingPayment(true);
+    await updateProfile({
+      iban: iban.trim() ? iban.trim().replace(/\s+/g, "").toUpperCase() : null,
+      phone: phone.trim() || null,
+    });
+    setSavingPayment(false);
+    setSavedPayment(true);
+    setTimeout(() => setSavedPayment(false), 2000);
+  };
+
+  const paymentDirty =
+    (iban.trim().replace(/\s+/g, "").toUpperCase() || null) !== (profile?.iban ?? null) ||
+    (phone.trim() || null) !== (profile?.phone ?? null);
 
   const isDark = theme === "dark";
 
@@ -165,6 +190,72 @@ export default function SettingsPage() {
                       <>
                         <Save size={15} />
                         Sauvegarder
+                      </>
+                    )}
+                  </Button>
+                </GlassCard>
+              </Section>
+
+              {/* ─── Section Paiement ────────────────────────────────── */}
+              <Section label="Remboursements">
+                <GlassCard className="space-y-4">
+                  <p className="text-sm text-slate-400 -mt-1">
+                    Tes infos seront visibles par les autres membres d'un voyage
+                    quand ils auront un solde à te rembourser. Elles ne sont
+                    jamais exposées ailleurs.
+                  </p>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-slate-300 text-sm font-medium flex items-center gap-1.5">
+                      <CreditCard size={14} />
+                      IBAN
+                    </Label>
+                    <Input
+                      value={iban}
+                      onChange={(e) => setIban(e.target.value)}
+                      placeholder="FR76 1234 5678 9012 3456 7890 123"
+                      autoComplete="off"
+                      autoCapitalize="characters"
+                      spellCheck={false}
+                      className="bg-foreground/8 border-foreground/10 text-slate-100 placeholder:text-slate-500 font-mono text-sm tracking-wide"
+                    />
+                    <p className="text-sm text-slate-500">
+                      Pour les virements classiques.
+                    </p>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-slate-300 text-sm font-medium flex items-center gap-1.5">
+                      <Phone size={14} />
+                      Numéro de téléphone
+                    </Label>
+                    <Input
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      onFocus={(e) => e.target.select()}
+                      placeholder="+33 6 12 34 56 78"
+                      autoComplete="tel"
+                      className="bg-foreground/8 border-foreground/10 text-slate-100 placeholder:text-slate-500"
+                    />
+                    <p className="text-sm text-slate-500">
+                      Utilisé pour générer des liens Lydia / Wero.
+                    </p>
+                  </div>
+
+                  <Button
+                    onClick={handleSavePayment}
+                    disabled={savingPayment || !paymentDirty}
+                    className="w-full gradient-primary text-white border-0 disabled:opacity-40"
+                  >
+                    {savingPayment ? (
+                      <Loader2 size={15} className="animate-spin" />
+                    ) : savedPayment ? (
+                      "✓ Enregistré"
+                    ) : (
+                      <>
+                        <Save size={15} />
+                        Enregistrer
                       </>
                     )}
                   </Button>

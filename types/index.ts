@@ -6,6 +6,8 @@ export interface Profile {
   avatar_url: string | null;
   custom_avatar_url: string | null;
   email: string | null;
+  iban: string | null;
+  phone: string | null;
   created_at: string;
 }
 

@@ -344,79 +344,85 @@ export function MealEditDialog({
                   className="overflow-hidden"
                 >
                   <div className="px-5 pb-5 space-y-4">
-                    {/* Ingredients table */}
-                    <div className="space-y-2">
-                      <div className="grid grid-cols-[1fr_120px_36px] gap-2 px-1">
-                        <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                          Ingrédient
-                        </p>
-                        <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                          Quantité
-                        </p>
-                        <span />
-                      </div>
+                    {/* Ingredients table — pas pertinent au resto */}
+                    {category !== "restaurant" && (
+                      <div className="space-y-2">
+                        <div className="grid grid-cols-[1fr_120px_36px] gap-2 px-1">
+                          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                            Ingrédient
+                          </p>
+                          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                            Quantité
+                          </p>
+                          <span />
+                        </div>
 
-                      <AnimatePresence initial={false}>
-                        {ingredients.map((ing) => (
-                          <motion.div
-                            key={ing.id}
-                            layout
-                            initial={{ opacity: 0, y: -6 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -6 }}
-                            className="grid grid-cols-[1fr_120px_36px] gap-2 items-center"
-                          >
-                            <Input
-                              value={ing.name}
-                              onChange={(e) =>
-                                updateIngredient(ing.id, "name", e.target.value)
-                              }
-                              placeholder="Tomates"
-                              className="bg-foreground/5 border-foreground/10 text-slate-100 placeholder:text-slate-500"
-                            />
-                            <Input
-                              value={ing.quantity}
-                              onChange={(e) =>
-                                updateIngredient(
-                                  ing.id,
-                                  "quantity",
-                                  e.target.value
-                                )
-                              }
-                              placeholder="500g"
-                              className="bg-foreground/5 border-foreground/10 text-slate-100 placeholder:text-slate-500"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => removeIngredient(ing.id)}
-                              className="h-9 w-9 rounded-lg flex items-center justify-center text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                              aria-label="Retirer l'ingrédient"
+                        <AnimatePresence initial={false}>
+                          {ingredients.map((ing) => (
+                            <motion.div
+                              key={ing.id}
+                              layout
+                              initial={{ opacity: 0, y: -6 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -6 }}
+                              className="grid grid-cols-[1fr_120px_36px] gap-2 items-center"
                             >
-                              <Trash2 size={14} />
-                            </button>
-                          </motion.div>
-                        ))}
-                      </AnimatePresence>
+                              <Input
+                                value={ing.name}
+                                onChange={(e) =>
+                                  updateIngredient(ing.id, "name", e.target.value)
+                                }
+                                placeholder="Tomates"
+                                className="bg-foreground/5 border-foreground/10 text-slate-100 placeholder:text-slate-500"
+                              />
+                              <Input
+                                value={ing.quantity}
+                                onChange={(e) =>
+                                  updateIngredient(
+                                    ing.id,
+                                    "quantity",
+                                    e.target.value
+                                  )
+                                }
+                                placeholder="500g"
+                                className="bg-foreground/5 border-foreground/10 text-slate-100 placeholder:text-slate-500"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => removeIngredient(ing.id)}
+                                className="h-9 w-9 rounded-lg flex items-center justify-center text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                                aria-label="Retirer l'ingrédient"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </motion.div>
+                          ))}
+                        </AnimatePresence>
 
-                      <button
-                        type="button"
-                        onClick={addIngredient}
-                        className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-dashed border-foreground/15 text-sm text-slate-400 hover:border-foreground/25 hover:text-slate-200 hover:bg-foreground/4 transition-colors"
-                      >
-                        <Plus size={14} />
-                        Ajouter un ingrédient
-                      </button>
-                    </div>
+                        <button
+                          type="button"
+                          onClick={addIngredient}
+                          className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-dashed border-foreground/15 text-sm text-slate-400 hover:border-foreground/25 hover:text-slate-200 hover:bg-foreground/4 transition-colors"
+                        >
+                          <Plus size={14} />
+                          Ajouter un ingrédient
+                        </button>
+                      </div>
+                    )}
 
                     {/* Notes */}
                     <div className="space-y-1.5">
                       <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 px-1">
-                        Notes
+                        {category === "restaurant" ? "Réservation / notes" : "Notes"}
                       </p>
                       <textarea
                         value={notes}
                         onChange={(e) => setNotes(e.target.value)}
-                        placeholder="Allergies, restos envisagés…"
+                        placeholder={
+                          category === "restaurant"
+                            ? "Nom du resto, horaire, n° de réservation…"
+                            : "Allergies, restos envisagés…"
+                        }
                         rows={2}
                         className="w-full bg-foreground/5 border border-foreground/10 rounded-lg px-3 py-2 text-base text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-3 focus:ring-section resize-none"
                       />

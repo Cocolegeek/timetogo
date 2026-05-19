@@ -28,7 +28,12 @@ export function useProfile() {
   useEffect(() => { fetchProfile(); }, [fetchProfile]);
 
   const updateProfile = async (
-    updates: { name?: string; custom_avatar_url?: string | null }
+    updates: {
+      name?: string;
+      custom_avatar_url?: string | null;
+      iban?: string | null;
+      phone?: string | null;
+    }
   ): Promise<void> => {
     const supabase = createClient();
     const { data: { session } } = await supabase.auth.getSession();

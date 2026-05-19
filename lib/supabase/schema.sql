@@ -1,5 +1,5 @@
 -- ============================================================
--- Voyou — Supabase Schema (canonical, up to migration 016)
+-- Voyou — Supabase Schema (canonical, up to migration 019)
 -- Run this in the Supabase SQL editor after creating your project.
 -- Already-deployed DBs: apply individual migrations in lib/supabase/migrations/.
 -- ============================================================
@@ -11,6 +11,8 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   avatar_url            text,        -- Google OAuth avatar
   custom_avatar_url     text,        -- User-uploaded avatar (migration 013)
   email                 text,
+  iban                  text,        -- Payment info (migration 017)
+  phone                 text,        -- Payment info (migration 017)
   gdpr_consented_at     timestamptz, -- migration 008
   gdpr_consent_version  text,
   gdpr_consent_proof    text,
@@ -92,9 +94,15 @@ CREATE TABLE IF NOT EXISTS public.trip_members (
   user_id        uuid NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   participant_id uuid REFERENCES public.participants(id) ON DELETE SET NULL,
   role           text NOT NULL DEFAULT 'contributor',
+  is_primary     boolean NOT NULL DEFAULT false,    -- migration 018
   joined_at      timestamptz DEFAULT now() NOT NULL,
   PRIMARY KEY (trip_id, user_id)
 );
+
+-- At most one primary claim per (trip, participant) — migration 018
+CREATE UNIQUE INDEX IF NOT EXISTS trip_members_primary_unique
+  ON public.trip_members (trip_id, participant_id)
+  WHERE is_primary = true;
 
 ALTER TABLE public.trip_members ENABLE ROW LEVEL SECURITY;
 

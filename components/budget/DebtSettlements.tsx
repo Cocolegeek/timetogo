@@ -2,8 +2,18 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowDown, Loader2 } from "lucide-react";
+import {
+  ArrowDown,
+  Loader2,
+  Copy,
+  Check,
+  CreditCard,
+  Phone,
+  ExternalLink,
+} from "lucide-react";
 import { formatCurrency } from "@/lib/format-currency";
+import { lydiaLink, weroLink, formatIban } from "@/lib/payment-links";
+import { usePaymentInfo, type PaymentInfo } from "@/hooks/usePaymentInfo";
 import { AllSettledEmpty } from "./AllSettledEmpty";
 import {
   Dialog,
@@ -30,6 +40,7 @@ export function DebtSettlements({
 }: DebtSettlementsProps) {
   const [pending, setPending] = useState<Settlement | null>(null);
   const [loading, setLoading] = useState(false);
+  const { info, loading: loadingInfo } = usePaymentInfo(pending?.toId ?? null);
 
   const handleConfirm = async () => {
     if (!pending) return;
@@ -66,7 +77,6 @@ export function DebtSettlements({
               onClick={() => setPending(s)}
               className="w-full glass-subtle border border-section rounded-2xl px-4 py-4 flex flex-col gap-3 text-left active:scale-[0.98] transition-transform"
             >
-              {/* Participants */}
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2 min-w-0">
                   <span
@@ -91,7 +101,6 @@ export function DebtSettlements({
                 </div>
               </div>
 
-              {/* Amount + hint */}
               <div className="flex items-end justify-between">
                 <span className="text-2xl font-bold text-section-soft tabular-nums">
                   {formatCurrency(s.amount, currency)}
@@ -131,6 +140,15 @@ export function DebtSettlements({
                   {formatCurrency(pending.amount, currency)}
                 </p>
               </div>
+
+              <PaymentDetails
+                info={info}
+                loading={loadingInfo}
+                recipientName={pendingTo.name}
+                amount={pending.amount}
+                currency={currency}
+              />
+
               <p className="text-sm text-slate-400">
                 Un remboursement sera ajouté dans les dépenses et les soldes seront mis à jour.
               </p>
@@ -156,5 +174,153 @@ export function DebtSettlements({
         </DialogContent>
       </Dialog>
     </>
+  );
+}
+
+// ─── PaymentDetails ───────────────────────────────────────────────────────────
+
+function PaymentDetails({
+  info,
+  loading,
+  recipientName,
+  amount,
+  currency,
+}: {
+  info: PaymentInfo | null;
+  loading: boolean;
+  recipientName: string;
+  amount: number;
+  currency: string;
+}) {
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-2">
+        <Loader2 size={14} className="animate-spin text-slate-500" />
+      </div>
+    );
+  }
+
+  if (!info || (!info.iban && !info.phone)) {
+    return (
+      <p className="text-sm text-slate-500 italic">
+        {recipientName} n&apos;a pas renseigné ses infos de paiement.
+      </p>
+    );
+  }
+
+  const lydia = lydiaLink(info.phone);
+  const wero = weroLink(info.phone);
+
+  return (
+    <div className="space-y-2">
+      <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+        Payer {recipientName}
+      </p>
+
+      {info.iban && (
+        <PaymentRow
+          icon={<CreditCard size={14} />}
+          label="IBAN"
+          value={formatIban(info.iban)}
+          rawValue={info.iban}
+          monospace
+        />
+      )}
+
+      {info.phone && (
+        <PaymentRow
+          icon={<Phone size={14} />}
+          label="Téléphone"
+          value={info.phone}
+          rawValue={info.phone}
+        />
+      )}
+
+      {(lydia || wero) && (
+        <div className="flex gap-2 pt-1">
+          {lydia && (
+            <a
+              href={lydia}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium border border-foreground/10 bg-foreground/4 text-slate-200 hover:bg-foreground/8 transition-colors"
+            >
+              <span>Lydia</span>
+              <ExternalLink size={12} className="text-slate-500" />
+            </a>
+          )}
+          {wero && (
+            <a
+              href={wero}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium border border-foreground/10 bg-foreground/4 text-slate-200 hover:bg-foreground/8 transition-colors"
+            >
+              <span>Wero</span>
+              <ExternalLink size={12} className="text-slate-500" />
+            </a>
+          )}
+        </div>
+      )}
+
+      <p className="text-xs text-slate-500">
+        Montant à transférer :{" "}
+        <span className="text-slate-300 font-semibold tabular-nums">
+          {formatCurrency(amount, currency)}
+        </span>
+      </p>
+    </div>
+  );
+}
+
+function PaymentRow({
+  icon,
+  label,
+  value,
+  rawValue,
+  monospace = false,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  rawValue: string;
+  monospace?: boolean;
+}) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(rawValue);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // clipboard not available — silent fail
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-foreground/8 bg-foreground/4">
+      <span className="text-slate-500 shrink-0">{icon}</span>
+      <div className="flex-1 min-w-0">
+        <p className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold">
+          {label}
+        </p>
+        <p
+          className={`text-sm text-slate-100 truncate ${
+            monospace ? "font-mono tracking-wide" : ""
+          }`}
+        >
+          {value}
+        </p>
+      </div>
+      <button
+        type="button"
+        onClick={handleCopy}
+        className="p-2 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-foreground/8 transition-colors shrink-0"
+        aria-label={`Copier ${label}`}
+      >
+        {copied ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
+      </button>
+    </div>
   );
 }

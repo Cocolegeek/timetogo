@@ -146,9 +146,33 @@ export function useTrips() {
   return { trips, loading, refetch: fetchTrips, createTrip, deleteTrip };
 }
 
+export interface ParticipantClaim {
+  participantId: string;
+  userId: string;
+  userName: string | null;
+  isPrimary: boolean;
+}
+
 export function useTrip(id: string) {
   const [trip, setTrip] = useState<Trip | null>(null);
+  const [claims, setClaims] = useState<ParticipantClaim[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const fetchClaims = useCallback(async () => {
+    const supabase = createClient();
+    const { data, error } = await supabase.rpc("get_trip_member_claims", {
+      p_trip_id: id,
+    });
+    if (error || !data) return;
+    setClaims(
+      (data as Array<Record<string, unknown>>).map((r) => ({
+        participantId: r.participant_id as string,
+        userId: r.user_id as string,
+        userName: (r.user_name as string | null) ?? null,
+        isPrimary: r.is_primary as boolean,
+      }))
+    );
+  }, [id]);
 
   const fetchTrip = useCallback(async () => {
     const supabase = createClient();
@@ -173,7 +197,7 @@ export function useTrip(id: string) {
     setLoading(false);
   }, [id]);
 
-  useEffect(() => { fetchTrip(); }, [fetchTrip]);
+  useEffect(() => { fetchTrip(); fetchClaims(); }, [fetchTrip, fetchClaims]);
   useRevalidateOnFocus(fetchTrip);
 
   const updateTrip = async (
@@ -230,11 +254,13 @@ export function useTrip(id: string) {
   const setMyParticipant = async (participantId: string): Promise<void> => {
     const supabase = createClient();
     const { data: { session } } = await supabase.auth.getSession();
-    const user = session?.user;
-    if (!user) return;
-    await supabase.from("trip_members").update({ participant_id: participantId })
-      .eq("trip_id", id).eq("user_id", user.id);
-    await fetchTrip();
+    if (!session?.user) return;
+    const { error } = await supabase.rpc("claim_participant", {
+      p_trip_id: id,
+      p_participant_id: participantId,
+    });
+    if (error) throw error;
+    await Promise.all([fetchTrip(), fetchClaims()]);
   };
 
   const addParticipant = async (data: { name: string; color: string }): Promise<Participant> => {
@@ -266,5 +292,5 @@ export function useTrip(id: string) {
     await fetchTrip();
   };
 
-  return { trip, loading, refetch: fetchTrip, updateTrip, setMyParticipant, addParticipant, updateParticipant, deleteParticipant };
+  return { trip, claims, loading, refetch: fetchTrip, refetchClaims: fetchClaims, updateTrip, setMyParticipant, addParticipant, updateParticipant, deleteParticipant };
 }

@@ -20,7 +20,7 @@ export const CATEGORY_CONFIG: Record<MealCategory, CategoryConfig> = {
   },
   picnic: {
     category: "picnic",
-    label: "Pic-Nic",
+    label: "Pique-nique",
     badgeClass:
       "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40",
     stripClass: "bg-emerald-500",

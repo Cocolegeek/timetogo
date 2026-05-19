@@ -2,15 +2,23 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { UserCheck, UserPlus, X, Loader2 } from "lucide-react";
+import { UserCheck, UserPlus, X, Loader2, AlertTriangle } from "lucide-react";
 import { ParticipantAvatar } from "@/components/shared/ParticipantAvatar";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Participant } from "@/types";
+
+export interface IdentityClaim {
+  participantId: string;
+  userId: string;
+  userName: string | null;
+  isPrimary: boolean;
+}
 
 interface IdentityPickerProps {
   participants: Participant[];
   selectedId: string | null;
-  onSelect: (id: string) => void;
+  onSelect: (id: string) => void | Promise<void>;
   /**
    * Optional: when provided, an "Ajouter un participant" tile is shown.
    * The callback should create the participant in the data layer and
@@ -20,6 +28,12 @@ interface IdentityPickerProps {
   onCreate?: (name: string) => Promise<Participant>;
   /** Mode compact : inline dans le dashboard vs plein écran au join */
   compact?: boolean;
+  /** Liste des liens user→participant. Quand fournie, le picker affiche
+   *  "déjà lié à X" et demande confirmation pour reprendre l'identité. */
+  claims?: IdentityClaim[];
+  /** UID de l'utilisateur connecté — sert à savoir si une revendication
+   *  primary est la sienne ou celle d'un autre. */
+  currentUserId?: string | null;
 }
 
 const FALLBACK_COLORS = [
@@ -37,13 +51,45 @@ export function IdentityPicker({
   onSelect,
   onCreate,
   compact = false,
+  claims,
+  currentUserId,
 }: IdentityPickerProps) {
   const [addOpen, setAddOpen] = useState(false);
   const [newName, setNewName] = useState("");
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirmTarget, setConfirmTarget] = useState<{
+    participant: Participant;
+    primaryName: string | null;
+  } | null>(null);
+  const [claiming, setClaiming] = useState(false);
 
   const previewColor = nextColor(participants);
+
+  const primaryByParticipant = new Map<string, IdentityClaim>();
+  for (const c of claims ?? []) {
+    if (c.isPrimary) primaryByParticipant.set(c.participantId, c);
+  }
+
+  const handleParticipantClick = (p: Participant) => {
+    const primary = primaryByParticipant.get(p.id);
+    if (primary && primary.userId !== currentUserId) {
+      setConfirmTarget({ participant: p, primaryName: primary.userName });
+      return;
+    }
+    void onSelect(p.id);
+  };
+
+  const handleConfirmClaim = async () => {
+    if (!confirmTarget) return;
+    setClaiming(true);
+    try {
+      await onSelect(confirmTarget.participant.id);
+      setConfirmTarget(null);
+    } finally {
+      setClaiming(false);
+    }
+  };
 
   const handleCreate = async () => {
     if (!onCreate) return;
@@ -53,7 +99,7 @@ export function IdentityPicker({
     setError(null);
     try {
       const created = await onCreate(name);
-      onSelect(created.id);
+      await onSelect(created.id);
       setNewName("");
       setAddOpen(false);
     } catch {
@@ -79,6 +125,8 @@ export function IdentityPicker({
       <div className={cn("grid gap-2", compact ? "grid-cols-2 sm:grid-cols-3" : "grid-cols-1 sm:grid-cols-2")}>
         {participants.map((p, i) => {
           const isSelected = selectedId === p.id;
+          const primary = primaryByParticipant.get(p.id);
+          const claimedByOther = primary && primary.userId !== currentUserId;
           return (
             <motion.button
               key={p.id}
@@ -86,7 +134,7 @@ export function IdentityPicker({
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: i * 0.04 }}
               type="button"
-              onClick={() => onSelect(p.id)}
+              onClick={() => handleParticipantClick(p)}
               className={cn(
                 "flex items-center gap-3 p-3 rounded-xl border transition-all duration-200 text-left",
                 isSelected
@@ -104,9 +152,13 @@ export function IdentityPicker({
                 >
                   {p.name}
                 </p>
-                {isSelected && (
+                {isSelected ? (
                   <p className="text-sm text-section">C&apos;est moi</p>
-                )}
+                ) : claimedByOther ? (
+                  <p className="text-sm text-amber-400 truncate">
+                    Lié à {primary?.userName ?? "un autre membre"}
+                  </p>
+                ) : null}
               </div>
               {isSelected && (
                 <div className="w-2 h-2 rounded-full bg-section shrink-0" />
@@ -205,6 +257,72 @@ export function IdentityPicker({
                 )}
               </button>
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Confirmation modal — claimed by another user */}
+      <AnimatePresence>
+        {confirmTarget && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-4"
+            onClick={() => !claiming && setConfirmTarget(null)}
+          >
+            <motion.div
+              initial={{ y: 32, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 32, opacity: 0 }}
+              transition={{ type: "spring", damping: 26, stiffness: 280 }}
+              className="w-full max-w-sm bg-slate-900 border border-foreground/10 rounded-2xl p-5 space-y-4 glass-strong"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center shrink-0">
+                  <AlertTriangle size={18} className="text-amber-400" />
+                </div>
+                <div className="space-y-1 min-w-0">
+                  <h3 className="text-base font-semibold text-slate-100">
+                    Identité déjà revendiquée
+                  </h3>
+                  <p className="text-sm text-slate-400 leading-snug">
+                    <span className="text-slate-200 font-medium">
+                      {confirmTarget.primaryName ?? "Un autre membre"}
+                    </span>{" "}
+                    est déjà lié à{" "}
+                    <span className="text-slate-200 font-medium">
+                      {confirmTarget.participant.name}
+                    </span>
+                    . En continuant, tu deviens le compte principal pour cette
+                    identité. Ses infos de paiement ne seront plus affichées.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  variant="ghost"
+                  onClick={() => setConfirmTarget(null)}
+                  disabled={claiming}
+                  className="flex-1 text-slate-400 hover:text-slate-200 hover:bg-foreground/8"
+                >
+                  Annuler
+                </Button>
+                <Button
+                  onClick={handleConfirmClaim}
+                  disabled={claiming}
+                  className="flex-1 gradient-primary text-white border-0"
+                >
+                  {claiming ? (
+                    <Loader2 size={15} className="animate-spin" />
+                  ) : (
+                    "C'est moi"
+                  )}
+                </Button>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

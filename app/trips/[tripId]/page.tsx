@@ -30,6 +30,7 @@ import {
 import { useTrip } from "@/hooks/useTrip";
 import { useBudget } from "@/hooks/useBudget";
 import { useItinerary } from "@/hooks/useItinerary";
+import { useUserId } from "@/hooks/useUserId";
 import { pickRelevantPlanningDay, relativeDayLabel } from "@/lib/planning-day";
 import { cn } from "@/lib/utils";
 import { isVoyage, tripFeatures } from "@/lib/trip-features";
@@ -52,12 +53,14 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
   const { tripId } = use(params);
   const {
     trip,
+    claims,
     updateTrip,
     setMyParticipant,
     addParticipant,
   } = useTrip(tripId);
   const { expenses, totalSpent } = useBudget(tripId);
   const { items: itineraryItems } = useItinerary(tripId);
+  const userId = useUserId();
 
   const [identityOpen, setIdentityOpen] = useState(false);
   const [budgetOpen, setBudgetOpen] = useState(false);
@@ -353,6 +356,8 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
             <IdentityPicker
               participants={trip.participants}
               selectedId={trip.myParticipantId}
+              claims={claims}
+              currentUserId={userId}
               onSelect={async (id) => {
                 await setMyParticipant(id);
                 setIdentityOpen(false);
