@@ -295,24 +295,37 @@ export function JourneyForm({
           <Row icon={<Clock size={18} />} label="Durée du trajet">
             {currentMode.autoRoute ? (
               <div className="space-y-3">
-                <button
-                  type="button"
-                  onClick={calculateRoute}
-                  disabled={!canAutoRoute || routeLoading}
-                  className={cn(
-                    "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95",
-                    canAutoRoute
-                      ? "gradient-primary text-white"
-                      : "bg-foreground/5 text-slate-500 cursor-not-allowed"
+                <div className="flex items-center gap-2 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={calculateRoute}
+                    disabled={!canAutoRoute || routeLoading}
+                    className={cn(
+                      "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95",
+                      canAutoRoute
+                        ? "gradient-primary text-white"
+                        : "bg-foreground/5 text-slate-500 cursor-not-allowed"
+                    )}
+                  >
+                    {routeLoading ? (
+                      <Loader2 size={14} className="animate-spin" />
+                    ) : (
+                      <Navigation size={14} />
+                    )}
+                    {routeLoading ? "Calcul en cours…" : "Calculer le trajet"}
+                  </button>
+                  {canAutoRoute && mode === "car" && (
+                    <a
+                      href={`https://waze.com/ul?navigate=yes&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold bg-foreground/8 text-amber-400 hover:bg-foreground/12 active:scale-95 transition-all"
+                    >
+                      <Car size={14} />
+                      Waze
+                    </a>
                   )}
-                >
-                  {routeLoading ? (
-                    <Loader2 size={14} className="animate-spin" />
-                  ) : (
-                    <Navigation size={14} />
-                  )}
-                  {routeLoading ? "Calcul en cours…" : "Calculer le trajet"}
-                </button>
+                </div>
 
                 {routeError && (
                   <p className="text-xs text-red-300 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
@@ -328,13 +341,10 @@ export function JourneyForm({
                       </p>
                       <p className="text-xs text-slate-400">{routeResult.distanceKm} km</p>
                     </div>
-                    <span className="text-xs text-slate-500">Durée enregistrée ✓</span>
                   </div>
                 )}
 
-                {!routeResult && (
-                  <ManualDuration durationH={durationH} durationM={durationM} setDurationH={setDurationH} setDurationM={setDurationM} />
-                )}
+                <ManualDuration durationH={durationH} durationM={durationM} setDurationH={setDurationH} setDurationM={setDurationM} />
               </div>
             ) : (
               <div className="space-y-3">
