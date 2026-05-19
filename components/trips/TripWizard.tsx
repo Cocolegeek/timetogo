@@ -6,7 +6,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { Plus, X, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { GlassCard } from "@/components/layout/GlassCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,12 +23,13 @@ const PARTICIPANT_COLORS = [
 const EMOJIS = ["✈️", "🏖️", "🏔️", "🗺️", "🌍", "🎒", "🏕️", "🚢"];
 const CURRENCIES = ["EUR", "USD", "GBP", "JPY", "CHF", "CAD"];
 
-// Participant without ID — IDs are assigned by the DB
 type ParticipantInput = { name: string; color: string };
+type NavTab = "Infos" | "Participants";
 
 export function TripWizard() {
   const router = useRouter();
   const { createTrip } = useTrips();
+  const [activeTab, setActiveTab] = useState<NavTab>("Infos");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [newParticipantName, setNewParticipantName] = useState("");
@@ -117,14 +117,35 @@ export function TripWizard() {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit as never)} className="space-y-6">
-      {/* Name + emoji inline */}
-      <GlassCard>
+    <form onSubmit={handleSubmit(onSubmit as never)} className="space-y-4">
+      {/* Tab navigation */}
+      <div className="flex gap-1 bg-foreground/4 p-1 rounded-xl border border-foreground/8">
+        {(["Infos", "Participants"] as NavTab[]).map((tab) => (
+          <button
+            key={tab}
+            type="button"
+            onClick={() => setActiveTab(tab)}
+            className={cn(
+              "flex-1 py-2 rounded-lg text-sm font-medium transition-all",
+              activeTab === tab
+                ? "bg-section-soft text-section-soft ring-1 ring-section"
+                : "text-slate-400 hover:text-slate-200"
+            )}
+          >
+            {tab}
+            {tab === "Participants" && participants.length > 0 && (
+              <span className="ml-1.5 text-xs opacity-70">({participants.length})</span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Infos ── */}
+      {activeTab === "Infos" && (
         <div className="space-y-4">
+          {/* Name + emoji */}
           <div className="space-y-1.5">
-            <Label className="text-slate-300 text-sm font-medium">
-              Nom du voyage
-            </Label>
+            <Label className="text-slate-300 text-sm font-medium">Nom du voyage</Label>
             <div className="flex items-stretch gap-2 bg-foreground/8 border border-foreground/10 rounded-lg focus-within:ring-3 focus-within:ring-section transition-all overflow-hidden">
               <button
                 type="button"
@@ -177,17 +198,13 @@ export function TripWizard() {
             )}
           </div>
 
+          {/* Destination */}
           <div className="space-y-1.5">
-            <Label className="text-slate-300 text-sm font-medium">
-              Destination
-            </Label>
+            <Label className="text-slate-300 text-sm font-medium">Destination</Label>
             <LocationPickerSheet
               value={destination}
               onChange={(v) =>
-                setValue("destination", v, {
-                  shouldValidate: true,
-                  shouldDirty: true,
-                })
+                setValue("destination", v, { shouldValidate: true, shouldDirty: true })
               }
               placeholder="Rome, Italie"
               className="bg-foreground/8 border-foreground/10"
@@ -196,106 +213,109 @@ export function TripWizard() {
               <p className="text-xs text-red-400">{errors.destination.message}</p>
             )}
           </div>
-        </div>
-      </GlassCard>
 
-      {/* Dates */}
-      <GlassCard>
-        <DateRangePicker
-          startDate={startDate}
-          endDate={endDate}
-          onChange={(start, end) => {
-            setValue("startDate", start);
-            setValue("endDate", end);
-          }}
-        />
-      </GlassCard>
+          {/* Dates */}
+          <DateRangePicker
+            startDate={startDate}
+            endDate={endDate}
+            onChange={(start, end) => {
+              setValue("startDate", start);
+              setValue("endDate", end);
+            }}
+          />
 
-      {/* Currency */}
-      <GlassCard>
-        <div className="space-y-2">
-          <Label className="text-slate-300 text-sm font-medium">Devise principale</Label>
-          <div className="flex gap-2 flex-wrap">
-            {CURRENCIES.map((c) => (
+          {/* Currency */}
+          <div className="space-y-2">
+            <Label className="text-slate-300 text-sm font-medium">Devise principale</Label>
+            <div className="flex gap-2 flex-wrap">
+              {CURRENCIES.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setValue("currency", c)}
+                  className={cn(
+                    "px-3 py-1.5 rounded-xl text-sm font-medium transition-all",
+                    selectedCurrency === c
+                      ? "bg-section-soft text-section-soft ring-1 ring-section"
+                      : "bg-foreground/5 text-slate-400 hover:bg-foreground/10 hover:text-slate-300"
+                  )}
+                >
+                  {c}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Budget prévisionnel */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label className="text-slate-300 text-sm font-medium">
+                Budget prévisionnel{" "}
+                <span className="text-slate-500 font-normal">(optionnel)</span>
+              </Label>
               <button
-                key={c}
                 type="button"
-                onClick={() => setValue("currency", c)}
-                className={`px-3 py-1.5 rounded-xl text-sm font-medium transition-all ${
-                  selectedCurrency === c
-                    ? "bg-section-soft text-section-soft ring-1 ring-section"
-                    : "bg-foreground/5 text-slate-400 hover:bg-foreground/10 hover:text-slate-300"
-                }`}
-              >
-                {c}
-              </button>
-            ))}
-          </div>
-        </div>
-      </GlassCard>
-
-      {/* Budget prévisionnel (optional) */}
-      <GlassCard>
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <Label className="text-slate-300 text-sm font-medium">
-              Budget prévisionnel{" "}
-              <span className="text-slate-500 font-normal">(optionnel)</span>
-            </Label>
-            <button
-              type="button"
-              onClick={() => setBudgetEnabled((v) => !v)}
-              className={cn(
-                "relative w-10 h-6 rounded-full transition-colors",
-                budgetEnabled ? "bg-section" : "bg-foreground/10"
-              )}
-              aria-label="Activer le budget prévisionnel"
-            >
-              <span
+                onClick={() => setBudgetEnabled((v) => !v)}
                 className={cn(
-                  "absolute top-0.5 w-5 h-5 rounded-full bg-white transition-transform",
-                  budgetEnabled ? "translate-x-[18px]" : "translate-x-0.5"
+                  "relative w-10 h-6 rounded-full transition-colors",
+                  budgetEnabled ? "bg-section" : "bg-foreground/10"
                 )}
-              />
-            </button>
-          </div>
-          <AnimatePresence initial={false}>
-            {budgetEnabled && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                className="overflow-hidden"
+                aria-label="Activer le budget prévisionnel"
               >
-                <div className="relative">
-                  <Input
-                    type="text"
-                    inputMode="decimal"
-                    value={budgetStr}
-                    onChange={(e) =>
-                      setBudgetStr(e.target.value.replace(/[^0-9.,]/g, ""))
-                    }
-                    placeholder="ex: 1500"
-                    className="bg-foreground/8 border-foreground/10 text-slate-100 placeholder:text-slate-500 pr-14 tabular-nums"
-                  />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-500 pointer-events-none">
-                    {selectedCurrency}
-                  </span>
-                </div>
-                <p className="text-xs text-slate-500 mt-1.5">
-                  Sert à suivre tes dépenses avec une barre de progression.
-                </p>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                <span
+                  className={cn(
+                    "absolute top-0.5 w-5 h-5 rounded-full bg-white transition-transform",
+                    budgetEnabled ? "translate-x-[18px]" : "translate-x-0.5"
+                  )}
+                />
+              </button>
+            </div>
+            <AnimatePresence initial={false}>
+              {budgetEnabled && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="overflow-hidden"
+                >
+                  <div className="relative">
+                    <Input
+                      type="text"
+                      inputMode="decimal"
+                      value={budgetStr}
+                      onChange={(e) =>
+                        setBudgetStr(e.target.value.replace(/[^0-9.,]/g, ""))
+                      }
+                      onFocus={(e) => e.target.select()}
+                      placeholder="ex: 1500"
+                      className="bg-foreground/8 border-foreground/10 text-slate-100 placeholder:text-slate-500 pr-14 tabular-nums"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-500 pointer-events-none">
+                      {selectedCurrency}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-1.5">
+                    Sert à suivre tes dépenses avec une barre de progression.
+                  </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Guide vers l'onglet suivant */}
+          <button
+            type="button"
+            onClick={() => setActiveTab("Participants")}
+            className="w-full py-2.5 text-sm text-slate-400 hover:text-slate-200 border border-foreground/8 rounded-xl hover:bg-foreground/4 transition-all"
+          >
+            Ajouter des participants →
+          </button>
         </div>
-      </GlassCard>
+      )}
 
-      {/* Participants */}
-      <GlassCard>
-        <div className="space-y-3">
-          <Label className="text-slate-300 text-sm font-medium">Participants</Label>
-
+      {/* ── Participants ── */}
+      {activeTab === "Participants" && (
+        <div className="space-y-4">
           <div className="flex gap-2">
             <Input
               value={newParticipantName}
@@ -353,7 +373,7 @@ export function TripWizard() {
             </p>
           )}
         </div>
-      </GlassCard>
+      )}
 
       {submitError && (
         <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">

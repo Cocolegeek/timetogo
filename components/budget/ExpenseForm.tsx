@@ -23,7 +23,6 @@ import type {
   SplitMode,
 } from "@/types";
 
-// ─── Local split state type ───────────────────────────────────────────────────
 type SplitState = ParticipantSplit & { pinned: boolean };
 
 // ─── Pure rebalance helpers ───────────────────────────────────────────────────
@@ -80,7 +79,10 @@ function distributeCents(total: number, count: number): number[] {
   );
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+type NavTab = "Infos" | "Payé par" | "Pour qui";
+const NAV_TABS: NavTab[] = ["Infos", "Payé par", "Pour qui"];
 
 interface ExpenseFormProps {
   open: boolean;
@@ -111,6 +113,7 @@ export function ExpenseForm({
 }: ExpenseFormProps) {
   const isEdit = !!initialValues;
 
+  const [activeTab, setActiveTab] = useState<NavTab>("Infos");
   const [title, setTitle] = useState("");
   const [amountStr, setAmountStr] = useState("");
   const [category, setCategory] = useState<ExpenseCategory>("other");
@@ -124,6 +127,7 @@ export function ExpenseForm({
   // ── Hydration ──────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!open) return;
+    setActiveTab("Infos");
 
     if (initialValues) {
       setTitle(initialValues.title);
@@ -383,6 +387,9 @@ export function ExpenseForm({
 
   const sym = currencySymbol(currency);
 
+  // ── Tab validity indicators ────────────────────────────────────────────────
+  const infoValid = title.trim().length > 0 && amount > 0;
+
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
@@ -393,368 +400,397 @@ export function ExpenseForm({
         style={{ height: "92dvh" }}
       >
         {/* Header */}
-        <div className="px-5 pt-5 pb-3 border-b border-foreground/8 shrink-0 pr-14">
+        <div className="px-5 pt-5 pb-3 shrink-0 pr-14">
           <SheetTitle className="text-slate-100 text-xl font-bold">
             {isEdit ? "Modifier la dépense" : "Nouvelle dépense"}
           </SheetTitle>
         </div>
 
-        {/* Scrollable body */}
+        {/* Tab navigation */}
+        <div className="flex gap-1 px-5 pb-3 border-b border-foreground/8 shrink-0">
+          {NAV_TABS.map((tab) => {
+            const isActive = activeTab === tab;
+            const hasIssue =
+              (tab === "Infos" && !infoValid && (title.length > 0 || amount > 0)) ||
+              (tab === "Payé par" && !payerValid && amount > 0) ||
+              (tab === "Pour qui" && !splitValid && amount > 0);
+            return (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => setActiveTab(tab)}
+                className={cn(
+                  "flex-1 py-1.5 rounded-lg text-sm font-medium transition-all",
+                  isActive
+                    ? "bg-section-soft text-section-soft ring-1 ring-section"
+                    : hasIssue
+                    ? "text-amber-400 bg-amber-500/8"
+                    : "text-slate-400 hover:text-slate-200 hover:bg-foreground/8"
+                )}
+              >
+                {tab}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Tab content */}
         <div className="flex-1 overflow-y-auto px-5 py-5 space-y-5">
 
-          {/* 1. Amount */}
-          <div className="text-center">
-            <input
-              type="text"
-              inputMode="decimal"
-              value={amountStr}
-              onChange={(e) =>
-                setAmountStr(e.target.value.replace(/[^0-9.,]/g, ""))
-              }
-              placeholder={`0,00 ${sym}`}
-              className="w-full text-center bg-transparent text-6xl font-bold text-slate-100 placeholder:text-slate-700 focus:outline-none tabular-nums"
-              autoFocus={!isEdit}
-              onFocus={(e) => e.target.select()}
-            />
-          </div>
+          {/* ── Infos ── */}
+          {activeTab === "Infos" && (
+            <>
+              <div className="text-center">
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={amountStr}
+                  onChange={(e) =>
+                    setAmountStr(e.target.value.replace(/[^0-9.,]/g, ""))
+                  }
+                  placeholder={`0,00 ${sym}`}
+                  className="w-full text-center bg-transparent text-6xl font-bold text-slate-100 placeholder:text-slate-700 focus:outline-none tabular-nums"
+                  autoFocus={!isEdit}
+                  onFocus={(e) => e.target.select()}
+                />
+              </div>
 
-          {/* 2. Description — no label, placeholder only */}
-          <Input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Restaurant, courses, taxi…"
-            className="bg-foreground/8 border-foreground/10 text-slate-100 placeholder:text-slate-500 focus-visible:ring-section text-base h-12"
-          />
+              <Input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Restaurant, courses, taxi…"
+                className="bg-foreground/8 border-foreground/10 text-slate-100 placeholder:text-slate-500 focus-visible:ring-section text-base h-12"
+              />
 
-          {/* 3. Payé par */}
-          <div className="space-y-2">
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-              Payé par
-            </p>
-            <div className="flex gap-2 flex-wrap">
-              {participants.map((p) => {
-                const selected = payers.some((py) => py.participantId === p.id);
-                return (
-                  <button
-                    key={p.id}
-                    type="button"
-                    onClick={() => togglePayer(p.id)}
-                    className={cn(
-                      "flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all active:scale-95",
-                      selected
-                        ? "border-section bg-section-soft text-section-soft"
-                        : "border-foreground/10 bg-foreground/4 text-slate-300 hover:bg-foreground/8"
-                    )}
-                  >
-                    <span
-                      className="w-2 h-2 rounded-full shrink-0"
-                      style={{ backgroundColor: p.color }}
-                    />
-                    <span className="text-sm font-medium">{p.name}</span>
-                  </button>
-                );
-              })}
-            </div>
-
-            {payers.length > 1 && (
-              <div className="space-y-1.5 mt-1">
-                {payers.map((payer) => {
-                  const p = participants.find(
-                    (part) => part.id === payer.participantId
-                  );
-                  if (!p) return null;
-                  return (
-                    <div
-                      key={payer.participantId}
-                      className="flex items-center gap-3 px-3 py-2 rounded-xl border border-foreground/8 bg-foreground/4"
-                    >
-                      <span
-                        className="w-2.5 h-2.5 rounded-full shrink-0"
-                        style={{ backgroundColor: p.color }}
-                      />
-                      <span className="text-sm text-slate-200 flex-1 truncate">
-                        {p.name}
-                      </span>
-                      <input
-                        type="number"
-                        inputMode="decimal"
-                        step="0.01"
-                        min="0"
-                        value={payer.amount}
-                        onChange={(e) =>
-                          setPayerAmount(
-                            payer.participantId,
-                            Number(e.target.value) || 0
-                          )
-                        }
-                        onFocus={(e) => e.target.select()}
-                        className="w-20 text-right bg-foreground/8 border border-foreground/10 rounded-lg px-2 py-1 text-sm text-slate-100 focus:outline-none focus:border-section tabular-nums"
-                      />
-                      <span className="text-xs text-slate-500 w-8">{sym}</span>
-                    </div>
-                  );
-                })}
-                <p
-                  className={cn(
-                    "text-center text-xs",
-                    Math.abs(payerTotal - amount) < 0.01
-                      ? "text-emerald-400"
-                      : "text-amber-400"
-                  )}
-                >
-                  {Math.abs(payerTotal - amount) < 0.01
-                    ? "Répartition correcte ✓"
-                    : `Total payeurs : ${formatCurrency(payerTotal, currency)} / ${formatCurrency(amount, currency)}`}
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  Catégorie
                 </p>
-              </div>
-            )}
-          </div>
-
-          {/* 4. Pour qui / répartition */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                Pour qui
-              </p>
-              <button
-                type="button"
-                onClick={handleEqualForAll}
-                className="text-xs text-section-soft bg-section/8 border border-section/20 px-2.5 py-1 rounded-full hover:bg-section/15 transition-colors active:scale-95"
-              >
-                Tous — équitable
-              </button>
-            </div>
-
-            {newMemberIds.size > 0 && (
-              <div className="px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-xs text-amber-200 flex items-start gap-2">
-                <span className="text-base leading-none">👋</span>
-                <span>
-                  {newMemberIds.size === 1
-                    ? "Un nouveau membre a rejoint le voyage. Coche-le si cette dépense le concerne."
-                    : `${newMemberIds.size} nouveaux membres ont rejoint le voyage. Coche-les si cette dépense les concerne.`}
-                </span>
-              </div>
-            )}
-
-            <Tabs value={splitMode} onValueChange={handleSplitModeChange}>
-              <TabsList className="grid grid-cols-3 w-full bg-foreground/4 border border-foreground/8">
-                <TabsTrigger
-                  value="equal"
-                  className="data-[state=active]:bg-section-soft data-[state=active]:text-section"
-                >
-                  Équitable
-                </TabsTrigger>
-                <TabsTrigger
-                  value="percentage"
-                  className="data-[state=active]:bg-section-soft data-[state=active]:text-section"
-                >
-                  %
-                </TabsTrigger>
-                <TabsTrigger
-                  value="fixed"
-                  className="data-[state=active]:bg-section-soft data-[state=active]:text-section"
-                >
-                  Montants
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-
-            <div className="space-y-1.5">
-              {participants.map((p) => {
-                const split = splits.find((s) => s.participantId === p.id);
-                if (!split) return null;
-                const computed = computedSplits.find(
-                  (s) => s.participantId === p.id
-                );
-                const share = computed?.share ?? 0;
-                const isNew = newMemberIds.has(p.id);
-
-                return (
-                  <div
-                    key={p.id}
-                    className={cn(
-                      "flex items-center gap-3 px-3 py-2 rounded-xl border transition-all",
-                      split.excluded
-                        ? isNew
-                          ? "border-amber-500/40 bg-amber-500/5"
-                          : "border-foreground/4 bg-foreground/2 opacity-50"
-                        : "border-foreground/8 bg-foreground/4"
-                    )}
-                  >
-                    {/* Equal: checkbox */}
-                    {splitMode === "equal" && (
+                <div className="flex gap-2 overflow-x-auto pb-1 -mx-5 px-5 scrollbar-none">
+                  {CATEGORY_ORDER.map((cat) => {
+                    const cfg = CATEGORIES[cat];
+                    const Icon = cfg.icon;
+                    const selected = category === cat;
+                    return (
                       <button
+                        key={cat}
                         type="button"
-                        onClick={() => toggleInclusion(p.id)}
+                        onClick={() => setCategory(cat)}
                         className={cn(
-                          "w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all",
-                          split.excluded
-                            ? "border-slate-600"
-                            : "border-section bg-section"
+                          "flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl border transition-all active:scale-95",
+                          selected
+                            ? cn(cfg.bg, cfg.color, "border-current ring-1", cfg.ring)
+                            : "bg-foreground/4 border-foreground/8 text-slate-400 hover:bg-foreground/8"
                         )}
                       >
-                        {!split.excluded && (
-                          <svg width="11" height="11" viewBox="0 0 16 16" fill="none">
-                            <path
-                              d="M3 8l3 3 7-7"
-                              stroke="white"
-                              strokeWidth="2.5"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </svg>
-                        )}
-                      </button>
-                    )}
-
-                    <span
-                      className="w-2.5 h-2.5 rounded-full shrink-0"
-                      style={{ backgroundColor: p.color }}
-                    />
-                    <span className="text-sm text-slate-200 truncate">{p.name}</span>
-                    {isNew && (
-                      <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0">
-                        Nouveau
-                      </span>
-                    )}
-                    <span className="flex-1" />
-
-                    {splitMode === "equal" && (
-                      <span className="text-sm font-medium text-slate-300 tabular-nums">
-                        {split.excluded ? "—" : formatCurrency(share, currency)}
-                      </span>
-                    )}
-
-                    {splitMode === "percentage" && (
-                      <div className="flex items-center gap-1.5">
-                        {split.pinned && !split.excluded && (
-                          <button
-                            type="button"
-                            onClick={() => unpinPct(p.id)}
-                            title="Désancrer"
-                            className="text-section opacity-70 hover:opacity-100 transition-opacity shrink-0"
-                          >
-                            <Lock size={13} />
-                          </button>
-                        )}
-                        <input
-                          type="number"
-                          inputMode="decimal"
-                          step="0.1"
-                          min="0"
-                          max="100"
-                          value={split.percentage ?? 0}
-                          onChange={(e) =>
-                            setPercentage(p.id, Number(e.target.value) || 0)
-                          }
-                          onFocus={(e) => e.target.select()}
-                          className={cn(
-                            "w-16 text-right border rounded-lg px-2 py-1 text-sm text-slate-100 focus:outline-none focus:border-section tabular-nums",
-                            split.pinned && !split.excluded
-                              ? "bg-section/10 border-section/40"
-                              : "bg-foreground/8 border-foreground/10"
-                          )}
-                        />
-                        <span className="text-xs text-slate-500">%</span>
-                        <span className="text-xs text-slate-400 w-16 text-right tabular-nums">
-                          {formatCurrency(share, currency)}
+                        <Icon size={16} />
+                        <span className="text-xs font-medium whitespace-nowrap">
+                          {cfg.label}
                         </span>
-                      </div>
-                    )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
 
-                    {splitMode === "fixed" && (
-                      <div className="flex items-center gap-1.5">
-                        {split.pinned && !split.excluded && (
-                          <button
-                            type="button"
-                            onClick={() => unpinFixed(p.id)}
-                            title="Désancrer"
-                            className="text-section opacity-70 hover:opacity-100 transition-opacity shrink-0"
-                          >
-                            <Lock size={13} />
-                          </button>
-                        )}
+              <div className="space-y-1.5">
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  Date
+                </p>
+                <Input
+                  type="date"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  className="bg-foreground/8 border-foreground/10 text-slate-100 [color-scheme:dark]"
+                />
+              </div>
+            </>
+          )}
+
+          {/* ── Payé par ── */}
+          {activeTab === "Payé par" && (
+            <div className="space-y-3">
+              <div className="flex gap-2 flex-wrap">
+                {participants.map((p) => {
+                  const selected = payers.some((py) => py.participantId === p.id);
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => togglePayer(p.id)}
+                      className={cn(
+                        "flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all active:scale-95",
+                        selected
+                          ? "border-section bg-section-soft text-section-soft"
+                          : "border-foreground/10 bg-foreground/4 text-slate-300 hover:bg-foreground/8"
+                      )}
+                    >
+                      <span
+                        className="w-2 h-2 rounded-full shrink-0"
+                        style={{ backgroundColor: p.color }}
+                      />
+                      <span className="text-sm font-medium">{p.name}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {payers.length > 1 && (
+                <div className="space-y-1.5 mt-1">
+                  {payers.map((payer) => {
+                    const p = participants.find(
+                      (part) => part.id === payer.participantId
+                    );
+                    if (!p) return null;
+                    return (
+                      <div
+                        key={payer.participantId}
+                        className="flex items-center gap-3 px-3 py-2 rounded-xl border border-foreground/8 bg-foreground/4"
+                      >
+                        <span
+                          className="w-2.5 h-2.5 rounded-full shrink-0"
+                          style={{ backgroundColor: p.color }}
+                        />
+                        <span className="text-sm text-slate-200 flex-1 truncate">
+                          {p.name}
+                        </span>
                         <input
                           type="number"
                           inputMode="decimal"
                           step="0.01"
                           min="0"
-                          value={split.fixedAmount ?? 0}
+                          value={payer.amount}
                           onChange={(e) =>
-                            setFixedAmount(p.id, Number(e.target.value) || 0)
+                            setPayerAmount(
+                              payer.participantId,
+                              Number(e.target.value) || 0
+                            )
                           }
                           onFocus={(e) => e.target.select()}
-                          className={cn(
-                            "w-20 text-right border rounded-lg px-2 py-1 text-sm text-slate-100 focus:outline-none focus:border-section tabular-nums",
-                            split.pinned && !split.excluded
-                              ? "bg-section/10 border-section/40"
-                              : "bg-foreground/8 border-foreground/10"
-                          )}
+                          className="w-20 text-right bg-foreground/8 border border-foreground/10 rounded-lg px-2 py-1 text-sm text-slate-100 focus:outline-none focus:border-section tabular-nums"
                         />
-                        <span className="text-xs text-slate-500 w-6">{sym}</span>
+                        <span className="text-xs text-slate-500 w-8">{sym}</span>
                       </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-            <SplitTotalFeedback
-              mode={splitMode}
-              splitTotal={splitTotal}
-              amount={amount}
-              activeCount={activeCount}
-              currency={currency}
-            />
-          </div>
-
-          {/* 5. Catégorie — horizontal scroll */}
-          <div className="space-y-2">
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-              Catégorie
-            </p>
-            <div className="flex gap-2 overflow-x-auto pb-1 -mx-5 px-5 scrollbar-none">
-              {CATEGORY_ORDER.map((cat) => {
-                const cfg = CATEGORIES[cat];
-                const Icon = cfg.icon;
-                const selected = category === cat;
-                return (
-                  <button
-                    key={cat}
-                    type="button"
-                    onClick={() => setCategory(cat)}
+                    );
+                  })}
+                  <p
                     className={cn(
-                      "flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl border transition-all active:scale-95",
-                      selected
-                        ? cn(cfg.bg, cfg.color, "border-current ring-1", cfg.ring)
-                        : "bg-foreground/4 border-foreground/8 text-slate-400 hover:bg-foreground/8"
+                      "text-center text-xs",
+                      Math.abs(payerTotal - amount) < 0.01
+                        ? "text-emerald-400"
+                        : "text-amber-400"
                     )}
                   >
-                    <Icon size={16} />
-                    <span className="text-xs font-medium whitespace-nowrap">
-                      {cfg.label}
-                    </span>
-                  </button>
-                );
-              })}
+                    {Math.abs(payerTotal - amount) < 0.01
+                      ? "Répartition correcte ✓"
+                      : `Total : ${formatCurrency(payerTotal, currency)} / ${formatCurrency(amount, currency)}`}
+                  </p>
+                </div>
+              )}
             </div>
-          </div>
+          )}
 
-          {/* 6. Date */}
-          <div className="space-y-1.5">
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-              Date
-            </p>
-            <Input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="bg-foreground/8 border-foreground/10 text-slate-100 [color-scheme:dark]"
-            />
-          </div>
+          {/* ── Pour qui ── */}
+          {activeTab === "Pour qui" && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  Répartition
+                </p>
+                <button
+                  type="button"
+                  onClick={handleEqualForAll}
+                  className="text-xs text-section-soft bg-section/8 border border-section/20 px-2.5 py-1 rounded-full hover:bg-section/15 transition-colors active:scale-95"
+                >
+                  Tous — équitable
+                </button>
+              </div>
+
+              {newMemberIds.size > 0 && (
+                <div className="px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-xs text-amber-200 flex items-start gap-2">
+                  <span className="text-base leading-none">👋</span>
+                  <span>
+                    {newMemberIds.size === 1
+                      ? "Un nouveau membre a rejoint le voyage. Coche-le si cette dépense le concerne."
+                      : `${newMemberIds.size} nouveaux membres ont rejoint le voyage. Coche-les si cette dépense les concerne.`}
+                  </span>
+                </div>
+              )}
+
+              <Tabs value={splitMode} onValueChange={handleSplitModeChange}>
+                <TabsList className="grid grid-cols-3 w-full bg-foreground/4 border border-foreground/8">
+                  <TabsTrigger
+                    value="equal"
+                    className="data-[state=active]:bg-section-soft data-[state=active]:text-section"
+                  >
+                    Équitable
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="percentage"
+                    className="data-[state=active]:bg-section-soft data-[state=active]:text-section"
+                  >
+                    %
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="fixed"
+                    className="data-[state=active]:bg-section-soft data-[state=active]:text-section"
+                  >
+                    Montants
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+
+              <div className="space-y-1.5">
+                {participants.map((p) => {
+                  const split = splits.find((s) => s.participantId === p.id);
+                  if (!split) return null;
+                  const computed = computedSplits.find(
+                    (s) => s.participantId === p.id
+                  );
+                  const share = computed?.share ?? 0;
+                  const isNew = newMemberIds.has(p.id);
+
+                  return (
+                    <div
+                      key={p.id}
+                      className={cn(
+                        "flex items-center gap-3 px-3 py-2 rounded-xl border transition-all",
+                        split.excluded
+                          ? isNew
+                            ? "border-amber-500/40 bg-amber-500/5"
+                            : "border-foreground/4 bg-foreground/2 opacity-50"
+                          : "border-foreground/8 bg-foreground/4"
+                      )}
+                    >
+                      {splitMode === "equal" && (
+                        <button
+                          type="button"
+                          onClick={() => toggleInclusion(p.id)}
+                          className={cn(
+                            "w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all",
+                            split.excluded
+                              ? "border-slate-600"
+                              : "border-section bg-section"
+                          )}
+                        >
+                          {!split.excluded && (
+                            <svg width="11" height="11" viewBox="0 0 16 16" fill="none">
+                              <path
+                                d="M3 8l3 3 7-7"
+                                stroke="white"
+                                strokeWidth="2.5"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          )}
+                        </button>
+                      )}
+
+                      <span
+                        className="w-2.5 h-2.5 rounded-full shrink-0"
+                        style={{ backgroundColor: p.color }}
+                      />
+                      <span className="text-sm text-slate-200 truncate">{p.name}</span>
+                      {isNew && (
+                        <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0">
+                          Nouveau
+                        </span>
+                      )}
+                      <span className="flex-1" />
+
+                      {splitMode === "equal" && (
+                        <span className="text-sm font-medium text-slate-300 tabular-nums">
+                          {split.excluded ? "—" : formatCurrency(share, currency)}
+                        </span>
+                      )}
+
+                      {splitMode === "percentage" && (
+                        <div className="flex items-center gap-1.5">
+                          {split.pinned && !split.excluded && (
+                            <button
+                              type="button"
+                              onClick={() => unpinPct(p.id)}
+                              title="Désancrer"
+                              className="text-section opacity-70 hover:opacity-100 transition-opacity shrink-0"
+                            >
+                              <Lock size={13} />
+                            </button>
+                          )}
+                          <input
+                            type="number"
+                            inputMode="decimal"
+                            step="0.1"
+                            min="0"
+                            max="100"
+                            value={split.percentage ?? 0}
+                            onChange={(e) =>
+                              setPercentage(p.id, Number(e.target.value) || 0)
+                            }
+                            onFocus={(e) => e.target.select()}
+                            className={cn(
+                              "w-16 text-right border rounded-lg px-2 py-1 text-sm text-slate-100 focus:outline-none focus:border-section tabular-nums",
+                              split.pinned && !split.excluded
+                                ? "bg-section/10 border-section/40"
+                                : "bg-foreground/8 border-foreground/10"
+                            )}
+                          />
+                          <span className="text-xs text-slate-500">%</span>
+                          <span className="text-xs text-slate-400 w-16 text-right tabular-nums">
+                            {formatCurrency(share, currency)}
+                          </span>
+                        </div>
+                      )}
+
+                      {splitMode === "fixed" && (
+                        <div className="flex items-center gap-1.5">
+                          {split.pinned && !split.excluded && (
+                            <button
+                              type="button"
+                              onClick={() => unpinFixed(p.id)}
+                              title="Désancrer"
+                              className="text-section opacity-70 hover:opacity-100 transition-opacity shrink-0"
+                            >
+                              <Lock size={13} />
+                            </button>
+                          )}
+                          <input
+                            type="number"
+                            inputMode="decimal"
+                            step="0.01"
+                            min="0"
+                            value={split.fixedAmount ?? 0}
+                            onChange={(e) =>
+                              setFixedAmount(p.id, Number(e.target.value) || 0)
+                            }
+                            onFocus={(e) => e.target.select()}
+                            className={cn(
+                              "w-20 text-right border rounded-lg px-2 py-1 text-sm text-slate-100 focus:outline-none focus:border-section tabular-nums",
+                              split.pinned && !split.excluded
+                                ? "bg-section/10 border-section/40"
+                                : "bg-foreground/8 border-foreground/10"
+                            )}
+                          />
+                          <span className="text-xs text-slate-500 w-6">{sym}</span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              <SplitTotalFeedback
+                mode={splitMode}
+                splitTotal={splitTotal}
+                amount={amount}
+                activeCount={activeCount}
+                currency={currency}
+              />
+            </div>
+          )}
         </div>
 
-        {/* Footer */}
+        {/* Footer — toujours visible */}
         <div
           className="px-5 py-3 border-t border-foreground/8 bg-slate-900/50 shrink-0"
           style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 0.75rem)" }}
@@ -846,7 +882,6 @@ function SplitTotalFeedback({
     );
   }
 
-  // fixed
   const diff = splitTotal - amount;
   const ok = Math.abs(diff) < 0.01;
   return (
