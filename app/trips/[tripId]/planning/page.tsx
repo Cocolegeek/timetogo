@@ -430,7 +430,7 @@ function EventCardContent({
   durationLabel: string | undefined;
   involved: Participant[];
   everyone: boolean;
-  openLocation: (q: string) => void;
+  openLocation: (q: string, options?: { mode?: ItineraryItem["journeyMode"] }) => void;
 }) {
   return (
     <div className="flex-1 min-w-0 pr-1">
@@ -483,10 +483,11 @@ function JourneyCardContent({
   item: ItineraryItem;
   involved: Participant[];
   everyone: boolean;
-  openLocation: (q: string) => void;
+  openLocation: (q: string, options?: { mode?: ItineraryItem["journeyMode"] }) => void;
 }) {
   const ModeIcon = item.journeyMode ? JOURNEY_MODE_ICON[item.journeyMode] : Route;
   const durationLabel = formatDuration(item.durationMinutes) || undefined;
+  const journeyOpts = item.journeyMode ? { mode: item.journeyMode } : undefined;
 
   return (
     <div className="flex-1 min-w-0 pr-1">
@@ -514,7 +515,7 @@ function JourneyCardContent({
         {item.location && (
           <button
             type="button"
-            onClick={(e) => { e.stopPropagation(); openLocation(item.location!); }}
+            onClick={(e) => { e.stopPropagation(); openLocation(item.location!, journeyOpts); }}
             className="flex items-center gap-1.5 text-base text-slate-200 font-semibold hover:text-sky-400 transition-colors"
           >
             <MapPin size={13} className="text-slate-500 shrink-0" />
@@ -529,7 +530,7 @@ function JourneyCardContent({
         {item.destination && (
           <button
             type="button"
-            onClick={(e) => { e.stopPropagation(); openLocation(item.destination!); }}
+            onClick={(e) => { e.stopPropagation(); openLocation(item.destination!, journeyOpts); }}
             className="flex items-center gap-1.5 text-base text-slate-200 font-semibold hover:text-sky-400 transition-colors"
           >
             <MapPin size={13} className="text-sky-500 shrink-0" />
