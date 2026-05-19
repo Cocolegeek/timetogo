@@ -185,7 +185,10 @@ export type ItineraryType =
   | "accommodation"
   | "activity"
   | "food"
-  | "other";
+  | "other"
+  | "journey";
+
+export type JourneyMode = "car" | "foot" | "bike" | "transit" | "plane";
 
 export interface ItineraryItem {
   id: string;
@@ -195,7 +198,9 @@ export interface ItineraryItem {
   title: string;
   description?: string;
   location?: string;
+  destination?: string;
   type: ItineraryType;
+  journeyMode?: JourneyMode;
   /** Duration in minutes (optional). */
   durationMinutes?: number;
   /** Participant IDs involved in this step. */

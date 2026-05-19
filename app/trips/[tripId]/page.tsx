@@ -41,6 +41,7 @@ const ITINERARY_EMOJI: Record<ItineraryType, string> = {
   activity: "🎯",
   food: "🍽️",
   other: "📍",
+  journey: "🛣️",
 };
 
 interface TripDashboardProps {

@@ -19,18 +19,12 @@ import {
 } from "@/components/ui/dialog";
 import { LocationAutocomplete } from "@/components/shared/LocationAutocomplete";
 import { cn } from "@/lib/utils";
-import type { ItineraryItem, ItineraryType, Participant } from "@/types";
+import type { ItineraryItem, ItineraryType, JourneyMode, Participant } from "@/types";
 
-const TYPE_CONFIG: Record<
+const TYPE_CONFIG: Partial<Record<
   ItineraryType,
   { label: string; emoji: string; color: string; bg: string }
-> = {
-  transport: {
-    label: "Transport",
-    emoji: "🚗",
-    color: "text-sky-300",
-    bg: "bg-sky-500/15 ring-sky-500/40",
-  },
+>> = {
   accommodation: {
     label: "Hébergement",
     emoji: "🏨",
@@ -71,8 +65,10 @@ export interface ItineraryFormValues {
   date: string;
   time?: string;
   location?: string;
+  destination?: string;
   description?: string;
   type: ItineraryType;
+  journeyMode?: JourneyMode;
   durationMinutes?: number;
   participantIds: string[];
 }
@@ -333,8 +329,7 @@ export function ItineraryItemForm({
           {/* Type */}
           <Row icon={<Tag size={18} />}>
             <div className="flex gap-1.5 flex-wrap">
-              {(Object.keys(TYPE_CONFIG) as ItineraryType[]).map((t) => {
-                const cfg = TYPE_CONFIG[t];
+              {(Object.entries(TYPE_CONFIG) as [ItineraryType, NonNullable<typeof TYPE_CONFIG[keyof typeof TYPE_CONFIG]>][]).map(([t, cfg]) => {
                 const selected = type === t;
                 return (
                   <button

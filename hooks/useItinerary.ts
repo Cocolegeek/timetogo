@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRevalidateOnFocus } from "@/hooks/useRevalidateOnFocus";
-import type { ItineraryItem, ItineraryType } from "@/types";
+import type { ItineraryItem, ItineraryType, JourneyMode } from "@/types";
 
 function rowToItem(row: Record<string, unknown>): ItineraryItem {
   return {
@@ -14,7 +14,9 @@ function rowToItem(row: Record<string, unknown>): ItineraryItem {
     title: row.title as string,
     description: (row.description as string | null) ?? undefined,
     location: (row.location as string | null) ?? undefined,
+    destination: (row.destination as string | null) ?? undefined,
     type: row.type as ItineraryType,
+    journeyMode: (row.journey_mode as JourneyMode | null) ?? undefined,
     durationMinutes: (row.duration_minutes as number | null) ?? undefined,
     participantIds: Array.isArray(row.participant_ids) ? (row.participant_ids as string[]) : [],
     createdAt: row.created_at as string,
@@ -59,7 +61,9 @@ export function useItinerary(tripId: string) {
         title: data.title,
         description: data.description ?? null,
         location: data.location ?? null,
+        destination: data.destination ?? null,
         type: data.type,
+        journey_mode: data.journeyMode ?? null,
         duration_minutes: data.durationMinutes ?? null,
         participant_ids: data.participantIds ?? [],
       })
@@ -83,7 +87,9 @@ export function useItinerary(tripId: string) {
       ...(data.title !== undefined && { title: data.title }),
       ...(data.description !== undefined && { description: data.description ?? null }),
       ...(data.location !== undefined && { location: data.location ?? null }),
+      ...(data.destination !== undefined && { destination: data.destination ?? null }),
       ...(data.type !== undefined && { type: data.type }),
+      ...(data.journeyMode !== undefined && { journey_mode: data.journeyMode ?? null }),
       ...(data.durationMinutes !== undefined && { duration_minutes: data.durationMinutes ?? null }),
       ...(data.participantIds !== undefined && { participant_ids: data.participantIds ?? [] }),
     }).eq("id", id);
