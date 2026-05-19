@@ -1,5 +1,15 @@
 import type { ParticipantSplit, SplitMode } from "@/types";
 
+function distributeCents(total: number, count: number): number[] {
+  if (count === 0) return [];
+  const totalCents = Math.round(total * 100);
+  const base = Math.floor(totalCents / count);
+  const remainder = totalCents - base * count;
+  return Array.from({ length: count }, (_, i) =>
+    (i < remainder ? base + 1 : base) / 100
+  );
+}
+
 export function computeShares(
   totalAmount: number,
   splits: ParticipantSplit[],
@@ -10,17 +20,23 @@ export function computeShares(
   switch (mode) {
     case "equal": {
       if (active.length === 0) return splits;
-      const share = Math.round((totalAmount / active.length) * 100) / 100;
-      return splits.map((s) => ({ ...s, share: s.excluded ? 0 : share }));
+      const shares = distributeCents(totalAmount, active.length);
+      const shareMap = new Map(active.map((s, i) => [s.participantId, shares[i]]));
+      return splits.map((s) => ({ ...s, share: shareMap.get(s.participantId) ?? 0 }));
     }
 
     case "percentage": {
-      return splits.map((s) => ({
-        ...s,
-        share: s.excluded
-          ? 0
-          : Math.round(totalAmount * ((s.percentage ?? 0) / 100) * 100) / 100,
-      }));
+      const pctShares = active.map((s) =>
+        Math.round(totalAmount * ((s.percentage ?? 0) / 100) * 100) / 100
+      );
+      const pctSum = pctShares.reduce((a, b) => a + b, 0);
+      const diff = Math.round((totalAmount - pctSum) * 100);
+      if (diff !== 0 && active.length > 0) {
+        pctShares[active.length - 1] =
+          Math.round((pctShares[active.length - 1] + diff / 100) * 100) / 100;
+      }
+      const pctMap = new Map(active.map((s, i) => [s.participantId, pctShares[i]]));
+      return splits.map((s) => ({ ...s, share: pctMap.get(s.participantId) ?? 0 }));
     }
 
     case "fixed": {
