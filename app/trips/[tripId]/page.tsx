@@ -66,15 +66,6 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
   const [identityOpen, setIdentityOpen] = useState(false);
   const [budgetOpen, setBudgetOpen] = useState(false);
 
-  if (!trip) {
-    return (
-      <Spinner />
-    );
-  }
-
-  const currentParticipant = trip.participants.find(
-    (p) => p.id === trip.myParticipantId
-  );
   const categoryBreakdown = useMemo(() => {
     const byCategory: Partial<Record<ExpenseCategory, number>> = {};
     for (const e of expenses) {
@@ -85,6 +76,16 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
       .sort(([, a], [, b]) => (b as number) - (a as number))
       .filter(([, amount]) => (amount as number) > 0) as [ExpenseCategory, number][];
   }, [expenses]);
+
+  if (!trip) {
+    return (
+      <Spinner />
+    );
+  }
+
+  const currentParticipant = trip.participants.find(
+    (p) => p.id === trip.myParticipantId
+  );
   const budgetRawPct = trip.totalBudget
     ? (totalSpent / trip.totalBudget) * 100
     : 0;
