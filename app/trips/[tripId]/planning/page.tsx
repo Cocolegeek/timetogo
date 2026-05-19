@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useEffect, useMemo, useRef, useState } from "react";
+import { use, useEffect, useMemo, useState } from "react";
 import {
   Plus,
   Map,
@@ -24,6 +24,7 @@ import { GlassCard } from "@/components/layout/GlassCard";
 import { useOpenLocation, useOpenRoute } from "@/components/shared/MapAppPicker";
 import { ConfirmDeleteDialog } from "@/components/shared/ConfirmDeleteDialog";
 import { DayHeader } from "@/components/shared/DayHeader";
+import { DayTabs } from "@/components/shared/DayTabs";
 import { EmptyState } from "@/components/shared/EmptyState";
 import {
   DropdownMenu,
@@ -92,18 +93,16 @@ export default function PlanningPage({ params }: PlanningPageProps) {
   const [formDefaultDate, setFormDefaultDate] = useState<string | undefined>();
   const [editingItem, setEditingItem] = useState<ItineraryItem | undefined>();
   const [confirmDelete, setConfirmDelete] = useState<ItineraryItem | null>(null);
+  const [activeDate, setActiveDate] = useState<string | null>(null);
 
   const today = useMemo(() => new Date().toISOString().split("T")[0], []);
-  const todayRef = useRef<HTMLDivElement>(null);
+
+  const dates = trip && isVoyage(trip) ? eachDate(trip.startDate, trip.endDate) : [];
 
   useEffect(() => {
-    if (loading || !trip) return;
-    const el = todayRef.current;
-    if (!el) return;
-    requestAnimationFrame(() => {
-      el.scrollIntoView({ behavior: "auto", block: "start" });
-    });
-  }, [loading, trip?.id]);
+    if (dates.length === 0 || activeDate) return;
+    setActiveDate(dates.includes(today) ? today : dates[0]);
+  }, [dates, today, activeDate]);
 
   const openPicker = (date?: string) => {
     setPickerDate(date);
@@ -155,10 +154,23 @@ export default function PlanningPage({ params }: PlanningPageProps) {
     return acc;
   }, {});
 
-  const dates = trip && isVoyage(trip) ? eachDate(trip.startDate, trip.endDate) : [];
+  const currentDate = activeDate ?? dates[0] ?? today;
+  const currentIsToday = currentDate === today;
+  const currentIsPast = currentDate < today;
+  const dayItems = byDate[currentDate] ?? [];
 
   return (
-    <div className="space-y-5 pt-2">
+    <div className="space-y-4 pt-2">
+      {dates.length > 0 && (
+        <DayTabs
+          dates={dates}
+          activeDate={currentDate}
+          onChange={setActiveDate}
+          today={today}
+          accent="sky"
+        />
+      )}
+
       {dates.length === 0 ? (
         <EmptyState
           icon={Map}
@@ -166,49 +178,36 @@ export default function PlanningPage({ params }: PlanningPageProps) {
           description="Vérifie les dates du voyage pour afficher le planning."
         />
       ) : (
-        <div className="space-y-6">
-          {dates.map((d, idx) => {
-            const isToday = d === today;
-            const isPast = d < today;
-            const dayItems = byDate[d] ?? [];
-            return (
-              <motion.div
-                key={d}
-                ref={isToday ? todayRef : undefined}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: isPast ? 0.6 : 1, y: 0 }}
-                transition={{ delay: Math.min(idx * 0.02, 0.2) }}
-                className="scroll-mt-[calc(env(safe-area-inset-top)+4rem)]"
-              >
-                <DayHeader date={d} isToday={isToday} isPast={isPast} />
-                <div className="relative pl-4 border-l border-foreground/8 space-y-3">
-                  <AnimatePresence>
-                    {dayItems.map((item) => (
-                      <ItineraryCard
-                        key={item.id}
-                        item={item}
-                        participants={trip?.participants ?? []}
-                        onEdit={() => openForEdit(item)}
-                        onDelete={() => setConfirmDelete(item)}
-                        onSwipeDelete={async () => { await deleteItem(item.id); }}
-                      />
-                    ))}
-                  </AnimatePresence>
-                  {dayItems.length === 0 && (
-                    <button
-                      type="button"
-                      onClick={() => openPicker(d)}
-                      className="w-full text-left px-3.5 py-3 rounded-2xl border border-dashed border-foreground/15 bg-foreground/3 hover:border-section/40 hover:bg-section/5 active:bg-foreground/10 transition-all flex items-center gap-2.5 text-slate-400 hover:text-section-soft"
-                    >
-                      <Plus size={16} className="shrink-0" />
-                      <span className="text-sm font-medium">Ajouter au planning</span>
-                    </button>
-                  )}
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
+        <motion.div
+          key={currentDate}
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: currentIsPast ? 0.7 : 1, y: 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          <DayHeader date={currentDate} isToday={currentIsToday} isPast={currentIsPast} />
+          <div className="relative pl-4 border-l border-foreground/8 space-y-3">
+            <AnimatePresence>
+              {dayItems.map((item) => (
+                <ItineraryCard
+                  key={item.id}
+                  item={item}
+                  participants={trip?.participants ?? []}
+                  onEdit={() => openForEdit(item)}
+                  onDelete={() => setConfirmDelete(item)}
+                  onSwipeDelete={async () => { await deleteItem(item.id); }}
+                />
+              ))}
+            </AnimatePresence>
+            <button
+              type="button"
+              onClick={() => openPicker(currentDate)}
+              className="w-full text-left px-3.5 py-3 rounded-2xl border border-dashed border-foreground/15 bg-foreground/3 hover:border-section/40 hover:bg-section/5 active:bg-foreground/10 transition-all flex items-center gap-2.5 text-slate-400 hover:text-section-soft"
+            >
+              <Plus size={16} className="shrink-0" />
+              <span className="text-sm font-medium">Ajouter au planning</span>
+            </button>
+          </div>
+        </motion.div>
       )}
 
       {/* Type picker */}
@@ -265,16 +264,6 @@ export default function PlanningPage({ params }: PlanningPageProps) {
         initialValues={editingItem}
         onSubmit={handleSubmit}
       />
-
-      {/* FAB */}
-      <button
-        onClick={() => openPicker()}
-        className="fixed right-4 z-30 w-14 h-14 rounded-full gradient-primary text-white shadow-section-strong flex items-center justify-center active:scale-95 hover:scale-105 transition-all"
-        style={{ bottom: "var(--fab-bottom)" }}
-        aria-label="Nouvelle étape"
-      >
-        <Plus size={26} strokeWidth={2.5} />
-      </button>
 
       {/* Confirm delete */}
       {confirmDelete && (

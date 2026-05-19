@@ -1,11 +1,12 @@
 "use client";
 
-import { use, useEffect, useMemo, useRef, useState } from "react";
+import { use, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from "framer-motion";
 import { UtensilsCrossed, ChefHat, Users, Plus, Trash2 } from "lucide-react";
 import { GlassCard } from "@/components/layout/GlassCard";
 import { DayHeader } from "@/components/shared/DayHeader";
+import { DayTabs } from "@/components/shared/DayTabs";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Spinner } from "@/components/shared/Spinner";
 import dynamic from "next/dynamic";
@@ -32,18 +33,17 @@ export default function MenusPage({ params }: MenusPageProps) {
   const { meals, loading, addMeal, updateMeal, deleteMeal } = useMeals(tripId);
 
   const [editingMeal, setEditingMeal] = useState<Meal | null>(null);
-  const todayRef = useRef<HTMLDivElement>(null);
+  const [activeDate, setActiveDate] = useState<string | null>(null);
 
   const today = useMemo(() => new Date().toISOString().split("T")[0], []);
 
+  const dates = trip && isVoyage(trip) ? eachDate(trip.startDate, trip.endDate) : [];
+
+  // Default active date = today if in range, else first day
   useEffect(() => {
-    if (loading || !trip) return;
-    const el = todayRef.current;
-    if (!el) return;
-    requestAnimationFrame(() => {
-      el.scrollIntoView({ behavior: "auto", block: "start" });
-    });
-  }, [loading, trip?.id]);
+    if (dates.length === 0 || activeDate) return;
+    setActiveDate(dates.includes(today) ? today : dates[0]);
+  }, [dates, today, activeDate]);
 
   useEffect(() => {
     if (trip && !isVoyage(trip)) {
@@ -52,8 +52,6 @@ export default function MenusPage({ params }: MenusPageProps) {
   }, [trip, tripId, router]);
 
   if (!trip || !isVoyage(trip)) return <Spinner />;
-
-  const dates = eachDate(trip.startDate, trip.endDate);
 
   // Group meals by date
   const mealsByDate = new Map<string, Meal[]>();
@@ -68,8 +66,27 @@ export default function MenusPage({ params }: MenusPageProps) {
     setEditingMeal(newMeal);
   };
 
+  const currentDate = activeDate ?? dates[0] ?? today;
+
+  const dayMeals = (mealsByDate.get(currentDate) ?? []).sort(
+    (a, b) => a.position - b.position
+  );
+  const usedSlots = new Set(dayMeals.map((m) => m.slot));
+  const availableSlots = DEFAULT_SLOTS.filter((s) => !usedSlots.has(s.slot));
+  const isToday = currentDate === today;
+  const isPast = currentDate < today;
+
   return (
-    <div className="space-y-4 pt-4">
+    <div className="space-y-4 pt-2">
+      {dates.length > 0 && (
+        <DayTabs
+          dates={dates}
+          activeDate={currentDate}
+          onChange={setActiveDate}
+          today={today}
+        />
+      )}
+
       {loading ? (
         <div className="flex items-center justify-center py-20">
           <div
@@ -87,52 +104,34 @@ export default function MenusPage({ params }: MenusPageProps) {
           description="Vérifie les dates du voyage pour ajouter des repas."
         />
       ) : (
-        <div className="space-y-6">
-          {dates.map((d, idx) => {
-            const isToday = d === today;
-            const isPast = d < today;
-            const dayMeals = (mealsByDate.get(d) ?? []).sort(
-              (a, b) => a.position - b.position
-            );
-            const usedSlots = new Set(dayMeals.map((m) => m.slot));
-            const availableSlots = DEFAULT_SLOTS.filter(
-              (s) => !usedSlots.has(s.slot)
-            );
+        <motion.section
+          key={currentDate}
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: isPast ? 0.7 : 1, y: 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          <DayHeader date={currentDate} isToday={isToday} isPast={isPast} />
+          <div className="relative pl-4 border-l border-foreground/8 space-y-2.5">
+            <AnimatePresence initial={false}>
+              {dayMeals.map((meal) => (
+                <MealCard
+                  key={meal.id}
+                  meal={meal}
+                  participants={trip.participants}
+                  onTap={() => setEditingMeal(meal)}
+                  onDelete={() => deleteMeal(meal.id)}
+                />
+              ))}
+            </AnimatePresence>
 
-            return (
-              <motion.section
-                key={d}
-                ref={isToday ? todayRef : undefined}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: isPast ? 0.6 : 1, y: 0 }}
-                transition={{ delay: Math.min(idx * 0.02, 0.2) }}
-                className="scroll-mt-[calc(env(safe-area-inset-top)+4rem)]"
-              >
-                <DayHeader date={d} isToday={isToday} isPast={isPast} />
-                <div className="relative pl-4 border-l border-foreground/8 space-y-2.5">
-                  <AnimatePresence initial={false}>
-                    {dayMeals.map((meal) => (
-                      <MealCard
-                        key={meal.id}
-                        meal={meal}
-                        participants={trip.participants}
-                        onTap={() => setEditingMeal(meal)}
-                        onDelete={() => deleteMeal(meal.id)}
-                      />
-                    ))}
-                  </AnimatePresence>
-
-                  {availableSlots.length > 0 && (
-                    <AddMealRow
-                      availableSlots={availableSlots.map((s) => s.slot)}
-                      onPick={(slot) => handleAddMeal(d, slot)}
-                    />
-                  )}
-                </div>
-              </motion.section>
-            );
-          })}
-        </div>
+            {availableSlots.length > 0 && (
+              <AddMealRow
+                availableSlots={availableSlots.map((s) => s.slot)}
+                onPick={(slot) => handleAddMeal(currentDate, slot)}
+              />
+            )}
+          </div>
+        </motion.section>
       )}
 
       <MealEditDialog
