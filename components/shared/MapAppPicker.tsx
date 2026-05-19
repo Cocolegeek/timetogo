@@ -18,7 +18,7 @@ export function useOpenLocation(): OpenFn {
   return useContext(MapAppPickerContext);
 }
 
-function buildUrl(appId: MapAppId, query: string): string {
+function buildUrl(appId: MapAppId, query: string, coord?: { lat: number; lon: number }): string {
   const q = encodeURIComponent(query);
   const isIos =
     typeof navigator !== "undefined" && /iphone|ipad|ipod/i.test(navigator.userAgent);
@@ -30,7 +30,20 @@ function buildUrl(appId: MapAppId, query: string): string {
     case "waze":
       return `https://waze.com/ul?q=${q}&navigate=yes`;
     case "citymapper":
+      if (coord) {
+        return `https://citymapper.com/directions?endcoord=${coord.lat},${coord.lon}&endname=${q}`;
+      }
       return `https://citymapper.com/directions?endaddress=${q}&endname=${q}`;
+  }
+}
+
+async function geocodeQuery(query: string): Promise<{ lat: number; lon: number } | null> {
+  try {
+    const res = await fetch(`/api/geocode?q=${encodeURIComponent(query)}`);
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
   }
 }
 
@@ -71,9 +84,13 @@ export function MapAppPickerProvider({ children }: { children: React.ReactNode }
 
   const open = useCallback((q: string) => setQuery(q), []);
 
-  const handlePick = (appId: MapAppId) => {
+  const handlePick = async (appId: MapAppId) => {
     if (!query) return;
-    window.open(buildUrl(appId, query), "_blank", "noopener,noreferrer");
+    let coord: { lat: number; lon: number } | undefined;
+    if (appId === "citymapper") {
+      coord = (await geocodeQuery(query)) ?? undefined;
+    }
+    window.open(buildUrl(appId, query, coord), "_blank", "noopener,noreferrer");
     setQuery(null);
   };
 

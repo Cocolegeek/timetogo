@@ -72,6 +72,11 @@ export function JourneyForm({
   const [routeResult, setRouteResult]   = useState<{ durationMinutes: number; distanceKm: number } | null>(null);
   const [routeError, setRouteError]     = useState<string | null>(null);
 
+  const [coords, setCoords] = useState<{
+    from: { lat: number; lon: number } | null;
+    to: { lat: number; lon: number } | null;
+  }>({ from: null, to: null });
+
   useEffect(() => {
     if (!open) return;
     if (initialValues) {
@@ -105,6 +110,26 @@ export function JourneyForm({
     setRouteResult(null);
     setRouteError(null);
   }, [mode]);
+
+  // Geocode from/to in background for CityMapper coordinate-based URL
+  useEffect(() => {
+    const fromTrim = from.trim();
+    const toTrim = to.trim();
+    if (fromTrim.length < 3 || toTrim.length < 3) {
+      setCoords({ from: null, to: null });
+      return;
+    }
+    let cancelled = false;
+    const run = async () => {
+      const [resFrom, resTo] = await Promise.all([
+        fetch(`/api/geocode?q=${encodeURIComponent(fromTrim)}`).then((r) => r.ok ? r.json() : null).catch(() => null),
+        fetch(`/api/geocode?q=${encodeURIComponent(toTrim)}`).then((r) => r.ok ? r.json() : null).catch(() => null),
+      ]);
+      if (!cancelled) setCoords({ from: resFrom, to: resTo });
+    };
+    const t = setTimeout(run, 600);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [from, to]);
 
   const totalMinutes = (Number(durationH) || 0) * 60 + (Number(durationM) || 0);
   const currentMode = MODES.find((m) => m.id === mode)!;
@@ -361,7 +386,7 @@ export function JourneyForm({
                       Google Maps
                     </a>
                     <a
-                      href={`https://citymapper.com/directions?startaddress=${encodeURIComponent(from)}&endaddress=${encodeURIComponent(to)}&startname=${encodeURIComponent(from)}&endname=${encodeURIComponent(to)}`}
+                      href={buildCityMapperUrl(from, to, coords.from, coords.to)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-sm font-semibold bg-foreground/8 text-slate-200 hover:bg-foreground/12 active:scale-95 transition-all"
@@ -438,6 +463,21 @@ function buildGoogleMapsUrl(from: string, to: string, mode: JourneyMode): string
   const t = encodeURIComponent(to);
   const travelmode = mode === "plane" ? "driving" : "transit";
   return `https://www.google.com/maps/dir/?api=1&origin=${f}&destination=${t}&travelmode=${travelmode}`;
+}
+
+function buildCityMapperUrl(
+  fromName: string,
+  toName: string,
+  fromCoord: { lat: number; lon: number } | null,
+  toCoord: { lat: number; lon: number } | null,
+): string {
+  const base = "https://citymapper.com/directions";
+  const startname = encodeURIComponent(fromName);
+  const endname = encodeURIComponent(toName);
+  if (fromCoord && toCoord) {
+    return `${base}?startcoord=${fromCoord.lat},${fromCoord.lon}&endcoord=${toCoord.lat},${toCoord.lon}&startname=${startname}&endname=${endname}`;
+  }
+  return `${base}?startaddress=${encodeURIComponent(fromName)}&endaddress=${encodeURIComponent(toName)}&startname=${startname}&endname=${endname}`;
 }
 
 function formatDuration(minutes: number): string {
