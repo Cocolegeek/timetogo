@@ -1,25 +1,19 @@
 "use client";
 
-import { use, useMemo, useState } from "react";
-import { Plus, Wallet, Receipt, Scale } from "lucide-react";
+import { use, useState } from "react";
+import { Plus, Receipt, Scale } from "lucide-react";
 import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
 const ExpenseForm = dynamic(() => import("@/components/budget/ExpenseForm").then(m => ({ default: m.ExpenseForm })), { ssr: false });
 import { ExpenseList } from "@/components/budget/ExpenseList";
 import { Spinner } from "@/components/shared/Spinner";
-import { SectionLabel } from "@/components/shared/SectionLabel";
-import { BalanceSummary } from "@/components/budget/BalanceSummary";
-import { DebtSettlements } from "@/components/budget/DebtSettlements";
-import { MyBalanceCard } from "@/components/budget/MyBalanceCard";
-import { AllSettledEmpty } from "@/components/budget/AllSettledEmpty";
-import { IAmSettledEmpty } from "@/components/budget/IAmSettledEmpty";
+import { BalancesView } from "@/components/budget/BalancesView";
 import { ExpenseDetailSheet } from "@/components/budget/ExpenseDetailSheet";
 import { useTrip } from "@/hooks/useTrip";
 import { useBudget } from "@/hooks/useBudget";
 import { useDebts } from "@/hooks/useDebts";
-import { CATEGORIES } from "@/lib/budget/categories";
 import { cn } from "@/lib/utils";
-import type { Expense, ExpenseCategory, Payer, Settlement } from "@/types";
+import type { Expense, Payer, Settlement } from "@/types";
 
 type BudgetTab = "expenses" | "balances";
 
@@ -35,7 +29,6 @@ export default function BudgetPage({ params }: BudgetPageProps) {
     addExpense,
     updateExpense,
     deleteExpense,
-    totalSpent,
   } = useBudget(tripId);
 
   const [formOpen, setFormOpen] = useState(false);
@@ -49,26 +42,6 @@ export default function BudgetPage({ params }: BudgetPageProps) {
   const { balances, settlements } = useDebts(expenses, participants);
 
   const myId = trip?.myParticipantId ?? null;
-  const myParticipant = myId ? participants.find((p) => p.id === myId) : null;
-  const myBalance = myId ? balances.find((b) => b.participantId === myId) : null;
-  const mySettlements = myId
-    ? settlements.filter((s) => s.fromId === myId || s.toId === myId)
-    : [];
-  const otherSettlements = myId
-    ? settlements.filter((s) => s.fromId !== myId && s.toId !== myId)
-    : settlements;
-
-  // Category breakdown for hero card
-  const categoryBreakdown = useMemo(() => {
-    const byCategory: Partial<Record<ExpenseCategory, number>> = {};
-    for (const e of expenses) {
-      if (e.category === "reimbursement") continue;
-      byCategory[e.category] = (byCategory[e.category] ?? 0) + e.amountInTripCurrency;
-    }
-    return Object.entries(byCategory)
-      .sort(([, a], [, b]) => (b as number) - (a as number))
-      .filter(([, amount]) => (amount as number) > 0) as [ExpenseCategory, number][];
-  }, [expenses]);
 
   const handleSubmit = async (data: {
     title: string;
@@ -149,97 +122,8 @@ export default function BudgetPage({ params }: BudgetPageProps) {
         height: "calc(100dvh - env(safe-area-inset-top) - 1.25rem - var(--bottom-nav-top) - 1.5rem)",
       }}
     >
-      {/* ── Anchored top section ── */}
+      {/* ── Tab switcher anchored ── */}
       <div className="shrink-0">
-        {/* Hero: total dépensé */}
-        <motion.div
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-4"
-        >
-          <div className="relative overflow-hidden rounded-3xl p-6 glass-strong border border-section shadow-section">
-            <div
-              className="absolute inset-0 pointer-events-none"
-              style={{
-                background:
-                  "linear-gradient(135deg, oklch(0.55 var(--accent-c) var(--accent-h) / 55%), oklch(0.48 calc(var(--accent-c) + 0.03) calc(var(--accent-h) + 25) / 55%))",
-              }}
-            />
-            <div
-              className="absolute inset-0 pointer-events-none opacity-50"
-              style={{
-                background:
-                  "radial-gradient(ellipse 80% 60% at top, oklch(1 0 0 / 22%), transparent 70%)",
-              }}
-            />
-            <div
-              className="absolute -bottom-20 -right-20 w-56 h-56 rounded-full pointer-events-none"
-              style={{
-                background: "radial-gradient(circle, oklch(1 0 0 / 18%), transparent 70%)",
-                filter: "blur(20px)",
-              }}
-            />
-            <div className="relative">
-              <div className="flex items-center gap-2 mb-3">
-                <Wallet size={16} className="text-white/80" />
-                <span className="text-xs text-white/80 uppercase tracking-widest font-bold">
-                  Total dépensé
-                </span>
-              </div>
-              <p className="text-5xl font-bold text-white tabular-nums leading-none">
-                {new Intl.NumberFormat("fr-FR", {
-                  style: "currency",
-                  currency,
-                  minimumFractionDigits: 2,
-                }).format(totalSpent)}
-              </p>
-
-              {/* Budget progress bar */}
-              {trip.totalBudget ? (
-                <>
-                  <div className="mt-3 h-1 rounded-full bg-white/20 overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-white/80 transition-all duration-500"
-                      style={{
-                        width: `${Math.min(100, (totalSpent / trip.totalBudget) * 100)}%`,
-                      }}
-                    />
-                  </div>
-                  <p className="text-sm text-white/75 mt-1.5 font-medium">
-                    {Math.round((totalSpent / trip.totalBudget) * 100)}% sur{" "}
-                    {new Intl.NumberFormat("fr-FR", {
-                      style: "currency",
-                      currency,
-                      minimumFractionDigits: 0,
-                    }).format(trip.totalBudget)}
-                  </p>
-                </>
-              ) : null}
-
-              {/* Category breakdown pills */}
-              {categoryBreakdown.length > 1 && totalSpent > 0 && (
-                <div className="flex gap-1.5 mt-3 flex-wrap">
-                  {categoryBreakdown.slice(0, 5).map(([cat, amount]) => {
-                    const cfg = CATEGORIES[cat];
-                    const Icon = cfg.icon;
-                    const pct = Math.round((amount / totalSpent) * 100);
-                    return (
-                      <span
-                        key={cat}
-                        className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-white/10 text-white/65 border border-white/10"
-                      >
-                        <Icon size={10} />
-                        <span>{pct}%</span>
-                      </span>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Tab switcher */}
         <BudgetTabSwitcher active={activeTab} onChange={setActiveTab} />
       </div>
 
@@ -262,81 +146,14 @@ export default function BudgetPage({ params }: BudgetPageProps) {
           )}
 
           {activeTab === "balances" && (
-            <div className="space-y-5">
-              {settlements.length === 0 ? (
-                <AllSettledEmpty />
-              ) : (
-                <>
-                  {/* Me concerne card: my balance + my settlements */}
-                  {myParticipant && myBalance && (
-                    <div className="glass-subtle border border-section rounded-2xl p-4 space-y-4">
-                      <SectionLabel>
-                        <span className="inline-flex items-center gap-2">
-                          <span
-                            className="w-2 h-2 rounded-full shrink-0"
-                            style={{ backgroundColor: myParticipant.color }}
-                            aria-hidden
-                          />
-                          Me concerne
-                        </span>
-                      </SectionLabel>
-                      {Math.abs(myBalance.net) < 0.005 ? (
-                        <IAmSettledEmpty />
-                      ) : (
-                        <MyBalanceCard
-                          balance={myBalance}
-                          participant={myParticipant}
-                          currency={currency}
-                        />
-                      )}
-                      {mySettlements.length > 0 && (
-                        <DebtSettlements
-                          settlements={mySettlements}
-                          participants={participants}
-                          currency={currency}
-                          onSettle={handleSettle}
-                        />
-                      )}
-                    </div>
-                  )}
-
-                  {/* All balances */}
-                  <div>
-                    <SectionLabel count={balances.length}>
-                      {myParticipant ? "Tous les soldes" : "Soldes"}
-                    </SectionLabel>
-                    <BalanceSummary
-                      balances={balances}
-                      participants={participants}
-                      currency={currency}
-                    />
-                  </div>
-
-                  {/* Other settlements (or all if no myParticipant) */}
-                  {(otherSettlements.length > 0 || !myParticipant) && (
-                    <div>
-                      <SectionLabel
-                        count={
-                          myParticipant
-                            ? otherSettlements.length
-                            : settlements.length
-                        }
-                      >
-                        {myParticipant ? "Entre les autres" : "Remboursements"}
-                      </SectionLabel>
-                      <DebtSettlements
-                        settlements={
-                          myParticipant ? otherSettlements : settlements
-                        }
-                        participants={participants}
-                        currency={currency}
-                        onSettle={handleSettle}
-                      />
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
+            <BalancesView
+              myId={myId}
+              balances={balances}
+              settlements={settlements}
+              participants={participants}
+              currency={currency}
+              onSettle={handleSettle}
+            />
           )}
         </motion.div>
       </div>

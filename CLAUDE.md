@@ -46,12 +46,14 @@ proxy.ts                 → middleware: enforces auth on all routes except /log
 ## Component Map
 ```
 components/
-  budget/     AllSettledEmpty, BalanceSummary, DebtSettlements,
+  budget/     AllSettledEmpty, IAmSettledEmpty,
+              BalancesView,        — onglet Soldes : "Ils me doivent" / "Je leur dois" /
+                                     dépliable "Entre les autres" + grille balances + sheets paiement
               ExpenseCard,         — swipe-to-delete card; tap opens ExpenseDetailSheet
               ExpenseDetailSheet,  — bottom sheet: read-only detail with Edit/Delete actions
-              ExpenseForm,         — Sheet 92dvh: amount→description→payer→split→category→date
+              ExpenseForm,         — Sheet 92dvh, 3 tabs Infos | Payé par | Pour qui
               ExpenseList,         — grouped by date, sticky headers with daily total
-              IAmSettledEmpty, MyBalanceCard
+              ParticipantPaymentSheet — bottom sheet: copy IBAN/tél, share via navigator.share
   layout/     AppHeader, GlassCard, MeshGradientBackground, SectionThemeController,
               TripAppHeader, TripNav, TripClientProviders, UserMenu, VoyouLogo
   menus/      MealEditDialog

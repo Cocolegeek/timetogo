@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useMemo, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
@@ -13,6 +13,7 @@ import {
 import dynamic from "next/dynamic";
 import { GlassCard } from "@/components/layout/GlassCard";
 import { getBudgetColor, getBudgetTextColor } from "@/lib/budget/budget-color";
+import { CATEGORIES } from "@/lib/budget/categories";
 import { IdentityPicker } from "@/components/trips/IdentityPicker";
 
 const BudgetEditDialog = dynamic(
@@ -34,7 +35,7 @@ import { useUserId } from "@/hooks/useUserId";
 import { pickRelevantPlanningDay, relativeDayLabel } from "@/lib/planning-day";
 import { cn } from "@/lib/utils";
 import { isVoyage, tripFeatures } from "@/lib/trip-features";
-import type { ItineraryType } from "@/types";
+import type { ExpenseCategory, ItineraryType } from "@/types";
 
 const ITINERARY_EMOJI: Record<ItineraryType, string> = {
   transport: "🚗",
@@ -74,6 +75,16 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
   const currentParticipant = trip.participants.find(
     (p) => p.id === trip.myParticipantId
   );
+  const categoryBreakdown = useMemo(() => {
+    const byCategory: Partial<Record<ExpenseCategory, number>> = {};
+    for (const e of expenses) {
+      if (e.category === "reimbursement") continue;
+      byCategory[e.category] = (byCategory[e.category] ?? 0) + e.amountInTripCurrency;
+    }
+    return Object.entries(byCategory)
+      .sort(([, a], [, b]) => (b as number) - (a as number))
+      .filter(([, amount]) => (amount as number) > 0) as [ExpenseCategory, number][];
+  }, [expenses]);
   const budgetRawPct = trip.totalBudget
     ? (totalSpent / trip.totalBudget) * 100
     : 0;
@@ -247,6 +258,30 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
                     </>
                   )}
                 </p>
+
+                {categoryBreakdown.length > 0 && totalSpent > 0 && (
+                  <div className="flex gap-1.5 flex-wrap pt-1">
+                    {categoryBreakdown.slice(0, 5).map(([cat, amount]) => {
+                      const cfg = CATEGORIES[cat];
+                      const Icon = cfg.icon;
+                      const pct = Math.round((amount / totalSpent) * 100);
+                      return (
+                        <span
+                          key={cat}
+                          className={cn(
+                            "flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border",
+                            cfg.bg,
+                            cfg.color,
+                            "border-current/20"
+                          )}
+                        >
+                          <Icon size={11} />
+                          <span className="font-medium">{pct}%</span>
+                        </span>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </GlassCard>
           </button>
