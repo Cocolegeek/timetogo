@@ -124,10 +124,10 @@ export function ExpenseForm({
   const [submitting, setSubmitting] = useState(false);
 
   // ── Hydration ──────────────────────────────────────────────────────────────
-  // Edit mode: existing splits are ALL pinned so the amount-change effect
-  // never overwrites them. The user unpins manually if needed.
-  // Create mode: all free (pinned: false) so the amount effect distributes
-  // automatically as the user types the total.
+  // Both create and edit mode start with pinned: false.
+  // The amount effect uses an "allZero" check to decide whether to
+  // auto-distribute: it only runs when all fixedAmounts are 0 (fresh state).
+  // Existing values (edit mode) are non-zero → effect is a no-op → preserved.
   useEffect(() => {
     if (!open) return;
 
@@ -151,7 +151,7 @@ export function ExpenseForm({
       );
       const merged: SplitState[] = participants.map((p) => {
         const existing = existingByParticipant.get(p.id);
-        if (existing) return { ...existing, pinned: true }; // preserve existing values
+        if (existing) return { ...existing, pinned: false };
         return {
           participantId: p.id,
           excluded: true,
@@ -241,14 +241,16 @@ export function ExpenseForm({
     title.trim().length > 0 && amount > 0 && payerValid && splitValid;
 
   // ── Amount effect (fixed mode) ─────────────────────────────────────────────
-  // Only auto-distributes when NO participant is pinned (i.e., the user hasn't
-  // manually set any amount yet). Once at least one is pinned, the effect is
-  // a no-op and pinned values are preserved across total changes.
+  // Auto-distributes only when ALL active fixedAmounts are 0 — which is true
+  // for a brand-new expense before the user sets anything.
+  // Edit mode (non-zero existing values) and post-manual-edit states both
+  // have at least one non-zero amount → effect is a no-op → values preserved.
   useEffect(() => {
     if (splitMode !== "fixed" || !amount) return;
     setSplits((prev) => {
-      const hasPins = prev.some((s) => !s.excluded && s.pinned);
-      if (hasPins) return prev;
+      const active = prev.filter((s) => !s.excluded);
+      const allZero = active.every((s) => (s.fixedAmount ?? 0) < 0.005);
+      if (!allZero) return prev;
       return rebalanceFixed(prev, amount);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
