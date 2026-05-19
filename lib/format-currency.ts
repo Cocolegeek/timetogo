@@ -1,10 +1,12 @@
 export function formatCurrency(amount: number, currency: string): string {
+  const rounded = Math.round(amount * 100) / 100;
+  const decimals = rounded % 1 === 0 ? 0 : 2;
   return new Intl.NumberFormat("fr-FR", {
     style: "currency",
     currency,
-    minimumFractionDigits: 0,
+    minimumFractionDigits: decimals,
     maximumFractionDigits: 2,
-  }).format(amount);
+  }).format(rounded);
 }
 
 /**

@@ -63,13 +63,16 @@ function rebalancePct(splits: SplitState[]): SplitState[] {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const formatCurrency = (n: number, currency: string) =>
-  new Intl.NumberFormat("fr-FR", {
+const formatCurrency = (n: number, currency: string) => {
+  const rounded = Math.round(n * 100) / 100;
+  const decimals = rounded % 1 === 0 ? 0 : 2;
+  return new Intl.NumberFormat("fr-FR", {
     style: "currency",
     currency,
-    minimumFractionDigits: 0,
+    minimumFractionDigits: decimals,
     maximumFractionDigits: 2,
-  }).format(n);
+  }).format(rounded);
+};
 
 function distributeCents(total: number, count: number): number[] {
   if (count === 0) return [];
