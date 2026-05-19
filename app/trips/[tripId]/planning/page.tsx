@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from "framer-motion";
 import { GlassCard } from "@/components/layout/GlassCard";
-import { useOpenLocation } from "@/components/shared/MapAppPicker";
+import { useOpenLocation, useOpenRoute } from "@/components/shared/MapAppPicker";
 import { ConfirmDeleteDialog } from "@/components/shared/ConfirmDeleteDialog";
 import { DayHeader } from "@/components/shared/DayHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -198,10 +198,10 @@ export default function PlanningPage({ params }: PlanningPageProps) {
                     <button
                       type="button"
                       onClick={() => openPicker(d)}
-                      className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl border border-dashed border-foreground/20 bg-foreground/4 text-slate-400 hover:text-slate-200 hover:border-foreground/35 hover:bg-foreground/8 active:bg-foreground/10 transition-all text-left"
+                      className="w-full text-left px-3.5 py-3 rounded-2xl border border-dashed border-foreground/15 bg-foreground/3 hover:border-section/40 hover:bg-section/5 active:bg-foreground/10 transition-all flex items-center gap-2.5 text-slate-400 hover:text-section-soft"
                     >
-                      <Plus size={16} className="shrink-0 text-section" />
-                      <p className="text-sm font-medium">Rien de prévu ce jour</p>
+                      <Plus size={16} className="shrink-0" />
+                      <span className="text-sm font-medium">Ajouter au planning</span>
                     </button>
                   )}
                 </div>
@@ -310,6 +310,7 @@ function ItineraryCard({
   onSwipeDelete: () => void;
 }) {
   const openLocation = useOpenLocation();
+  const openRoute = useOpenRoute();
   const cfg = TYPE_CONFIG[item.type];
   const durationLabel = formatDuration(item.durationMinutes);
   const x = useMotionValue(0);
@@ -377,7 +378,13 @@ function ItineraryCard({
             className="p-3.5 flex items-start gap-3 cursor-pointer active:bg-foreground/4 transition-colors touch-pan-y select-none"
           >
             {isJourney ? (
-              <JourneyCardContent item={item} involved={involved} everyone={everyone} openLocation={openLocation} />
+              <JourneyCardContent
+                item={item}
+                involved={involved}
+                everyone={everyone}
+                openLocation={openLocation}
+                openRoute={openRoute}
+              />
             ) : (
               <EventCardContent item={item} cfg={cfg} durationLabel={durationLabel} involved={involved} everyone={everyone} openLocation={openLocation} />
             )}
@@ -479,15 +486,18 @@ function JourneyCardContent({
   involved,
   everyone,
   openLocation,
+  openRoute,
 }: {
   item: ItineraryItem;
   involved: Participant[];
   everyone: boolean;
   openLocation: (q: string, options?: { mode?: ItineraryItem["journeyMode"] }) => void;
+  openRoute: (from: string, to: string, options?: { mode?: ItineraryItem["journeyMode"] }) => void;
 }) {
   const ModeIcon = item.journeyMode ? JOURNEY_MODE_ICON[item.journeyMode] : Route;
   const durationLabel = formatDuration(item.durationMinutes) || undefined;
   const journeyOpts = item.journeyMode ? { mode: item.journeyMode } : undefined;
+  const hasFullRoute = !!(item.location && item.destination);
 
   return (
     <div className="flex-1 min-w-0 pr-1">
@@ -541,6 +551,20 @@ function JourneyCardContent({
           <p className="text-xl font-semibold text-slate-100 leading-tight">{item.title}</p>
         )}
       </div>
+
+      {hasFullRoute && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            openRoute(item.location!, item.destination!, journeyOpts);
+          }}
+          className="inline-flex items-center gap-1.5 mt-2.5 px-2.5 py-1 rounded-full text-sm font-semibold border border-sky-400/30 bg-sky-400/10 text-sky-300 hover:bg-sky-400/15 hover:border-sky-400/50 active:scale-95 transition-all"
+        >
+          <Route size={13} />
+          Itinéraire
+        </button>
+      )}
 
       {involved.length > 0 && (
         <div className="mt-2.5">

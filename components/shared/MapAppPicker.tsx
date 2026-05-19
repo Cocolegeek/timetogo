@@ -12,16 +12,28 @@ import type { MapAppId } from "@/lib/map-apps";
 import type { JourneyMode } from "@/types";
 
 type Coord = { lat: number; lon: number };
+
 export interface OpenLocationOptions {
   /** Reorders the picker to put the most relevant apps first */
   mode?: JourneyMode;
 }
-type OpenFn = (query: string, options?: OpenLocationOptions) => void;
 
-const MapAppPickerContext = createContext<OpenFn>(() => {});
+interface MapAppApi {
+  openLocation: (q: string, options?: OpenLocationOptions) => void;
+  openRoute: (from: string, to: string, options?: OpenLocationOptions) => void;
+}
 
-export function useOpenLocation(): OpenFn {
-  return useContext(MapAppPickerContext);
+const MapAppPickerContext = createContext<MapAppApi>({
+  openLocation: () => {},
+  openRoute: () => {},
+});
+
+export function useOpenLocation() {
+  return useContext(MapAppPickerContext).openLocation;
+}
+
+export function useOpenRoute() {
+  return useContext(MapAppPickerContext).openRoute;
 }
 
 async function geocodeQuery(query: string): Promise<Coord | null> {
@@ -34,26 +46,67 @@ async function geocodeQuery(query: string): Promise<Coord | null> {
   }
 }
 
-function buildUrl(appId: MapAppId, query: string, coord?: Coord): string {
+function isIosUA(): boolean {
+  return (
+    typeof navigator !== "undefined" && /iphone|ipad|ipod/i.test(navigator.userAgent)
+  );
+}
+
+function buildLocationUrl(appId: MapAppId, query: string, coord?: Coord): string {
   const q = encodeURIComponent(query);
-  const isIos =
-    typeof navigator !== "undefined" && /iphone|ipad|ipod/i.test(navigator.userAgent);
   switch (appId) {
     case "google":
       if (coord) return `https://maps.google.com/?q=${coord.lat},${coord.lon}`;
       return `https://maps.google.com/?q=${q}`;
     case "apple":
       if (coord) {
-        const base = isIos ? "maps://" : "https://maps.apple.com/";
+        const base = isIosUA() ? "maps://" : "https://maps.apple.com/";
         return `${base}?ll=${coord.lat},${coord.lon}&q=${q}`;
       }
-      return isIos ? `maps://?q=${q}` : `https://maps.apple.com/?q=${q}`;
+      return isIosUA() ? `maps://?q=${q}` : `https://maps.apple.com/?q=${q}`;
     case "waze":
       if (coord) return `https://waze.com/ul?ll=${coord.lat},${coord.lon}&navigate=yes`;
       return `https://waze.com/ul?q=${q}&navigate=yes`;
     case "citymapper":
-      if (coord) return `https://citymapper.com/directions?endcoord=${coord.lat},${coord.lon}&endname=${q}`;
+      if (coord)
+        return `https://citymapper.com/directions?endcoord=${coord.lat},${coord.lon}&endname=${q}`;
       return `https://citymapper.com/directions?endaddress=${q}&endname=${q}`;
+  }
+}
+
+function buildRouteUrl(
+  appId: MapAppId,
+  from: string,
+  to: string,
+  fromCoord: Coord | null,
+  toCoord: Coord | null,
+  mode?: JourneyMode
+): string {
+  const fromQ = fromCoord ? `${fromCoord.lat},${fromCoord.lon}` : from;
+  const toQ = toCoord ? `${toCoord.lat},${toCoord.lon}` : to;
+  switch (appId) {
+    case "google": {
+      const travelmode =
+        mode === "foot" ? "walking"
+        : mode === "bike" ? "bicycling"
+        : mode === "transit" ? "transit"
+        : "driving";
+      return `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(fromQ)}&destination=${encodeURIComponent(toQ)}&travelmode=${travelmode}`;
+    }
+    case "apple": {
+      const dirflg =
+        mode === "foot" || mode === "bike" ? "w"
+        : mode === "transit" ? "r"
+        : "d";
+      const base = isIosUA() ? "maps://" : "https://maps.apple.com/";
+      return `${base}?saddr=${encodeURIComponent(fromQ)}&daddr=${encodeURIComponent(toQ)}&dirflg=${dirflg}`;
+    }
+    case "waze":
+      // Waze always routes from current GPS; we can only pass destination.
+      if (toCoord) return `https://waze.com/ul?ll=${toCoord.lat},${toCoord.lon}&navigate=yes`;
+      return `https://waze.com/ul?q=${encodeURIComponent(to)}&navigate=yes`;
+    case "citymapper":
+      return `https://citymapper.com/directions?startaddress=${encodeURIComponent(from)}&startname=${encodeURIComponent(from)}&endaddress=${encodeURIComponent(to)}&endname=${encodeURIComponent(to)}`;
   }
 }
 
@@ -71,7 +124,6 @@ const APPS: AppDef[] = [
   { id: "apple",      name: "Plans",       description: "Ouvrir dans Plans (Apple)",          Icon: AppleMapsIcon   },
 ];
 
-/** Apps mises en avant selon le mode de trajet */
 const PREFERRED_BY_MODE: Partial<Record<JourneyMode, MapAppId[]>> = {
   car: ["google", "waze"],
   transit: ["citymapper", "google"],
@@ -90,46 +142,88 @@ function orderApps(mode?: JourneyMode): AppDef[] {
   return [...head, ...tail];
 }
 
-export function MapAppPickerProvider({ children }: { children: React.ReactNode }) {
-  const [query, setQuery] = useState<string | null>(null);
-  const [mode, setMode] = useState<JourneyMode | undefined>(undefined);
-  const [coord, setCoord] = useState<Coord | null>(null);
+type PickerState =
+  | { kind: "location"; query: string; mode?: JourneyMode }
+  | { kind: "route"; from: string; to: string; mode?: JourneyMode };
 
-  const open = useCallback((q: string, options?: OpenLocationOptions) => {
-    setQuery(q);
-    setMode(options?.mode);
+export function MapAppPickerProvider({ children }: { children: React.ReactNode }) {
+  const [state, setState] = useState<PickerState | null>(null);
+  const [coord, setCoord] = useState<Coord | null>(null);
+  const [routeCoords, setRouteCoords] = useState<{ from: Coord | null; to: Coord | null }>({
+    from: null,
+    to: null,
+  });
+
+  const openLocation = useCallback((q: string, options?: OpenLocationOptions) => {
+    setState({ kind: "location", query: q, mode: options?.mode });
   }, []);
 
+  const openRoute = useCallback(
+    (from: string, to: string, options?: OpenLocationOptions) => {
+      setState({ kind: "route", from, to, mode: options?.mode });
+    },
+    []
+  );
+
+  // Geocode based on state
   useEffect(() => {
-    if (!query) { setCoord(null); return; }
+    if (!state) {
+      setCoord(null);
+      setRouteCoords({ from: null, to: null });
+      return;
+    }
     let cancelled = false;
-    geocodeQuery(query).then((c) => { if (!cancelled) setCoord(c); });
+    if (state.kind === "location") {
+      geocodeQuery(state.query).then((c) => { if (!cancelled) setCoord(c); });
+    } else {
+      Promise.all([geocodeQuery(state.from), geocodeQuery(state.to)]).then(
+        ([f, t]) => { if (!cancelled) setRouteCoords({ from: f, to: t }); }
+      );
+    }
     return () => { cancelled = true; };
-  }, [query]);
+  }, [state]);
 
   const handlePick = (appId: MapAppId) => {
-    if (!query) return;
-    window.open(buildUrl(appId, query, coord ?? undefined), "_blank", "noopener,noreferrer");
-    setQuery(null);
-    setMode(undefined);
+    if (!state) return;
+    const url =
+      state.kind === "location"
+        ? buildLocationUrl(appId, state.query, coord ?? undefined)
+        : buildRouteUrl(
+            appId,
+            state.from,
+            state.to,
+            routeCoords.from,
+            routeCoords.to,
+            state.mode
+          );
+    window.open(url, "_blank", "noopener,noreferrer");
+    setState(null);
   };
 
-  const orderedApps = orderApps(mode);
+  const orderedApps = orderApps(state?.mode);
+  const headerLabel =
+    state?.kind === "route" ? "Ouvrir l'itinéraire dans…" : "Ouvrir le lieu dans…";
+  const subtitle =
+    state?.kind === "route"
+      ? `${state.from} → ${state.to}`
+      : state?.kind === "location"
+        ? state.query
+        : null;
 
   return (
-    <MapAppPickerContext.Provider value={open}>
+    <MapAppPickerContext.Provider value={{ openLocation, openRoute }}>
       {children}
-      <Sheet open={query !== null} onOpenChange={(o) => { if (!o) { setQuery(null); setMode(undefined); } }}>
+      <Sheet open={state !== null} onOpenChange={(o) => { if (!o) setState(null); }}>
         <SheetContent
           side="bottom"
           className="glass-strong border-foreground/10 rounded-t-2xl px-0 pb-0"
         >
           <div className="px-5 pt-4 pb-2">
             <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold text-center">
-              Ouvrir le lieu dans…
+              {headerLabel}
             </p>
-            {query && (
-              <p className="text-sm text-slate-300 text-center mt-1 truncate">{query}</p>
+            {subtitle && (
+              <p className="text-sm text-slate-300 text-center mt-1 truncate">{subtitle}</p>
             )}
           </div>
 
