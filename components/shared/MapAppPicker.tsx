@@ -102,8 +102,8 @@ export function MapAppPickerProvider({ children }: { children: React.ReactNode }
                 onClick={() => handlePick(id)}
                 className="w-full flex items-center gap-4 px-5 py-4 hover:bg-foreground/6 active:bg-foreground/10 transition-colors text-left"
               >
-                <div className="w-12 h-12 rounded-2xl overflow-hidden shrink-0 shadow-sm">
-                  <Icon size={48} />
+                <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shrink-0 shadow-sm p-2.5">
+                  <Icon size={28} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-base font-semibold text-slate-100">{name}</p>
