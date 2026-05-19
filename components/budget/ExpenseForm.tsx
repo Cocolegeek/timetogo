@@ -2,13 +2,11 @@
 
 import { useState, useEffect, useMemo } from "react";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Lock } from "lucide-react";
@@ -26,12 +24,9 @@ import type {
 } from "@/types";
 
 // ─── Local split state type ───────────────────────────────────────────────────
-// `pinned` is UI-only: it tracks which rows the user manually edited.
-// Stripped before calling onSubmit.
 type SplitState = ParticipantSplit & { pinned: boolean };
 
 // ─── Pure rebalance helpers ───────────────────────────────────────────────────
-// These are called inside setSplits updaters so they must be pure functions.
 
 function rebalanceFixed(splits: SplitState[], amount: number): SplitState[] {
   const active = splits.filter((s) => !s.excluded);
@@ -127,10 +122,6 @@ export function ExpenseForm({
   const [submitting, setSubmitting] = useState(false);
 
   // ── Hydration ──────────────────────────────────────────────────────────────
-  // Both create and edit mode start with pinned: false.
-  // The amount effect uses an "allZero" check to decide whether to
-  // auto-distribute: it only runs when all fixedAmounts are 0 (fresh state).
-  // Existing values (edit mode) are non-zero → effect is a no-op → preserved.
   useEffect(() => {
     if (!open) return;
 
@@ -244,10 +235,6 @@ export function ExpenseForm({
     title.trim().length > 0 && amount > 0 && payerValid && splitValid;
 
   // ── Amount effect (fixed mode) ─────────────────────────────────────────────
-  // Auto-distributes only when ALL active fixedAmounts are 0 — which is true
-  // for a brand-new expense before the user sets anything.
-  // Edit mode (non-zero existing values) and post-manual-edit states both
-  // have at least one non-zero amount → effect is a no-op → values preserved.
   useEffect(() => {
     if (splitMode !== "fixed" || !amount) return;
     setSplits((prev) => {
@@ -298,7 +285,6 @@ export function ExpenseForm({
     });
   };
 
-  // Toggling inclusion clears the pin so the participant rejoins the free pool
   const toggleInclusion = (participantId: string) => {
     setSplits((prev) => {
       const toggled = prev.map((s) =>
@@ -312,7 +298,6 @@ export function ExpenseForm({
     });
   };
 
-  // Fixed mode: pin on edit, rebalance free participants
   const setFixedAmount = (participantId: string, value: number) => {
     setSplits((prev) => {
       const withPin = prev.map((s) =>
@@ -333,7 +318,6 @@ export function ExpenseForm({
     });
   };
 
-  // Percentage mode: pin on edit, rebalance free participants
   const setPercentage = (participantId: string, value: number) => {
     setSplits((prev) => {
       const withPin = prev.map((s) =>
@@ -354,7 +338,6 @@ export function ExpenseForm({
     });
   };
 
-  // Switching mode resets all pins and redistributes equally
   const handleSplitModeChange = (mode: string) => {
     const newMode = mode as SplitMode;
     setSplitMode(newMode);
@@ -366,6 +349,11 @@ export function ExpenseForm({
     });
   };
 
+  const handleEqualForAll = () => {
+    setSplitMode("equal");
+    setSplits((prev) => prev.map((s) => ({ ...s, excluded: false, pinned: false })));
+  };
+
   const handleSubmit = async () => {
     if (!formValid) return;
     setSubmitting(true);
@@ -374,7 +362,6 @@ export function ExpenseForm({
         payers.length === 1
           ? [{ participantId: payers[0].participantId, amount }]
           : payers;
-      // Strip the `pinned` field before persisting
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const cleanSplits: ParticipantSplit[] = splits.map(({ pinned: _p, ...s }) => s);
       await onSubmit({
@@ -394,22 +381,28 @@ export function ExpenseForm({
     }
   };
 
+  const sym = currencySymbol(currency);
+
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="glass-strong border-foreground/10 max-w-md p-0 max-h-[92vh] overflow-hidden flex flex-col"
-        showCloseButton={false}
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent
+        side="bottom"
+        className="glass-strong border-foreground/10 rounded-t-2xl p-0 flex flex-col overflow-hidden"
+        style={{ height: "92dvh" }}
       >
-        <DialogHeader className="px-5 pt-5 pb-3 border-b border-foreground/8">
-          <DialogTitle className="text-slate-100 text-xl">
+        {/* Header */}
+        <div className="px-5 pt-5 pb-3 border-b border-foreground/8 shrink-0 pr-14">
+          <SheetTitle className="text-slate-100 text-xl font-bold">
             {isEdit ? "Modifier la dépense" : "Nouvelle dépense"}
-          </DialogTitle>
-        </DialogHeader>
+          </SheetTitle>
+        </div>
 
-        <div className="flex-1 overflow-y-auto px-5 py-5 space-y-6">
-          {/* Amount */}
+        {/* Scrollable body */}
+        <div className="flex-1 overflow-y-auto px-5 py-5 space-y-5">
+
+          {/* 1. Amount */}
           <div className="text-center">
             <input
               type="text"
@@ -418,66 +411,25 @@ export function ExpenseForm({
               onChange={(e) =>
                 setAmountStr(e.target.value.replace(/[^0-9.,]/g, ""))
               }
-              placeholder="0,00"
+              placeholder={`0,00 ${sym}`}
               className="w-full text-center bg-transparent text-6xl font-bold text-slate-100 placeholder:text-slate-700 focus:outline-none tabular-nums"
               autoFocus={!isEdit}
             />
-            <p className="text-sm text-slate-500 mt-1">{currencySymbol(currency)}</p>
           </div>
 
-          {/* Title */}
-          <div className="space-y-1.5">
-            <Label className="text-slate-300 text-sm font-medium">Description</Label>
-            <Input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Restaurant, courses, taxi…"
-              className="bg-foreground/8 border-foreground/10 text-slate-100 placeholder:text-slate-500 focus-visible:ring-section"
-            />
-          </div>
+          {/* 2. Description — no label, placeholder only */}
+          <Input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Restaurant, courses, taxi…"
+            className="bg-foreground/8 border-foreground/10 text-slate-100 placeholder:text-slate-500 focus-visible:ring-section text-base h-12"
+          />
 
-          {/* Categories */}
+          {/* 3. Payé par */}
           <div className="space-y-2">
-            <Label className="text-slate-300 text-sm font-medium">Catégorie</Label>
-            <div className="grid grid-cols-3 gap-2">
-              {CATEGORY_ORDER.map((cat) => {
-                const cfg = CATEGORIES[cat];
-                const Icon = cfg.icon;
-                const selected = category === cat;
-                return (
-                  <button
-                    key={cat}
-                    type="button"
-                    onClick={() => setCategory(cat)}
-                    className={cn(
-                      "flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all active:scale-95",
-                      selected
-                        ? cn(cfg.bg, cfg.color, "border-current ring-1", cfg.ring)
-                        : "bg-foreground/4 border-foreground/8 text-slate-400 hover:bg-foreground/8"
-                    )}
-                  >
-                    <Icon size={22} />
-                    <span className="text-xs font-medium">{cfg.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Date */}
-          <div className="space-y-1.5">
-            <Label className="text-slate-300 text-sm font-medium">Date</Label>
-            <Input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="bg-foreground/8 border-foreground/10 text-slate-100 [color-scheme:dark]"
-            />
-          </div>
-
-          {/* Paid by */}
-          <div className="space-y-2">
-            <Label className="text-slate-300 text-sm font-medium">Payé par</Label>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+              Payé par
+            </p>
             <div className="flex gap-2 flex-wrap">
               {participants.map((p) => {
                 const selected = payers.some((py) => py.participantId === p.id);
@@ -536,9 +488,7 @@ export function ExpenseForm({
                         }
                         className="w-20 text-right bg-foreground/8 border border-foreground/10 rounded-lg px-2 py-1 text-sm text-slate-100 focus:outline-none focus:border-section tabular-nums"
                       />
-                      <span className="text-xs text-slate-500 w-8">
-                        {currencySymbol(currency)}
-                      </span>
+                      <span className="text-xs text-slate-500 w-8">{sym}</span>
                     </div>
                   );
                 })}
@@ -558,9 +508,20 @@ export function ExpenseForm({
             )}
           </div>
 
-          {/* Split section */}
+          {/* 4. Pour qui / répartition */}
           <div className="space-y-3">
-            <Label className="text-slate-300 text-sm font-medium">Pour qui ?</Label>
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                Pour qui
+              </p>
+              <button
+                type="button"
+                onClick={handleEqualForAll}
+                className="text-xs text-section-soft bg-section/8 border border-section/20 px-2.5 py-1 rounded-full hover:bg-section/15 transition-colors active:scale-95"
+              >
+                Tous — équitable
+              </button>
+            </div>
 
             {newMemberIds.size > 0 && (
               <div className="px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-xs text-amber-200 flex items-start gap-2">
@@ -625,7 +586,9 @@ export function ExpenseForm({
                         onClick={() => toggleInclusion(p.id)}
                         className={cn(
                           "w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all",
-                          split.excluded ? "border-slate-600" : "border-section bg-section"
+                          split.excluded
+                            ? "border-slate-600"
+                            : "border-section bg-section"
                         )}
                       >
                         {!split.excluded && (
@@ -724,9 +687,7 @@ export function ExpenseForm({
                               : "bg-foreground/8 border-foreground/10"
                           )}
                         />
-                        <span className="text-xs text-slate-500 w-6">
-                          {currencySymbol(currency)}
-                        </span>
+                        <span className="text-xs text-slate-500 w-6">{sym}</span>
                       </div>
                     )}
                   </div>
@@ -742,11 +703,56 @@ export function ExpenseForm({
               currency={currency}
             />
           </div>
+
+          {/* 5. Catégorie — horizontal scroll */}
+          <div className="space-y-2">
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+              Catégorie
+            </p>
+            <div className="flex gap-2 overflow-x-auto pb-1 -mx-5 px-5 scrollbar-none">
+              {CATEGORY_ORDER.map((cat) => {
+                const cfg = CATEGORIES[cat];
+                const Icon = cfg.icon;
+                const selected = category === cat;
+                return (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setCategory(cat)}
+                    className={cn(
+                      "flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl border transition-all active:scale-95",
+                      selected
+                        ? cn(cfg.bg, cfg.color, "border-current ring-1", cfg.ring)
+                        : "bg-foreground/4 border-foreground/8 text-slate-400 hover:bg-foreground/8"
+                    )}
+                  >
+                    <Icon size={16} />
+                    <span className="text-xs font-medium whitespace-nowrap">
+                      {cfg.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 6. Date */}
+          <div className="space-y-1.5">
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+              Date
+            </p>
+            <Input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="bg-foreground/8 border-foreground/10 text-slate-100 [color-scheme:dark]"
+            />
+          </div>
         </div>
 
         {/* Footer */}
         <div
-          className="px-5 py-3 border-t border-foreground/8 bg-slate-900/50"
+          className="px-5 py-3 border-t border-foreground/8 bg-slate-900/50 shrink-0"
           style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 0.75rem)" }}
         >
           <div className="flex gap-2">
@@ -766,8 +772,8 @@ export function ExpenseForm({
             </Button>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 }
 
