@@ -83,6 +83,8 @@ interface ItineraryItemFormProps {
   onSubmit: (values: ItineraryFormValues) => Promise<void>;
 }
 
+type ItineraryNavTab = "Quand" | "Quoi" | "Qui";
+
 export function ItineraryItemForm({
   open,
   onOpenChange,
@@ -93,6 +95,7 @@ export function ItineraryItemForm({
 }: ItineraryItemFormProps) {
   const isEdit = !!initialValues;
 
+  const [activeTab, setActiveTab] = useState<ItineraryNavTab>("Quand");
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
@@ -110,6 +113,7 @@ export function ItineraryItemForm({
   // Hydrate when opened
   useEffect(() => {
     if (!open) return;
+    setActiveTab("Quand");
     if (initialValues) {
       setTitle(initialValues.title);
       setDate(initialValues.date);
@@ -246,187 +250,191 @@ export function ItineraryItemForm({
           </button>
         </div>
 
-        {/* Body — sectioned like Google Calendar */}
-        <div className="flex-1 overflow-y-auto">
-          {/* Title — big, no label */}
-          <div className="px-5 pt-5 pb-4">
-            <input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Ajouter un titre"
-              className="w-full bg-transparent border-0 outline-none text-2xl font-bold text-slate-100 placeholder:text-slate-600 placeholder:font-normal"
-              autoFocus={!isEdit}
-            />
-          </div>
+        {/* Title — sticky, persistent across tabs */}
+        <div className="px-5 pt-4 pb-3 border-b border-foreground/8 shrink-0">
+          <input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Titre de l'étape"
+            className="w-full bg-transparent border-0 outline-none text-xl font-bold text-slate-100 placeholder:text-slate-600 placeholder:font-normal"
+            autoFocus={!isEdit}
+          />
+        </div>
 
-          {/* Date + time */}
-          <Row icon={<Calendar size={18} />}>
-            <div className="grid grid-cols-2 gap-3">
-              <DateInput
-                value={date}
-                onChange={setDate}
-                placeholder="Date"
-              />
-              <TimeInput
-                value={time}
-                onChange={setTime}
-                placeholder="Heure"
-              />
-            </div>
-          </Row>
-
-          {/* Duration */}
-          <Row icon={<Hourglass size={18} />} label="Durée (optionnelle)">
-            <div className="flex gap-1.5 flex-wrap">
-              {QUICK_DURATIONS.map((d) => {
-                const selected = totalMinutes === d.minutes;
-                return (
-                  <button
-                    key={d.label}
-                    type="button"
-                    onClick={() => setQuickDuration(d.minutes)}
-                    className={cn(
-                      "px-3 py-1.5 rounded-full text-sm font-medium transition-all active:scale-95",
-                      selected
-                        ? "bg-section-soft text-section-soft ring-1 ring-section"
-                        : "bg-foreground/5 text-slate-400 hover:bg-foreground/10"
-                    )}
-                  >
-                    {d.label}
-                  </button>
-                );
-              })}
-            </div>
-            <div className="flex items-center gap-2 pt-2">
-              <NumberPill
-                value={durationH}
-                onChange={setDurationH}
-                suffix="h"
-                max={48}
-              />
-              <NumberPill
-                value={durationM}
-                onChange={setDurationM}
-                suffix="min"
-                max={59}
-              />
-              {totalMinutes > 0 && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setDurationH("");
-                    setDurationM("");
-                  }}
-                  className="p-2 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-foreground/8 transition-colors shrink-0"
-                  aria-label="Effacer la durée"
-                >
-                  <X size={14} />
-                </button>
+        {/* Tab navigation */}
+        <div className="flex gap-1 px-5 py-2 border-b border-foreground/8 shrink-0">
+          {(["Quand", "Quoi", "Qui"] as ItineraryNavTab[]).map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              onClick={() => setActiveTab(tab)}
+              className={cn(
+                "flex-1 py-1.5 rounded-lg text-sm font-medium transition-all",
+                activeTab === tab
+                  ? "bg-section-soft text-section-soft ring-1 ring-section"
+                  : "text-slate-400 hover:text-slate-200 hover:bg-foreground/8"
               )}
-            </div>
-          </Row>
+            >
+              {tab}
+              {tab === "Qui" && selectedParticipantIds.length > 0 && (
+                <span className="ml-1.5 text-xs opacity-70">
+                  ({selectedParticipantIds.length})
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
 
-          {/* Type */}
-          <Row icon={<Tag size={18} />}>
-            <div className="flex gap-1.5 flex-wrap">
-              {(Object.entries(TYPE_CONFIG) as [ItineraryType, NonNullable<typeof TYPE_CONFIG[keyof typeof TYPE_CONFIG]>][]).map(([t, cfg]) => {
-                const selected = type === t;
-                return (
-                  <button
-                    key={t}
-                    type="button"
-                    onClick={() => setType(t)}
-                    className={cn(
-                      "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all active:scale-95",
-                      selected
-                        ? cn(cfg.bg, cfg.color, "ring-1")
-                        : "bg-foreground/5 text-slate-400 hover:bg-foreground/10"
-                    )}
-                  >
-                    <span>{cfg.emoji}</span>
-                    {cfg.label}
-                  </button>
-                );
-              })}
-            </div>
-          </Row>
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto">
+          {activeTab === "Quand" && (
+            <>
+              <Row icon={<Calendar size={18} />}>
+                <div className="grid grid-cols-2 gap-3">
+                  <DateInput value={date} onChange={setDate} placeholder="Date" />
+                  <TimeInput value={time} onChange={setTime} placeholder="Heure" />
+                </div>
+              </Row>
 
-          {/* Location */}
-          <Row icon={<MapPin size={18} />}>
-            <LocationPickerSheet
-              value={location}
-              onChange={setLocation}
-              placeholder="Ajouter un lieu"
-              className="bg-foreground/5 border-foreground/10"
-            />
-          </Row>
-
-          {/* Participants */}
-          {participants.length > 0 && (
-            <Row icon={<Users size={18} />} label="Participants">
-              <div className="flex gap-1.5 flex-wrap">
-                <button
-                  type="button"
-                  onClick={toggleAll}
-                  className={cn(
-                    "px-3 py-1.5 rounded-full text-sm font-medium border transition-all active:scale-95",
-                    allSelected
-                      ? "bg-section-soft text-section-soft border-section"
-                      : "bg-foreground/5 text-slate-400 border-foreground/10 hover:bg-foreground/10"
-                  )}
-                >
-                  Tout le monde
-                </button>
-                {participants.map((p) => {
-                  const sel = selectedParticipantIds.includes(p.id);
-                  return (
+              <Row icon={<Hourglass size={18} />} label="Durée (optionnelle)">
+                <div className="flex gap-1.5 flex-wrap">
+                  {QUICK_DURATIONS.map((d) => {
+                    const selected = totalMinutes === d.minutes;
+                    return (
+                      <button
+                        key={d.label}
+                        type="button"
+                        onClick={() => setQuickDuration(d.minutes)}
+                        className={cn(
+                          "px-3 py-1.5 rounded-full text-sm font-medium transition-all active:scale-95",
+                          selected
+                            ? "bg-section-soft text-section-soft ring-1 ring-section"
+                            : "bg-foreground/5 text-slate-400 hover:bg-foreground/10"
+                        )}
+                      >
+                        {d.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="flex items-center gap-2 pt-2">
+                  <NumberPill value={durationH} onChange={setDurationH} suffix="h" max={48} />
+                  <NumberPill value={durationM} onChange={setDurationM} suffix="min" max={59} />
+                  {totalMinutes > 0 && (
                     <button
-                      key={p.id}
                       type="button"
-                      onClick={() => toggleParticipant(p.id)}
-                      className={cn(
-                        "flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium transition-all active:scale-95",
-                        sel
-                          ? "border-section bg-section-soft text-section-soft"
-                          : "border-foreground/10 bg-foreground/5 text-slate-300 hover:bg-foreground/10"
-                      )}
+                      onClick={() => { setDurationH(""); setDurationM(""); }}
+                      className="p-2 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-foreground/8 transition-colors shrink-0"
+                      aria-label="Effacer la durée"
                     >
-                      <span
-                        className="w-2.5 h-2.5 rounded-full shrink-0"
-                        style={{ backgroundColor: p.color }}
-                      />
-                      {p.name}
+                      <X size={14} />
                     </button>
-                  );
-                })}
-              </div>
-            </Row>
+                  )}
+                </div>
+              </Row>
+            </>
           )}
 
-          {/* Description */}
-          <Row icon={<AlignLeft size={18} />}>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Ajouter une description"
-              rows={2}
-              className="w-full bg-foreground/5 border border-foreground/10 rounded-lg px-3 py-2 text-base text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-3 focus:ring-section resize-none"
-            />
-          </Row>
+          {activeTab === "Quoi" && (
+            <>
+              <Row icon={<Tag size={18} />} label="Type">
+                <div className="flex gap-1.5 flex-wrap">
+                  {(Object.entries(TYPE_CONFIG) as [ItineraryType, NonNullable<typeof TYPE_CONFIG[keyof typeof TYPE_CONFIG]>][]).map(([t, cfg]) => {
+                    const selected = type === t;
+                    return (
+                      <button
+                        key={t}
+                        type="button"
+                        onClick={() => setType(t)}
+                        className={cn(
+                          "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all active:scale-95",
+                          selected
+                            ? cn(cfg.bg, cfg.color, "ring-1")
+                            : "bg-foreground/5 text-slate-400 hover:bg-foreground/10"
+                        )}
+                      >
+                        <span>{cfg.emoji}</span>
+                        {cfg.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </Row>
 
-          {/* Error */}
+              <Row icon={<MapPin size={18} />} label="Lieu">
+                <LocationPickerSheet
+                  value={location}
+                  onChange={setLocation}
+                  placeholder="Ajouter un lieu"
+                  className="bg-foreground/5 border-foreground/10"
+                />
+              </Row>
+
+              <Row icon={<AlignLeft size={18} />} label="Description">
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Ajouter une description"
+                  rows={3}
+                  className="w-full bg-foreground/5 border border-foreground/10 rounded-lg px-3 py-2 text-base text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-3 focus:ring-section resize-none"
+                />
+              </Row>
+            </>
+          )}
+
+          {activeTab === "Qui" && (
+            participants.length === 0 ? (
+              <div className="px-5 py-10 text-center text-sm text-slate-500">
+                Aucun participant — ajoute-en depuis l&apos;édition du voyage.
+              </div>
+            ) : (
+              <Row icon={<Users size={18} />} label="Participants">
+                <div className="flex gap-1.5 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={toggleAll}
+                    className={cn(
+                      "px-3 py-1.5 rounded-full text-sm font-medium border transition-all active:scale-95",
+                      allSelected
+                        ? "bg-section-soft text-section-soft border-section"
+                        : "bg-foreground/5 text-slate-400 border-foreground/10 hover:bg-foreground/10"
+                    )}
+                  >
+                    Tout le monde
+                  </button>
+                  {participants.map((p) => {
+                    const sel = selectedParticipantIds.includes(p.id);
+                    return (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => toggleParticipant(p.id)}
+                        className={cn(
+                          "flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium transition-all active:scale-95",
+                          sel
+                            ? "border-section bg-section-soft text-section-soft"
+                            : "border-foreground/10 bg-foreground/5 text-slate-300 hover:bg-foreground/10"
+                        )}
+                      >
+                        <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: p.color }} />
+                        {p.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              </Row>
+            )
+          )}
+
           {errorMsg && (
-            <div className="px-5 pb-4">
+            <div className="px-5 py-4">
               <p className="text-sm text-red-300 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
                 {errorMsg}
               </p>
             </div>
           )}
 
-          <div
-            aria-hidden
-            style={{ height: "calc(env(safe-area-inset-bottom) + 1rem)" }}
-          />
+          <div aria-hidden style={{ height: "calc(env(safe-area-inset-bottom) + 1rem)" }} />
         </div>
       </DialogContent>
     </Dialog>

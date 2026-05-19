@@ -48,6 +48,8 @@ interface JourneyFormProps {
   onSubmit: (values: ItineraryFormValues) => Promise<void>;
 }
 
+type JourneyNavTab = "Quand" | "Trajet" | "Qui";
+
 export function JourneyForm({
   open,
   onOpenChange,
@@ -58,6 +60,7 @@ export function JourneyForm({
 }: JourneyFormProps) {
   const isEdit = !!initialValues;
 
+  const [activeTab, setActiveTab] = useState<JourneyNavTab>("Quand");
   const [date, setDate]     = useState("");
   const [time, setTime]     = useState("");
   const [from, setFrom]     = useState("");
@@ -80,6 +83,7 @@ export function JourneyForm({
 
   useEffect(() => {
     if (!open) return;
+    setActiveTab("Quand");
     if (initialValues) {
       setDate(initialValues.date);
       setTime(initialValues.time ?? "");
@@ -221,28 +225,55 @@ export function JourneyForm({
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto">
-          {/* Date + time */}
-          <Row icon={<Calendar size={18} />}>
-            <div className="grid grid-cols-2 gap-3">
-              <input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="w-full bg-foreground/5 border border-foreground/10 rounded-lg px-3 h-10 text-base text-slate-100 [color-scheme:dark] focus:outline-none focus:ring-3 focus:ring-section tabular-nums"
-              />
-              <div className="relative">
-                <Clock size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
-                <input
-                  type="time"
-                  value={time}
-                  onChange={(e) => setTime(e.target.value)}
-                  className="w-full bg-foreground/5 border border-foreground/10 rounded-lg pl-9 pr-3 h-10 text-base text-slate-100 [color-scheme:dark] focus:outline-none focus:ring-3 focus:ring-section tabular-nums"
-                />
-              </div>
-            </div>
-          </Row>
+        {/* Tab navigation */}
+        <div className="flex gap-1 px-5 py-2 border-b border-foreground/8 shrink-0">
+          {(["Quand", "Trajet", "Qui"] as JourneyNavTab[]).map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              onClick={() => setActiveTab(tab)}
+              className={cn(
+                "flex-1 py-1.5 rounded-lg text-sm font-medium transition-all",
+                activeTab === tab
+                  ? "bg-section-soft text-section-soft ring-1 ring-section"
+                  : "text-slate-400 hover:text-slate-200 hover:bg-foreground/8"
+              )}
+            >
+              {tab}
+              {tab === "Qui" && selectedParticipantIds.length > 0 && (
+                <span className="ml-1.5 text-xs opacity-70">
+                  ({selectedParticipantIds.length})
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
 
+        <div className="flex-1 overflow-y-auto">
+          {activeTab === "Quand" && (
+            <Row icon={<Calendar size={18} />}>
+              <div className="grid grid-cols-2 gap-3">
+                <input
+                  type="date"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  className="w-full bg-foreground/5 border border-foreground/10 rounded-lg px-3 h-10 text-base text-slate-100 [color-scheme:dark] focus:outline-none focus:ring-3 focus:ring-section tabular-nums"
+                />
+                <div className="relative">
+                  <Clock size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
+                  <input
+                    type="time"
+                    value={time}
+                    onChange={(e) => setTime(e.target.value)}
+                    className="w-full bg-foreground/5 border border-foreground/10 rounded-lg pl-9 pr-3 h-10 text-base text-slate-100 [color-scheme:dark] focus:outline-none focus:ring-3 focus:ring-section tabular-nums"
+                  />
+                </div>
+              </div>
+            </Row>
+          )}
+
+          {activeTab === "Trajet" && (
+          <>
           {/* From → To */}
           <Row icon={<Navigation size={18} />} label="Itinéraire">
             <div className="space-y-2">
@@ -402,44 +433,52 @@ export function JourneyForm({
               </div>
             )}
           </Row>
+          </>
+          )}
 
           {/* Participants */}
-          {participants.length > 0 && (
-            <Row icon={<Users size={18} />} label="Participants">
-              <div className="flex gap-1.5 flex-wrap">
-                <button
-                  type="button"
-                  onClick={toggleAll}
-                  className={cn(
-                    "px-3 py-1.5 rounded-full text-sm font-medium border transition-all active:scale-95",
-                    allSelected
-                      ? "bg-section-soft text-section-soft border-section"
-                      : "bg-foreground/5 text-slate-400 border-foreground/10 hover:bg-foreground/10"
-                  )}
-                >
-                  Tout le monde
-                </button>
-                {participants.map((p) => {
-                  const sel = selectedParticipantIds.includes(p.id);
-                  return (
-                    <button
-                      key={p.id}
-                      type="button"
-                      onClick={() => toggleParticipant(p.id)}
-                      className={cn(
-                        "flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium transition-all active:scale-95",
-                        sel
-                          ? "border-section bg-section-soft text-section-soft"
-                          : "border-foreground/10 bg-foreground/5 text-slate-300 hover:bg-foreground/10"
-                      )}
-                    >
-                      <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: p.color }} />
-                      {p.name}
-                    </button>
-                  );
-                })}
+          {activeTab === "Qui" && (
+            participants.length === 0 ? (
+              <div className="px-5 py-10 text-center text-sm text-slate-500">
+                Aucun participant — ajoute-en depuis l&apos;édition du voyage.
               </div>
-            </Row>
+            ) : (
+              <Row icon={<Users size={18} />} label="Participants">
+                <div className="flex gap-1.5 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={toggleAll}
+                    className={cn(
+                      "px-3 py-1.5 rounded-full text-sm font-medium border transition-all active:scale-95",
+                      allSelected
+                        ? "bg-section-soft text-section-soft border-section"
+                        : "bg-foreground/5 text-slate-400 border-foreground/10 hover:bg-foreground/10"
+                    )}
+                  >
+                    Tout le monde
+                  </button>
+                  {participants.map((p) => {
+                    const sel = selectedParticipantIds.includes(p.id);
+                    return (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => toggleParticipant(p.id)}
+                        className={cn(
+                          "flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium transition-all active:scale-95",
+                          sel
+                            ? "border-section bg-section-soft text-section-soft"
+                            : "border-foreground/10 bg-foreground/5 text-slate-300 hover:bg-foreground/10"
+                        )}
+                      >
+                        <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: p.color }} />
+                        {p.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              </Row>
+            )
           )}
 
           {errorMsg && (

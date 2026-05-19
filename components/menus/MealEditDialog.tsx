@@ -66,6 +66,8 @@ interface MealEditDialogProps {
   }) => Promise<void>;
 }
 
+type MealNavTab = "Infos" | "Qui" | "Plats";
+
 export function MealEditDialog({
   open,
   onOpenChange,
@@ -73,6 +75,7 @@ export function MealEditDialog({
   participants,
   onSave,
 }: MealEditDialogProps) {
+  const [activeTab, setActiveTab] = useState<MealNavTab>("Infos");
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState<MealCategory>("home");
   const [notes, setNotes] = useState("");
@@ -85,6 +88,7 @@ export function MealEditDialog({
 
   useEffect(() => {
     if (!open || !meal) return;
+    setActiveTab("Infos");
     setTitle(meal.title ?? "");
     setCategory(meal.category);
     setNotes(meal.notes ?? "");
@@ -101,6 +105,15 @@ export function MealEditDialog({
 
   const slotCfg = meal ? SLOT_CONFIG[meal.slot] : null;
   const isRestaurant = category === "restaurant";
+
+  // If user switches to restaurant while on Plats tab, jump back to Infos
+  useEffect(() => {
+    if (isRestaurant && activeTab === "Plats") setActiveTab("Infos");
+  }, [isRestaurant, activeTab]);
+
+  const tabs: MealNavTab[] = isRestaurant
+    ? ["Infos", "Qui"]
+    : ["Infos", "Qui", "Plats"];
 
   const toggleEater = (id: string) => {
     setEaterIds((prev) =>
@@ -264,108 +277,159 @@ export function MealEditDialog({
           </button>
         </div>
 
+        {/* Tab navigation */}
+        <div className="flex gap-1 px-5 py-2 border-b border-foreground/8 shrink-0">
+          {tabs.map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              onClick={() => setActiveTab(tab)}
+              className={cn(
+                "flex-1 py-1.5 rounded-lg text-sm font-medium transition-all",
+                activeTab === tab
+                  ? "bg-section-soft text-section-soft ring-1 ring-section"
+                  : "text-slate-400 hover:text-slate-200 hover:bg-foreground/8"
+              )}
+            >
+              {tab}
+              {tab === "Plats" && dishes.length > 0 && (
+                <span className="ml-1.5 text-xs opacity-70">({dishes.length})</span>
+              )}
+            </button>
+          ))}
+        </div>
+
         {/* Body */}
         <div className="flex-1 overflow-y-auto">
-          {/* Category */}
-          <Section label="Catégorie">
-            <div className="grid grid-cols-3 gap-2">
-              {CATEGORY_ORDER.map((cat) => {
-                const cfg = CATEGORY_CONFIG[cat];
-                const selected = category === cat;
-                return (
-                  <button
-                    key={cat}
-                    type="button"
-                    onClick={() => setCategory(cat)}
-                    className={cn(
-                      "flex items-center justify-center py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95",
-                      selected
-                        ? cfg.badgeClass
-                        : "bg-foreground/4 text-slate-400 border border-foreground/8 hover:bg-foreground/8"
-                    )}
-                  >
-                    {cfg.label}
-                  </button>
-                );
-              })}
-            </div>
-          </Section>
+          {/* ── Infos ── */}
+          {activeTab === "Infos" && (
+            <>
+              <Section label="Catégorie">
+                <div className="grid grid-cols-3 gap-2">
+                  {CATEGORY_ORDER.map((cat) => {
+                    const cfg = CATEGORY_CONFIG[cat];
+                    const selected = category === cat;
+                    return (
+                      <button
+                        key={cat}
+                        type="button"
+                        onClick={() => setCategory(cat)}
+                        className={cn(
+                          "flex items-center justify-center py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95",
+                          selected
+                            ? cfg.badgeClass
+                            : "bg-foreground/4 text-slate-400 border border-foreground/8 hover:bg-foreground/8"
+                        )}
+                      >
+                        {cfg.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </Section>
 
-          {/* Optional note */}
-          <Section label="Note" hint="optionnel">
-            <Input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder={
-                isRestaurant ? "Le bistrot de Léa…" : "Ex: chez Léa, repas léger…"
-              }
-              className="bg-foreground/5 border-foreground/10 text-slate-100 placeholder:text-slate-500"
-            />
-          </Section>
+              <Section label="Note" hint="optionnel">
+                <Input
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder={
+                    isRestaurant ? "Le bistrot de Léa…" : "Ex: chez Léa, repas léger…"
+                  }
+                  className="bg-foreground/5 border-foreground/10 text-slate-100 placeholder:text-slate-500"
+                />
+              </Section>
 
-          {/* Cook — optional */}
-          {participants.length > 0 && !isRestaurant && (
-            <Section
-              icon={<ChefHat size={14} className="text-amber-400/80" />}
-              label="Qui gère ?"
-              hint="optionnel"
-            >
-              <PeoplePills
-                participants={participants}
-                selected={cookIds}
-                onToggle={toggleCook}
-                selectedTone="amber"
-              />
-            </Section>
+              <Section
+                label={isRestaurant ? "Réservation / notes" : "Notes"}
+                hint="optionnel"
+              >
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder={
+                    isRestaurant
+                      ? "Nom du resto, horaire, n° de réservation…"
+                      : "Allergies, idées de courses…"
+                  }
+                  rows={3}
+                  className="w-full bg-foreground/5 border border-foreground/10 rounded-lg px-3 py-2 text-base text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-3 focus:ring-section resize-none"
+                />
+              </Section>
+            </>
           )}
 
-          {/* Eaters */}
-          {participants.length > 0 && (
-            <Section
-              icon={<Users size={14} className="text-slate-400" />}
-              label="Qui mange ?"
-            >
-              <div className="flex gap-1.5 flex-wrap">
-                <button
-                  type="button"
-                  onClick={toggleAllEaters}
-                  className={cn(
-                    "px-3 py-1.5 rounded-full text-sm font-medium border transition-all active:scale-95",
-                    allEatersSelected
-                      ? "bg-section-soft text-section-soft border-section"
-                      : "bg-foreground/5 text-slate-400 border-foreground/10 hover:bg-foreground/10"
-                  )}
-                >
-                  Tout le monde
-                </button>
-                {participants.map((p) => {
-                  const sel = eaterIds.includes(p.id);
-                  return (
-                    <button
-                      key={p.id}
-                      type="button"
-                      onClick={() => toggleEater(p.id)}
-                      className={cn(
-                        "flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium transition-all active:scale-95",
-                        sel
-                          ? "border-section bg-section-soft text-section-soft"
-                          : "border-foreground/10 bg-foreground/5 text-slate-300 hover:bg-foreground/10"
-                      )}
+          {/* ── Qui ── */}
+          {activeTab === "Qui" && (
+            <>
+              {participants.length === 0 ? (
+                <div className="px-5 py-10 text-center text-sm text-slate-500">
+                  Aucun participant — ajoute-en depuis l&apos;édition du voyage.
+                </div>
+              ) : (
+                <>
+                  {!isRestaurant && (
+                    <Section
+                      icon={<ChefHat size={14} className="text-amber-400/80" />}
+                      label="Qui gère ?"
+                      hint="optionnel"
                     >
-                      <span
-                        className="w-2.5 h-2.5 rounded-full shrink-0"
-                        style={{ backgroundColor: p.color }}
+                      <PeoplePills
+                        participants={participants}
+                        selected={cookIds}
+                        onToggle={toggleCook}
+                        selectedTone="amber"
                       />
-                      {p.name}
-                    </button>
-                  );
-                })}
-              </div>
-            </Section>
+                    </Section>
+                  )}
+
+                  <Section
+                    icon={<Users size={14} className="text-slate-400" />}
+                    label="Qui mange ?"
+                  >
+                    <div className="flex gap-1.5 flex-wrap">
+                      <button
+                        type="button"
+                        onClick={toggleAllEaters}
+                        className={cn(
+                          "px-3 py-1.5 rounded-full text-sm font-medium border transition-all active:scale-95",
+                          allEatersSelected
+                            ? "bg-section-soft text-section-soft border-section"
+                            : "bg-foreground/5 text-slate-400 border-foreground/10 hover:bg-foreground/10"
+                        )}
+                      >
+                        Tout le monde
+                      </button>
+                      {participants.map((p) => {
+                        const sel = eaterIds.includes(p.id);
+                        return (
+                          <button
+                            key={p.id}
+                            type="button"
+                            onClick={() => toggleEater(p.id)}
+                            className={cn(
+                              "flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium transition-all active:scale-95",
+                              sel
+                                ? "border-section bg-section-soft text-section-soft"
+                                : "border-foreground/10 bg-foreground/5 text-slate-300 hover:bg-foreground/10"
+                            )}
+                          >
+                            <span
+                              className="w-2.5 h-2.5 rounded-full shrink-0"
+                              style={{ backgroundColor: p.color }}
+                            />
+                            {p.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </Section>
+                </>
+              )}
+            </>
           )}
 
-          {/* Dishes — hidden when restaurant */}
-          {!isRestaurant && (
+          {/* ── Plats ── (caché si resto) */}
+          {activeTab === "Plats" && !isRestaurant && (
             <Section label="Plats" hint={dishes.length > 0 ? `${dishes.length}` : undefined}>
               <div className="space-y-2">
                 <AnimatePresence initial={false}>
@@ -399,24 +463,6 @@ export function MealEditDialog({
               </div>
             </Section>
           )}
-
-          {/* Notes */}
-          <Section
-            label={isRestaurant ? "Réservation / notes" : "Notes"}
-            hint="optionnel"
-          >
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder={
-                isRestaurant
-                  ? "Nom du resto, horaire, n° de réservation…"
-                  : "Allergies, idées de courses…"
-              }
-              rows={2}
-              className="w-full bg-foreground/5 border border-foreground/10 rounded-lg px-3 py-2 text-base text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-3 focus:ring-section resize-none"
-            />
-          </Section>
 
           {errorMsg && (
             <div className="px-5 py-3">
