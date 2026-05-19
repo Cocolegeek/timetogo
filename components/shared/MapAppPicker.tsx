@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import {
   GoogleMapsIcon,
@@ -10,6 +10,7 @@ import {
 } from "@/components/shared/MapAppIcons";
 import type { MapAppId } from "@/lib/map-apps";
 
+type Coord = { lat: number; lon: number };
 type OpenFn = (query: string) => void;
 
 const MapAppPickerContext = createContext<OpenFn>(() => {});
@@ -18,26 +19,7 @@ export function useOpenLocation(): OpenFn {
   return useContext(MapAppPickerContext);
 }
 
-function buildUrl(appId: MapAppId, query: string, coord?: { lat: number; lon: number }): string {
-  const q = encodeURIComponent(query);
-  const isIos =
-    typeof navigator !== "undefined" && /iphone|ipad|ipod/i.test(navigator.userAgent);
-  switch (appId) {
-    case "google":
-      return `https://maps.google.com/?q=${q}`;
-    case "apple":
-      return isIos ? `maps://?q=${q}` : `https://maps.apple.com/?q=${q}`;
-    case "waze":
-      return `https://waze.com/ul?q=${q}&navigate=yes`;
-    case "citymapper":
-      if (coord) {
-        return `https://citymapper.com/directions?endcoord=${coord.lat},${coord.lon}&endname=${q}`;
-      }
-      return `https://citymapper.com/directions?endaddress=${q}&endname=${q}`;
-  }
-}
-
-async function geocodeQuery(query: string): Promise<{ lat: number; lon: number } | null> {
+async function geocodeQuery(query: string): Promise<Coord | null> {
   try {
     const res = await fetch(`/api/geocode?q=${encodeURIComponent(query)}`);
     if (!res.ok) return null;
@@ -47,50 +29,59 @@ async function geocodeQuery(query: string): Promise<{ lat: number; lon: number }
   }
 }
 
+function buildUrl(appId: MapAppId, query: string, coord?: Coord): string {
+  const q = encodeURIComponent(query);
+  const isIos =
+    typeof navigator !== "undefined" && /iphone|ipad|ipod/i.test(navigator.userAgent);
+  switch (appId) {
+    case "google":
+      if (coord) return `https://maps.google.com/?q=${coord.lat},${coord.lon}`;
+      return `https://maps.google.com/?q=${q}`;
+    case "apple":
+      if (coord) {
+        const base = isIos ? "maps://" : "https://maps.apple.com/";
+        return `${base}?ll=${coord.lat},${coord.lon}&q=${q}`;
+      }
+      return isIos ? `maps://?q=${q}` : `https://maps.apple.com/?q=${q}`;
+    case "waze":
+      // Waze always routes from GPS position — destination coord only
+      if (coord) return `https://waze.com/ul?ll=${coord.lat},${coord.lon}&navigate=yes`;
+      return `https://waze.com/ul?q=${q}&navigate=yes`;
+    case "citymapper":
+      if (coord) return `https://citymapper.com/directions?endcoord=${coord.lat},${coord.lon}&endname=${q}`;
+      return `https://citymapper.com/directions?endaddress=${q}&endname=${q}`;
+  }
+}
+
 const APPS: {
   id: MapAppId;
   name: string;
   description: string;
   Icon: React.ComponentType<{ size?: number }>;
 }[] = [
-  {
-    id: "google",
-    name: "Google Maps",
-    description: "Ouvrir dans Google Maps",
-    Icon: GoogleMapsIcon,
-  },
-  {
-    id: "citymapper",
-    name: "CityMapper",
-    description: "Transports en commun & multimodal",
-    Icon: CityMapperIcon,
-  },
-  {
-    id: "waze",
-    name: "Waze",
-    description: "Navigation communautaire",
-    Icon: WazeIcon,
-  },
-  {
-    id: "apple",
-    name: "Plans",
-    description: "Ouvrir dans Plans (Apple)",
-    Icon: AppleMapsIcon,
-  },
+  { id: "google",     name: "Google Maps", description: "Ouvrir dans Google Maps",              Icon: GoogleMapsIcon  },
+  { id: "citymapper", name: "CityMapper",  description: "Transports en commun & multimodal",   Icon: CityMapperIcon  },
+  { id: "waze",       name: "Waze",        description: "Navigation communautaire (via GPS)",   Icon: WazeIcon        },
+  { id: "apple",      name: "Plans",       description: "Ouvrir dans Plans (Apple)",            Icon: AppleMapsIcon   },
 ];
 
 export function MapAppPickerProvider({ children }: { children: React.ReactNode }) {
   const [query, setQuery] = useState<string | null>(null);
+  const [coord, setCoord] = useState<Coord | null>(null);
 
   const open = useCallback((q: string) => setQuery(q), []);
 
-  const handlePick = async (appId: MapAppId) => {
+  // Geocode as soon as the picker opens so all apps get coords instantly on tap
+  useEffect(() => {
+    if (!query) { setCoord(null); return; }
+    let cancelled = false;
+    geocodeQuery(query).then((c) => { if (!cancelled) setCoord(c); });
+    return () => { cancelled = true; };
+  }, [query]);
+
+  const handlePick = (appId: MapAppId) => {
     if (!query) return;
-    let coord: { lat: number; lon: number } | undefined;
-    if (appId === "citymapper") {
-      coord = (await geocodeQuery(query)) ?? undefined;
-    }
-    window.open(buildUrl(appId, query, coord), "_blank", "noopener,noreferrer");
+    window.open(buildUrl(appId, query, coord ?? undefined), "_blank", "noopener,noreferrer");
     setQuery(null);
   };
 
@@ -130,10 +121,7 @@ export function MapAppPickerProvider({ children }: { children: React.ReactNode }
             ))}
           </div>
 
-          <div
-            aria-hidden
-            style={{ height: "calc(env(safe-area-inset-bottom) + 0.5rem)" }}
-          />
+          <div aria-hidden style={{ height: "calc(env(safe-area-inset-bottom) + 0.5rem)" }} />
         </SheetContent>
       </Sheet>
     </MapAppPickerContext.Provider>

@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { LocationAutocomplete } from "@/components/shared/LocationAutocomplete";
-import { GoogleMapsIcon, CityMapperIcon } from "@/components/shared/MapAppIcons";
+import { GoogleMapsIcon, WazeIcon, CityMapperIcon } from "@/components/shared/MapAppIcons";
 import { cn } from "@/lib/utils";
 import type { ItineraryItem, JourneyMode, Participant } from "@/types";
 import type { ItineraryFormValues } from "./ItineraryItemForm";
@@ -342,12 +342,12 @@ export function JourneyForm({
                   </button>
                   {canAutoRoute && mode === "car" && (
                     <a
-                      href={`https://waze.com/ul?navigate=yes&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`}
+                      href={buildWazeUrl(to, coords.to)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold bg-foreground/8 text-amber-400 hover:bg-foreground/12 active:scale-95 transition-all"
+                      className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold bg-foreground/8 text-slate-200 hover:bg-foreground/12 active:scale-95 transition-all"
                     >
-                      <Car size={14} />
+                      <WazeIcon size={18} />
                       Waze
                     </a>
                   )}
@@ -376,24 +376,38 @@ export function JourneyForm({
               <div className="space-y-3">
                 {from.trim().length > 2 && to.trim().length > 2 && (
                   <div className="flex gap-2 flex-wrap">
-                    <a
-                      href={buildGoogleMapsUrl(from, to, mode)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-sm font-semibold bg-foreground/8 text-slate-200 hover:bg-foreground/12 active:scale-95 transition-all"
-                    >
-                      <GoogleMapsIcon size={18} />
-                      Google Maps
-                    </a>
-                    <a
-                      href={buildCityMapperUrl(from, to, coords.from, coords.to)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-sm font-semibold bg-foreground/8 text-slate-200 hover:bg-foreground/12 active:scale-95 transition-all"
-                    >
-                      <CityMapperIcon size={18} />
-                      CityMapper
-                    </a>
+                    {mode === "plane" ? (
+                      <a
+                        href={`https://www.google.com/travel/flights?hl=fr&q=${encodeURIComponent(`vols ${from} ${to}`)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-sm font-semibold bg-foreground/8 text-slate-200 hover:bg-foreground/12 active:scale-95 transition-all"
+                      >
+                        <GoogleMapsIcon size={18} />
+                        Google Flights
+                      </a>
+                    ) : (
+                      <>
+                        <a
+                          href={buildGoogleMapsUrl(from, to, coords.from, coords.to)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-sm font-semibold bg-foreground/8 text-slate-200 hover:bg-foreground/12 active:scale-95 transition-all"
+                        >
+                          <GoogleMapsIcon size={18} />
+                          Google Maps
+                        </a>
+                        <a
+                          href={buildCityMapperUrl(from, to, coords.from, coords.to)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-sm font-semibold bg-foreground/8 text-slate-200 hover:bg-foreground/12 active:scale-95 transition-all"
+                        >
+                          <CityMapperIcon size={18} />
+                          CityMapper
+                        </a>
+                      </>
+                    )}
                   </div>
                 )}
                 <p className="text-xs text-slate-500">
@@ -458,18 +472,28 @@ export function JourneyForm({
   );
 }
 
-function buildGoogleMapsUrl(from: string, to: string, mode: JourneyMode): string {
-  const f = encodeURIComponent(from);
-  const t = encodeURIComponent(to);
-  const travelmode = mode === "plane" ? "driving" : "transit";
-  return `https://www.google.com/maps/dir/?api=1&origin=${f}&destination=${t}&travelmode=${travelmode}`;
+type Coord = { lat: number; lon: number };
+
+function buildGoogleMapsUrl(
+  from: string, to: string,
+  fromCoord: Coord | null, toCoord: Coord | null,
+): string {
+  const travelmode = "transit";
+  if (fromCoord && toCoord) {
+    return `https://www.google.com/maps/dir/?api=1&origin=${fromCoord.lat},${fromCoord.lon}&destination=${toCoord.lat},${toCoord.lon}&travelmode=${travelmode}`;
+  }
+  return `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(from)}&destination=${encodeURIComponent(to)}&travelmode=${travelmode}`;
+}
+
+function buildWazeUrl(to: string, toCoord: Coord | null): string {
+  // Waze routes from GPS position — only destination can be specified via URL
+  if (toCoord) return `https://waze.com/ul?ll=${toCoord.lat},${toCoord.lon}&navigate=yes`;
+  return `https://waze.com/ul?q=${encodeURIComponent(to)}&navigate=yes`;
 }
 
 function buildCityMapperUrl(
-  fromName: string,
-  toName: string,
-  fromCoord: { lat: number; lon: number } | null,
-  toCoord: { lat: number; lon: number } | null,
+  fromName: string, toName: string,
+  fromCoord: Coord | null, toCoord: Coord | null,
 ): string {
   const base = "https://citymapper.com/directions";
   const startname = encodeURIComponent(fromName);
