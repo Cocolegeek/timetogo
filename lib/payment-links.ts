@@ -42,8 +42,8 @@ export function buildShareText({
   } else {
     lines.push(`Rembourser ${recipientName}`);
   }
-  if (iban) lines.push(`IBAN : ${formatIban(iban)}`);
-  if (phone) lines.push(`Tél : ${phone}`);
+  if (iban) lines.push(formatIban(iban));
+  if (phone) lines.push(phone);
   return lines.join("\n");
 }
 

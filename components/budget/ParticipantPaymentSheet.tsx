@@ -64,7 +64,7 @@ export function ParticipantPaymentSheet({
                   icon={<CreditCard size={14} />}
                   label="IBAN"
                   display={formatIban(info.iban)}
-                  raw={info.iban}
+                  raw={formatIban(info.iban)}
                   monospace
                 />
               )}
