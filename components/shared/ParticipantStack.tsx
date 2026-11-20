@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { isImageAvatar } from "@/lib/avatars";
 import type { Participant } from "@/types";
 
 interface ParticipantStackProps {
@@ -52,14 +53,19 @@ export function ParticipantStack({
             key={p.id}
             title={p.name}
             className={cn(
-              "rounded-full flex items-center justify-center font-bold text-white ring-2",
+              "rounded-full flex items-center justify-center overflow-hidden font-bold text-white ring-2",
               cfg.box,
               cfg.text,
               ringColor
             )}
             style={{ backgroundColor: p.color }}
           >
-            {p.name.charAt(0).toUpperCase()}
+            {isImageAvatar(p.avatar) ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={p.avatar} alt="" referrerPolicy="no-referrer" className="h-full w-full object-cover" draggable={false} />
+            ) : (
+              p.name.charAt(0).toUpperCase()
+            )}
           </span>
         ))}
         {overflow > 0 && (

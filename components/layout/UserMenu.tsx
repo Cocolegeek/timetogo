@@ -1,8 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { LogOut, Settings } from "lucide-react";
+import { CloudUpload, LogOut, Settings } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
+import { useAuthUser } from "@/hooks/useAuthUser";
+import { UserAvatar } from "@/components/shared/UserAvatar";
+import { GuestSignOutDialog } from "@/components/auth/GuestSignOutDialog";
+import { profileAvatar } from "@/lib/avatars";
+import { startGoogleUpgrade } from "@/lib/auth/guest";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,58 +19,59 @@ import {
 
 export function UserMenu() {
   const { profile, signOut } = useProfile();
+  const { isAnonymous } = useAuthUser();
   const router = useRouter();
-
-  const initials = profile?.name ? profile.name.charAt(0).toUpperCase() : "?";
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        className="size-10 overflow-hidden rounded-full p-0 ring-1 ring-border transition-shadow outline-none hover:ring-foreground/20 focus-visible:ring-2 focus-visible:ring-ring"
-        aria-label="Menu utilisateur"
-      >
-        {profile?.custom_avatar_url || profile?.avatar_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={profile.custom_avatar_url ?? profile.avatar_url ?? ""}
-            alt={profile.name ?? "avatar"}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <span className="flex h-full w-full items-center justify-center bg-foreground font-display text-sm font-bold text-background">
-            {initials}
-          </span>
-        )}
-      </DropdownMenuTrigger>
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          className="relative size-10 rounded-full p-0 ring-1 ring-border transition-shadow outline-none hover:ring-foreground/20 focus-visible:ring-2 focus-visible:ring-ring"
+          aria-label="Menu utilisateur"
+        >
+          <UserAvatar src={profileAvatar(profile)} name={profile?.name} size={40} />
+          {isAnonymous && (
+            <span className="absolute -right-0.5 -bottom-0.5 size-3 rounded-full bg-amber-400 ring-2 ring-background" aria-hidden="true" />
+          )}
+        </DropdownMenuTrigger>
 
-      <DropdownMenuContent
-        align="end"
-        className="min-w-56"
-      >
-        {profile && (
-          <>
-            <div className="px-3 py-2.5">
-              <p className="truncate font-semibold text-foreground">
-                {profile.name ?? "Utilisateur"}
-              </p>
-              <p className="truncate text-sm text-muted-foreground">{profile.email}</p>
-            </div>
-            <DropdownMenuSeparator />
-          </>
-        )}
+        <DropdownMenuContent align="end" className="min-w-60">
+          {profile && (
+            <>
+              <div className="flex items-center gap-3 px-3 py-2.5">
+                <UserAvatar src={profileAvatar(profile)} name={profile.name} size={36} />
+                <div className="min-w-0">
+                  <p className="truncate font-semibold text-foreground">{profile.name ?? (isAnonymous ? "Invité" : "Utilisateur")}</p>
+                  <p className="truncate text-sm text-muted-foreground">{isAnonymous ? "Compte invité" : profile.email}</p>
+                </div>
+              </div>
+              <DropdownMenuSeparator />
+            </>
+          )}
 
-        <DropdownMenuItem onClick={() => router.push("/settings")}>
-          <Settings />
-          Paramètres
-        </DropdownMenuItem>
+          {isAnonymous && (
+            <DropdownMenuItem onClick={() => void startGoogleUpgrade()}>
+              <CloudUpload />
+              Sauvegarder avec Google
+            </DropdownMenuItem>
+          )}
 
-        <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => router.push("/settings")}>
+            <Settings />
+            Paramètres
+          </DropdownMenuItem>
 
-        <DropdownMenuItem onClick={signOut} variant="destructive">
-          <LogOut />
-          Se déconnecter
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+          <DropdownMenuSeparator />
+
+          <DropdownMenuItem onClick={() => (isAnonymous ? setConfirmOpen(true) : signOut())} variant="destructive">
+            <LogOut />
+            Se déconnecter
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <GuestSignOutDialog open={confirmOpen} onOpenChange={setConfirmOpen} onSignOut={signOut} />
+    </>
   );
 }

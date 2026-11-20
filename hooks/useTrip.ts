@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { generateShareCode } from "@/lib/trip-share";
 import { useRevalidateOnFocus } from "@/hooks/useRevalidateOnFocus";
+import { syncMyParticipantAvatars } from "@/lib/avatar-sync";
 import type { Trip, TripType, Participant } from "@/types";
 
 function rowsToTrip(
@@ -126,6 +127,7 @@ export function useTrips() {
 
     if (rpcError || !tripId) throw rpcError ?? new Error("Trip creation failed");
 
+    await syncMyParticipantAvatars();
     await fetchTrips();
     return tripId as string;
   };
@@ -254,6 +256,7 @@ export function useTrip(id: string) {
       p_participant_id: participantId,
     });
     if (error) throw error;
+    await syncMyParticipantAvatars();
     await Promise.all([fetchTrip(), fetchClaims()]);
   };
 

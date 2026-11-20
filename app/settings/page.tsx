@@ -16,6 +16,12 @@ import {
   SunMoon,
 } from "lucide-react";
 import { AppHeader } from "@/components/layout/AppHeader";
+import { AvatarPicker } from "@/components/shared/AvatarPicker";
+import { UserAvatar } from "@/components/shared/UserAvatar";
+import { GuestUpgradeCard } from "@/components/auth/GuestUpgradeCard";
+import { GuestSignOutDialog } from "@/components/auth/GuestSignOutDialog";
+import { useAuthUser } from "@/hooks/useAuthUser";
+import { profileAvatar } from "@/lib/avatars";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { SectionLabel } from "@/components/shared/SectionLabel";
 import { SegmentedControl } from "@/components/shared/SegmentedControl";
@@ -33,6 +39,8 @@ import { useUserId } from "@/hooks/useUserId";
 export default function SettingsPage() {
   const { profile, loading, updateProfile, signOut } = useProfile();
   const { preference, setPreference } = useTheme();
+  const { isAnonymous } = useAuthUser();
+  const [confirmSignOut, setConfirmSignOut] = useState(false);
   const userId = useUserId();
 
   const [name, setName] = useState("");
@@ -130,12 +138,17 @@ export default function SettingsPage() {
                   ) : (
                     <div className="w-[88px] h-[88px] rounded-full bg-foreground/8" />
                   )}
-                  <p className="text-sm text-slate-500">
-                    {profile?.custom_avatar_url
-                      ? "Photo personnalisée"
-                      : "Photo synchronisée depuis Google"}
-                  </p>
+                  <p className="text-sm text-muted-foreground">Touche la photo pour en importer une</p>
                 </motion.div>
+
+                <GlassCard className="space-y-3">
+                  <p className="text-sm font-semibold">Ou choisis un avatar</p>
+                  <AvatarPicker
+                    value={profileAvatar(profile)}
+                    googleUrl={profile?.avatar_url}
+                    onChange={(url) => updateProfile({ custom_avatar_url: url })}
+                  />
+                </GlassCard>
 
                 {/* Form */}
                 <GlassCard className="space-y-4">
@@ -284,36 +297,26 @@ export default function SettingsPage() {
 
               {/* ─── Section Compte ──────────────────────────────────── */}
               <Section label="Compte">
+                {isAnonymous && <GuestUpgradeCard />}
                 <GlassCard padding={false}>
                   <div className="flex items-center gap-3 border-b border-border px-4 py-3.5">
-                    {profile?.custom_avatar_url || profile?.avatar_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={profile.custom_avatar_url ?? profile.avatar_url ?? ""}
-                        alt=""
-                        className="w-10 h-10 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex size-10 items-center justify-center rounded-full bg-primary font-display font-bold text-primary-foreground">
-                        {(profile?.name ?? "?").charAt(0).toUpperCase()}
-                      </div>
-                    )}
+                    <UserAvatar src={profileAvatar(profile)} name={profile?.name} size={40} />
                     <div className="flex-1 min-w-0">
                       <p className="text-base text-slate-100 font-semibold truncate">
                         {profile?.name ?? "Utilisateur"}
                       </p>
                       <p className="text-sm text-slate-500 truncate">
-                        {profile?.email}
+                        {isAnonymous ? "Données sur cet appareil uniquement" : profile?.email}
                       </p>
                     </div>
                     <span className="rounded-full bg-foreground/[0.06] px-2.5 py-1 text-xs font-semibold text-muted-foreground">
-                      Google
+                      {isAnonymous ? "Invité" : "Google"}
                     </span>
                   </div>
 
                   <button
                     type="button"
-                    onClick={signOut}
+                    onClick={() => (isAnonymous ? setConfirmSignOut(true) : signOut())}
                     className="flex w-full items-center gap-3 px-4 py-3.5 text-red-400 transition-colors hover:bg-red-500/[0.06] active:bg-red-500/10"
                   >
                     <div className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-red-500/12">
@@ -328,6 +331,7 @@ export default function SettingsPage() {
             </Stagger>
           )}
         </main>
+        <GuestSignOutDialog open={confirmSignOut} onOpenChange={setConfirmSignOut} onSignOut={signOut} />
       </div>
     </>
   );

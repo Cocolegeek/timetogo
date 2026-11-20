@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { syncMyParticipantAvatars } from "@/lib/avatar-sync";
 import type { Profile } from "@/types";
 
 export function useProfile() {
@@ -42,7 +43,11 @@ export function useProfile() {
 
     setProfile(prev => prev ? { ...prev, ...updates } : prev);
     const { error } = await supabase.from("profiles").update(updates).eq("id", user.id);
-    if (error) await fetchProfile();
+    if (error) {
+      await fetchProfile();
+      return;
+    }
+    if (updates.custom_avatar_url !== undefined) await syncMyParticipantAvatars();
   };
 
   const signOut = async (): Promise<void> => {

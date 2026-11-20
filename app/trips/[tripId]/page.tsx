@@ -40,6 +40,7 @@ import { EASE_OUT } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import { isVoyage, tripFeatures } from "@/lib/trip-features";
 import type { ExpenseCategory } from "@/types";
+import { PARTICIPANT_COLORS } from "@/lib/participant-colors";
 
 const BudgetEditDialog = dynamic(
   () => import("@/components/trips/BudgetEditDialog").then((m) => ({ default: m.BudgetEditDialog })),
@@ -57,7 +58,6 @@ const CATEGORY_FILL: Record<ExpenseCategory, string> = {
   reimbursement: "bg-foreground/20",
 };
 
-const PARTICIPANT_COLORS = ["#635BFF", "#0F7C8A", "#1E5AA8", "#167A4F", "#C98A12", "#D14D72", "#7A4BC2", "#3D3A4F"];
 
 interface TripDashboardProps {
   params: Promise<{ tripId: string }>;
@@ -128,7 +128,7 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
             <TripCover seed={trip.id} className="h-48" />
           )}
           {status.kind !== "permanent" && (
-            <span className="absolute top-4 left-4 inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-[0.8125rem] font-semibold text-[#1C1840] shadow-card backdrop-blur">
+            <span className="absolute top-4 left-4 inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-[0.8125rem] font-semibold text-[#1A1D24] shadow-card backdrop-blur">
               {status.kind === "ongoing" && <span className="size-2 rounded-full bg-emerald-500" />}
               {status.label}
             </span>

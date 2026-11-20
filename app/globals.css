@@ -60,7 +60,7 @@ html, body {
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.22 0.005 280);
 
-  --primary: #635bff;
+  --primary: oklch(0.2 0.006 280);
   --primary-foreground: oklch(1 0 0);
   --secondary: oklch(0.945 0.006 280);
   --secondary-foreground: oklch(0.25 0.006 280);
@@ -72,9 +72,9 @@ html, body {
   --destructive: oklch(0.55 0.21 27);
   --border: oklch(0.2 0.005 280 / 9%);
   --input: oklch(0.2 0.005 280 / 12%);
-  --ring: oklch(0.578 0.235 279 / 55%);
+  --ring: oklch(0.2 0.006 280 / 40%);
 
-  --chart-1: #635bff;
+  --chart-1: oklch(0.2 0.006 280);
   --chart-2: oklch(0.84 0.15 85);
   --chart-3: oklch(0.52 0.13 155);
   --chart-4: oklch(0.48 0.15 255);
@@ -84,12 +84,12 @@ html, body {
 
   --sidebar: oklch(1 0 0);
   --sidebar-foreground: oklch(0.22 0.005 280);
-  --sidebar-primary: #635bff;
+  --sidebar-primary: oklch(0.2 0.006 280);
   --sidebar-primary-foreground: oklch(1 0 0);
   --sidebar-accent: oklch(0.95 0.012 280);
   --sidebar-accent-foreground: oklch(0.22 0.005 280);
   --sidebar-border: oklch(0.90 0.015 280);
-  --sidebar-ring: oklch(0.578 0.235 279 / 55%);
+  --sidebar-ring: var(--ring);
 
   /* Surfaces (kept under the historical glass-* names) */
   --glass-bg: oklch(1 0 0);
@@ -117,8 +117,8 @@ html, body {
   --popover: oklch(0.225 0.005 280);
   --popover-foreground: oklch(0.96 0.006 280);
 
-  --primary: #635bff;
-  --primary-foreground: oklch(1 0 0);
+  --primary: oklch(0.965 0.005 280);
+  --primary-foreground: oklch(0.17 0.006 280);
   --secondary: oklch(0.255 0.005 280);
   --secondary-foreground: oklch(0.90 0.006 280);
   --muted: oklch(0.255 0.005 280);
@@ -129,9 +129,9 @@ html, body {
   --destructive: oklch(0.65 0.20 27);
   --border: oklch(1 0 0 / 9%);
   --input: oklch(1 0 0 / 13%);
-  --ring: oklch(0.65 0.2 279 / 60%);
+  --ring: oklch(1 0 0 / 45%);
 
-  --chart-1: oklch(0.65 0.2 279);
+  --chart-1: oklch(0.965 0.005 280);
   --chart-2: oklch(0.82 0.14 80);
   --chart-3: oklch(0.66 0.14 155);
   --chart-4: oklch(0.66 0.14 255);
@@ -139,12 +139,12 @@ html, body {
 
   --sidebar: oklch(0.22 0.008 280);
   --sidebar-foreground: oklch(0.96 0.006 280);
-  --sidebar-primary: #635bff;
-  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-primary: oklch(0.965 0.005 280);
+  --sidebar-primary-foreground: oklch(0.17 0.006 280);
   --sidebar-accent: oklch(0.26 0.008 280);
   --sidebar-accent-foreground: oklch(0.96 0.006 280);
   --sidebar-border: oklch(1 0 0 / 11%);
-  --sidebar-ring: oklch(0.65 0.2 279 / 60%);
+  --sidebar-ring: var(--ring);
 
   --glass-bg: oklch(0.205 0.005 280);
   --glass-strong-bg: oklch(0.225 0.005 280);
@@ -168,23 +168,24 @@ html, body {
 
 /* Brand accent: one color across the whole app */
 :root {
-  --accent-h: 279;
-  --accent-c: 0.235;
-  --accent-500: #635bff;
-  --accent-400: oklch(0.52 0.24 279);
-  --accent-300: oklch(0.46 0.22 279);
-  --accent-soft: oklch(0.578 0.235 279 / 11%);
-  --accent-border: oklch(0.578 0.235 279 / 28%);
-  --accent-glow: oklch(0.578 0.235 279 / 45%);
-  --primary-text: oklch(0.52 0.24 279);
+  --accent-h: 280;
+  --accent-c: 0.006;
+  --accent-500: oklch(0.2 0.006 280);
+  --accent-400: oklch(0.2 0.006 280);
+  --accent-300: oklch(0.36 0.008 280);
+  --accent-soft: oklch(0.2 0.006 280 / 7%);
+  --accent-border: oklch(0.2 0.006 280 / 18%);
+  --accent-glow: oklch(0.2 0.006 280 / 32%);
+  --primary-text: oklch(0.2 0.006 280);
 }
 .dark {
-  --accent-500: #6f68ff;
-  --accent-400: #8f8aff;
-  --accent-300: #a5a1ff;
-  --accent-soft: oklch(0.65 0.2 279 / 18%);
-  --accent-border: oklch(0.65 0.2 279 / 35%);
-  --primary-text: #a5a1ff;
+  --accent-500: oklch(0.965 0.005 280);
+  --accent-400: oklch(0.965 0.005 280);
+  --accent-300: oklch(0.82 0.006 280);
+  --accent-soft: oklch(1 0 0 / 9%);
+  --accent-border: oklch(1 0 0 / 20%);
+  --accent-glow: oklch(0 0 0 / 55%);
+  --primary-text: oklch(0.965 0.005 280);
 }
 
 /* ── Surfaces ──────────────────────────────────────────────────────── */
@@ -314,19 +315,19 @@ html, body {
   --color-slate-900: oklch(0.95 0.01 280);
   --color-slate-950: oklch(0.97 0.008 280);
 
-  --color-indigo-100: oklch(0.32 0.16 279);
-  --color-indigo-200: oklch(0.38 0.19 279);
-  --color-indigo-300: oklch(0.45 0.22 279);
-  --color-indigo-400: oklch(0.52 0.24 279);
-  --color-indigo-500: oklch(0.578 0.235 279);
-  --color-indigo-600: oklch(0.5 0.22 279);
-  --color-indigo-700: oklch(0.43 0.19 279);
-  --color-violet-100: oklch(0.32 0.16 279);
-  --color-violet-200: oklch(0.38 0.19 279);
-  --color-violet-300: oklch(0.45 0.22 279);
-  --color-violet-400: oklch(0.52 0.24 279);
-  --color-violet-500: oklch(0.578 0.235 279);
-  --color-violet-600: oklch(0.5 0.22 279);
+  --color-indigo-100: oklch(0.22 0.006 280);
+  --color-indigo-200: oklch(0.28 0.006 280);
+  --color-indigo-300: oklch(0.36 0.008 280);
+  --color-indigo-400: oklch(0.46 0.008 280);
+  --color-indigo-500: oklch(0.2 0.006 280);
+  --color-indigo-600: oklch(0.2 0.006 280);
+  --color-indigo-700: oklch(0.16 0.006 280);
+  --color-violet-100: oklch(0.34 0.17 295);
+  --color-violet-200: oklch(0.4 0.19 295);
+  --color-violet-300: oklch(0.46 0.2 295);
+  --color-violet-400: oklch(0.52 0.21 295);
+  --color-violet-500: oklch(0.56 0.21 295);
+  --color-violet-600: oklch(0.5 0.2 295);
 
   --color-emerald-100: oklch(0.30 0.16 162);
   --color-emerald-200: oklch(0.36 0.18 162);
@@ -372,19 +373,13 @@ html, body {
   --color-slate-900: oklch(0.22 0.008 280);
   --color-slate-950: oklch(0.17 0.006 280);
 
-  --color-indigo-100: oklch(0.94 0.04 279);
-  --color-indigo-200: oklch(0.88 0.08 279);
-  --color-indigo-300: oklch(0.8 0.12 279);
-  --color-indigo-400: oklch(0.74 0.14 279);
-  --color-indigo-500: oklch(0.65 0.2 279);
-  --color-indigo-600: oklch(0.578 0.235 279);
-  --color-indigo-700: oklch(0.5 0.22 279);
-  --color-violet-100: oklch(0.94 0.04 279);
-  --color-violet-200: oklch(0.88 0.08 279);
-  --color-violet-300: oklch(0.8 0.12 279);
-  --color-violet-400: oklch(0.74 0.14 279);
-  --color-violet-500: oklch(0.65 0.2 279);
-  --color-violet-600: oklch(0.578 0.235 279);
+  --color-indigo-100: oklch(0.96 0.004 280);
+  --color-indigo-200: oklch(0.9 0.005 280);
+  --color-indigo-300: oklch(0.82 0.006 280);
+  --color-indigo-400: oklch(0.74 0.006 280);
+  --color-indigo-500: oklch(0.965 0.005 280);
+  --color-indigo-600: oklch(0.9 0.005 280);
+  --color-indigo-700: oklch(0.8 0.006 280);
 }
 
 /* ── Base ─────────────────────────────────────────────────────────────── */
@@ -500,8 +495,8 @@ html, body {
   }
 }
 
-/* Brand text colour: the logo blurple is a fill colour; text uses a shade
- * that keeps 4.5:1 on the page background in both themes. */
+/* Interface is monochrome (ink on paper): "primary" = ink in light,
+ * paper in dark. Colour is reserved for meaning and illustrations. */
 .text-primary {
   color: var(--primary-text);
 }

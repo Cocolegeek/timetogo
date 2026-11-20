@@ -162,34 +162,34 @@ export default function BudgetPage({ params }: BudgetPageProps) {
           <circle cx="100" cy="100" r="64" fill="none" stroke="currentColor" strokeWidth="2" />
           <circle cx="100" cy="100" r="32" fill="none" stroke="currentColor" strokeWidth="2" />
         </svg>
-        <p className="text-sm font-medium text-white/75">Total dépensé</p>
+        <p className="text-sm font-medium text-primary-foreground/70">Total dépensé</p>
         <NumberTicker
           value={totalSpent}
           format={formatMoney}
           className="tabular mt-1 block font-display text-[2.75rem] leading-none font-extrabold tracking-[-0.035em]"
         />
-        <dl className="mt-5 grid grid-cols-2 gap-3 border-t border-white/15 pt-4">
+        <dl className="mt-5 grid grid-cols-2 gap-3 border-t border-primary-foreground/15 pt-4">
           {myBalance ? (
             <>
               <div>
-                <dt className="text-xs font-medium text-white/70">Ta part</dt>
+                <dt className="text-xs font-medium text-primary-foreground/65">Ta part</dt>
                 <dd className="tabular mt-0.5 text-lg font-semibold">{formatMoney(myBalance.owes)}</dd>
               </div>
               <div>
-                <dt className="text-xs font-medium text-white/70">Tu as payé</dt>
+                <dt className="text-xs font-medium text-primary-foreground/65">Tu as payé</dt>
                 <dd className="tabular mt-0.5 text-lg font-semibold">{formatMoney(myBalance.paid)}</dd>
               </div>
             </>
           ) : (
             <>
               <div>
-                <dt className="text-xs font-medium text-white/70">Par personne</dt>
+                <dt className="text-xs font-medium text-primary-foreground/65">Par personne</dt>
                 <dd className="tabular mt-0.5 text-lg font-semibold">
                   {formatMoney(participants.length ? totalSpent / participants.length : 0)}
                 </dd>
               </div>
               <div>
-                <dt className="text-xs font-medium text-white/70">Dépenses</dt>
+                <dt className="text-xs font-medium text-primary-foreground/65">Dépenses</dt>
                 <dd className="tabular mt-0.5 text-lg font-semibold">{expenses.length}</dd>
               </div>
             </>

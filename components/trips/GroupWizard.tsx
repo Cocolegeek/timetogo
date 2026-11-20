@@ -13,11 +13,8 @@ import { Label } from "@/components/ui/label";
 import { groupSchema, type GroupFormValues, type GroupDateMode } from "@/lib/budget/schemas";
 import { useTrips } from "@/hooks/useTrip";
 import { cn } from "@/lib/utils";
+import { PARTICIPANT_COLORS } from "@/lib/participant-colors";
 
-const PARTICIPANT_COLORS = [
-  "#6366f1", "#7c3aed", "#0ea5e9", "#10b981",
-  "#f59e0b", "#ef4444", "#ec4899", "#14b8a6",
-];
 
 const EMOJIS = ["💰", "🎂", "🎉", "🍻", "🏠", "🎁", "🤝", "📚"];
 const CURRENCIES = ["EUR", "USD", "GBP", "JPY", "CHF", "CAD"];

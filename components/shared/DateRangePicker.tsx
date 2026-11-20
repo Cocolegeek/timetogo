@@ -209,11 +209,11 @@ export function DateRangePicker({ startDate, endDate, onChange }: DateRangePicke
                       // Range fill (no border-radius on middle cells)
                       inRange && "bg-section-tint text-slate-100",
                       // Start cap
-                      isStart && "bg-section text-white rounded-l-full shadow-sm",
+                      isStart && "bg-primary text-primary-foreground rounded-l-full shadow-sm",
                       // End cap
-                      isEnd && "bg-section text-white rounded-r-full shadow-sm",
+                      isEnd && "bg-primary text-primary-foreground rounded-r-full shadow-sm",
                       // Single day (start = end)
-                      isSingle && "bg-section text-white rounded-full shadow-sm",
+                      isSingle && "bg-primary text-primary-foreground rounded-full shadow-sm",
                       // Default
                       !isStart && !isEnd && !isSingle && !inRange && [
                         "rounded-full hover:bg-foreground/10",

@@ -11,7 +11,8 @@ Application de planification de voyage collaborative — budget partagé, planni
 
 ## Fonctionnalités
 
-- Authentification Google
+- Authentification Google, ou mode invité sans compte (sauvegarde ultérieure vers Google sans perte de données)
+- Avatars : photo Google ou bibliothèque de 16 avatars illustrés, choisis à l'arrivée
 - **Voyages** : destination, dates, participants, devise, budget, planning jour par jour, menus
 - **Groupes** (style Tricount) : budget partagé sans dates ni destination
 - Suivi des dépenses avec répartition (équitable / pourcentage / montant fixe)
@@ -20,7 +21,8 @@ Application de planification de voyage collaborative — budget partagé, planni
 - Planning d'itinéraire jour par jour
 - Menus (petit-déj, déjeuner, dîner) avec liste de courses
 - Partage par code 6 caractères — les contributeurs peuvent tout voir et modifier
-- Profil utilisateur (nom, photo, avatar custom)
+- Profil utilisateur (nom, photo, avatar)
+- Recherche dans un voyage, ajout rapide, annulation des suppressions
 - PWA installable (iOS + Android)
 
 ## Lancer en local
@@ -35,6 +37,12 @@ cp .env.local.example .env.local
 # 3. Lancer
 npm run dev
 ```
+
+### Supabase : mode invité
+
+Appliquer `lib/supabase/migrations/021_guest_accounts.sql`, puis dans le dashboard Supabase
+(Authentication) activer **Allow anonymous sign-ins** et **Allow manual linking**.
+Un CAPTCHA (Attack Protection) est recommandé pour limiter la création de comptes invités.
 
 Ouvre http://localhost:3000.
 

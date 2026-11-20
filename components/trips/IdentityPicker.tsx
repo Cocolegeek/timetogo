@@ -7,6 +7,7 @@ import { ParticipantAvatar } from "@/components/shared/ParticipantAvatar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Participant } from "@/types";
+import { PARTICIPANT_COLORS } from "@/lib/participant-colors";
 
 export interface IdentityClaim {
   participantId: string;
@@ -36,13 +37,9 @@ interface IdentityPickerProps {
   currentUserId?: string | null;
 }
 
-const FALLBACK_COLORS = [
-  "#6366f1", "#7c3aed", "#0ea5e9", "#10b981",
-  "#f59e0b", "#ef4444", "#ec4899", "#14b8a6",
-];
 
 function nextColor(existing: Participant[]): string {
-  return FALLBACK_COLORS[existing.length % FALLBACK_COLORS.length];
+  return PARTICIPANT_COLORS[existing.length % PARTICIPANT_COLORS.length];
 }
 
 export function IdentityPicker({

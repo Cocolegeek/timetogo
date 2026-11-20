@@ -24,6 +24,8 @@ import { Spinner } from "@/components/shared/Spinner";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { useTrips } from "@/hooks/useTrip";
 import { useProfile } from "@/hooks/useProfile";
+import { useAuthUser } from "@/hooks/useAuthUser";
+import { GuestUpgradeCard } from "@/components/auth/GuestUpgradeCard";
 import { daysUntil } from "@/lib/format-date";
 import { isVoyage } from "@/lib/trip-features";
 import type { VoyageTrip, GroupTrip, Trip } from "@/types";
@@ -36,6 +38,7 @@ import { springSoft } from "@/lib/motion";
 export default function TripsPage() {
   const { trips, loading, refetch: refetchTrips, deleteTrip } = useTrips();
   const { profile } = useProfile();
+  const { isAnonymous } = useAuthUser();
 
   /** Sort voyages by status (en cours → planifié → passé), then chronological */
   const sortedVoyages = useMemo(() => {
@@ -132,6 +135,12 @@ export default function TripsPage() {
                   title="Tes voyages"
                 />
               </StaggerItem>
+
+              {isAnonymous && (
+                <StaggerItem>
+                  <GuestUpgradeCard compact />
+                </StaggerItem>
+              )}
 
               {isEmpty ? (
                 <StaggerItem>

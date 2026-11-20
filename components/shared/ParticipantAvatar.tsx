@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { isImageAvatar } from "@/lib/avatars";
 import type { Participant } from "@/types";
 
 interface ParticipantAvatarProps {
@@ -29,14 +30,19 @@ export function ParticipantAvatar({
   return (
     <div
       className={cn(
-        "rounded-full flex items-center justify-center font-semibold text-white shrink-0 ring-2 ring-card",
+        "rounded-full flex items-center justify-center overflow-hidden font-semibold text-white shrink-0 ring-2 ring-card",
         SIZES[size],
         className
       )}
       style={{ backgroundColor: participant.color }}
       title={participant.name}
     >
-      {participant.avatar ?? initials}
+      {isImageAvatar(participant.avatar) ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={participant.avatar} alt="" referrerPolicy="no-referrer" className="h-full w-full rounded-full object-cover" draggable={false} />
+      ) : (
+        participant.avatar ?? initials
+      )}
     </div>
   );
 }

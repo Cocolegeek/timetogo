@@ -67,7 +67,7 @@ function TripActions({
         className={cn(
           "flex size-10 items-center justify-center rounded-full outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring",
           floating
-            ? "bg-white/90 text-[#1C1840] shadow-card backdrop-blur hover:bg-white"
+            ? "bg-white/90 text-[#1A1D24] shadow-card backdrop-blur hover:bg-white"
             : "text-muted-foreground hover:bg-foreground/[0.06] hover:text-foreground"
         )}
         aria-label={`Actions pour ${trip.name}`}
@@ -121,7 +121,7 @@ export function TripCard({ trip, onEdit, onDelete, onShare, variant = "row" }: T
             <span
               className={cn(
                 "absolute top-4 left-4 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[0.8125rem] font-semibold shadow-card backdrop-blur",
-                "bg-white/90 text-[#1C1840]"
+                "bg-white/90 text-[#1A1D24]"
               )}
             >
               {status.kind === "ongoing" && (

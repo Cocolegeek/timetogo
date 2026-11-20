@@ -13,7 +13,9 @@ import { EASE_OUT } from "@/lib/motion";
 import { IdentityPicker } from "@/components/trips/IdentityPicker";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
+import { syncMyParticipantAvatars } from "@/lib/avatar-sync";
 import type { Participant } from "@/types";
+import { PARTICIPANT_COLORS } from "@/lib/participant-colors";
 
 interface TripPreview {
   id: string;
@@ -146,6 +148,7 @@ function JoinContent() {
         p_new_participant_color: null,
       });
       if (rpcError) throw rpcError;
+      await syncMyParticipantAvatars();
       router.push(`/trips/${tripPreview.id}`);
     } catch {
       setError("Impossible de rejoindre l'aventure. Réessaie.");
@@ -154,12 +157,8 @@ function JoinContent() {
   };
 
   const stashNewParticipant = async (name: string) => {
-    const FALLBACK_COLORS = [
-      "#6366f1", "#7c3aed", "#0ea5e9", "#10b981",
-      "#f59e0b", "#ef4444", "#ec4899", "#14b8a6",
-    ];
     const color =
-      FALLBACK_COLORS[(tripPreview?.participants.length ?? 0) % FALLBACK_COLORS.length];
+      PARTICIPANT_COLORS[(tripPreview?.participants.length ?? 0) % PARTICIPANT_COLORS.length];
     const synthetic: Participant = { id: `__pending__${Date.now()}`, name, color };
     setPendingNewName(name);
     if (tripPreview) {
@@ -248,7 +247,7 @@ function TripHero({ trip, badge }: { trip: TripPreview; badge: string }) {
       className="relative overflow-hidden rounded-[1.75rem] shadow-raised"
     >
       <TripCover seed={trip.id} className="h-44" />
-      <span className="absolute top-4 left-4 inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-[0.8125rem] font-semibold text-[#1C1840] shadow-card backdrop-blur">
+      <span className="absolute top-4 left-4 inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-[0.8125rem] font-semibold text-[#1A1D24] shadow-card backdrop-blur">
         {badge}
       </span>
     </motion.div>

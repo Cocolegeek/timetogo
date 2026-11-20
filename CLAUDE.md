@@ -4,7 +4,7 @@
 
 ## Stack
 - **Next.js 16 / React 19** — App Router, TypeScript, no Pages Router
-- **Supabase** — PostgreSQL + RLS + Google OAuth via `@supabase/ssr`
+- **Supabase** — PostgreSQL + RLS + Google OAuth + comptes invités (anonymous sign-in) via `@supabase/ssr`
 - **UI** — shadcn/ui (style: base-nova, primitives restylés) + Tailwind CSS 4 + Framer Motion + Lucide
 - **Forms** — react-hook-form + Zod v4
 - **State** — Custom hooks + local useState (no Redux/Zustand)
@@ -23,8 +23,9 @@ Le projet gère deux types d'entités via la même table `trips`, distinguées p
 ```
 app/
   page.tsx               → redirects to /trips
-  login/page.tsx         → Google OAuth entry
-  auth/callback/route.ts → exchanges OAuth code for session
+  login/page.tsx         → Google OAuth + "Continuer en tant qu'invité" (anonymous sign-in)
+  auth/callback/route.ts → exchanges OAuth code for session; forwards OAuth errors (?error_code=)
+  auth/link/page.tsx     → fin de sauvegarde invité → Google (liaison OK, ou compte existant → fusion)
   consent/page.tsx       → GDPR consent (shown once after first login)
   api/consent/route.ts   → POST: saves consent to DB, redirects to /trips
   api/geocode/route.ts   → GET ?q= → { lat, lon } via Nominatim (server-side)
@@ -40,7 +41,9 @@ app/
       budget/page.tsx    → 2-tab expense tracker (Dépenses / Soldes+Régler)
       menus/page.tsx     → meal planning
       planning/page.tsx  → itinerary builder (étapes + trajets)
+  trips/template.tsx + [tripId]/template.tsx → page transitions (PageTransition)
 proxy.ts                 → middleware: enforces auth on all routes except /login /auth/callback /join /consent
+                           (a guest = anonymous Supabase user, so it passes like any signed-in user)
 ```
 
 ## Component Map
@@ -54,6 +57,8 @@ components/
               ExpenseForm,         — Sheet 92dvh, 3 tabs Infos | Payé par | Pour qui
               ExpenseList,         — grouped by date, sticky headers with daily total
               ParticipantPaymentSheet — bottom sheet: copy IBAN/tél, share via navigator.share
+  auth/       GoogleIcon, GuestUpgradeCard (carte « mode invité » + bouton Sauvegarder avec Google),
+              GuestSignOutDialog (un invité qui se déconnecte perd ses données : on propose de sauvegarder)
   layout/     AppHeader, GlassCard (= carte pleine, plus de verre), MeshGradientBackground (= fond uni),
               PageHeader (grand titre), SectionThemeController, TripAppHeader, TripNav, TripClientProviders,
               UserMenu, VoyouLogo (logo officiel /icons/icon.png)
@@ -62,15 +67,18 @@ components/
   menus/      MealEditDialog
   planning/   ItineraryItemForm,  — full-screen dialog: title/date/type/location/participants
               JourneyForm          — full-screen dialog: from→to, mode, routing/duration, participants
-  shared/     AvatarUpload, ConfirmDeleteDialog, DateRangePicker, DayHeader, DayTabs, EmptyState, Fab,
-              SegmentedControl, Skeleton (Spinner = squelette de page),
+  shared/     AvatarPicker (photo Google + 16 avatars), AvatarUpload, ConfirmDeleteDialog, DateRangePicker,
+              DayHeader, DayTabs, EmptyState, SegmentedControl, Skeleton (Spinner = squelette de page),
+              Toaster (ToastProvider + useToast), UserAvatar (photo / avatar / initiale),
               ImageCropDialog, IosInstallBanner,
               LocationPickerSheet, — tap → 88dvh Sheet with large search + Nominatim results;
                                      exports LocationCoord; onChangeCoord passes lat/lon directly
               MapAppIcons,         — GoogleMapsIcon, WazeIcon, AppleMapsIcon, CityMapperIcon, GoogleFlightsIcon
               MapAppPicker,        — MapAppPickerProvider + useOpenLocation() context hook
               ParticipantAvatar, ParticipantStack, SectionLabel, Spinner
-  trips/      BudgetEditDialog, GroupWizard, IdentityPicker, OnboardingModal, ShareModal,
+  trips/      BudgetEditDialog, GettingStarted, GroupWizard, IdentityPicker,
+              OnboardingModal (bienvenue + « Ta tête dans la bande » : prénom + avatar), ShareModal,
+              TripSearch, UpNextCard,
               TripCard (variants featured | row, tripStatus()), TripCover (illustrations en aplats),
               TripEditDialog, TripEditWrapper, TripWizard
   ui/         shadcn primitives (button, card, dialog, dropdown-menu, input, label,
@@ -87,8 +95,13 @@ useBudget(id)           → { expenses, loading, refetch, addExpense, updateExpe
 useMeals(id)            → { meals, loading, refetch, updateMeal, deleteMeal }
 useItinerary(id)        → { items, loading, refetch, addItem, updateItem, deleteItem }
 useProfile()            → { profile, loading, refetch, updateProfile, signOut }
+                          // updateProfile({ custom_avatar_url }) recopie l'avatar sur mes participants
+useAuthUser()           → { user, loading, isAnonymous }  (suit sign-in / linkIdentity / sign-out)
+useQuickAdd(cb)         → ouvre le formulaire d'une page depuis le « + » global (?new=<kind> ou événement)
+useUndoableDelete(fn)   → { pending, remove(id, label) } suppression différée 5 s + toast « Annuler »
+useScrolled(), useScrollDirection() → état de défilement (en-têtes, barre compacte)
 useDebts(id)            → computed balances/settlements (no direct DB)
-useTheme()              → localStorage toggle (key: "voyou-theme")
+useTheme()              → { preference: system|light|dark, setPreference } (key: "voyou-theme")
 useUserId()             → current user uuid (fast, no extra fetch)
 useRevalidateOnFocus()  → re-calls refetch on window focus (pass a refetch fn)
 ```
@@ -98,10 +111,20 @@ useRevalidateOnFocus()  → re-calls refetch on window focus (pass a refetch fn)
 lib/
   supabase/client.ts    → createBrowserClient() — use in hooks/client components
   supabase/server.ts    → createServerClient() with cookies — use in server components/API routes
-  supabase/schema.sql   → canonical schema with RLS (up to migration 015)
-  supabase/migrations/  → 001..015_*.sql (008: RGPD, 009: multi-payer, 010: trip type,
+  supabase/schema.sql   → canonical schema with RLS (up to migration 021)
+  supabase/migrations/  → 001..021_*.sql (008: RGPD, 009: multi-payer, 010: trip type,
                           011: lock join lookups, 012: join_trip RPC, 013: custom avatars,
-                          014: anon join preview, 015: create_trip_with_owner RPC)
+                          014: anon join preview, 015: create_trip_with_owner RPC, 016: journeys,
+                          017: payment info, 018: identity claim, 019: get_payment_info,
+                          020: multi-dish meals, 021: guest accounts + transfer)
+  auth/guest.ts         → continueAsGuest(), startGoogleUpgrade(), signInToExistingGoogle(),
+                          claimGuestTransfer(), syncProfileFromGoogle()
+  avatars.ts            → AVATAR_PRESETS, presetUrl(), isImageAvatar(), defaultPreset(), profileAvatar()
+  avatar-sync.ts        → syncMyParticipantAvatars() (avatar du profil → participants liés)
+  participant-colors.ts → PARTICIPANT_COLORS (palette unique des participants)
+  itinerary-types.ts    → icône / libellé / teinte par type d'étape et mode de trajet
+  meals/courses.ts      → COURSES (icônes Lucide), COURSE_ORDER
+  motion.ts, haptics.ts → courbes/springs Framer, haptic()
   trip-features.ts      → tripFeatures(trip), isVoyage(t), isGroup(t), TRIP_TYPE_LABELS
   budget/splits.ts      → computeShares(equal|percentage|fixed), buildDefaultSplits()
   budget/debts.ts       → computeBalances(), simplifyDebts() (greedy O(n log n))
@@ -123,12 +146,13 @@ lib/
 
 ## DB Schema (key tables)
 ```
-profiles          id, name, avatar_url, custom_avatar_url, email,
+profiles          id, name, avatar_url (Google), custom_avatar_url (choix : preset "/avatars/x.svg",
+                  photo importée ou photo Google), email, iban, phone,
                   gdpr_consented_at, gdpr_consent_version, gdpr_consent_proof
 trips             id, name, type ('trip'|'group'), destination?, emoji, icon_url?,
                   currency, start_date?, end_date?, total_budget, share_code(UNIQUE), owner_id
                   // destination/start_date/end_date nullable for type='group'
-participants      id, trip_id, name, color, avatar?
+participants      id, trip_id, name, color, avatar? (URL/chemin d'image = avatar du membre lié, sinon emoji)
 trip_members      trip_id + user_id (composite PK), participant_id, role: owner|contributor
 expenses          id, trip_id, title, amount, currency, exchange_rate, amount_in_trip_currency,
                   category, paid_by_id (legacy), payers: jsonb[], date, split_mode, splits: jsonb[], notes
@@ -141,14 +165,18 @@ meals             id, trip_id, date, slot: breakfast|lunch|snack|dinner, title?,
 itinerary_items   id, trip_id, date, time, title, location, type, duration_minutes, participant_ids: uuid[]
                   // type: 'accommodation'|'activity'|'food'|'other'|'journey'
                   // journey extras: destination (text), journey_mode ('car'|'foot'|'bike'|'transit'|'plane')
+guest_transfers   token, guest_id, expires_at, claimed_by/at — jetons à usage unique (021, pas de policy)
 ```
-RPCs: `create_trip_with_owner`, `join_trip`, `get_join_preview` (all SECURITY DEFINER — see schema.sql).
+RPCs: `create_trip_with_owner`, `join_trip`, `get_join_preview`, `claim_participant`,
+`create_guest_transfer`, `claim_guest_transfer` (all SECURITY DEFINER — see schema.sql).
 DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip()` / `rowToExpense()` etc. for conversion.
 
 ## Design system (enforced — do not regress)
 
-- **Marque** : violet-bleu du logo `#635BFF` = `bg-primary`. Le texte de marque utilise `text-primary`
-  (surchargé dans globals.css vers une teinte qui garde 4.5:1). Une seule couleur vive : pas d'orange/corail.
+- **Monochrome** : pas de couleur dominante. `primary` = encre (noir en clair, blanc en sombre) pour
+  boutons, onglets actifs, sélections. La couleur est réservée au sens (vert « on te doit », rouge
+  « tu dois », teintes de catégories / types d'étape / créneaux) et aux illustrations. Le logo garde
+  sa couleur, c'est la seule touche de marque. Ne pas réintroduire d'accent violet/bleu/orange.
 - **Neutres** froids, clair + sombre natifs. Thème = système par défaut (`useTheme()` → `preference`
   `system | light | dark`, clé localStorage `voyou-theme`). Toujours utiliser les tokens
   (`bg-card`, `bg-secondary`, `text-foreground`, `text-muted-foreground`, `border-border`).
@@ -158,7 +186,10 @@ DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip(
 - **Surfaces** : cartes pleines `bg-card shadow-card rounded-[1.5rem]` (ou `glass` = même rendu),
   listes groupées façon iOS (rangées séparées par `border-t border-border`). Jamais de verre dépoli,
   d'orbes, de dégradés décoratifs (`gradient-primary` = aplat) ni d'emoji comme icône.
-- **Illustrations** : `TripCover` (aplats violet / nuit / lilas / soleil), choisie par `seed` = id.
+- **Illustrations** : `TripCover` (aplats doux : ciel, sable, sauge, argile, nuit, or), choisie par
+  `seed` = id. Même palette pour l'écran de connexion et les avatars.
+- **Avatars** : `public/avatars/*.svg` générés par `scripts/generate-avatars.mjs` (garder `lib/avatars.ts`
+  en phase). Priorité d'affichage : choix (`custom_avatar_url`) > photo Google > initiale.
 - **Motion** : `lib/motion.ts` (`EASE_OUT`, `EASE_SHEET`, `spring`, `fadeUp`, `stagger`). Indicateurs
   glissants via `layoutId` (TripNav, SegmentedControl, DayTabs). Respect de `prefers-reduced-motion`
   (MotionConfig + CSS). `pressable` pour le retour tactile.
@@ -177,6 +208,18 @@ DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip(
 - **Retours** : `useToast()` (`ToastProvider` à la racine) après chaque création / modification / suppression,
   `haptic()` sur les gestes. Feuilles du bas fermables en glissant la poignée.
 - **Tableau de bord** : `GettingStarted` (premiers pas) puis `UpNextCard` (prochaine étape + « Y aller »).
+
+## Comptes invités (enforced — do not regress)
+
+- « Continuer en tant qu'invité » = `supabase.auth.signInAnonymously()` : vrai utilisateur
+  (`is_anonymous`), toutes les RLS/RPC fonctionnent sans changement.
+- Sauvegarde = `linkIdentity({ provider: "google" })` → même uid, aucune copie. Avant, on crée un jeton
+  (`create_guest_transfer`, gardé en localStorage). Si Google existe déjà (`identity_already_exists`) :
+  connexion au compte existant puis `claim_guest_transfer(token)` qui déplace voyages + memberships
+  (fusion sans doublon), complète le profil et supprime l'invité vide. Voir migration 021.
+- Prérequis Supabase : « Allow anonymous sign-ins » + « Allow manual linking » activés.
+- Un invité est signalé (point ambre sur l'avatar, carte sur /trips et /settings) ; la déconnexion
+  d'un invité passe par `GuestSignOutDialog`.
 
 ## UX Patterns (enforced — do not regress)
 
