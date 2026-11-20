@@ -160,9 +160,9 @@ html, body {
   --mesh-grid: oklch(1 0 0);
 }
 
-/* Layout offsets: bottom nav is 4.5rem + safe area */
+/* Layout offsets: floating tab bar (4.25rem) + 0.75rem gap + safe area */
 :root {
-  --bottom-nav-top: calc(env(safe-area-inset-bottom) + 4.5rem);
+  --bottom-nav-top: calc(env(safe-area-inset-bottom) + 5rem);
   --fab-bottom: calc(var(--bottom-nav-top) + 1rem);
 }
 

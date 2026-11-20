@@ -15,6 +15,9 @@ import {
 import dynamic from "next/dynamic";
 import { CATEGORIES } from "@/lib/budget/categories";
 import { IdentityPicker } from "@/components/trips/IdentityPicker";
+import { GettingStarted } from "@/components/trips/GettingStarted";
+import { UpNextCard } from "@/components/trips/UpNextCard";
+import { useRouter } from "next/navigation";
 import { TripCover } from "@/components/trips/TripCover";
 import { tripStatus } from "@/components/trips/TripCard";
 import { ParticipantAvatar } from "@/components/shared/ParticipantAvatar";
@@ -68,6 +71,7 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
   const { meals } = useMeals(tripId);
   const { settlements } = useDebts(expenses, trip?.participants ?? []);
   const userId = useUserId();
+  const router = useRouter();
 
   const [identityOpen, setIdentityOpen] = useState(false);
   const [budgetOpen, setBudgetOpen] = useState(false);
@@ -158,22 +162,49 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
         </div>
       </StaggerItem>
 
-      {!me && (
+      <StaggerItem>
+        <GettingStarted
+          tripId={trip.id}
+          steps={[
+            {
+              id: "me",
+              label: "Dis qui tu es",
+              hint: "Pour attribuer tes dépenses et tes soldes",
+              done: !!me,
+              onClick: () => setIdentityOpen(true),
+            },
+            {
+              id: "share",
+              label: "Invite la bande",
+              hint: "Partage le lien du voyage",
+              done: trip.participants.length > 1,
+              onClick: () => window.dispatchEvent(new Event("voyou:open-share")),
+            },
+            {
+              id: "expense",
+              label: "Ajoute une première dépense",
+              hint: "Voyou calcule qui doit quoi",
+              done: expenses.length > 0,
+              onClick: () => router.push(`/trips/${tripId}/budget?new=expense`),
+            },
+            ...(features.hasPlanning
+              ? [
+                  {
+                    id: "step",
+                    label: "Planifie une première étape",
+                    hint: "Activité, resto ou trajet",
+                    done: itineraryItems.length > 0,
+                    onClick: () => router.push(`/trips/${tripId}/planning?new=step`),
+                  },
+                ]
+              : []),
+          ]}
+        />
+      </StaggerItem>
+
+      {features.hasPlanning && (
         <StaggerItem>
-          <button
-            type="button"
-            onClick={() => setIdentityOpen(true)}
-            className="pressable flex w-full items-center gap-4 rounded-[1.5rem] bg-primary p-4 text-left text-primary-foreground shadow-section"
-          >
-            <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-white/15">
-              <UserRound size={22} />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block font-semibold">Dis-nous qui tu es</span>
-              <span className="block text-sm text-white/80">Pour attribuer tes dépenses et calculer tes soldes.</span>
-            </span>
-            <ChevronRight size={20} />
-          </button>
+          <UpNextCard items={itineraryItems} today={today} planningHref={`/trips/${tripId}/planning`} />
         </StaggerItem>
       )}
 

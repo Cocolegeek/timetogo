@@ -36,6 +36,58 @@ function SheetOverlay({ className, ...props }: SheetPrimitive.Backdrop.Props) {
   )
 }
 
+/**
+ * Drag-down-to-dismiss on the top strip of a bottom sheet (where the grab
+ * handle is drawn). Past 110 px, or a quick flick, the sheet slides away and
+ * closes through the hidden Close button.
+ */
+function SheetDragZone({ closeRef }: { closeRef: React.RefObject<HTMLButtonElement | null> }) {
+  const state = React.useRef<{ y: number; t: number; dy: number } | null>(null)
+
+  const popupOf = (el: HTMLElement) => el.closest<HTMLElement>("[data-slot=sheet-content]")
+
+  return (
+    <div
+      aria-hidden="true"
+      data-sheet-drag
+      className="absolute inset-x-0 top-0 z-10 h-9 cursor-grab touch-none active:cursor-grabbing"
+      onPointerDown={(e) => {
+        state.current = { y: e.clientY, t: performance.now(), dy: 0 }
+        e.currentTarget.setPointerCapture(e.pointerId)
+        const popup = popupOf(e.currentTarget)
+        if (popup) popup.style.transition = "none"
+      }}
+      onPointerMove={(e) => {
+        if (!state.current) return
+        const dy = Math.max(0, e.clientY - state.current.y)
+        state.current.dy = dy
+        const popup = popupOf(e.currentTarget)
+        if (popup) popup.style.transform = `translateY(${dy}px)`
+      }}
+      onPointerUp={(e) => {
+        const s = state.current
+        state.current = null
+        const popup = popupOf(e.currentTarget)
+        if (!s || !popup) return
+        const velocity = s.dy / Math.max(1, performance.now() - s.t)
+        if (s.dy > 110 || (s.dy > 30 && velocity > 0.6)) {
+          popup.style.transition = "transform 220ms cubic-bezier(0.4, 0, 1, 1)"
+          popup.style.transform = "translateY(100%)"
+          setTimeout(() => closeRef.current?.click(), 180)
+        } else {
+          popup.style.transition = "transform 320ms cubic-bezier(0.32, 0.72, 0, 1)"
+          popup.style.transform = ""
+        }
+      }}
+      onPointerCancel={(e) => {
+        state.current = null
+        const popup = popupOf(e.currentTarget)
+        if (popup) popup.style.transform = ""
+      }}
+    />
+  )
+}
+
 function SheetContent({
   className,
   children,
@@ -46,6 +98,7 @@ function SheetContent({
   side?: "top" | "right" | "bottom" | "left"
   showCloseButton?: boolean
 }) {
+  const closeRef = React.useRef<HTMLButtonElement>(null)
   return (
     <SheetPortal>
       <SheetOverlay />
@@ -58,7 +111,9 @@ function SheetContent({
         )}
         {...props}
       >
+        {side === "bottom" && <SheetDragZone closeRef={closeRef} />}
         {children}
+        <SheetPrimitive.Close ref={closeRef} tabIndex={-1} aria-hidden="true" className="sr-only" />
         {showCloseButton && (
           <SheetPrimitive.Close
             data-slot="sheet-close"

@@ -244,19 +244,19 @@ export function JourneyForm({
         <div className="flex-1 overflow-y-auto">
           {activeTab === "Quand" && (
             <Row icon={<Calendar size={18} />}>
-              <div className="grid grid-cols-[1.35fr_1fr] gap-2.5">
+              <div className="grid grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] gap-2.5">
                 <input
                   type="date"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="w-full border px-3 text-base border-input bg-card rounded-2xl h-12 outline-none placeholder:text-muted-foreground focus:border-primary/60 focus:ring-4 focus:ring-primary/12 tabular"
+                  className="w-full min-w-0 border px-3 text-base border-input bg-card rounded-2xl h-12 outline-none placeholder:text-muted-foreground focus:border-primary/60 focus:ring-4 focus:ring-primary/12 tabular"
                 />
                 <div className="relative">
                                     <input
                     type="time"
                     value={time}
                     onChange={(e) => setTime(e.target.value)}
-                    className="w-full border px-4 text-base border-input bg-card rounded-2xl h-12 outline-none placeholder:text-muted-foreground focus:border-primary/60 focus:ring-4 focus:ring-primary/12 tabular"
+                    className="w-full min-w-0 border px-4 text-base border-input bg-card rounded-2xl h-12 outline-none placeholder:text-muted-foreground focus:border-primary/60 focus:ring-4 focus:ring-primary/12 tabular"
                   />
                 </div>
               </div>
@@ -418,7 +418,7 @@ export function JourneyForm({
                   </div>
                 )}
                 <p className="text-xs text-slate-500">
-                  Consulte l'itinéraire puis renseigne la durée ci-dessous.
+                  Consulte l&apos;itinéraire puis renseigne la durée ci-dessous.
                 </p>
                 <ManualDuration durationH={durationH} durationM={durationM} setDurationH={setDurationH} setDurationM={setDurationM} />
               </div>

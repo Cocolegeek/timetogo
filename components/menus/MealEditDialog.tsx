@@ -546,10 +546,10 @@ function DishRow({
                       type="button"
                       onClick={() => onUpdate({ course: c.id })}
                       className={cn(
-                        "flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border transition-all active:scale-95",
+                        "pressable flex h-9 items-center gap-1.5 rounded-full px-3 text-sm font-semibold transition-colors",
                         sel
-                          ? "bg-primary/10 text-primary ring-1 ring-primary/40 border-transparent"
-                          : "border-foreground/10 bg-foreground/4 text-slate-400 hover:bg-foreground/8"
+                          ? "bg-foreground text-background"
+                          : "bg-card text-foreground hover:bg-foreground/[0.06]"
                       )}
                     >
                       <c.icon size={14} />

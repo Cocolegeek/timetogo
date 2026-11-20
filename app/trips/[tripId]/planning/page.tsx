@@ -15,15 +15,16 @@ import {
   Sun,
 } from "lucide-react";
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from "framer-motion";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import { useOpenLocation, useOpenRoute } from "@/components/shared/MapAppPicker";
-import { ConfirmDeleteDialog } from "@/components/shared/ConfirmDeleteDialog";
 import { DayHeader } from "@/components/shared/DayHeader";
 import { DayTabs } from "@/components/shared/DayTabs";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { ParticipantStack } from "@/components/shared/ParticipantStack";
-import { Fab } from "@/components/shared/Fab";
+import { useToast } from "@/components/shared/Toaster";
+import { useUndoableDelete } from "@/hooks/useUndoableDelete";
+import { useQuickAdd } from "@/hooks/useQuickAdd";
 import { PageHeader } from "@/components/layout/PageHeader";
 import {
   DropdownMenu,
@@ -55,7 +56,12 @@ export default function PlanningPage({ params }: PlanningPageProps) {
   const { tripId } = use(params);
   const router = useRouter();
   const { trip } = useTrip(tripId);
-  const { items, addItem, updateItem, deleteItem } = useItinerary(tripId);
+  const { items: allItems, addItem, updateItem, deleteItem } = useItinerary(tripId);
+  const searchParams = useSearchParams();
+  const toast = useToast();
+  const { pending, remove } = useUndoableDelete(deleteItem);
+  const items = useMemo(() => allItems.filter((i) => !pending.has(i.id)), [allItems, pending]);
+  const highlightId = searchParams.get("item");
 
   useEffect(() => {
     if (trip && !isVoyage(trip)) {
@@ -65,12 +71,14 @@ export default function PlanningPage({ params }: PlanningPageProps) {
 
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerDate, setPickerDate] = useState<string | undefined>();
-  const [formOpen, setFormOpen] = useState(false);
-  const [journeyFormOpen, setJourneyFormOpen] = useState(false);
+  const [formOpen, setFormOpen] = useState(searchParams.get("new") === "step");
+  const [journeyFormOpen, setJourneyFormOpen] = useState(searchParams.get("new") === "journey");
   const [formDefaultDate, setFormDefaultDate] = useState<string | undefined>();
   const [editingItem, setEditingItem] = useState<ItineraryItem | undefined>();
-  const [confirmDelete, setConfirmDelete] = useState<ItineraryItem | null>(null);
-  const [selection, setSelection] = useState<{ date: string | null; dir: number }>({ date: null, dir: 1 });
+  const [selection, setSelection] = useState<{ date: string | null; dir: number }>({
+    date: searchParams.get("date"),
+    dir: 1,
+  });
   const selectedDate = selection.date;
   const dir = selection.dir;
 
@@ -94,6 +102,14 @@ export default function PlanningPage({ params }: PlanningPageProps) {
   const selectDate = (d: string) => {
     setSelection({ date: d, dir: d > currentDate ? 1 : -1 });
   };
+
+  useQuickAdd((kind) => {
+    if (kind !== "step" && kind !== "journey") return;
+    setEditingItem(undefined);
+    setFormDefaultDate(currentDate);
+    if (kind === "step") setFormOpen(true);
+    else setJourneyFormOpen(true);
+  });
 
   const openPicker = (date?: string) => {
     setPickerDate(date);
@@ -122,20 +138,19 @@ export default function PlanningPage({ params }: PlanningPageProps) {
   };
 
   const handleSubmit = async (values: ItineraryFormValues) => {
-    if (editingItem) await updateItem(editingItem.id, values);
-    else await addItem(values);
+    if (editingItem) {
+      await updateItem(editingItem.id, values);
+      toast({ message: "Étape modifiée", tone: "success" });
+    } else {
+      await addItem(values);
+      toast({ message: "Ajouté au planning", tone: "success" });
+    }
     setEditingItem(undefined);
-  };
-
-  const performDelete = async () => {
-    if (!confirmDelete) return;
-    await deleteItem(confirmDelete.id);
-    setConfirmDelete(null);
   };
 
   const dayItems = byDate[currentDate] ?? [];
   const participants = trip?.participants ?? [];
-  const fallbackDate = formDefaultDate ?? (trip && isVoyage(trip) ? trip.startDate : undefined) ?? today;
+  const fallbackDate = formDefaultDate ?? currentDate;
 
   return (
     <div className="space-y-3 pt-1">
@@ -181,10 +196,9 @@ export default function PlanningPage({ params }: PlanningPageProps) {
                         item={item}
                         participants={participants}
                         onEdit={() => openForEdit(item)}
-                        onDelete={() => setConfirmDelete(item)}
-                        onSwipeDelete={async () => {
-                          await deleteItem(item.id);
-                        }}
+                        highlight={item.id === highlightId}
+                        onDelete={() => remove(item.id, "Étape supprimée")}
+                        onSwipeDelete={() => remove(item.id, "Étape supprimée")}
                       />
                     </TimelineRow>
                   ))}
@@ -206,7 +220,6 @@ export default function PlanningPage({ params }: PlanningPageProps) {
         </AnimatePresence>
       )}
 
-      {dates.length > 0 && <Fab onClick={() => openPicker(currentDate)} label="Ajouter au planning" />}
 
       <Dialog open={pickerOpen} onOpenChange={setPickerOpen}>
         <DialogContent className="max-w-sm">
@@ -251,18 +264,6 @@ export default function PlanningPage({ params }: PlanningPageProps) {
         onSubmit={handleSubmit}
       />
 
-      {confirmDelete && (
-        <ConfirmDeleteDialog
-          title="Supprimer cette étape ?"
-          description={
-            <>
-              <span className="font-semibold text-foreground">{confirmDelete.title}</span> sera retirée du planning.
-            </>
-          }
-          onCancel={() => setConfirmDelete(null)}
-          onConfirm={performDelete}
-        />
-      )}
     </div>
   );
 }
@@ -324,7 +325,9 @@ function ItineraryCard({
   onEdit,
   onDelete,
   onSwipeDelete,
+  highlight,
 }: {
+  highlight?: boolean;
   item: ItineraryItem;
   participants: Participant[];
   onEdit: () => void;
@@ -335,8 +338,13 @@ function ItineraryCard({
   const openRoute = useOpenRoute();
   const x = useMotionValue(0);
   const dragged = useRef(false);
+  const rootRef = useRef<HTMLDivElement>(null);
   const revealOpacity = useTransform(x, [SWIPE_THRESHOLD, -24, 0], [1, 0.4, 0]);
   const trashScale = useTransform(x, [SWIPE_THRESHOLD - 20, -40, 0], [1.15, 0.85, 0.6]);
+
+  useEffect(() => {
+    if (highlight) rootRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+  }, [highlight]);
 
   const handleDragEnd = () => {
     if (x.get() <= SWIPE_THRESHOLD) {
@@ -356,7 +364,14 @@ function ItineraryCard({
   const journeyOpts = item.journeyMode ? { mode: item.journeyMode } : undefined;
 
   return (
-    <div className="relative overflow-hidden rounded-[1.25rem]">
+    <div
+      ref={rootRef}
+      className={cn(
+        "relative scroll-mt-40 overflow-hidden rounded-[1.25rem] transition-[outline-color] duration-500",
+        !isJourney && "shadow-card",
+        highlight && "outline-2 outline-offset-2 outline-primary"
+      )}
+    >
       <motion.div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 flex items-center justify-end bg-red-500 pr-6 text-white"
@@ -379,7 +394,7 @@ function ItineraryCard({
         onDragEnd={handleDragEnd}
         className={cn(
           "relative flex touch-pan-y items-start gap-3 rounded-[1.25rem] p-3.5 select-none",
-          isJourney ? "bg-sky-500/[0.09] ring-1 ring-sky-500/15 ring-inset" : "bg-card shadow-card"
+          isJourney ? "bg-[color-mix(in_oklch,var(--color-sky-500)_10%,var(--card))] ring-1 ring-sky-500/15 ring-inset" : "bg-card"
         )}
       >
         <span className={cn("flex size-11 shrink-0 items-center justify-center rounded-2xl", isJourney ? "bg-sky-500/15 text-sky-400" : cfg.tile)}>

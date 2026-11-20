@@ -257,7 +257,7 @@ export function ItineraryItemForm({
           {activeTab === "Quand" && (
             <>
               <Row icon={<Calendar size={18} />}>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] gap-2.5">
                   <DateInput value={date} onChange={setDate} placeholder="Date" />
                   <TimeInput value={time} onChange={setTime} placeholder="Heure" />
                 </div>
@@ -447,7 +447,7 @@ function DateInput({
       type="date"
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full border px-3 text-base border-input bg-card rounded-2xl h-12 outline-none placeholder:text-muted-foreground focus:border-primary/60 focus:ring-4 focus:ring-primary/12 tabular"
+      className="w-full min-w-0 border px-3 text-base border-input bg-card rounded-2xl h-12 outline-none placeholder:text-muted-foreground focus:border-primary/60 focus:ring-4 focus:ring-primary/12 tabular"
     />
   );
 }
@@ -461,12 +461,12 @@ function TimeInput({
   placeholder?: string;
 }) {
   return (
-    <div className="relative">
+    <div className="relative min-w-0">
       <input
         type="time"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full border px-4 text-base border-input bg-card rounded-2xl h-12 outline-none placeholder:text-muted-foreground focus:border-primary/60 focus:ring-4 focus:ring-primary/12 tabular"
+        className="w-full min-w-0 border px-4 text-base border-input bg-card rounded-2xl h-12 outline-none placeholder:text-muted-foreground focus:border-primary/60 focus:ring-4 focus:ring-primary/12 tabular"
       />
     </div>
   );

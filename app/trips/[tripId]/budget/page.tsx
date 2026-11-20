@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import dynamic from "next/dynamic";
@@ -17,7 +17,11 @@ import { EASE_OUT } from "@/lib/motion";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { SegmentedControl } from "@/components/shared/SegmentedControl";
 import { NumberTicker } from "@/components/motion/NumberTicker";
-import { Fab } from "@/components/shared/Fab";
+import { useToast } from "@/components/shared/Toaster";
+import { useUndoableDelete } from "@/hooks/useUndoableDelete";
+import { useQuickAdd } from "@/hooks/useQuickAdd";
+import { CATEGORIES, CATEGORY_ORDER } from "@/lib/budget/categories";
+import { cn } from "@/lib/utils";
 import type { Expense, Payer, Settlement } from "@/types";
 
 type BudgetTab = "expenses" | "balances";
@@ -30,19 +34,25 @@ export default function BudgetPage({ params }: BudgetPageProps) {
   const { tripId } = use(params);
   const { trip } = useTrip(tripId);
   const {
-    expenses,
+    expenses: allExpenses,
     addExpense,
     updateExpense,
     deleteExpense,
   } = useBudget(tripId);
 
-  const [formOpen, setFormOpen] = useState(false);
-  const [editingExpense, setEditingExpense] = useState<Expense | undefined>();
-  const [detailExpense, setDetailExpense] = useState<Expense | null>(null);
+  const toast = useToast();
   const searchParams = useSearchParams();
+  const [formOpen, setFormOpen] = useState(searchParams.get("new") === "expense");
+  const [editingExpense, setEditingExpense] = useState<Expense | undefined>();
+  const [detailId, setDetailId] = useState<string | null>(searchParams.get("expense"));
   const [activeTab, setActiveTab] = useState<BudgetTab>(
     searchParams.get("tab") === "balances" ? "balances" : "expenses"
   );
+  const [filter, setFilter] = useState<string>("all");
+
+  const { pending, remove } = useUndoableDelete(deleteExpense);
+  const expenses = useMemo(() => allExpenses.filter((e) => !pending.has(e.id)), [allExpenses, pending]);
+  const detailExpense = detailId ? expenses.find((e) => e.id === detailId) ?? null : null;
 
   const participants = trip?.participants ?? [];
   const currency = trip?.currency ?? "EUR";
@@ -65,38 +75,36 @@ export default function BudgetPage({ params }: BudgetPageProps) {
     if (editingExpense) {
       await updateExpense(editingExpense.id, data);
       setEditingExpense(undefined);
+      toast({ message: "Dépense modifiée", tone: "success" });
     } else {
       await addExpense({ ...data, tripId });
+      toast({ message: "Dépense ajoutée", tone: "success" });
+      setActiveTab("expenses");
     }
   };
 
-  // Tap → detail sheet (not directly to edit form)
-  const handleTap = (expense: Expense) => {
-    setDetailExpense(expense);
-  };
+  const handleTap = (expense: Expense) => setDetailId(expense.id);
 
-  // From detail sheet → edit form
   const handleEditFromDetail = () => {
     if (!detailExpense) return;
     setEditingExpense(detailExpense);
-    setDetailExpense(null);
+    setDetailId(null);
     setFormOpen(true);
   };
 
-  const handleDeleteFromDetail = async () => {
+  const handleDeleteFromDetail = () => {
     if (!detailExpense) return;
-    await deleteExpense(detailExpense.id);
-    setDetailExpense(null);
+    remove(detailExpense.id, "Dépense supprimée");
+    setDetailId(null);
   };
 
-  const handleDelete = async (id: string) => {
-    await deleteExpense(id);
-  };
+  const handleDelete = (id: string) => remove(id, "Dépense supprimée");
 
-  const handleOpenForm = () => {
+  useQuickAdd((kind) => {
+    if (kind !== "expense") return;
     setEditingExpense(undefined);
     setFormOpen(true);
-  };
+  });
 
   const handleSettle = async (s: Settlement) => {
     const from = participants.find((p) => p.id === s.fromId);
@@ -117,7 +125,20 @@ export default function BudgetPage({ params }: BudgetPageProps) {
         fixedAmount: p.id === s.toId ? s.amount : 0,
       })),
     });
+    toast({ message: "Remboursement enregistré", tone: "success" });
   };
+
+  const categoriesPresent = CATEGORY_ORDER.filter((c) => expenses.some((e) => e.category === c));
+  const filteredExpenses = expenses.filter((e) => {
+    if (filter === "all") return true;
+    if (filter === "mine") {
+      return (
+        !!myId &&
+        (e.payers.some((p) => p.participantId === myId) || e.splits.some((sp) => sp.participantId === myId && !sp.excluded))
+      );
+    }
+    return e.category === filter;
+  });
 
   const myBalance = myId ? balances.find((b) => b.participantId === myId) : undefined;
   const totalSpent = expenses
@@ -201,13 +222,37 @@ export default function BudgetPage({ params }: BudgetPageProps) {
           transition={{ duration: 0.28, ease: EASE_OUT }}
         >
           {activeTab === "expenses" ? (
-            <ExpenseList
-              expenses={expenses}
+            <>
+              {expenses.length > 0 && (
+                <div className="no-scrollbar -mx-4 mb-4 flex gap-2 overflow-x-auto px-4">
+                  {[
+                    { id: "all", label: "Tout" },
+                    ...(myId ? [{ id: "mine", label: "Me concernent" }] : []),
+                    ...categoriesPresent.map((c) => ({ id: c, label: CATEGORIES[c].label })),
+                  ].map((f) => (
+                    <button
+                      key={f.id}
+                      type="button"
+                      aria-pressed={filter === f.id}
+                      onClick={() => setFilter(f.id)}
+                      className={cn(
+                        "pressable h-9 shrink-0 rounded-full px-4 text-sm font-semibold transition-colors",
+                        filter === f.id ? "bg-foreground text-background" : "bg-foreground/[0.06] text-foreground hover:bg-foreground/10"
+                      )}
+                    >
+                      {f.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <ExpenseList
+              expenses={filteredExpenses}
               participants={participants}
               currency={currency}
               onDelete={handleDelete}
               onEdit={handleTap}
             />
+            </>
           ) : (
             <BalancesView
               myId={myId}
@@ -226,7 +271,7 @@ export default function BudgetPage({ params }: BudgetPageProps) {
         participants={participants}
         currency={currency}
         open={detailExpense !== null}
-        onOpenChange={(open) => { if (!open) setDetailExpense(null); }}
+        onOpenChange={(open) => { if (!open) setDetailId(null); }}
         onEdit={handleEditFromDetail}
         onDelete={handleDeleteFromDetail}
       />
@@ -244,7 +289,6 @@ export default function BudgetPage({ params }: BudgetPageProps) {
         initialValues={editingExpense}
       />
 
-      <Fab onClick={handleOpenForm} label="Nouvelle dépense" />
     </div>
   );
 }

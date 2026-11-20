@@ -169,7 +169,7 @@ export function LocationPickerSheet({
           <SheetTitle className="sr-only">Rechercher un lieu</SheetTitle>
 
           {/* Search header */}
-          <div className="shrink-0 border-b border-border px-4 pt-7 pr-16 pb-3">
+          <div className="shrink-0 border-b border-border px-4 pt-10 pr-16 pb-3">
             <div className="relative">
               <Search
                 size={18}

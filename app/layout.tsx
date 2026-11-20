@@ -4,6 +4,7 @@ import { PwaRegister } from "./pwa-register";
 import { AppInstallBanner } from "@/components/shared/IosInstallBanner";
 import { SectionThemeController } from "@/components/layout/SectionThemeController";
 import { MotionProvider } from "@/components/motion/MotionProvider";
+import { ToastProvider } from "@/components/shared/Toaster";
 import "./globals.css";
 
 const inter = Inter({
@@ -101,7 +102,9 @@ export default function RootLayout({
         <SectionThemeController />
         <PwaRegister />
         <AppInstallBanner />
-        <MotionProvider>{children}</MotionProvider>
+        <MotionProvider>
+          <ToastProvider>{children}</ToastProvider>
+        </MotionProvider>
       </body>
     </html>
   );

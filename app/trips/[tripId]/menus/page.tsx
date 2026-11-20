@@ -1,7 +1,11 @@
 "use client";
 
 import { use, useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { useUndoableDelete } from "@/hooks/useUndoableDelete";
+import { useQuickAdd } from "@/hooks/useQuickAdd";
+import { useToast } from "@/components/shared/Toaster";
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from "framer-motion";
 import { UtensilsCrossed, ChefHat, Users, Plus, Trash2, ChevronRight } from "lucide-react";
 import dynamic from "next/dynamic";
@@ -34,10 +38,18 @@ export default function MenusPage({ params }: MenusPageProps) {
   const { tripId } = use(params);
   const router = useRouter();
   const { trip } = useTrip(tripId);
-  const { meals, loading, addMeal, updateMeal, deleteMeal } = useMeals(tripId);
+  const { meals: allMeals, loading, addMeal, updateMeal, deleteMeal } = useMeals(tripId);
+  const searchParams = useSearchParams();
+  const toast = useToast();
+  const { pending, remove } = useUndoableDelete(deleteMeal);
+  const meals = useMemo(() => allMeals.filter((m) => !pending.has(m.id)), [allMeals, pending]);
 
   const [editingMeal, setEditingMeal] = useState<Meal | null>(null);
-  const [selection, setSelection] = useState<{ date: string | null; dir: number }>({ date: null, dir: 1 });
+  const [slotPickerOpen, setSlotPickerOpen] = useState(searchParams.get("new") === "meal");
+  const [selection, setSelection] = useState<{ date: string | null; dir: number }>({
+    date: searchParams.get("date"),
+    dir: 1,
+  });
   const selectedDate = selection.date;
   const dir = selection.dir;
 
@@ -52,6 +64,10 @@ export default function MenusPage({ params }: MenusPageProps) {
   }, [meals]);
   const marked = useMemo(() => new Set(mealsByDate.keys()), [mealsByDate]);
 
+  useQuickAdd((kind) => {
+    if (kind === "meal") setSlotPickerOpen(true);
+  });
+
   useEffect(() => {
     if (trip && !isVoyage(trip)) {
       router.replace(`/trips/${tripId}/budget`);
@@ -65,6 +81,7 @@ export default function MenusPage({ params }: MenusPageProps) {
   };
 
   const handleAddMeal = async (date: string, slot: MealSlot) => {
+    setSlotPickerOpen(false);
     const newMeal = await addMeal(date, slot);
     setEditingMeal(newMeal);
   };
@@ -105,7 +122,7 @@ export default function MenusPage({ params }: MenusPageProps) {
                     meal={meal}
                     participants={trip.participants}
                     onTap={() => setEditingMeal(meal)}
-                    onDelete={() => deleteMeal(meal.id)}
+                    onDelete={() => remove(meal.id, "Repas supprimé")}
                   />
                 ))}
               </AnimatePresence>
@@ -138,6 +155,39 @@ export default function MenusPage({ params }: MenusPageProps) {
         </AnimatePresence>
       )}
 
+      <Dialog open={slotPickerOpen} onOpenChange={setSlotPickerOpen}>
+        <DialogContent className="max-w-sm">
+          <div className="space-y-1 pr-10">
+            <DialogTitle>Ajouter un repas</DialogTitle>
+            <DialogDescription className="first-letter:uppercase">
+              {new Date(currentDate).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
+            </DialogDescription>
+          </div>
+          {availableSlots.length === 0 ? (
+            <p className="text-[0.95rem] text-muted-foreground">Tous les repas de ce jour sont déjà prévus.</p>
+          ) : (
+            <div className="grid grid-cols-2 gap-2.5">
+              {availableSlots.map((cfg) => {
+                const Icon = cfg.icon;
+                return (
+                  <button
+                    key={cfg.slot}
+                    type="button"
+                    onClick={() => handleAddMeal(currentDate, cfg.slot)}
+                    className="pressable flex flex-col items-start gap-3 rounded-[1.25rem] bg-secondary p-4 text-left transition-colors hover:bg-foreground/[0.08]"
+                  >
+                    <span className={cn("flex size-10 items-center justify-center rounded-2xl", cfg.bgClass, cfg.textClass)}>
+                      <Icon size={19} />
+                    </span>
+                    <span className="font-semibold">{cfg.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       <MealEditDialog
         open={editingMeal !== null}
         onOpenChange={(open) => { if (!open) setEditingMeal(null); }}
@@ -146,6 +196,7 @@ export default function MenusPage({ params }: MenusPageProps) {
         onSave={async (data) => {
           if (!editingMeal) return;
           await updateMeal(editingMeal.id, data);
+          toast({ message: "Repas enregistré", tone: "success" });
         }}
       />
     </div>
@@ -196,7 +247,7 @@ function MealCard({
       layout="position"
       variants={fadeUp}
       exit={{ opacity: 0, height: 0, transition: { duration: 0.25, ease: EASE_OUT } }}
-      className="relative overflow-hidden rounded-[1.5rem]"
+      className="relative overflow-hidden rounded-[1.5rem] shadow-card"
     >
       <motion.div
         aria-hidden="true"
@@ -222,7 +273,7 @@ function MealCard({
         onClick={() => {
           if (!dragged.current) onTap();
         }}
-        className="relative block w-full touch-pan-y rounded-[1.5rem] bg-card p-4 text-left shadow-card outline-none select-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="relative block w-full touch-pan-y rounded-[1.5rem] bg-card p-4 text-left outline-none select-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
       >
         <span className="flex items-center gap-3">
           <span className={cn("flex size-10 shrink-0 items-center justify-center rounded-2xl", slotCfg.bgClass, slotCfg.textClass)}>

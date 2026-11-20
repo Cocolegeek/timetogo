@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ChevronLeft, MoreHorizontal, Pencil, Settings, Share } from "lucide-react";
+import { ChevronLeft, MoreHorizontal, Pencil, Search, Settings, Share } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useTrip } from "@/hooks/useTrip";
@@ -19,6 +19,10 @@ const TripEditDialog = dynamic(
   () => import("@/components/trips/TripEditDialog").then((m) => ({ default: m.TripEditDialog })),
   { ssr: false }
 );
+const TripSearch = dynamic(
+  () => import("@/components/trips/TripSearch").then((m) => ({ default: m.TripSearch })),
+  { ssr: false }
+);
 const ShareModal = dynamic(
   () => import("@/components/trips/ShareModal").then((m) => ({ default: m.ShareModal })),
   { ssr: false }
@@ -32,7 +36,14 @@ export function TripAppHeader({ tripId }: { tripId: string }) {
     useTrip(tripId);
   const [editOpen, setEditOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const scrolled = useScrolled(4);
+
+  useEffect(() => {
+    const open = () => setShareOpen(true);
+    window.addEventListener("voyou:open-share", open);
+    return () => window.removeEventListener("voyou:open-share", open);
+  }, []);
   const router = useRouter();
 
   return (
@@ -50,18 +61,24 @@ export function TripAppHeader({ tripId }: { tripId: string }) {
           <ChevronLeft size={24} strokeWidth={2.2} />
         </Link>
 
-        <p
-          className={cn(
-            "min-w-0 flex-1 truncate font-display text-[1.05rem] font-bold tracking-tight transition-opacity duration-300",
-            scrolled ? "opacity-100" : "opacity-0"
-          )}
+        <button
+          type="button"
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          tabIndex={scrolled ? 0 : -1}
           aria-hidden={!scrolled}
+          className={cn(
+            "min-w-0 flex-1 truncate text-left font-display text-[1.05rem] font-bold tracking-tight transition-opacity duration-300 outline-none",
+            scrolled ? "opacity-100" : "pointer-events-none opacity-0"
+          )}
         >
           {trip?.name}
-        </p>
+        </button>
 
         {trip && (
           <div className="flex shrink-0 items-center">
+            <button type="button" onClick={() => setSearchOpen(true)} className={ICON_BTN} aria-label="Rechercher dans le voyage">
+              <Search size={20} strokeWidth={2} />
+            </button>
             <button type="button" onClick={() => setShareOpen(true)} className={ICON_BTN} aria-label="Partager le voyage">
               <Share size={19} strokeWidth={2} />
             </button>
@@ -97,6 +114,7 @@ export function TripAppHeader({ tripId }: { tripId: string }) {
             onDeleteParticipant={deleteParticipant}
           />
           <ShareModal open={shareOpen} onOpenChange={setShareOpen} trip={trip} />
+          <TripSearch open={searchOpen} onOpenChange={setSearchOpen} trip={trip} />
         </>
       )}
     </header>

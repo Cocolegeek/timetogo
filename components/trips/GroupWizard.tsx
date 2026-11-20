@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useProfile } from "@/hooks/useProfile";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
@@ -32,6 +33,14 @@ export function GroupWizard() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [newParticipantName, setNewParticipantName] = useState("");
   const [participants, setParticipants] = useState<ParticipantInput[]>([]);
+  const { profile } = useProfile();
+  const creatorName = profile?.name?.split(" ")[0] ?? null;
+
+  // The creator is always part of the trip: pre-fill them as first participant.
+  useEffect(() => {
+    if (!creatorName) return;
+    setParticipants((list) => (list.length === 0 ? [{ name: creatorName, color: PARTICIPANT_COLORS[0] }] : list));
+  }, [creatorName]);
   const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
 
   const {

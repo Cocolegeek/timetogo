@@ -164,6 +164,20 @@ DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip(
   (MotionConfig + CSS). `pressable` pour le retour tactile.
 - **Accessibilité** : zoom autorisé, cibles ≥ 44 px, `aria-label` sur les boutons icônes.
 
+## Parcours (enforced — do not regress)
+
+- **Navigation voyage** : barre d'onglets flottante (matière translucide = seule zone « verre » autorisée),
+  qui se compacte au défilement ; toucher l'onglet actif ou le titre de l'en-tête remonte en haut.
+- **Ajout rapide** : le bouton « + » de la barre ouvre la feuille Ajouter (dépense, étape, trajet, repas).
+  Les pages ouvrent leur formulaire via `useQuickAdd()` (événement si déjà sur la page, sinon `?new=<kind>`).
+  Pas de FAB par page.
+- **Recherche** : `TripSearch` (loupe de l'en-tête) cherche dans dépenses, planning, repas et participants
+  (sans accents). Liens profonds : `budget?expense=<id>`, `budget?tab=balances`,
+  `planning?date=YYYY-MM-DD&item=<id>`, `menus?date=YYYY-MM-DD`.
+- **Retours** : `useToast()` (`ToastProvider` à la racine) après chaque création / modification / suppression,
+  `haptic()` sur les gestes. Feuilles du bas fermables en glissant la poignée.
+- **Tableau de bord** : `GettingStarted` (premiers pas) puis `UpNextCard` (prochaine étape + « Y aller »).
+
 ## UX Patterns (enforced — do not regress)
 
 ### Location input
@@ -181,7 +195,8 @@ All creation/edit forms are full-screen or near-full-screen on mobile:
 
 ### Expense flow
 Tap card → `ExpenseDetailSheet` (read-only: amount, payers, splits) → "Modifier" → `ExpenseForm`.
-Swipe left on card = direct delete (no extra confirmation needed — the gesture is the confirmation).
+Swipe left on card = delete with a 5 s "Annuler" toast (`useUndoableDelete`) — no confirmation dialog.
+Same for expenses, itinerary items and meals (also from detail sheets / menus).
 Budget page accepts `?tab=balances` to open the Soldes tab (used by the dashboard balance tiles).
 
 ### Number inputs
