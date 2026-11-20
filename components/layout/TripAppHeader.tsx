@@ -2,18 +2,11 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ChevronLeft, MoreHorizontal, Pencil, Search, Settings, Share } from "lucide-react";
+import { ChevronLeft, Pencil, Search, Share } from "lucide-react";
 import dynamic from "next/dynamic";
-import { useRouter } from "next/navigation";
 import { useTrip } from "@/hooks/useTrip";
 import { useScrolled } from "@/hooks/useScrolled";
 import { cn } from "@/lib/utils";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 const TripEditDialog = dynamic(
   () => import("@/components/trips/TripEditDialog").then((m) => ({ default: m.TripEditDialog })),
@@ -44,7 +37,6 @@ export function TripAppHeader({ tripId }: { tripId: string }) {
     window.addEventListener("voyou:open-share", open);
     return () => window.removeEventListener("voyou:open-share", open);
   }, []);
-  const router = useRouter();
 
   return (
     <header
@@ -82,21 +74,14 @@ export function TripAppHeader({ tripId }: { tripId: string }) {
             <button type="button" onClick={() => setShareOpen(true)} className={ICON_BTN} aria-label="Partager le voyage">
               <Share size={19} strokeWidth={2} />
             </button>
-            <DropdownMenu>
-              <DropdownMenuTrigger className={ICON_BTN} aria-label="Plus d'actions">
-                <MoreHorizontal size={21} strokeWidth={2} />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="min-w-52">
-                <DropdownMenuItem onClick={() => setEditOpen(true)}>
-                  <Pencil />
-                  Modifier {trip.type === "group" ? "le groupe" : "le voyage"}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => router.push("/settings")}>
-                  <Settings />
-                  Paramètres
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <button
+              type="button"
+              onClick={() => setEditOpen(true)}
+              className={ICON_BTN}
+              aria-label={trip.type === "group" ? "Modifier le groupe" : "Modifier le voyage"}
+            >
+              <Pencil size={19} strokeWidth={2} />
+            </button>
           </div>
         )}
       </div>

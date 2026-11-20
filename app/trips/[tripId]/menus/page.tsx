@@ -7,7 +7,7 @@ import { useUndoableDelete } from "@/hooks/useUndoableDelete";
 import { useQuickAdd } from "@/hooks/useQuickAdd";
 import { useToast } from "@/components/shared/Toaster";
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from "framer-motion";
-import { UtensilsCrossed, ChefHat, Users, Plus, Trash2, ChevronRight } from "lucide-react";
+import { UtensilsCrossed, ChefHat, Users, Plus, Trash2 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { DayHeader } from "@/components/shared/DayHeader";
 import { DayTabs } from "@/components/shared/DayTabs";
@@ -235,7 +235,9 @@ function MealCard({
 
   const cooks = participants.filter((p) => meal.cookIds.includes(p.id));
   const eatersCount = meal.participantIds.length;
-  const eaterLabel = eatersCount === 0 || eatersCount === participants.length ? "Tout le monde" : `${eatersCount} pers.`;
+  // "Tout le monde" and "À la maison" are the defaults: only say what differs.
+  const eaterLabel = eatersCount === 0 || eatersCount === participants.length ? null : `${eatersCount} pers.`;
+  const showCategory = meal.category !== "home";
 
   const dishes = [...meal.dishes]
     .filter((d) => d.name.trim().length > 0)
@@ -283,8 +285,9 @@ function MealCard({
             <span className="block font-display text-[1.05rem] font-bold tracking-tight">{slotCfg.label}</span>
             {note && <span className="block truncate text-sm text-muted-foreground">{note}</span>}
           </span>
-          <span className={cn("shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold", catCfg.badgeClass)}>{catCfg.label}</span>
-          <ChevronRight size={18} className="shrink-0 text-muted-foreground" />
+          {showCategory && (
+            <span className={cn("shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold", catCfg.badgeClass)}>{catCfg.label}</span>
+          )}
         </span>
 
         {dishes.length > 0 ? (
@@ -300,6 +303,7 @@ function MealCard({
           !note && <span className="mt-3 block border-t border-border pt-3 text-sm text-muted-foreground">Touche pour composer le repas.</span>
         )}
 
+        {(cooks.length > 0 || eaterLabel) && (
         <span className="mt-3 flex items-center gap-4 text-sm text-muted-foreground">
           {cooks.length > 0 && (
             <span className="flex items-center gap-1.5">
@@ -312,11 +316,14 @@ function MealCard({
               {cooks.length === 1 ? cooks[0].name : `${cooks.length} en cuisine`}
             </span>
           )}
-          <span className="flex items-center gap-1.5">
-            <Users size={15} />
-            {eaterLabel}
-          </span>
+          {eaterLabel && (
+            <span className="flex items-center gap-1.5">
+              <Users size={15} />
+              {eaterLabel}
+            </span>
+          )}
         </span>
+        )}
       </motion.button>
     </motion.li>
   );

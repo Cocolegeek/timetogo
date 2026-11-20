@@ -2,11 +2,8 @@
 
 import { use, useEffect, useMemo, useRef, useState } from "react";
 import {
-  Plus,
   Map,
   MapPin,
-  MoreHorizontal,
-  Pencil,
   Trash2,
   CalendarPlus,
   Route,
@@ -26,13 +23,6 @@ import { useToast } from "@/components/shared/Toaster";
 import { useUndoableDelete } from "@/hooks/useUndoableDelete";
 import { useQuickAdd } from "@/hooks/useQuickAdd";
 import { PageHeader } from "@/components/layout/PageHeader";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { useTrip } from "@/hooks/useTrip";
 import { useItinerary } from "@/hooks/useItinerary";
@@ -197,23 +187,11 @@ export default function PlanningPage({ params }: PlanningPageProps) {
                         participants={participants}
                         onEdit={() => openForEdit(item)}
                         highlight={item.id === highlightId}
-                        onDelete={() => remove(item.id, "Étape supprimée")}
                         onSwipeDelete={() => remove(item.id, "Étape supprimée")}
                       />
                     </TimelineRow>
                   ))}
                 </AnimatePresence>
-                <li className="grid grid-cols-[3rem_minmax(0,1fr)] gap-3">
-                  <span />
-                  <button
-                    type="button"
-                    onClick={() => openPicker(currentDate)}
-                    className="pressable flex h-12 items-center justify-center gap-2 rounded-2xl border border-dashed border-foreground/20 text-sm font-semibold text-muted-foreground transition-colors hover:border-foreground/35 hover:text-foreground"
-                  >
-                    <Plus size={16} />
-                    Ajouter une étape
-                  </button>
-                </li>
               </motion.ol>
             )}
           </motion.section>
@@ -247,6 +225,7 @@ export default function PlanningPage({ params }: PlanningPageProps) {
         defaultDate={fallbackDate}
         initialValues={editingItem}
         onSubmit={handleSubmit}
+        onDelete={editingItem ? () => remove(editingItem.id, "Étape supprimée") : undefined}
       />
 
       <JourneyForm
@@ -262,6 +241,7 @@ export default function PlanningPage({ params }: PlanningPageProps) {
         defaultDate={fallbackDate}
         initialValues={editingItem}
         onSubmit={handleSubmit}
+        onDelete={editingItem ? () => remove(editingItem.id, "Étape supprimée") : undefined}
       />
 
     </div>
@@ -323,7 +303,6 @@ function ItineraryCard({
   item,
   participants,
   onEdit,
-  onDelete,
   onSwipeDelete,
   highlight,
 }: {
@@ -331,7 +310,6 @@ function ItineraryCard({
   item: ItineraryItem;
   participants: Participant[];
   onEdit: () => void;
-  onDelete: () => void;
   onSwipeDelete: () => void;
 }) {
   const openLocation = useOpenLocation();
@@ -431,37 +409,7 @@ function ItineraryCard({
           )}
         </button>
 
-        <div className="-mt-1 -mr-1 flex shrink-0 flex-col items-center">
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              className="flex size-10 items-center justify-center rounded-full text-muted-foreground outline-none transition-colors hover:bg-foreground/[0.06] hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
-              aria-label={`Actions pour ${item.title}`}
-            >
-              <MoreHorizontal size={19} />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="min-w-48">
-              {isJourney && item.location && item.destination ? (
-                <DropdownMenuItem onClick={() => openRoute(item.location!, item.destination!, journeyOpts)}>
-                  <Navigation />
-                  Itinéraire
-                </DropdownMenuItem>
-              ) : item.location ? (
-                <DropdownMenuItem onClick={() => openLocation(item.location!)}>
-                  <MapPin />
-                  Ouvrir dans une app
-                </DropdownMenuItem>
-              ) : null}
-              <DropdownMenuItem onClick={onEdit}>
-                <Pencil />
-                Modifier
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={onDelete} variant="destructive">
-                <Trash2 />
-                Supprimer
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+        <div className="-my-0.5 -mr-1 flex shrink-0 items-center self-center">
           {(isJourney ? item.location && item.destination : item.location) && (
             <button
               type="button"
@@ -471,8 +419,8 @@ function ItineraryCard({
                   : openLocation(item.location!)
               }
               className={cn(
-                "flex size-10 items-center justify-center rounded-full transition-colors",
-                isJourney ? "text-sky-400 hover:bg-sky-500/15" : "text-primary hover:bg-primary/10"
+                "flex size-11 items-center justify-center rounded-full transition-colors",
+                isJourney ? "bg-sky-500/12 text-sky-400 hover:bg-sky-500/20" : "bg-secondary text-foreground hover:bg-foreground/[0.08]"
               )}
               aria-label={isJourney ? "Voir l'itinéraire" : `Ouvrir ${item.location} dans une app de cartes`}
             >

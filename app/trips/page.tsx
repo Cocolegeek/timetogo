@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Plus, Compass, Wallet, ArrowRight } from "lucide-react";
+import { Plus } from "lucide-react";
 import dynamic from "next/dynamic";
 import { TripCard } from "@/components/trips/TripCard";
 import { ConfirmDeleteDialog } from "@/components/shared/ConfirmDeleteDialog";
@@ -162,27 +162,9 @@ function TripsPageContent() {
                     </StaggerItem>
                   )}
 
-                  <StaggerItem>
-                    {sortedGroups.length > 0 ? (
-                      <TripSection title="Groupes" trips={sortedGroups} cardProps={cardProps} />
-                    ) : (
-                      <SectionEmpty
-                        icon={Wallet}
-                        text="Un budget partagé, sans voyage"
-                        ctaLabel="Créer un groupe"
-                        href="/trips/new"
-                      />
-                    )}
-                  </StaggerItem>
-
-                  {!featured && upcoming.length === 0 && (
+                  {sortedGroups.length > 0 && (
                     <StaggerItem>
-                      <SectionEmpty
-                        icon={Compass}
-                        text="Pas encore de voyage à l'horizon"
-                        ctaLabel="Créer un voyage"
-                        href="/trips/new"
-                      />
+                      <TripSection title="Groupes" trips={sortedGroups} cardProps={cardProps} />
                     </StaggerItem>
                   )}
 
@@ -279,45 +261,13 @@ function TripSection({
 }) {
   return (
     <section>
-      <SectionLabel count={trips.length}>{title}</SectionLabel>
+      <SectionLabel>{title}</SectionLabel>
       <div className="-mx-2.5 space-y-1">
         {trips.map((trip) => (
           <TripCard key={trip.id} trip={trip} {...cardProps} />
         ))}
       </div>
     </section>
-  );
-}
-
-// ─── SectionEmpty ───────────────────────────────────────────────────────────
-
-function SectionEmpty({
-  icon: Icon,
-  text,
-  ctaLabel,
-  href,
-}: {
-  icon: typeof Compass;
-  text: string;
-  ctaLabel: string;
-  href: string;
-}) {
-  return (
-    <Link
-      href={href}
-      className="pressable flex items-center gap-4 rounded-[1.5rem] border border-dashed border-foreground/20 p-4 transition-colors hover:border-foreground/35 hover:bg-foreground/[0.02]"
-    >
-      <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-secondary">
-        <Icon size={20} className="text-muted-foreground" />
-      </div>
-      <div className="min-w-0 flex-1">
-        <p className="text-[0.95rem] font-medium text-foreground">{text}</p>
-        <p className="mt-0.5 flex items-center gap-1 text-sm font-semibold text-primary">
-          {ctaLabel}
-          <ArrowRight size={14} />
-        </p>
-      </div>
-    </Link>
   );
 }
 

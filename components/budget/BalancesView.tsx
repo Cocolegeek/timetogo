@@ -205,36 +205,75 @@ export function BalancesView({
       {balances.length > 0 && (
         <StaggerItem>
           <SectionLabel>Tous les soldes</SectionLabel>
-          <div className="grid grid-cols-2 gap-2.5">
-            {balances.map((balance) => {
-              const p = participantBy(balance.participantId);
-              if (!p) return null;
-              const isCreditor = balance.net > 0.005;
-              const isDebtor = balance.net < -0.005;
-              return (
-                <button
-                  key={balance.participantId}
-                  type="button"
-                  onClick={() => setOpenParticipant(p)}
-                  className="pressable flex items-center gap-2.5 rounded-2xl bg-card px-3 py-3 text-left shadow-card"
-                >
-                  <ParticipantAvatar participant={p} size="sm" />
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-medium">{p.name}</span>
-                    <span
+          {(() => {
+            const max = Math.max(...balances.map((b) => Math.abs(b.net)), 0.01);
+            const sorted = [...balances].sort((a, b) => b.net - a.net);
+            return (
+              <div className="overflow-hidden rounded-[1.5rem] bg-card shadow-card">
+                {sorted.map((balance, i) => {
+                  const p = participantBy(balance.participantId);
+                  if (!p) return null;
+                  const isCreditor = balance.net > 0.005;
+                  const isDebtor = balance.net < -0.005;
+                  const width = `${(Math.abs(balance.net) / max) * 100}%`;
+                  return (
+                    <button
+                      key={balance.participantId}
+                      type="button"
+                      onClick={() => setOpenParticipant(p)}
                       className={cn(
-                        "tabular block text-sm font-semibold",
-                        isCreditor ? "text-emerald-400" : isDebtor ? "text-rose-400" : "text-muted-foreground"
+                        "flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-foreground/[0.03]",
+                        i > 0 && "border-t border-border"
                       )}
                     >
-                      {isCreditor ? "+" : isDebtor ? "−" : ""}
-                      {formatMoney(Math.abs(balance.net))}
-                    </span>
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+                      <ParticipantAvatar participant={p} size="sm" />
+                      <span className="min-w-0 flex-1">
+                        <span className="flex items-baseline justify-between gap-3">
+                          <span className="truncate text-[0.95rem] font-medium">
+                            {p.name}
+                            {p.id === myId && <span className="ml-1.5 text-sm font-normal text-muted-foreground">toi</span>}
+                          </span>
+                          <span
+                            className={cn(
+                              "tabular shrink-0 text-sm font-semibold",
+                              isCreditor ? "text-emerald-400" : isDebtor ? "text-rose-400" : "text-muted-foreground"
+                            )}
+                          >
+                            {isCreditor ? "+" : isDebtor ? "−" : ""}
+                            {formatMoney(Math.abs(balance.net))}
+                          </span>
+                        </span>
+                        {/* Diverging bar from the centre: left = owes the group, right = is owed. */}
+                        <span aria-hidden="true" className="relative mt-2 flex h-1.5 items-center rounded-full bg-foreground/[0.06]">
+                          <span className="absolute -inset-y-1 left-1/2 w-px bg-foreground/20" />
+                          <span className="flex h-full w-1/2 justify-end">
+                            {isDebtor && (
+                              <motion.span
+                                initial={{ width: 0 }}
+                                animate={{ width }}
+                                transition={{ duration: 0.7, ease: EASE_OUT, delay: 0.1 + i * 0.04 }}
+                                className="h-full rounded-l-full bg-rose-500"
+                              />
+                            )}
+                          </span>
+                          <span className="flex h-full w-1/2">
+                            {isCreditor && (
+                              <motion.span
+                                initial={{ width: 0 }}
+                                animate={{ width }}
+                                transition={{ duration: 0.7, ease: EASE_OUT, delay: 0.1 + i * 0.04 }}
+                                className="h-full rounded-r-full bg-emerald-500"
+                              />
+                            )}
+                          </span>
+                        </span>
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            );
+          })()}
         </StaggerItem>
       )}
 

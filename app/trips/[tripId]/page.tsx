@@ -5,7 +5,6 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import {
   ArrowUpRight,
-  CalendarDays,
   Check,
   ChevronDown,
   ChevronRight,
@@ -16,7 +15,7 @@ import dynamic from "next/dynamic";
 import { CATEGORIES } from "@/lib/budget/categories";
 import { IdentityPicker } from "@/components/trips/IdentityPicker";
 import { GettingStarted } from "@/components/trips/GettingStarted";
-import { UpNextCard } from "@/components/trips/UpNextCard";
+import { DayAgendaCard } from "@/components/trips/DayAgendaCard";
 import { useRouter } from "next/navigation";
 import { TripCover } from "@/components/trips/TripCover";
 import { tripStatus } from "@/components/trips/TripCard";
@@ -32,14 +31,12 @@ import { useItinerary } from "@/hooks/useItinerary";
 import { useMeals } from "@/hooks/useMeals";
 import { useDebts } from "@/hooks/useDebts";
 import { useUserId } from "@/hooks/useUserId";
-import { pickRelevantPlanningDay, relativeDayLabel } from "@/lib/planning-day";
-import { ITINERARY_TYPES } from "@/lib/itinerary-types";
 import { SLOT_CONFIG } from "@/lib/meals/slots";
 import { formatDateRange } from "@/lib/format-date";
 import { EASE_OUT } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import { isVoyage, tripFeatures } from "@/lib/trip-features";
-import type { ExpenseCategory } from "@/types";
+import type { ExpenseCategory, Participant } from "@/types";
 import { PARTICIPANT_COLORS } from "@/lib/participant-colors";
 
 const BudgetEditDialog = dynamic(
@@ -108,7 +105,6 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
   const barTone = budgetPct >= 100 ? "bg-red-500" : budgetPct >= 85 ? "bg-amber-400" : "bg-primary";
 
   const today = new Date().toISOString().split("T")[0];
-  const relevantDay = pickRelevantPlanningDay(itineraryItems, today);
   const todayMeals = meals
     .filter((m) => m.date === today)
     .sort((a, b) => SLOT_CONFIG[a.slot].position - SLOT_CONFIG[b.slot].position);
@@ -123,9 +119,9 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
         <div className="relative overflow-hidden rounded-[1.75rem] shadow-raised">
           {trip.iconUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={trip.iconUrl} alt="" className="h-48 w-full object-cover" draggable={false} />
+            <img src={trip.iconUrl} alt="" className="h-40 w-full object-cover" draggable={false} />
           ) : (
-            <TripCover seed={trip.id} className="h-48" />
+            <TripCover seed={trip.id} className="h-40" />
           )}
           {status.kind !== "permanent" && (
             <span className="absolute top-4 left-4 inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-[0.8125rem] font-semibold text-[#1A1D24] shadow-card backdrop-blur">
@@ -202,13 +198,8 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
         />
       </StaggerItem>
 
-      {features.hasPlanning && (
-        <StaggerItem>
-          <UpNextCard items={itineraryItems} today={today} planningHref={`/trips/${tripId}/planning`} />
-        </StaggerItem>
-      )}
-
-      {/* ── Budget ───────────────────────────────────────────── */}
+      {/* ── Budget (hidden while empty: « Premiers pas » asks for the first expense) ── */}
+      {(expenses.length > 0 || !!trip.totalBudget) && (
       <StaggerItem>
         <section className="rounded-[1.75rem] bg-card p-5 shadow-card">
           <div className="flex items-center justify-between">
@@ -299,6 +290,7 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
           </Link>
         </section>
       </StaggerItem>
+      )}
 
       {/* ── Balances ─────────────────────────────────────────── */}
       {me && expenses.length > 0 && (
@@ -317,35 +309,31 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
               </span>
             </Link>
           ) : (
-            <div className="grid grid-cols-2 gap-3">
-              <BalanceTile
-                href={`/trips/${tripId}/budget?tab=balances`}
-                tone="owe"
-                label="Tu dois"
-                amount={formatMoney(iOweTotal)}
-                detail={
-                  iOwe.length === 0
-                    ? "Rien du tout"
-                    : iOwe.length === 1
-                      ? `à ${nameOf(iOwe[0].toId)}`
-                      : `à ${iOwe.length} personnes`
-                }
-                muted={iOweTotal < 0.01}
-              />
-              <BalanceTile
-                href={`/trips/${tripId}/budget?tab=balances`}
-                tone="owed"
-                label="On te doit"
-                amount={formatMoney(owedTotal)}
-                detail={
-                  owedToMe.length === 0
-                    ? "Rien pour l'instant"
-                    : owedToMe.length === 1
-                      ? `de ${nameOf(owedToMe[0].fromId)}`
-                      : `de ${owedToMe.length} personnes`
-                }
-                muted={owedTotal < 0.01}
-              />
+            <div className={cn("grid gap-3", iOweTotal >= 0.01 && owedTotal >= 0.01 && "grid-cols-2")}>
+              {iOweTotal >= 0.01 && (
+                <BalanceTile
+                  href={`/trips/${tripId}/budget?tab=balances`}
+                  tone="owe"
+                  label="Tu dois"
+                  amount={formatMoney(iOweTotal)}
+                  people={iOwe.map((s) => s.toId)}
+                  participants={trip.participants}
+                  detail={iOwe.length === 1 ? `à ${nameOf(iOwe[0].toId)}` : `à ${iOwe.length} personnes`}
+                  wide={owedTotal < 0.01}
+                />
+              )}
+              {owedTotal >= 0.01 && (
+                <BalanceTile
+                  href={`/trips/${tripId}/budget?tab=balances`}
+                  tone="owed"
+                  label="On te doit"
+                  amount={formatMoney(owedTotal)}
+                  people={owedToMe.map((s) => s.fromId)}
+                  participants={trip.participants}
+                  detail={owedToMe.length === 1 ? `${nameOf(owedToMe[0].fromId)} te doit` : `${owedToMe.length} personnes`}
+                  wide={iOweTotal < 0.01}
+                />
+              )}
             </div>
           )}
         </StaggerItem>
@@ -354,47 +342,7 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
       {/* ── Planning ─────────────────────────────────────────── */}
       {features.hasPlanning && (
         <StaggerItem>
-          <section className="rounded-[1.75rem] bg-card p-5 shadow-card">
-            <div className="flex items-center justify-between">
-              <h2 className="font-display text-[1.15rem] font-bold tracking-tight">
-                {relevantDay ? relativeDayLabel(relevantDay.daysOffset) : "Planning"}
-              </h2>
-              <Link href={`/trips/${tripId}/planning`} className="flex items-center gap-0.5 text-sm font-semibold text-primary">
-                Tout voir
-                <ChevronRight size={16} />
-              </Link>
-            </div>
-            {relevantDay ? (
-              <ol className="relative mt-4 space-y-3.5 before:absolute before:top-3 before:bottom-3 before:left-[1.1875rem] before:w-px before:bg-border">
-                {relevantDay.items.slice(0, 4).map((item) => {
-                  const cfg = ITINERARY_TYPES[item.type];
-                  const Icon = cfg.icon;
-                  return (
-                    <li key={item.id} className="relative flex items-center gap-3.5">
-                      <span className={cn("relative flex size-10 shrink-0 items-center justify-center rounded-full ring-4 ring-card", cfg.tile)}>
-                        <Icon size={18} />
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate font-medium">{item.title}</span>
-                        {item.location && <span className="block truncate text-sm text-muted-foreground">{item.location}</span>}
-                      </span>
-                      {item.time && <span className="tabular shrink-0 text-sm font-semibold text-muted-foreground">{item.time.slice(0, 5)}</span>}
-                    </li>
-                  );
-                })}
-              </ol>
-            ) : (
-              <Link href={`/trips/${tripId}/planning`} className="mt-3 flex items-center gap-3 text-[0.95rem] text-muted-foreground">
-                <CalendarDays size={18} />
-                Aucune étape pour l&apos;instant. Ajoute la première.
-              </Link>
-            )}
-            {relevantDay && relevantDay.items.length > 4 && (
-              <p className="mt-3 pl-[3.375rem] text-sm text-muted-foreground">
-                + {relevantDay.items.length - 4} autre{relevantDay.items.length - 4 > 1 ? "s" : ""}
-              </p>
-            )}
-          </section>
+          <DayAgendaCard items={itineraryItems} today={today} planningHref={`/trips/${tripId}/planning`} />
         </StaggerItem>
       )}
 
@@ -404,7 +352,7 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
           <section className="rounded-[1.75rem] bg-card p-5 shadow-card">
             <div className="flex items-center justify-between">
               <h2 className="font-display text-[1.15rem] font-bold tracking-tight">Au menu aujourd&apos;hui</h2>
-              <Link href={`/trips/${tripId}/menus`} className="flex items-center gap-0.5 text-sm font-semibold text-primary">
+              <Link href={`/trips/${tripId}/menus`} className="-mr-2 flex h-9 items-center gap-0.5 rounded-full px-2 text-sm font-semibold text-muted-foreground hover:text-foreground">
                 Menus
                 <ChevronRight size={16} />
               </Link>
@@ -415,14 +363,16 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
                 const Icon = slot.icon;
                 const what = meal.dishes.length > 0 ? meal.dishes.map((d) => d.name).join(" · ") : meal.title ?? "À définir";
                 return (
-                  <li key={meal.id} className="flex items-center gap-3.5 py-3">
-                    <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-secondary text-muted-foreground">
-                      <Icon size={18} />
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-sm text-muted-foreground">{slot.label}</span>
-                      <span className="block truncate font-medium">{what}</span>
-                    </span>
+                  <li key={meal.id}>
+                    <Link href={`/trips/${tripId}/menus?date=${today}`} className="flex items-center gap-3.5 py-3">
+                      <span className={cn("flex size-10 shrink-0 items-center justify-center rounded-full", slot.bgClass, slot.textClass)}>
+                        <Icon size={18} />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-sm text-muted-foreground">{slot.label}</span>
+                        <span className="block truncate font-medium">{what}</span>
+                      </span>
+                    </Link>
                   </li>
                 );
               })}
@@ -478,35 +428,49 @@ function BalanceTile({
   label,
   amount,
   detail,
-  muted,
+  people,
+  participants,
+  wide,
 }: {
   href: string;
   tone: "owe" | "owed";
   label: string;
   amount: string;
   detail: string;
-  muted?: boolean;
+  people: string[];
+  participants: Participant[];
+  wide?: boolean;
 }) {
+  const faces = people
+    .map((id) => participants.find((p) => p.id === id))
+    .filter((p): p is Participant => !!p);
   return (
     <Link
       href={href}
       className={cn(
-        "pressable block rounded-[1.5rem] p-4",
-        muted ? "bg-card shadow-card" : tone === "owe" ? "bg-rose-500/12" : "bg-emerald-500/12"
+        "pressable flex items-center gap-3 rounded-[1.5rem] p-4",
+        tone === "owe" ? "bg-rose-500/12" : "bg-emerald-500/12"
       )}
     >
-      <span className={cn("block text-sm font-semibold", muted ? "text-muted-foreground" : tone === "owe" ? "text-rose-300" : "text-emerald-300")}>
-        {label}
+      <span className="min-w-0 flex-1">
+        <span className={cn("block text-sm font-semibold", tone === "owe" ? "text-rose-300" : "text-emerald-300")}>{label}</span>
+        <span
+          className={cn(
+            "tabular mt-1 block font-display leading-tight font-extrabold tracking-tight",
+            wide ? "text-[2rem]" : "text-[1.75rem]",
+            tone === "owe" ? "text-rose-200" : "text-emerald-200"
+          )}
+        >
+          {amount}
+        </span>
+        <span className="mt-0.5 block truncate text-sm text-muted-foreground">{detail}</span>
       </span>
-      <span
-        className={cn(
-          "tabular mt-1 block font-display text-[1.75rem] leading-tight font-extrabold tracking-tight",
-          muted ? "text-muted-foreground" : tone === "owe" ? "text-rose-200" : "text-emerald-200"
-        )}
-      >
-        {amount}
-      </span>
-      <span className="mt-0.5 block truncate text-sm text-muted-foreground">{detail}</span>
+      {wide && faces.length > 0 && (
+        <span className="flex shrink-0 items-center">
+          <ParticipantStack participants={faces} size="sm" max={3} showLabel={false} />
+          <ChevronRight size={18} className="ml-1 text-muted-foreground" />
+        </span>
+      )}
     </Link>
   );
 }

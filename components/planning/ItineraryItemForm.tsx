@@ -10,6 +10,7 @@ import {
   Users,
   AlignLeft,
   Loader2,
+  Trash2,
 } from "lucide-react";
 import {
   Dialog,
@@ -61,6 +62,8 @@ interface ItineraryItemFormProps {
   /** Provide an item to enter edit mode. */
   initialValues?: ItineraryItem;
   onSubmit: (values: ItineraryFormValues) => Promise<void>;
+  /** Edit mode only: deletes the item (with the page's undo toast). */
+  onDelete?: () => void;
 }
 
 type ItineraryNavTab = "Quand" | "Quoi" | "Qui";
@@ -71,6 +74,7 @@ export function ItineraryItemForm({
   participants,
   defaultDate,
   initialValues,
+  onDelete,
   onSubmit,
 }: ItineraryItemFormProps) {
   const isEdit = !!initialValues;
@@ -374,6 +378,22 @@ export function ItineraryItemForm({
               <p className="rounded-2xl bg-red-500/10 px-4 py-3 text-sm text-red-400">
                 {errorMsg}
               </p>
+            </div>
+          )}
+
+          {isEdit && onDelete && (
+            <div className="px-5 pt-8 pb-2">
+              <button
+                type="button"
+                onClick={() => {
+                  onOpenChange(false);
+                  onDelete();
+                }}
+                className="pressable flex h-12 w-full items-center justify-center gap-2 rounded-full bg-red-500/10 text-[0.95rem] font-semibold text-red-400 transition-colors hover:bg-red-500/15"
+              >
+                <Trash2 size={17} />
+                Supprimer l&apos;étape
+              </button>
             </div>
           )}
 

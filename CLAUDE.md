@@ -60,8 +60,8 @@ components/
   auth/       GoogleIcon, GuestUpgradeCard (carte « mode invité » + bouton Sauvegarder avec Google),
               GuestSignOutDialog (un invité qui se déconnecte perd ses données : on propose de sauvegarder)
   layout/     AppHeader, GlassCard (= carte pleine, plus de verre), MeshGradientBackground (= fond uni),
-              PageHeader (grand titre), SectionThemeController, TripAppHeader, TripNav, TripClientProviders,
-              UserMenu, VoyouLogo (LogoMark = visage « oyo » en SVG inline + mot-symbole)
+              PageHeader (grand titre), SectionThemeController, TripAppHeader (retour · recherche · partage · modifier),
+              TripNav, TripClientProviders, UserMenu (avatar = lien direct vers /settings), VoyouLogo (LogoMark = visage « oyo » en SVG inline + mot-symbole)
   motion/     MotionProvider (reducedMotion="user"), PageTransition (templates), Stagger/StaggerItem,
               NumberTicker (montants animés)
   menus/      MealEditDialog
@@ -80,7 +80,7 @@ components/
               « Tout le monde » optionnel — payeurs, étapes, trajets, repas), ParticipantStack, SectionLabel, Spinner
   trips/      BudgetEditDialog, GettingStarted, GroupWizard, IdentityPicker,
               OnboardingModal (bienvenue + « Ta tête dans la bande » : prénom + avatar), ShareModal,
-              TripSearch, UpNextCard,
+              TripSearch, DayAgendaCard (journée utile du tableau de bord : étape en cours / à suivre + reste du jour),
               TripCard (variants featured | row, tripStatus()), TripCover (illustrations en aplats),
               TripEditDialog, TripEditWrapper, TripWizard
   ui/         shadcn primitives (button, card, dialog, dropdown-menu, input, label,
@@ -212,6 +212,11 @@ DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip(
 
 ## Parcours (enforced — do not regress)
 
+- **Épure** : n'afficher que ce qui diffère du défaut (pas de « Tout le monde », « À la maison », compteurs à 1,
+  tuile à 0 €) ; une action = un seul endroit (pas de menu « … » qui répète un geste ou un bouton visible).
+- **Réglages** : carte identité (avatar → feuille photo + avatars), champs en liste groupée, un seul bouton
+  « Enregistrer » flottant qui n'apparaît que si quelque chose a changé.
+
 - **Navigation voyage** : barre d'onglets flottante (matière translucide = seule zone « verre » autorisée),
   qui se compacte au défilement ; toucher l'onglet actif ou le titre de l'en-tête remonte en haut.
 - **Ajout rapide** : le bouton « + » de la barre ouvre la feuille Ajouter (dépense, étape, trajet, repas).
@@ -222,7 +227,9 @@ DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip(
   `planning?date=YYYY-MM-DD&item=<id>`, `menus?date=YYYY-MM-DD`.
 - **Retours** : `useToast()` (`ToastProvider` à la racine) après chaque création / modification / suppression,
   `haptic()` sur les gestes. Feuilles du bas fermables en glissant la poignée.
-- **Tableau de bord** : `GettingStarted` (premiers pas) puis `UpNextCard` (prochaine étape + « Y aller »).
+- **Tableau de bord** : `GettingStarted` (n'affiche que les étapes restantes) puis budget, solde, `DayAgendaCard`
+  (aujourd'hui, ou demain une fois la journée finie), repas du jour. Une carte vide n'est pas affichée si
+  « Premiers pas » invite déjà à la remplir. Solde : une seule tuile large si un seul sens est non nul.
 
 ## Performance & cache (enforced — do not regress)
 
@@ -267,7 +274,8 @@ All creation/edit forms are full-screen or near-full-screen on mobile:
 ### Expense flow
 Tap card → `ExpenseDetailSheet` (read-only: amount, payers, splits) → "Modifier" → `ExpenseForm`.
 Swipe left on card = delete with a 5 s "Annuler" toast (`useUndoableDelete`) — no confirmation dialog.
-Same for expenses, itinerary items and meals (also from detail sheets / menus).
+Same for expenses, itinerary items and meals (also from detail sheets / menus). Étapes et trajets : toucher la carte
+= modifier, bouton rond = itinéraire, « Supprimer » en bas du formulaire d'édition (pas de menu « … » sur les cartes).
 Budget page accepts `?tab=balances` to open the Soldes tab (used by the dashboard balance tiles).
 
 ### Number inputs

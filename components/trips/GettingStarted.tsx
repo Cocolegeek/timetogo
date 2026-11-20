@@ -78,7 +78,7 @@ export function GettingStarted({ tripId, steps }: { tripId: string; steps: Start
             </button>
           </div>
           <ul className="px-2 pb-2">
-            {steps.map((step) => (
+            {steps.filter((step) => !step.done).map((step) => (
               <li key={step.id}>
                 <button
                   type="button"

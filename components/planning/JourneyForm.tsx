@@ -15,6 +15,7 @@ import {
   Loader2,
   Users,
   TriangleAlert,
+  Trash2,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle, FULLSCREEN_DIALOG } from "@/components/ui/dialog";
 import { LocationPickerSheet } from "@/components/shared/LocationPickerSheet";
@@ -48,6 +49,8 @@ interface JourneyFormProps {
   defaultDate: string;
   initialValues?: ItineraryItem;
   onSubmit: (values: ItineraryFormValues) => Promise<void>;
+  /** Edit mode only: deletes the item (with the page's undo toast). */
+  onDelete?: () => void;
 }
 
 type JourneyNavTab = "Quand" | "Trajet" | "Qui";
@@ -58,6 +61,7 @@ export function JourneyForm({
   participants,
   defaultDate,
   initialValues,
+  onDelete,
   onSubmit,
 }: JourneyFormProps) {
   const isEdit = !!initialValues;
@@ -440,6 +444,22 @@ export function JourneyForm({
               <p className="rounded-2xl bg-red-500/10 px-4 py-3 text-sm text-red-400">
                 {errorMsg}
               </p>
+            </div>
+          )}
+
+          {isEdit && onDelete && (
+            <div className="px-5 pt-8 pb-2">
+              <button
+                type="button"
+                onClick={() => {
+                  onOpenChange(false);
+                  onDelete();
+                }}
+                className="pressable flex h-12 w-full items-center justify-center gap-2 rounded-full bg-red-500/10 text-[0.95rem] font-semibold text-red-400 transition-colors hover:bg-red-500/15"
+              >
+                <Trash2 size={17} />
+                Supprimer le trajet
+              </button>
             </div>
           )}
 
