@@ -1,10 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
-  <defs>
-    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#6366f1"/>
-      <stop offset="100%" stop-color="#7c3aed"/>
-    </linearGradient>
-  </defs>
-  <rect width="192" height="192" rx="40" fill="url(#g)"/>
-  <text x="96" y="130" font-size="96" text-anchor="middle" font-family="system-ui">✈️</text>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="150" fill="#FFC83D"/><g fill="none" stroke="#15171C" stroke-linecap="round" stroke-linejoin="round">
+<circle cx="174" cy="214" r="54" stroke-width="36"/><circle cx="338" cy="214" r="54" stroke-width="36"/>
+<circle cx="190" cy="212" r="17" fill="#15171C" stroke="none"/><circle cx="354" cy="212" r="17" fill="#15171C" stroke="none"/>
+<path d="M228 270 L256 314 L284 270 M256 314 C254 366 308 394 364 366" stroke-width="34"/>
+</g></svg>

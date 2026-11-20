@@ -106,7 +106,7 @@ export function UpNextCard({ items, today, planningHref }: { items: ItineraryIte
           )}
           <Link
             href={planningHref}
-            className="pressable flex h-11 flex-1 items-center justify-center rounded-full bg-foreground/[0.06] text-[0.95rem] font-semibold transition-colors hover:bg-foreground/10"
+            className="pressable flex h-11 flex-1 items-center justify-center rounded-full bg-foreground/[0.06] text-[0.95rem] font-semibold transition-colors hover:bg-foreground/[0.08]"
           >
             Voir la journée
           </Link>

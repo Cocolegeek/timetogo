@@ -163,25 +163,25 @@ export function BudgetEditDialog({
                 className="tabular h-14 pr-14 font-display text-2xl font-bold"
                 autoFocus
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-500 pointer-events-none">
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground pointer-events-none">
                 {currency}
               </span>
             </div>
 
             {/* Live preview */}
             {mode === "per-person" && numericValue > 0 && (
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-muted-foreground">
                 × {participantCount} voyageur{participantCount !== 1 ? "s" : ""} ={" "}
-                <span className="text-slate-200 font-medium">
+                <span className="text-foreground font-medium">
                   {formatCurrency(computedTotal, currency)}
                 </span>{" "}
                 au total
               </p>
             )}
             {mode === "total" && perPersonPreview !== null && (
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-muted-foreground">
                 Soit{" "}
-                <span className="text-slate-200 font-medium">
+                <span className="text-foreground font-medium">
                   {formatCurrency(perPersonPreview, currency)}
                 </span>{" "}
                 par personne ({participantCount} voyageur

@@ -173,7 +173,7 @@ export function LocationPickerSheet({
             <div className="relative">
               <Search
                 size={18}
-                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none"
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
               />
               <input
                 ref={inputRef}
@@ -186,13 +186,13 @@ export function LocationPickerSheet({
               {loading ? (
                 <Loader2
                   size={16}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 animate-spin text-slate-500"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 animate-spin text-muted-foreground"
                 />
               ) : query ? (
                 <button
                   type="button"
                   onClick={() => { setQuery(""); setSuggestions([]); setLoading(false); }}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-500 hover:text-slate-300 rounded"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground/85 rounded"
                 >
                   <X size={15} />
                 </button>
@@ -217,11 +217,11 @@ export function LocationPickerSheet({
                         <MapPin size={17} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-base font-semibold text-slate-100 truncate leading-snug">
+                        <p className="text-base font-semibold text-foreground truncate leading-snug">
                           {main}
                         </p>
                         {subtitle && (
-                          <p className="text-sm text-slate-500 truncate mt-0.5">
+                          <p className="text-sm text-muted-foreground truncate mt-0.5">
                             {subtitle}
                           </p>
                         )}
@@ -232,22 +232,22 @@ export function LocationPickerSheet({
               </div>
             ) : query.trim().length >= 2 && !loading ? (
               <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
-                <div className="w-14 h-14 rounded-full bg-foreground/8 flex items-center justify-center mb-4">
-                  <MapPin size={22} className="text-slate-500" />
+                <div className="w-14 h-14 rounded-full bg-foreground/[0.06] flex items-center justify-center mb-4">
+                  <MapPin size={22} className="text-muted-foreground" />
                 </div>
-                <p className="text-slate-300 font-semibold text-lg">Aucun résultat</p>
-                <p className="text-sm text-slate-500 mt-1">
+                <p className="text-foreground/85 font-semibold text-lg">Aucun résultat</p>
+                <p className="text-sm text-muted-foreground mt-1">
                   Essaie un autre nom ou une adresse complète
                 </p>
               </div>
             ) : query.trim().length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
-                <div className="w-14 h-14 rounded-full bg-foreground/8 flex items-center justify-center mb-4">
-                  <Search size={22} className="text-slate-500" />
+                <div className="w-14 h-14 rounded-full bg-foreground/[0.06] flex items-center justify-center mb-4">
+                  <Search size={22} className="text-muted-foreground" />
                 </div>
-                <p className="text-slate-300 font-semibold">Où veux-tu aller ?</p>
-                <p className="text-sm text-slate-500 mt-1">
-                  Tape le nom d'un lieu, d'une ville ou d'une adresse
+                <p className="text-foreground/85 font-semibold">Où veux-tu aller ?</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Tape le nom d&apos;un lieu, d&apos;une ville ou d&apos;une adresse
                 </p>
               </div>
             ) : null}

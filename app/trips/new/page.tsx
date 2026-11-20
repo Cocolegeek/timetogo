@@ -11,6 +11,8 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { Stagger, StaggerItem } from "@/components/motion/Stagger";
 import { EASE_OUT } from "@/lib/motion";
 import type { TripType } from "@/types";
+import { ClientOnly } from "@/components/shared/ClientOnly";
+import { PageSkeleton } from "@/components/shared/Skeleton";
 
 const TYPE_OPTIONS: {
   type: TripType;
@@ -35,7 +37,7 @@ const TYPE_OPTIONS: {
 const ICON_BTN =
   "flex size-10 items-center justify-center rounded-full text-foreground transition-colors hover:bg-foreground/[0.06] outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
-export default function NewTripPage() {
+function NewTripPageContent() {
   const [chosen, setChosen] = useState<TripType | null>(null);
 
   return (
@@ -110,5 +112,13 @@ export default function NewTripPage() {
         </AnimatePresence>
       </main>
     </div>
+  );
+}
+
+export default function NewTripPage() {
+  return (
+    <ClientOnly fallback={<div className="mx-auto max-w-3xl px-5 pt-16"><PageSkeleton /></div>}>
+      <NewTripPageContent />
+    </ClientOnly>
   );
 }

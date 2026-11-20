@@ -171,7 +171,7 @@ export function IdentityPicker({
               <p className="text-base font-semibold text-foreground">
                 Je ne suis pas dans la liste
               </p>
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-muted-foreground">
                 Créer un nouveau participant
               </p>
             </div>
@@ -195,7 +195,7 @@ export function IdentityPicker({
                     className="w-3 h-3 rounded-full shrink-0"
                     style={{ backgroundColor: previewColor }}
                   />
-                  <span className="text-sm font-medium text-slate-300">Nouveau participant</span>
+                  <span className="text-sm font-medium text-foreground/85">Nouveau participant</span>
                 </div>
                 <button
                   type="button"
@@ -204,7 +204,7 @@ export function IdentityPicker({
                     setNewName("");
                     setError(null);
                   }}
-                  className="p-1 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-foreground/8 transition-colors"
+                  className="p-1 rounded-lg text-muted-foreground hover:text-foreground/85 hover:bg-foreground/[0.06] transition-colors"
                   aria-label="Annuler"
                 >
                   <X size={16} />
@@ -275,12 +275,12 @@ export function IdentityPicker({
                   <h3 className="font-display text-lg font-bold tracking-tight">
                     Identité déjà revendiquée
                   </h3>
-                  <p className="text-sm text-slate-400 leading-snug">
-                    <span className="text-slate-200 font-medium">
+                  <p className="text-sm text-muted-foreground leading-snug">
+                    <span className="text-foreground font-medium">
                       {confirmTarget.primaryName ?? "Un autre membre"}
                     </span>{" "}
                     est déjà lié à{" "}
-                    <span className="text-slate-200 font-medium">
+                    <span className="text-foreground font-medium">
                       {confirmTarget.participant.name}
                     </span>
                     . En continuant, tu deviens le compte principal pour cette

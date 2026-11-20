@@ -5,6 +5,7 @@ import { AppInstallBanner } from "@/components/shared/IosInstallBanner";
 import { SectionThemeController } from "@/components/layout/SectionThemeController";
 import { MotionProvider } from "@/components/motion/MotionProvider";
 import { ToastProvider } from "@/components/shared/Toaster";
+import { DataProvider } from "@/lib/data/swr";
 import "./globals.css";
 
 const inter = Inter({
@@ -40,9 +41,12 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
   },
   icons: {
-    icon: "/icons/icon.png",
-    apple: [{ url: "/icons/icon.png", sizes: "512x512" }],
-    shortcut: "/icons/icon.png",
+    icon: [
+      { url: "/icons/icon.svg", type: "image/svg+xml" },
+      { url: "/icons/favicon-32.png", sizes: "32x32", type: "image/png" },
+    ],
+    apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180" }],
+    shortcut: "/icons/favicon-32.png",
   },
   openGraph: {
     type: "website",
@@ -103,7 +107,9 @@ export default function RootLayout({
         <PwaRegister />
         <AppInstallBanner />
         <MotionProvider>
-          <ToastProvider>{children}</ToastProvider>
+          <DataProvider>
+            <ToastProvider>{children}</ToastProvider>
+          </DataProvider>
         </MotionProvider>
       </body>
     </html>

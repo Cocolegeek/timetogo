@@ -29,7 +29,7 @@ const ShareModal = dynamic(
 );
 
 const ICON_BTN =
-  "flex size-10 items-center justify-center rounded-full text-foreground transition-colors hover:bg-foreground/[0.06] active:bg-foreground/10 outline-none focus-visible:ring-2 focus-visible:ring-ring";
+  "flex size-10 items-center justify-center rounded-full text-foreground transition-colors hover:bg-foreground/[0.06] active:bg-foreground/[0.08] outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
 export function TripAppHeader({ tripId }: { tripId: string }) {
   const { trip, updateTrip, addParticipant, updateParticipant, deleteParticipant } =

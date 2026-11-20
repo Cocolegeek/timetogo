@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { computeShares } from "@/lib/budget/splits";
-import { useRevalidateOnFocus } from "@/hooks/useRevalidateOnFocus";
+import { useCachedQuery } from "@/hooks/useCachedQuery";
 import type { Expense, Payer } from "@/types";
 
 function rowToExpense(row: Record<string, unknown>): Expense {
@@ -28,24 +27,23 @@ function rowToExpense(row: Record<string, unknown>): Expense {
   };
 }
 
+const NO_EXPENSES: Expense[] = [];
+
+export async function fetchExpenseRows(tripId: string): Promise<Expense[]> {
+  const { data } = await createClient()
+    .from("expenses")
+    .select("*")
+    .eq("trip_id", tripId)
+    .order("date", { ascending: false });
+  return (data ?? []).map(rowToExpense);
+}
+
 export function useBudget(tripId: string) {
-  const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const fetchExpenses = useCallback(async () => {
-    const supabase = createClient();
-    setLoading(true);
-    const { data } = await supabase
-      .from("expenses")
-      .select("*")
-      .eq("trip_id", tripId)
-      .order("date", { ascending: false });
-    setExpenses((data ?? []).map(rowToExpense));
-    setLoading(false);
-  }, [tripId]);
-
-  useEffect(() => { fetchExpenses(); }, [fetchExpenses]);
-  useRevalidateOnFocus(fetchExpenses);
+  const { data: expenses, loading, set: setExpenses, refetch: fetchExpenses } = useCachedQuery(
+    tripId ? `expenses:${tripId}` : null,
+    () => fetchExpenseRows(tripId),
+    NO_EXPENSES
+  );
 
   const addExpense = async (
     data: Omit<Expense, "id" | "createdAt" | "updatedAt" | "amountInTripCurrency">

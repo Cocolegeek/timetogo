@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { SLOT_CONFIG } from "@/lib/meals/slots";
 import { CATEGORY_CONFIG, CATEGORY_ORDER } from "@/lib/meals/categories";
 import { cn } from "@/lib/utils";
+import { ParticipantPicker } from "@/components/shared/ParticipantPicker";
 import { COURSES, COURSE_BY_ID, COURSE_ORDER } from "@/lib/meals/courses";
 import type {
   Dish,
@@ -299,7 +300,7 @@ export function MealEditDialog({
                           "pressable flex h-11 items-center justify-center rounded-full text-sm font-semibold transition-colors",
                           selected
                             ? "bg-foreground text-background"
-                            : "bg-foreground/[0.06] text-foreground hover:bg-foreground/10"
+                            : "bg-foreground/[0.06] text-foreground hover:bg-foreground/[0.08]"
                         )}
                       >
                         {cfg.label}
@@ -343,66 +344,35 @@ export function MealEditDialog({
           {activeTab === "Qui" && (
             <>
               {participants.length === 0 ? (
-                <div className="px-5 py-10 text-center text-sm text-slate-500">
+                <div className="px-5 py-10 text-center text-sm text-muted-foreground">
                   Aucun participant — ajoute-en depuis l&apos;édition du voyage.
                 </div>
               ) : (
                 <>
                   {!isRestaurant && (
                     <Section
-                      icon={<ChefHat size={14} className="text-amber-400/80" />}
+                      icon={<ChefHat size={14} className="text-muted-foreground" />}
                       label="Qui gère ?"
                       hint="optionnel"
                     >
-                      <PeoplePills
+                      <ParticipantPicker
                         participants={participants}
                         selected={cookIds}
                         onToggle={toggleCook}
-                        selectedTone="amber"
                       />
                     </Section>
                   )}
 
                   <Section
-                    icon={<Users size={14} className="text-slate-400" />}
+                    icon={<Users size={14} className="text-muted-foreground" />}
                     label="Qui mange ?"
                   >
-                    <div className="flex gap-1.5 flex-wrap">
-                      <button
-                        type="button"
-                        onClick={toggleAllEaters}
-                        className={cn(
-                          "px-3 py-1.5 rounded-full text-sm font-medium border transition-all active:scale-95",
-                          allEatersSelected
-                            ? "bg-section-soft text-section-soft border-section"
-                            : "bg-foreground/5 text-slate-400 border-foreground/10 hover:bg-foreground/10"
-                        )}
-                      >
-                        Tout le monde
-                      </button>
-                      {participants.map((p) => {
-                        const sel = eaterIds.includes(p.id);
-                        return (
-                          <button
-                            key={p.id}
-                            type="button"
-                            onClick={() => toggleEater(p.id)}
-                            className={cn(
-                              "flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium transition-all active:scale-95",
-                              sel
-                                ? "bg-primary/10 text-primary ring-1 ring-primary/40 border-transparent"
-                                : "border-foreground/10 bg-foreground/5 text-slate-300 hover:bg-foreground/10"
-                            )}
-                          >
-                            <span
-                              className="w-2.5 h-2.5 rounded-full shrink-0"
-                              style={{ backgroundColor: p.color }}
-                            />
-                            {p.name}
-                          </button>
-                        );
-                      })}
-                    </div>
+                    <ParticipantPicker
+                      participants={participants}
+                      selected={eaterIds}
+                      onToggle={toggleEater}
+                      onToggleAll={toggleAllEaters}
+                    />
                   </Section>
                 </>
               )}
@@ -436,7 +406,7 @@ export function MealEditDialog({
                 <button
                   type="button"
                   onClick={addDish}
-                  className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-dashed border-foreground/15 text-sm text-slate-400 hover:border-section/40 hover:text-section-soft hover:bg-section/5 transition-colors"
+                  className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-dashed border-foreground/20 text-sm text-muted-foreground hover:border-foreground/40 hover:text-primary hover:bg-foreground/5 transition-colors"
                 >
                   <Plus size={14} />
                   Ajouter un plat
@@ -447,7 +417,7 @@ export function MealEditDialog({
 
           {errorMsg && (
             <div className="px-5 py-3">
-              <p className="text-sm text-red-300 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+              <p className="rounded-2xl bg-red-500/10 px-4 py-3 text-sm text-red-400">
                 {errorMsg}
               </p>
             </div>
@@ -499,20 +469,20 @@ function DishRow({
         <button
           type="button"
           onClick={onToggle}
-          className="flex-1 flex items-center gap-2.5 px-3 py-2.5 text-left hover:bg-foreground/4 transition-colors min-w-0"
+          className="flex-1 flex items-center gap-2.5 px-3 py-2.5 text-left hover:bg-secondary transition-colors min-w-0"
         >
           <courseCfg.icon size={16} className="shrink-0 text-muted-foreground" />
           <span className="text-sm font-semibold text-muted-foreground shrink-0">
             {courseCfg.label}
           </span>
           {dish.name && (
-            <span className="text-sm text-slate-200 truncate">— {dish.name}</span>
+            <span className="text-sm text-foreground truncate">— {dish.name}</span>
           )}
           <span className="flex-1" />
           <ChevronDown
             size={14}
             className={cn(
-              "text-slate-500 transition-transform shrink-0",
+              "text-muted-foreground transition-transform shrink-0",
               expanded && "rotate-180"
             )}
           />
@@ -520,7 +490,7 @@ function DishRow({
         <button
           type="button"
           onClick={onRemove}
-          className="px-3 text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+          className="px-3 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-colors"
           aria-label="Retirer le plat"
         >
           <Trash2 size={14} />
@@ -601,7 +571,7 @@ function DishRow({
                       <button
                         type="button"
                         onClick={() => onRemoveIngredient(ing.id)}
-                        className="h-8 w-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                        className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-colors"
                         aria-label="Retirer l'ingrédient"
                       >
                         <Trash2 size={12} />
@@ -613,7 +583,7 @@ function DishRow({
                 <button
                   type="button"
                   onClick={onAddIngredient}
-                  className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg border border-dashed border-foreground/10 text-xs text-slate-500 hover:border-foreground/20 hover:text-slate-300 transition-colors"
+                  className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg border border-dashed border-border text-xs text-muted-foreground hover:border-foreground/20 hover:text-foreground/85 transition-colors"
                 >
                   <Plus size={12} />
                   Ingrédient
@@ -648,7 +618,7 @@ function Section({
           {label}
         </p>
         {hint && (
-          <span className="text-xs text-slate-500 normal-case font-normal">
+          <span className="text-xs text-muted-foreground normal-case font-normal">
             ({hint})
           </span>
         )}
@@ -658,45 +628,3 @@ function Section({
   );
 }
 
-function PeoplePills({
-  participants,
-  selected,
-  onToggle,
-  selectedTone,
-}: {
-  participants: Participant[];
-  selected: string[];
-  onToggle: (id: string) => void;
-  selectedTone: "amber" | "section";
-}) {
-  const tones = {
-    amber: "border-amber-400 bg-amber-500/15 text-amber-200",
-    section: "bg-primary/10 text-primary ring-1 ring-primary/40 border-transparent",
-  };
-  return (
-    <div className="flex gap-1.5 flex-wrap">
-      {participants.map((p) => {
-        const sel = selected.includes(p.id);
-        return (
-          <button
-            key={p.id}
-            type="button"
-            onClick={() => onToggle(p.id)}
-            className={cn(
-              "flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium transition-all active:scale-95",
-              sel
-                ? tones[selectedTone]
-                : "border-foreground/10 bg-foreground/5 text-slate-300 hover:bg-foreground/10"
-            )}
-          >
-            <span
-              className="w-2.5 h-2.5 rounded-full shrink-0"
-              style={{ backgroundColor: p.color }}
-            />
-            {p.name}
-          </button>
-        );
-      })}
-    </div>
-  );
-}

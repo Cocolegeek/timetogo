@@ -42,7 +42,7 @@ app/
       menus/page.tsx     → meal planning
       planning/page.tsx  → itinerary builder (étapes + trajets)
   trips/template.tsx + [tripId]/template.tsx → page transitions (PageTransition)
-proxy.ts                 → middleware: enforces auth on all routes except /login /auth/callback /join /consent
+proxy.ts                 → middleware (getClaims): enforces auth on all routes except /login /auth/callback /join /consent
                            (a guest = anonymous Supabase user, so it passes like any signed-in user)
 ```
 
@@ -61,13 +61,14 @@ components/
               GuestSignOutDialog (un invité qui se déconnecte perd ses données : on propose de sauvegarder)
   layout/     AppHeader, GlassCard (= carte pleine, plus de verre), MeshGradientBackground (= fond uni),
               PageHeader (grand titre), SectionThemeController, TripAppHeader, TripNav, TripClientProviders,
-              UserMenu, VoyouLogo (logo officiel /icons/icon.png)
+              UserMenu, VoyouLogo (LogoMark = visage « oyo » en SVG inline + mot-symbole)
   motion/     MotionProvider (reducedMotion="user"), PageTransition (templates), Stagger/StaggerItem,
               NumberTicker (montants animés)
   menus/      MealEditDialog
   planning/   ItineraryItemForm,  — full-screen dialog: title/date/type/location/participants
               JourneyForm          — full-screen dialog: from→to, mode, routing/duration, participants
-  shared/     AvatarPicker (photo Google + 16 avatars), AvatarUpload, ConfirmDeleteDialog, DateRangePicker,
+  shared/     AvatarPicker (photo Google + 16 avatars), AvatarUpload, ClientOnly (rendu client après hydratation),
+              ConfirmDeleteDialog, DateRangePicker, DateField / TimeField (DateTimeFields : libellé FR + sélecteur natif),
               DayHeader, DayTabs, EmptyState, SegmentedControl, Skeleton (Spinner = squelette de page),
               Toaster (ToastProvider + useToast), UserAvatar (photo / avatar / initiale),
               ImageCropDialog, IosInstallBanner,
@@ -75,7 +76,8 @@ components/
                                      exports LocationCoord; onChangeCoord passes lat/lon directly
               MapAppIcons,         — GoogleMapsIcon, WazeIcon, AppleMapsIcon, CityMapperIcon, GoogleFlightsIcon
               MapAppPicker,        — MapAppPickerProvider + useOpenLocation() context hook
-              ParticipantAvatar, ParticipantStack, SectionLabel, Spinner
+              ParticipantAvatar, ParticipantPicker (LA sélection multiple de participants : puces avatar,
+              « Tout le monde » optionnel — payeurs, étapes, trajets, repas), ParticipantStack, SectionLabel, Spinner
   trips/      BudgetEditDialog, GettingStarted, GroupWizard, IdentityPicker,
               OnboardingModal (bienvenue + « Ta tête dans la bande » : prénom + avatar), ShareModal,
               TripSearch, UpNextCard,
@@ -86,6 +88,12 @@ components/
 ```
 
 ## Hooks (all `"use client"`, call `createClient()` internally)
+
+Les hooks de données reposent sur SWR via `useCachedQuery` (clés : `trips`, `trip:<id>`, `claims:<id>`,
+`expenses:<id>`, `itinerary:<id>`, `meals:<id>`, `profile`). Le cache est partagé, dédupliqué et persisté
+dans localStorage (`voyou-cache-v1`, `lib/data/swr.tsx` → `DataProvider`, `clearDataCache()` à la
+déconnexion / au changement de compte) : affichage instantané, revalidation en arrière-plan (focus, reconnexion).
+Les mutations font `set()` (optimiste) puis `refetch()`.
 ```typescript
 useTrips()              → { trips, loading, refetch, createTrip, deleteTrip }           // hooks/useTrip.ts
 useTrip(id)             → { trip, loading, refetch, updateTrip, setMyParticipant,
@@ -103,7 +111,7 @@ useScrolled(), useScrollDirection() → état de défilement (en-têtes, barre c
 useDebts(id)            → computed balances/settlements (no direct DB)
 useTheme()              → { preference: system|light|dark, setPreference } (key: "voyou-theme")
 useUserId()             → current user uuid (fast, no extra fetch)
-useRevalidateOnFocus()  → re-calls refetch on window focus (pass a refetch fn)
+useCachedQuery(key, fetcher, fallback) → { data, loading, set, refetch }  // base de tous les hooks de données
 ```
 
 ## Lib / Utils
@@ -121,6 +129,7 @@ lib/
                           claimGuestTransfer(), syncProfileFromGoogle()
   avatars.ts            → AVATAR_PRESETS, presetUrl(), isImageAvatar(), defaultPreset(), profileAvatar()
   avatar-sync.ts        → syncMyParticipantAvatars() (avatar du profil → participants liés)
+  data/swr.tsx          → DataProvider (SWRConfig + cache localStorage persistant), clearDataCache()
   participant-colors.ts → PARTICIPANT_COLORS (palette unique des participants)
   itinerary-types.ts    → icône / libellé / teinte par type d'étape et mode de trajet
   meals/courses.ts      → COURSES (icônes Lucide), COURSE_ORDER
@@ -177,6 +186,9 @@ DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip(
   boutons, onglets actifs, sélections. La couleur est réservée au sens (vert « on te doit », rouge
   « tu dois », teintes de catégories / types d'étape / créneaux) et aux illustrations. Le logo garde
   sa couleur, c'est la seule touche de marque. Ne pas réintroduire d'accent violet/bleu/orange.
+- **Logo** : petit visage « oyo » (deux yeux en anneaux + nez/sourire en « y ») encre `#15171C` sur
+  jaune soleil `#FFC83D`. Source unique : `scripts/generate-logo.mjs` (SVG + PNG PWA / maskable /
+  apple-touch / favicon) et `LogoMark` (même tracé). Changer l'un = changer l'autre + `opengraph-image.tsx`.
 - **Neutres** froids, clair + sombre natifs. Thème = système par défaut (`useTheme()` → `preference`
   `system | light | dark`, clé localStorage `voyou-theme`). Toujours utiliser les tokens
   (`bg-card`, `bg-secondary`, `text-foreground`, `text-muted-foreground`, `border-border`).
@@ -193,6 +205,9 @@ DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip(
 - **Motion** : `lib/motion.ts` (`EASE_OUT`, `EASE_SHEET`, `spring`, `fadeUp`, `stagger`). Indicateurs
   glissants via `layoutId` (TripNav, SegmentedControl, DayTabs). Respect de `prefers-reduced-motion`
   (MotionConfig + CSS). `pressable` pour le retour tactile.
+- **Formulaires** : participants → `ParticipantPicker` ; dates/heures → `DateField` / `TimeField` ;
+  listes éditables → liste groupée `rounded-[1.25rem] bg-secondary` + `ParticipantAvatar`. Sélection = encre
+  (`bg-primary text-primary-foreground`), jamais une teinte (pas d'ambre/violet pour « sélectionné »).
 - **Accessibilité** : zoom autorisé, cibles ≥ 44 px, `aria-label` sur les boutons icônes.
 
 ## Parcours (enforced — do not regress)
@@ -208,6 +223,19 @@ DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip(
 - **Retours** : `useToast()` (`ToastProvider` à la racine) après chaque création / modification / suppression,
   `haptic()` sur les gestes. Feuilles du bas fermables en glissant la poignée.
 - **Tableau de bord** : `GettingStarted` (premiers pas) puis `UpNextCard` (prochaine étape + « Y aller »).
+
+## Performance & cache (enforced — do not regress)
+
+- **Données** : toujours via les hooks SWR (`useCachedQuery`) — jamais de `useEffect` + `fetch` maison.
+  Une page revisitée ou rechargée s'affiche depuis le cache, sans squelette.
+- **Pages connectées** : rendues côté client derrière `ClientOnly` (fallback `PageSkeleton`) pour lire le
+  cache sans erreur d'hydratation. `app/trips/[tripId]/layout.tsx` ne fait aucune requête serveur ;
+  `TripNav` lit le type du voyage via `useTrip()`. `loading.tsx` = squelette pendant la navigation.
+- **Navigation** : `<Link prefetch>` sur les onglets et les cartes voyage, `experimental.staleTimes`
+  (next.config.ts) pour réutiliser le rendu RSC, `optimizePackageImports` (lucide, framer-motion).
+- **Middleware** (`proxy.ts`) : `supabase.auth.getClaims()` (vérif locale du JWT, pas d'aller-retour réseau).
+- **Service worker** (`public/sw.js`) : cache-first pour `/_next/static`, `/avatars`, `/icons` ;
+  network-first pour les pages (repli hors-ligne). Incrémenter `CACHE` quand les assets précachés changent.
 
 ## Comptes invités (enforced — do not regress)
 

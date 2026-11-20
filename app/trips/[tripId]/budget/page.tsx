@@ -237,7 +237,7 @@ export default function BudgetPage({ params }: BudgetPageProps) {
                       onClick={() => setFilter(f.id)}
                       className={cn(
                         "pressable h-9 shrink-0 rounded-full px-4 text-sm font-semibold transition-colors",
-                        filter === f.id ? "bg-foreground text-background" : "bg-foreground/[0.06] text-foreground hover:bg-foreground/10"
+                        filter === f.id ? "bg-foreground text-background" : "bg-foreground/[0.06] text-foreground hover:bg-foreground/[0.08]"
                       )}
                     >
                       {f.label}

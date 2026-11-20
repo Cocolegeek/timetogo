@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { DEFAULT_SLOTS } from "@/lib/meals/slots";
-import { useRevalidateOnFocus } from "@/hooks/useRevalidateOnFocus";
+import { useCachedQuery } from "@/hooks/useCachedQuery";
 import type { Dish, Meal, MealCategory, MealSlot } from "@/types";
 
 function rowToMeal(row: Record<string, unknown>): Meal {
@@ -23,25 +22,24 @@ function rowToMeal(row: Record<string, unknown>): Meal {
   };
 }
 
+const NO_MEALS: Meal[] = [];
+
+export async function fetchMealRows(tripId: string): Promise<Meal[]> {
+  const { data } = await createClient()
+    .from("meals")
+    .select("*")
+    .eq("trip_id", tripId)
+    .order("date")
+    .order("position");
+  return (data ?? []).map(rowToMeal);
+}
+
 export function useMeals(tripId: string) {
-  const [meals, setMeals] = useState<Meal[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const fetchMeals = useCallback(async () => {
-    const supabase = createClient();
-    setLoading(true);
-    const { data } = await supabase
-      .from("meals")
-      .select("*")
-      .eq("trip_id", tripId)
-      .order("date")
-      .order("position");
-    setMeals((data ?? []).map(rowToMeal));
-    setLoading(false);
-  }, [tripId]);
-
-  useEffect(() => { fetchMeals(); }, [fetchMeals]);
-  useRevalidateOnFocus(fetchMeals);
+  const { data: meals, loading, set: setMeals, refetch: fetchMeals } = useCachedQuery(
+    tripId ? `meals:${tripId}` : null,
+    () => fetchMealRows(tripId),
+    NO_MEALS
+  );
 
   const updateMeal = async (
     id: string,

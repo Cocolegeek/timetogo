@@ -156,7 +156,7 @@ export function TripWizard() {
               <button
                 type="button"
                 onClick={() => setEmojiPickerOpen((v) => !v)}
-                className="w-12 h-full flex items-center justify-center text-2xl hover:bg-foreground/8 active:bg-foreground/12 transition-colors shrink-0"
+                className="w-12 h-full flex items-center justify-center text-2xl hover:bg-foreground/[0.06] active:bg-foreground/10 transition-colors shrink-0"
                 aria-label="Changer l'emoji"
               >
                 {selectedEmoji}
@@ -164,7 +164,7 @@ export function TripWizard() {
               <input
                 {...register("name")}
                 placeholder="Road trip en Italie"
-                className="flex-1 bg-transparent border-0 outline-none text-base text-slate-100 placeholder:text-slate-500 pr-3"
+                className="flex-1 bg-transparent border-0 outline-none text-base text-foreground placeholder:text-muted-foreground pr-3"
               />
             </div>
             <AnimatePresence initial={false}>
@@ -189,7 +189,7 @@ export function TripWizard() {
                           "w-10 h-10 rounded-lg text-xl transition-all",
                           selectedEmoji === e
                             ? "bg-primary/12 ring-2 ring-primary"
-                            : "hover:bg-foreground/8 active:bg-foreground/12"
+                            : "hover:bg-foreground/[0.06] active:bg-foreground/10"
                         )}
                       >
                         {e}
@@ -242,7 +242,7 @@ export function TripWizard() {
                     "pressable h-10 rounded-full px-4 text-sm font-semibold transition-colors",
                     selectedCurrency === c
                       ? "bg-foreground text-background"
-                      : "bg-foreground/[0.06] text-foreground hover:bg-foreground/10"
+                      : "bg-foreground/[0.06] text-foreground hover:bg-foreground/[0.08]"
                   )}
                 >
                   {c}
@@ -256,7 +256,7 @@ export function TripWizard() {
             <div className="flex items-center justify-between">
               <Label className="px-1 text-sm font-semibold text-foreground">
                 Budget prévisionnel{" "}
-                <span className="text-slate-500 font-normal">(optionnel)</span>
+                <span className="text-muted-foreground font-normal">(optionnel)</span>
               </Label>
               <button
                 type="button"
@@ -295,11 +295,11 @@ export function TripWizard() {
                       placeholder="ex: 1500"
                       className="pr-14 tabular-nums"
                     />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-500 pointer-events-none">
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground pointer-events-none">
                       {selectedCurrency}
                     </span>
                   </div>
-                  <p className="text-xs text-slate-500 mt-1.5">
+                  <p className="text-xs text-muted-foreground mt-1.5">
                     Sert à suivre tes dépenses avec une barre de progression.
                   </p>
                 </motion.div>
@@ -311,7 +311,7 @@ export function TripWizard() {
           <button
             type="button"
             onClick={() => setActiveTab("Participants")}
-            className="pressable flex h-12 w-full items-center justify-center rounded-full bg-foreground/[0.06] text-sm font-semibold text-foreground transition-colors hover:bg-foreground/10"
+            className="pressable flex h-12 w-full items-center justify-center rounded-full bg-foreground/[0.06] text-sm font-semibold text-foreground transition-colors hover:bg-foreground/[0.08]"
           >
             Ajouter des participants →
           </button>

@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useSWRConfig } from "swr";
 import { createClient } from "@/lib/supabase/client";
 import { generateShareCode } from "@/lib/trip-share";
-import { useRevalidateOnFocus } from "@/hooks/useRevalidateOnFocus";
+import { useCachedQuery } from "@/hooks/useCachedQuery";
 import { syncMyParticipantAvatars } from "@/lib/avatar-sync";
 import type { Trip, TripType, Participant } from "@/types";
 
@@ -43,23 +43,21 @@ function rowsToTrip(
   };
 }
 
-export function useTrips() {
-  const [trips, setTrips] = useState<Trip[]>([]);
-  const [loading, setLoading] = useState(true);
+const NO_TRIPS: Trip[] = [];
+const NO_CLAIMS: ParticipantClaim[] = [];
 
-  const fetchTrips = useCallback(async () => {
+async function fetchTripList(): Promise<Trip[]> {
     const supabase = createClient();
-    setLoading(true);
     const { data: { session } } = await supabase.auth.getSession();
     const user = session?.user;
-    if (!user) { setLoading(false); return; }
+    if (!user) return [];
 
     const { data: members } = await supabase
       .from("trip_members")
       .select("trip_id, role, participant_id")
       .eq("user_id", user.id);
 
-    if (!members?.length) { setTrips([]); setLoading(false); return; }
+    if (!members?.length) return [];
 
     const tripIds = members.map((m) => m.trip_id);
 
@@ -78,17 +76,24 @@ export function useTrips() {
 
     const memberMap = Object.fromEntries(members.map((m) => [m.trip_id, m]));
 
-    setTrips(
-      (tripsRes.data ?? []).map((t) => {
-        const member = memberMap[t.id];
-        return rowsToTrip(t, participantsByTrip[t.id] ?? [], member?.role === "owner", member?.participant_id ?? null);
-      })
-    );
-    setLoading(false);
-  }, []);
+    return (tripsRes.data ?? []).map((t) => {
+      const member = memberMap[t.id];
+      return rowsToTrip(t, participantsByTrip[t.id] ?? [], member?.role === "owner", member?.participant_id ?? null);
+    });
+}
 
-  useEffect(() => { fetchTrips(); }, [fetchTrips]);
-  useRevalidateOnFocus(fetchTrips);
+export function useTrips() {
+  const { mutate: cacheMutate } = useSWRConfig();
+  const { data: trips, loading, set: setTrips, refetch: fetchTrips } = useCachedQuery(
+    "trips",
+    async () => {
+      const list = await fetchTripList();
+      // Seed each trip's own cache: opening a trip from the list is instant.
+      for (const t of list) void cacheMutate(`trip:${t.id}`, t, { revalidate: false });
+      return list;
+    },
+    NO_TRIPS
+  );
 
   const createTrip = async (
     data: {
@@ -149,33 +154,24 @@ export interface ParticipantClaim {
   isPrimary: boolean;
 }
 
-export function useTrip(id: string) {
-  const [trip, setTrip] = useState<Trip | null>(null);
-  const [claims, setClaims] = useState<ParticipantClaim[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const fetchClaims = useCallback(async () => {
-    const supabase = createClient();
-    const { data, error } = await supabase.rpc("get_trip_member_claims", {
+async function fetchClaimRows(id: string): Promise<ParticipantClaim[]> {
+    const { data, error } = await createClient().rpc("get_trip_member_claims", {
       p_trip_id: id,
     });
-    if (error || !data) return;
-    setClaims(
-      (data as Array<Record<string, unknown>>).map((r) => ({
-        participantId: r.participant_id as string,
-        userId: r.user_id as string,
-        userName: (r.user_name as string | null) ?? null,
-        isPrimary: r.is_primary as boolean,
-      }))
-    );
-  }, [id]);
+    if (error || !data) return [];
+    return (data as Array<Record<string, unknown>>).map((r) => ({
+      participantId: r.participant_id as string,
+      userId: r.user_id as string,
+      userName: (r.user_name as string | null) ?? null,
+      isPrimary: r.is_primary as boolean,
+    }));
+}
 
-  const fetchTrip = useCallback(async () => {
+export async function fetchTripDetail(id: string): Promise<Trip | null> {
     const supabase = createClient();
-    setLoading(true);
     const { data: { session } } = await supabase.auth.getSession();
     const user = session?.user;
-    if (!user) { setLoading(false); return; }
+    if (!user) return null;
 
     const [tripRes, participantsRes, memberRes] = await Promise.all([
       supabase.from("trips").select("*").eq("id", id).single(),
@@ -183,18 +179,26 @@ export function useTrip(id: string) {
       supabase.from("trip_members").select("*").eq("trip_id", id).eq("user_id", user.id).single(),
     ]);
 
-    if (!tripRes.data) { setLoading(false); return; }
+    if (!tripRes.data) return null;
 
     const participants: Participant[] = (participantsRes.data ?? []).map((p) => ({
       id: p.id, name: p.name, color: p.color, avatar: p.avatar ?? undefined,
     }));
 
-    setTrip(rowsToTrip(tripRes.data, participants, memberRes.data?.role === "owner", memberRes.data?.participant_id ?? null));
-    setLoading(false);
-  }, [id]);
+    return rowsToTrip(tripRes.data, participants, memberRes.data?.role === "owner", memberRes.data?.participant_id ?? null);
+}
 
-  useEffect(() => { fetchTrip(); fetchClaims(); }, [fetchTrip, fetchClaims]);
-  useRevalidateOnFocus(fetchTrip);
+export function useTrip(id: string) {
+  const { data: trip, loading, set: setTrip, refetch: fetchTrip } = useCachedQuery<Trip | null>(
+    id ? `trip:${id}` : null,
+    () => fetchTripDetail(id),
+    null
+  );
+  const { data: claims, refetch: fetchClaims } = useCachedQuery(
+    id ? `claims:${id}` : null,
+    () => fetchClaimRows(id),
+    NO_CLAIMS
+  );
 
   const updateTrip = async (
     data: Partial<{

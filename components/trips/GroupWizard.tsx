@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { groupSchema, type GroupFormValues, type GroupDateMode } from "@/lib/budget/schemas";
 import { useTrips } from "@/hooks/useTrip";
 import { cn } from "@/lib/utils";
+import { DateField } from "@/components/shared/DateTimeFields";
 import { PARTICIPANT_COLORS } from "@/lib/participant-colors";
 
 
@@ -149,14 +150,14 @@ export function GroupWizard() {
               <button
                 type="button"
                 onClick={() => setEmojiPickerOpen((v) => !v)}
-                className="w-12 h-full flex items-center justify-center text-2xl hover:bg-foreground/8 active:bg-foreground/12 transition-colors shrink-0"
+                className="w-12 h-full flex items-center justify-center text-2xl hover:bg-foreground/[0.06] active:bg-foreground/10 transition-colors shrink-0"
               >
                 {selectedEmoji}
               </button>
               <input
                 {...register("name")}
                 placeholder="Anniversaire de Léa"
-                className="flex-1 bg-transparent border-0 outline-none text-base text-slate-100 placeholder:text-slate-500 pr-3"
+                className="flex-1 bg-transparent border-0 outline-none text-base text-foreground placeholder:text-muted-foreground pr-3"
               />
             </div>
             {errors.name && (
@@ -184,7 +185,7 @@ export function GroupWizard() {
                           "w-10 h-10 rounded-lg text-xl transition-all",
                           selectedEmoji === e
                             ? "bg-primary/12 ring-2 ring-primary"
-                            : "hover:bg-foreground/8 active:bg-foreground/12"
+                            : "hover:bg-foreground/[0.06] active:bg-foreground/10"
                         )}
                       >
                         {e}
@@ -209,7 +210,7 @@ export function GroupWizard() {
                     "px-3 py-1.5 rounded-xl text-sm font-medium transition-all active:scale-95",
                     selectedCurrency === c
                       ? "bg-primary/10 text-primary ring-1 ring-primary/40"
-                      : "bg-foreground/5 text-slate-400 hover:bg-foreground/10"
+                      : "bg-secondary text-muted-foreground hover:bg-foreground/[0.08]"
                   )}
                 >
                   {c}
@@ -241,7 +242,7 @@ export function GroupWizard() {
                     "flex-1 flex flex-col items-center gap-1 py-2.5 px-2 rounded-xl text-xs font-medium transition-all active:scale-95",
                     dateMode === mode
                       ? "bg-primary/10 text-primary ring-1 ring-primary/40"
-                      : "bg-foreground/5 text-slate-400 hover:bg-foreground/10"
+                      : "bg-secondary text-muted-foreground hover:bg-foreground/[0.08]"
                   )}
                 >
                   <Icon size={16} />
@@ -279,13 +280,8 @@ export function GroupWizard() {
                     </>
                   ) : (
                     <div className="space-y-1">
-                      <Label className="text-xs text-slate-400">Date</Label>
-                      <input
-                        type="date"
-                        value={startDate ?? ""}
-                        onChange={(e) => setValue("startDate", e.target.value || undefined)}
-                        className="w-full border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-section border-input bg-card rounded-2xl h-12 placeholder:text-muted-foreground focus:border-primary/60 focus:ring-4 focus:ring-primary/12 tabular"
-                      />
+                      <Label className="text-xs text-muted-foreground">Date</Label>
+                      <DateField value={startDate ?? ""} onChange={(v) => setValue("startDate", v || undefined)} />
                       {errors.startDate && (
                         <p className="text-xs text-red-400">{errors.startDate.message}</p>
                       )}
@@ -300,7 +296,7 @@ export function GroupWizard() {
           <button
             type="button"
             onClick={() => setActiveTab("Participants")}
-            className="pressable flex h-12 w-full items-center justify-center rounded-full bg-foreground/[0.06] text-sm font-semibold text-foreground transition-colors hover:bg-foreground/10"
+            className="pressable flex h-12 w-full items-center justify-center rounded-full bg-foreground/[0.06] text-sm font-semibold text-foreground transition-colors hover:bg-foreground/[0.08]"
           >
             Ajouter des participants →
           </button>
@@ -346,13 +342,13 @@ export function GroupWizard() {
                 }
               }}
               placeholder="Embarquer quelqu'un"
-              className="flex-1 border px-3 py-2 text-base outline-none focus:ring-section border-input bg-card rounded-2xl h-12 placeholder:text-muted-foreground focus:border-primary/60 focus:ring-4 focus:ring-primary/12 tabular"
+              className="flex-1 border px-3 py-2 text-base outline-none focus:ring-foreground/40 border-input bg-card rounded-2xl h-12 placeholder:text-muted-foreground focus:border-primary/60 focus:ring-4 focus:ring-primary/12 tabular"
             />
             <Button
               type="button"
               onClick={addParticipant}
               disabled={!newParticipantName.trim()}
-              className="shrink-0 bg-section-soft hover:bg-section-medium text-section-soft border border-section disabled:opacity-40"
+              className="shrink-0 bg-foreground/[0.06] hover:bg-foreground/10 text-primary border border-foreground/30 disabled:opacity-40"
             >
               <Plus size={16} />
             </Button>

@@ -21,6 +21,8 @@ import { LocationPickerSheet } from "@/components/shared/LocationPickerSheet";
 import type { LocationCoord } from "@/components/shared/LocationPickerSheet";
 import { GoogleMapsIcon, WazeIcon, CityMapperIcon, GoogleFlightsIcon } from "@/components/shared/MapAppIcons";
 import { cn } from "@/lib/utils";
+import { ParticipantPicker } from "@/components/shared/ParticipantPicker";
+import { DateField, TimeField } from "@/components/shared/DateTimeFields";
 import type { ItineraryItem, JourneyMode, Participant } from "@/types";
 import type { ItineraryFormValues } from "./ItineraryItemForm";
 
@@ -245,20 +247,8 @@ export function JourneyForm({
           {activeTab === "Quand" && (
             <Row icon={<Calendar size={18} />}>
               <div className="grid grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] gap-2.5">
-                <input
-                  type="date"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  className="w-full min-w-0 border px-3 text-base border-input bg-card rounded-2xl h-12 outline-none placeholder:text-muted-foreground focus:border-primary/60 focus:ring-4 focus:ring-primary/12 tabular"
-                />
-                <div className="relative">
-                                    <input
-                    type="time"
-                    value={time}
-                    onChange={(e) => setTime(e.target.value)}
-                    className="w-full min-w-0 border px-4 text-base border-input bg-card rounded-2xl h-12 outline-none placeholder:text-muted-foreground focus:border-primary/60 focus:ring-4 focus:ring-primary/12 tabular"
-                  />
-                </div>
+                <DateField value={date} onChange={setDate} />
+                <TimeField value={time} onChange={setTime} />
               </div>
             </Row>
           )}
@@ -273,18 +263,18 @@ export function JourneyForm({
                 onChange={(v) => { setFrom(v); setCoords((c) => ({ ...c, from: null })); }}
                 onChangeCoord={(coord) => setCoords((c) => ({ ...c, from: coord }))}
                 placeholder="Départ"
-                className="bg-foreground/5 border-foreground/10"
+                className="bg-secondary border-border"
               />
               <div className="flex items-center gap-2 px-1">
-                <ArrowDown size={14} className="text-slate-600" />
-                <div className="flex-1 h-px bg-foreground/8" />
+                <ArrowDown size={14} className="text-muted-foreground" />
+                <div className="flex-1 h-px bg-foreground/[0.06]" />
               </div>
               <LocationPickerSheet
                 value={to}
                 onChange={(v) => { setTo(v); setCoords((c) => ({ ...c, to: null })); }}
                 onChangeCoord={(coord) => setCoords((c) => ({ ...c, to: coord }))}
                 placeholder="Arrivée"
-                className="bg-foreground/5 border-foreground/10"
+                className="bg-secondary border-border"
               />
             </div>
           </Row>
@@ -303,7 +293,7 @@ export function JourneyForm({
                       "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all active:scale-95",
                       selected
                         ? cn(bg, color, "ring-1")
-                        : "bg-foreground/5 text-slate-400 hover:bg-foreground/10"
+                        : "bg-secondary text-muted-foreground hover:bg-foreground/[0.08]"
                     )}
                   >
                     <Icon size={14} />
@@ -337,7 +327,7 @@ export function JourneyForm({
                       "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95",
                       canAutoRoute
                         ? "bg-primary text-primary-foreground"
-                        : "bg-foreground/5 text-slate-500 cursor-not-allowed"
+                        : "bg-secondary text-muted-foreground cursor-not-allowed"
                     )}
                   >
                     {routeLoading ? (
@@ -352,7 +342,7 @@ export function JourneyForm({
                       href={buildWazeUrl(to, coords.to)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold bg-foreground/8 text-slate-200 hover:bg-foreground/12 active:scale-95 transition-all"
+                      className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold bg-foreground/[0.06] text-foreground hover:bg-foreground/10 active:scale-95 transition-all"
                     >
                       <AppIconBadge><WazeIcon size={20} /></AppIconBadge>
                       Waze
@@ -361,18 +351,18 @@ export function JourneyForm({
                 </div>
 
                 {routeError && (
-                  <p className="text-xs text-red-300 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+                  <p className="rounded-2xl bg-red-500/10 px-3.5 py-2.5 text-xs text-red-400">
                     {routeError}
                   </p>
                 )}
 
                 {routeResult && (
-                  <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-section/10 border border-section/30">
+                  <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-foreground/10 border border-foreground/30">
                     <div className="flex-1">
-                      <p className="text-sm font-semibold text-slate-100">
+                      <p className="text-sm font-semibold text-foreground">
                         {formatDuration(routeResult.durationMinutes)}
                       </p>
-                      <p className="text-xs text-slate-400">{routeResult.distanceKm} km</p>
+                      <p className="text-xs text-muted-foreground">{routeResult.distanceKm} km</p>
                     </div>
                   </div>
                 )}
@@ -388,7 +378,7 @@ export function JourneyForm({
                         href={`https://www.google.com/travel/flights?hl=fr&q=${encodeURIComponent(`vols ${from} ${to}`)}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold bg-foreground/8 text-slate-200 hover:bg-foreground/12 active:scale-95 transition-all"
+                        className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold bg-foreground/[0.06] text-foreground hover:bg-foreground/10 active:scale-95 transition-all"
                       >
                         <AppIconBadge><GoogleFlightsIcon size={20} /></AppIconBadge>
                         Google Flights
@@ -399,7 +389,7 @@ export function JourneyForm({
                           href={buildGoogleMapsUrl(from, to, coords.from, coords.to)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold bg-foreground/8 text-slate-200 hover:bg-foreground/12 active:scale-95 transition-all"
+                          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold bg-foreground/[0.06] text-foreground hover:bg-foreground/10 active:scale-95 transition-all"
                         >
                           <AppIconBadge><GoogleMapsIcon size={20} /></AppIconBadge>
                           Google Maps
@@ -408,7 +398,7 @@ export function JourneyForm({
                           href={buildCityMapperUrl(from, to, coords.from, coords.to)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold bg-foreground/8 text-slate-200 hover:bg-foreground/12 active:scale-95 transition-all"
+                          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold bg-foreground/[0.06] text-foreground hover:bg-foreground/10 active:scale-95 transition-all"
                         >
                           <AppIconBadge><CityMapperIcon size={20} /></AppIconBadge>
                           CityMapper
@@ -417,7 +407,7 @@ export function JourneyForm({
                     )}
                   </div>
                 )}
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-muted-foreground">
                   Consulte l&apos;itinéraire puis renseigne la durée ci-dessous.
                 </p>
                 <ManualDuration durationH={durationH} durationM={durationM} setDurationH={setDurationH} setDurationM={setDurationM} />
@@ -430,51 +420,24 @@ export function JourneyForm({
           {/* Participants */}
           {activeTab === "Qui" && (
             participants.length === 0 ? (
-              <div className="px-5 py-10 text-center text-sm text-slate-500">
+              <div className="px-5 py-10 text-center text-sm text-muted-foreground">
                 Aucun participant — ajoute-en depuis l&apos;édition du voyage.
               </div>
             ) : (
               <Row icon={<Users size={18} />} label="Participants">
-                <div className="flex gap-1.5 flex-wrap">
-                  <button
-                    type="button"
-                    onClick={toggleAll}
-                    className={cn(
-                      "px-3 py-1.5 rounded-full text-sm font-medium border transition-all active:scale-95",
-                      allSelected
-                        ? "bg-section-soft text-section-soft border-section"
-                        : "bg-foreground/5 text-slate-400 border-foreground/10 hover:bg-foreground/10"
-                    )}
-                  >
-                    Tout le monde
-                  </button>
-                  {participants.map((p) => {
-                    const sel = selectedParticipantIds.includes(p.id);
-                    return (
-                      <button
-                        key={p.id}
-                        type="button"
-                        onClick={() => toggleParticipant(p.id)}
-                        className={cn(
-                          "flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium transition-all active:scale-95",
-                          sel
-                            ? "bg-primary/10 text-primary ring-1 ring-primary/40 border-transparent"
-                            : "border-foreground/10 bg-foreground/5 text-slate-300 hover:bg-foreground/10"
-                        )}
-                      >
-                        <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: p.color }} />
-                        {p.name}
-                      </button>
-                    );
-                  })}
-                </div>
+                <ParticipantPicker
+                  participants={participants}
+                  selected={selectedParticipantIds}
+                  onToggle={toggleParticipant}
+                  onToggleAll={toggleAll}
+                />
               </Row>
             )
           )}
 
           {errorMsg && (
             <div className="px-5 pb-4">
-              <p className="text-sm text-red-300 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+              <p className="rounded-2xl bg-red-500/10 px-4 py-3 text-sm text-red-400">
                 {errorMsg}
               </p>
             </div>
@@ -557,7 +520,7 @@ function ManualDuration({
           placeholder="0"
           className="w-full border px-3 text-base pr-8 border-input bg-card rounded-2xl h-12 outline-none placeholder:text-muted-foreground focus:border-primary/60 focus:ring-4 focus:ring-primary/12 tabular"
         />
-        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-500 pointer-events-none">h</span>
+        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground pointer-events-none">h</span>
       </div>
       <div className="relative flex-1 min-w-0">
         <input
@@ -570,7 +533,7 @@ function ManualDuration({
           placeholder="0"
           className="w-full border px-3 text-base pr-12 border-input bg-card rounded-2xl h-12 outline-none placeholder:text-muted-foreground focus:border-primary/60 focus:ring-4 focus:ring-primary/12 tabular"
         />
-        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-500 pointer-events-none">min</span>
+        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground pointer-events-none">min</span>
       </div>
     </div>
   );
@@ -587,9 +550,9 @@ function Row({
 }) {
   return (
     <div className="flex items-start gap-4 px-5 py-3.5 border-t border-border">
-      <div className="text-slate-400 mt-2 shrink-0">{icon}</div>
+      <div className="text-muted-foreground mt-2 shrink-0">{icon}</div>
       <div className="flex-1 min-w-0 space-y-2">
-        {label && <p className="text-xs text-slate-500 font-medium">{label}</p>}
+        {label && <p className="text-xs text-muted-foreground font-medium">{label}</p>}
         {children}
       </div>
     </div>

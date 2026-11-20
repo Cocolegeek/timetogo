@@ -10,6 +10,7 @@ import { GoogleIcon } from "@/components/auth/GoogleIcon";
 import { PageSkeleton } from "@/components/shared/Skeleton";
 import { claimGuestTransfer, signInToExistingGoogle, startGoogleUpgrade, syncProfileFromGoogle } from "@/lib/auth/guest";
 import { syncMyParticipantAvatars } from "@/lib/avatar-sync";
+import { clearDataCache } from "@/lib/data/swr";
 import { EASE_OUT } from "@/lib/motion";
 
 type Outcome =
@@ -66,6 +67,7 @@ function LinkFlow() {
         if (step === "claim") {
           // Signed in to the existing Google account: pull the guest's trips in.
           const result = await claimGuestTransfer();
+          clearDataCache();
           await syncProfileFromGoogle();
           await syncMyParticipantAvatars();
           setOutcome({ kind: "merged", trips: result.trips });

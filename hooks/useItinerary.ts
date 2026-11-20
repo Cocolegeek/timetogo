@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { useRevalidateOnFocus } from "@/hooks/useRevalidateOnFocus";
+import { useCachedQuery } from "@/hooks/useCachedQuery";
 import type { ItineraryItem, ItineraryType, JourneyMode } from "@/types";
 
 function rowToItem(row: Record<string, unknown>): ItineraryItem {
@@ -29,25 +28,24 @@ function sortItems(items: ItineraryItem[]): ItineraryItem[] {
   );
 }
 
+const NO_ITEMS: ItineraryItem[] = [];
+
+export async function fetchItineraryRows(tripId: string): Promise<ItineraryItem[]> {
+  const { data } = await createClient()
+    .from("itinerary_items")
+    .select("*")
+    .eq("trip_id", tripId)
+    .order("date")
+    .order("time", { nullsFirst: true });
+  return (data ?? []).map(rowToItem);
+}
+
 export function useItinerary(tripId: string) {
-  const [items, setItems] = useState<ItineraryItem[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const fetchItems = useCallback(async () => {
-    const supabase = createClient();
-    setLoading(true);
-    const { data } = await supabase
-      .from("itinerary_items")
-      .select("*")
-      .eq("trip_id", tripId)
-      .order("date")
-      .order("time", { nullsFirst: true });
-    setItems((data ?? []).map(rowToItem));
-    setLoading(false);
-  }, [tripId]);
-
-  useEffect(() => { fetchItems(); }, [fetchItems]);
-  useRevalidateOnFocus(fetchItems);
+  const { data: items, loading, set: setItems, refetch: fetchItems } = useCachedQuery(
+    tripId ? `itinerary:${tripId}` : null,
+    () => fetchItineraryRows(tripId),
+    NO_ITEMS
+  );
 
   const addItem = async (
     data: Omit<ItineraryItem, "id" | "createdAt" | "tripId">

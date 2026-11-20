@@ -19,7 +19,7 @@ export function GlassCard({
         "rounded-[1.375rem]",
         variant === "default" && "glass",
         variant === "strong" && "glass-strong",
-        variant === "subtle" && "glass-subtle",
+        variant === "subtle" && "bg-secondary",
         padding && "p-5",
         className
       )}

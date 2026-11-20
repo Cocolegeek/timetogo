@@ -112,7 +112,7 @@ export function TripCard({ trip, onEdit, onDelete, onShare, variant = "row" }: T
   if (variant === "featured") {
     return (
       <article className="group relative overflow-hidden rounded-[1.75rem] bg-card shadow-raised">
-        <Link href={href} className="block outline-none focus-visible:ring-2 focus-visible:ring-ring">
+        <Link href={href} prefetch className="block outline-none focus-visible:ring-2 focus-visible:ring-ring">
           <div className="relative h-52 overflow-hidden">
             <Cover
               trip={trip}

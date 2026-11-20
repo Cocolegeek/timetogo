@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { EASE_OUT } from "@/lib/motion";
 import { GoogleIcon } from "@/components/auth/GoogleIcon";
 import { continueAsGuest } from "@/lib/auth/guest";
+import { clearDataCache } from "@/lib/data/swr";
 
 const BUILDINGS = [
   { x: 26, y: 214, w: 54, h: 150, fill: "#1A1D24" },
@@ -65,6 +66,7 @@ function LoginForm() {
   const [guestError, setGuestError] = useState<string | null>(null);
 
   const handleGuest = async () => {
+    clearDataCache();
     setGuestLoading(true);
     setGuestError(null);
     const { error } = await continueAsGuest();
@@ -78,6 +80,7 @@ function LoginForm() {
   };
 
   const handleGoogleLogin = async () => {
+    clearDataCache();
     setLoading(true);
     const supabase = createClient();
     await supabase.auth.signInWithOAuth({

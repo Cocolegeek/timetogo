@@ -137,7 +137,7 @@ export function AvatarUpload({
             draggable={false}
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-foreground/8">
+          <div className="w-full h-full flex items-center justify-center bg-foreground/[0.06]">
             {placeholder}
           </div>
         )}
@@ -161,7 +161,7 @@ export function AvatarUpload({
         <button
           type="button"
           onClick={handleRemove}
-          className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-red-400 transition-colors"
+          className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-red-400 transition-colors"
         >
           <Trash2 size={12} />
           Retirer

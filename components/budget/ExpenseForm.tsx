@@ -17,6 +17,8 @@ import { CATEGORIES, CATEGORY_ORDER } from "@/lib/budget/categories";
 import { computeShares } from "@/lib/budget/splits";
 import { currencySymbol } from "@/lib/format-currency";
 import { cn } from "@/lib/utils";
+import { ParticipantPicker } from "@/components/shared/ParticipantPicker";
+import { DateField } from "@/components/shared/DateTimeFields";
 import type {
   Expense,
   ExpenseCategory,
@@ -255,7 +257,6 @@ export function ExpenseForm({
       if (!allZero) return prev;
       return rebalanceFixed(prev, amount);
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [amount, splitMode]);
 
   // ── Payer effect ───────────────────────────────────────────────────────────
@@ -496,7 +497,7 @@ export function ExpenseForm({
                           "pressable flex h-11 shrink-0 items-center gap-2 rounded-full pr-4 pl-3 transition-colors",
                           selected
                             ? "bg-foreground text-background"
-                            : "bg-foreground/[0.06] text-foreground hover:bg-foreground/10"
+                            : "bg-foreground/[0.06] text-foreground hover:bg-foreground/[0.08]"
                         )}
                       >
                         <Icon size={17} className={selected ? undefined : cfg.color} />
@@ -511,12 +512,7 @@ export function ExpenseForm({
 
               <div className="space-y-2">
                 <label htmlFor="expense-date" className="px-1 text-sm font-semibold">Date</label>
-                <Input
-                  id="expense-date"
-                  type="date"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                />
+                <DateField id="expense-date" value={date} onChange={setDate} />
               </div>
             </>
           )}
@@ -525,28 +521,11 @@ export function ExpenseForm({
           {activeTab === "Payé par" && (
             <div className="space-y-4">
               <p className="px-1 text-sm text-muted-foreground">Qui a avancé l&apos;argent ? Sélectionne plusieurs personnes pour partager le paiement.</p>
-              <div className="flex flex-wrap gap-2">
-                {participants.map((p) => {
-                  const selected = payers.some((py) => py.participantId === p.id);
-                  return (
-                    <button
-                      key={p.id}
-                      type="button"
-                      onClick={() => togglePayer(p.id)}
-                      aria-pressed={selected}
-                      className={cn(
-                        "pressable flex h-11 items-center gap-2 rounded-full pr-4 pl-1.5 transition-colors",
-                        selected
-                          ? "bg-primary text-primary-foreground shadow-section"
-                          : "bg-foreground/[0.06] text-foreground hover:bg-foreground/10"
-                      )}
-                    >
-                      <ParticipantAvatar participant={p} size="sm" className={selected ? "ring-primary" : undefined} />
-                      <span className="text-sm font-semibold">{p.name}</span>
-                    </button>
-                  );
-                })}
-              </div>
+              <ParticipantPicker
+                participants={participants}
+                selected={payers.map((py) => py.participantId)}
+                onToggle={togglePayer}
+              />
 
               {payers.length > 1 && (
                 <div className="space-y-1.5 mt-1">
@@ -560,10 +539,7 @@ export function ExpenseForm({
                         key={payer.participantId}
                         className="flex items-center gap-3 rounded-2xl bg-secondary px-3 py-2"
                       >
-                        <span
-                          className="w-2.5 h-2.5 rounded-full shrink-0"
-                          style={{ backgroundColor: p.color }}
-                        />
+                        <ParticipantAvatar participant={p} size="xs" className="ring-secondary" />
                         <span className="flex-1 truncate text-[0.95rem] font-medium">{p.name}</span>
                         <input
                           type="number"
@@ -580,7 +556,7 @@ export function ExpenseForm({
                           onFocus={(e) => e.target.select()}
                           className="tabular h-10 w-24 rounded-xl border border-input bg-card px-3 text-right text-base outline-none focus:border-primary/60 focus:ring-4 focus:ring-primary/12"
                         />
-                        <span className="text-xs text-slate-500 w-8">{sym}</span>
+                        <span className="text-xs text-muted-foreground w-8">{sym}</span>
                       </div>
                     );
                   })}
@@ -704,7 +680,7 @@ export function ExpenseForm({
                               type="button"
                               onClick={() => unpinPct(p.id)}
                               title="Désancrer"
-                              className="text-section opacity-70 hover:opacity-100 transition-opacity shrink-0"
+                              className="text-primary opacity-70 hover:opacity-100 transition-opacity shrink-0"
                             >
                               <Lock size={13} />
                             </button>
@@ -727,8 +703,8 @@ export function ExpenseForm({
                                 : "border-input bg-card"
                             )}
                           />
-                          <span className="text-xs text-slate-500">%</span>
-                          <span className="text-xs text-slate-400 w-16 text-right tabular-nums">
+                          <span className="text-xs text-muted-foreground">%</span>
+                          <span className="text-xs text-muted-foreground w-16 text-right tabular-nums">
                             {formatCurrency(share, currency)}
                           </span>
                         </div>
@@ -741,7 +717,7 @@ export function ExpenseForm({
                               type="button"
                               onClick={() => unpinFixed(p.id)}
                               title="Désancrer"
-                              className="text-section opacity-70 hover:opacity-100 transition-opacity shrink-0"
+                              className="text-primary opacity-70 hover:opacity-100 transition-opacity shrink-0"
                             >
                               <Lock size={13} />
                             </button>
@@ -763,7 +739,7 @@ export function ExpenseForm({
                                 : "border-input bg-card"
                             )}
                           />
-                          <span className="text-xs text-slate-500 w-6">{sym}</span>
+                          <span className="text-xs text-muted-foreground w-6">{sym}</span>
                         </div>
                       )}
                     </div>
@@ -858,7 +834,7 @@ function SplitTotalFeedback({
         ) : (
           <>
             Total : {Math.round(splitTotal * 10) / 10}%
-            <span className="text-slate-500">
+            <span className="text-muted-foreground">
               ({diff > 0 ? "+" : ""}
               {Math.round(diff * 10) / 10}%)
             </span>
@@ -882,7 +858,7 @@ function SplitTotalFeedback({
       ) : (
         <>
           Total : {formatCurrency(splitTotal, currency)}
-          <span className="text-slate-500">
+          <span className="text-muted-foreground">
             ({diff > 0 ? "+" : ""}
             {formatCurrency(diff, currency)})
           </span>

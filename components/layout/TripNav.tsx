@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import { useScrollDirection } from "@/hooks/useScrollDirection";
+import { useTrip } from "@/hooks/useTrip";
 import { dispatchQuickAdd, type QuickAddKind } from "@/hooks/useQuickAdd";
 import { haptic } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
@@ -53,10 +54,12 @@ const GLASS =
 
 interface TripNavProps {
   tripId: string;
-  tripType: TripType;
 }
 
-export function TripNav({ tripId, tripType }: TripNavProps) {
+export function TripNav({ tripId }: TripNavProps) {
+  // Read from the shared trip cache (seeded by the trips list): no server round-trip.
+  const { trip } = useTrip(tripId);
+  const tripType: TripType = trip?.type ?? "trip";
   const pathname = usePathname();
   const router = useRouter();
   const base = `/trips/${tripId}`;
@@ -100,6 +103,7 @@ export function TripNav({ tripId, tripType }: TripNavProps) {
                 <li key={href} className="flex-1">
                   <Link
                     href={fullHref}
+                    prefetch
                     aria-current={isActive ? "page" : undefined}
                     aria-label={label}
                     onClick={(e) => {

@@ -36,7 +36,10 @@ export default async function proxy(req: NextRequest) {
     }
   );
 
-  const { data: { user } } = await supabase.auth.getUser();
+  // getClaims() verifies the JWT locally when the project uses asymmetric keys
+  // (no Auth round-trip per navigation) and falls back to getUser() otherwise.
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const user = claimsData?.claims?.sub ? { id: claimsData.claims.sub } : null;
 
   if (!isPublic && !user) {
     const loginUrl = req.nextUrl.clone();

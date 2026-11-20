@@ -19,6 +19,8 @@ FULLSCREEN_DIALOG,
 } from "@/components/ui/dialog";
 import { LocationPickerSheet } from "@/components/shared/LocationPickerSheet";
 import { cn } from "@/lib/utils";
+import { ParticipantPicker } from "@/components/shared/ParticipantPicker";
+import { DateField, TimeField } from "@/components/shared/DateTimeFields";
 import { ITINERARY_TYPES } from "@/lib/itinerary-types";
 import type { ItineraryItem, ItineraryType, JourneyMode, Participant } from "@/types";
 
@@ -223,7 +225,7 @@ export function ItineraryItemForm({
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Titre de l'étape"
-            className="w-full bg-transparent border-0 outline-none text-xl font-bold text-slate-100 placeholder:text-slate-600 placeholder:font-normal"
+            className="w-full bg-transparent border-0 outline-none text-xl font-bold text-foreground placeholder:text-muted-foreground placeholder:font-normal"
             autoFocus={!isEdit}
           />
         </div>
@@ -258,8 +260,8 @@ export function ItineraryItemForm({
             <>
               <Row icon={<Calendar size={18} />}>
                 <div className="grid grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] gap-2.5">
-                  <DateInput value={date} onChange={setDate} placeholder="Date" />
-                  <TimeInput value={time} onChange={setTime} placeholder="Heure" />
+                  <DateField value={date} onChange={setDate} />
+                  <TimeField value={time} onChange={setTime} />
                 </div>
               </Row>
 
@@ -276,7 +278,7 @@ export function ItineraryItemForm({
                           "px-3 py-1.5 rounded-full text-sm font-medium transition-all active:scale-95",
                           selected
                             ? "bg-primary/10 text-primary ring-1 ring-primary/40"
-                            : "bg-foreground/5 text-slate-400 hover:bg-foreground/10"
+                            : "bg-secondary text-muted-foreground hover:bg-foreground/[0.08]"
                         )}
                       >
                         {d.label}
@@ -291,7 +293,7 @@ export function ItineraryItemForm({
                     <button
                       type="button"
                       onClick={() => { setDurationH(""); setDurationM(""); }}
-                      className="p-2 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-foreground/8 transition-colors shrink-0"
+                      className="p-2 rounded-lg text-muted-foreground hover:text-foreground/85 hover:bg-foreground/[0.06] transition-colors shrink-0"
                       aria-label="Effacer la durée"
                     >
                       <X size={14} />
@@ -318,7 +320,7 @@ export function ItineraryItemForm({
                           "pressable flex h-11 items-center gap-2 rounded-full pr-4 pl-3 text-sm font-semibold transition-colors",
                           selected
                             ? "bg-foreground text-background"
-                            : "bg-foreground/[0.06] text-foreground hover:bg-foreground/10"
+                            : "bg-foreground/[0.06] text-foreground hover:bg-foreground/[0.08]"
                         )}
                       >
                         <cfg.icon size={17} />
@@ -334,7 +336,7 @@ export function ItineraryItemForm({
                   value={location}
                   onChange={setLocation}
                   placeholder="Ajouter un lieu"
-                  className="bg-foreground/5 border-foreground/10"
+                  className="bg-secondary border-border"
                 />
               </Row>
 
@@ -352,51 +354,24 @@ export function ItineraryItemForm({
 
           {activeTab === "Qui" && (
             participants.length === 0 ? (
-              <div className="px-5 py-10 text-center text-sm text-slate-500">
+              <div className="px-5 py-10 text-center text-sm text-muted-foreground">
                 Aucun participant — ajoute-en depuis l&apos;édition du voyage.
               </div>
             ) : (
               <Row icon={<Users size={18} />} label="Participants">
-                <div className="flex gap-1.5 flex-wrap">
-                  <button
-                    type="button"
-                    onClick={toggleAll}
-                    className={cn(
-                      "px-3 py-1.5 rounded-full text-sm font-medium border transition-all active:scale-95",
-                      allSelected
-                        ? "bg-section-soft text-section-soft border-section"
-                        : "bg-foreground/5 text-slate-400 border-foreground/10 hover:bg-foreground/10"
-                    )}
-                  >
-                    Tout le monde
-                  </button>
-                  {participants.map((p) => {
-                    const sel = selectedParticipantIds.includes(p.id);
-                    return (
-                      <button
-                        key={p.id}
-                        type="button"
-                        onClick={() => toggleParticipant(p.id)}
-                        className={cn(
-                          "flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium transition-all active:scale-95",
-                          sel
-                            ? "bg-primary/10 text-primary ring-1 ring-primary/40 border-transparent"
-                            : "border-foreground/10 bg-foreground/5 text-slate-300 hover:bg-foreground/10"
-                        )}
-                      >
-                        <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: p.color }} />
-                        {p.name}
-                      </button>
-                    );
-                  })}
-                </div>
+                <ParticipantPicker
+                  participants={participants}
+                  selected={selectedParticipantIds}
+                  onToggle={toggleParticipant}
+                  onToggleAll={toggleAll}
+                />
               </Row>
             )
           )}
 
           {errorMsg && (
             <div className="px-5 py-4">
-              <p className="text-sm text-red-300 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+              <p className="rounded-2xl bg-red-500/10 px-4 py-3 text-sm text-red-400">
                 {errorMsg}
               </p>
             </div>
@@ -421,53 +396,15 @@ function Row({
 }) {
   return (
     <div className="flex items-start gap-4 px-5 py-3.5 border-t border-border">
-      <div className="text-slate-400 mt-2 shrink-0">{icon}</div>
+      <div className="text-muted-foreground mt-2 shrink-0">{icon}</div>
       <div className="flex-1 min-w-0 space-y-2">
         {label && (
-          <p className="text-xs text-slate-500 font-medium">
+          <p className="text-xs text-muted-foreground font-medium">
             {label}
           </p>
         )}
         {children}
       </div>
-    </div>
-  );
-}
-
-function DateInput({
-  value,
-  onChange,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-  placeholder?: string;
-}) {
-  return (
-    <input
-      type="date"
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="w-full min-w-0 border px-3 text-base border-input bg-card rounded-2xl h-12 outline-none placeholder:text-muted-foreground focus:border-primary/60 focus:ring-4 focus:ring-primary/12 tabular"
-    />
-  );
-}
-
-function TimeInput({
-  value,
-  onChange,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-  placeholder?: string;
-}) {
-  return (
-    <div className="relative min-w-0">
-      <input
-        type="time"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full min-w-0 border px-4 text-base border-input bg-card rounded-2xl h-12 outline-none placeholder:text-muted-foreground focus:border-primary/60 focus:ring-4 focus:ring-primary/12 tabular"
-      />
     </div>
   );
 }
@@ -495,7 +432,7 @@ function NumberPill({
         placeholder="0"
         className="w-full border px-3 text-base pr-12 border-input bg-card rounded-2xl h-12 outline-none placeholder:text-muted-foreground focus:border-primary/60 focus:ring-4 focus:ring-primary/12 tabular"
       />
-      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-500 pointer-events-none">
+      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground pointer-events-none">
         {suffix}
       </span>
     </div>

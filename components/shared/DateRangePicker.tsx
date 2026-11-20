@@ -102,24 +102,24 @@ export function DateRangePicker({ startDate, endDate, onChange }: DateRangePicke
       <button
         type="button"
         onClick={openCalendar}
-        className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl bg-foreground/8 border border-foreground/10 hover:bg-foreground/12 active:bg-foreground/16 transition-all text-left"
+        className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl bg-foreground/[0.06] border border-border hover:bg-foreground/10 active:bg-foreground/16 transition-all text-left"
       >
-        <CalendarDays size={18} className="text-section shrink-0" />
+        <CalendarDays size={18} className="text-primary shrink-0" />
 
         <div className="flex-1 flex items-center gap-3 min-w-0">
           <div className="flex-1 min-w-0">
-            <p className="text-xs text-slate-500 font-semibold">Départ</p>
-            <p className="text-sm font-semibold text-slate-100 truncate">{fmtShort(startDate)}</p>
+            <p className="text-xs text-muted-foreground font-semibold">Départ</p>
+            <p className="text-sm font-semibold text-foreground truncate">{fmtShort(startDate)}</p>
           </div>
-          <div className="w-px h-7 bg-foreground/10 shrink-0" />
+          <div className="w-px h-7 bg-foreground/[0.08] shrink-0" />
           <div className="flex-1 min-w-0">
-            <p className="text-xs text-slate-500 font-semibold">Retour</p>
-            <p className="text-sm font-semibold text-slate-100 truncate">{fmtShort(endDate)}</p>
+            <p className="text-xs text-muted-foreground font-semibold">Retour</p>
+            <p className="text-sm font-semibold text-foreground truncate">{fmtShort(endDate)}</p>
           </div>
         </div>
 
         {duration > 0 && (
-          <span className="text-xs px-2.5 py-1 rounded-full bg-section-soft text-section-soft font-bold tabular-nums shrink-0">
+          <span className="text-xs px-2.5 py-1 rounded-full bg-foreground/[0.06] text-primary font-bold tabular-nums shrink-0">
             {duration}j
           </span>
         )}
@@ -132,13 +132,13 @@ export function DateRangePicker({ startDate, endDate, onChange }: DateRangePicke
           onClick={close}
         >
           <div
-            className="w-full max-w-sm glass-strong border border-foreground/10 rounded-t-2xl overflow-hidden"
+            className="w-full max-w-sm glass-strong border border-border rounded-t-2xl overflow-hidden"
             style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-5 py-3.5 border-b border-foreground/8">
-              <p className="text-sm font-semibold text-slate-200">
+            <div className="flex items-center justify-between px-5 py-3.5 border-b border-border">
+              <p className="text-sm font-semibold text-foreground">
                 {pendingStart
                   ? `Départ · ${fmtShort(pendingStart)} — Choisir le retour`
                   : "Choisir la date de départ"}
@@ -146,7 +146,7 @@ export function DateRangePicker({ startDate, endDate, onChange }: DateRangePicke
               <button
                 type="button"
                 onClick={close}
-                className="text-xs text-slate-400 hover:text-slate-200 px-2.5 py-1 rounded-lg hover:bg-foreground/8 transition-colors"
+                className="text-xs text-muted-foreground hover:text-foreground px-2.5 py-1 rounded-lg hover:bg-foreground/[0.06] transition-colors"
               >
                 Fermer
               </button>
@@ -157,17 +157,17 @@ export function DateRangePicker({ startDate, endDate, onChange }: DateRangePicke
               <button
                 type="button"
                 onClick={prevMonth}
-                className="p-2 rounded-xl hover:bg-foreground/8 active:bg-foreground/12 text-slate-300 transition-colors"
+                className="p-2 rounded-xl hover:bg-foreground/[0.06] active:bg-foreground/10 text-foreground/85 transition-colors"
               >
                 <ChevronLeft size={18} />
               </button>
-              <p className="text-base font-semibold text-slate-100 capitalize">
+              <p className="text-base font-semibold text-foreground capitalize">
                 {MONTHS_FR[calMonth]} {calYear}
               </p>
               <button
                 type="button"
                 onClick={nextMonth}
-                className="p-2 rounded-xl hover:bg-foreground/8 active:bg-foreground/12 text-slate-300 transition-colors"
+                className="p-2 rounded-xl hover:bg-foreground/[0.06] active:bg-foreground/10 text-foreground/85 transition-colors"
               >
                 <ChevronRight size={18} />
               </button>
@@ -176,7 +176,7 @@ export function DateRangePicker({ startDate, endDate, onChange }: DateRangePicke
             {/* Day-of-week headers */}
             <div className="grid grid-cols-7 px-3">
               {DAYS_FR.map((d, i) => (
-                <div key={i} className="text-center text-xs font-bold text-slate-600 uppercase py-1.5">
+                <div key={i} className="text-center text-xs font-bold text-muted-foreground uppercase py-1.5">
                   {d}
                 </div>
               ))}
@@ -207,7 +207,7 @@ export function DateRangePicker({ startDate, endDate, onChange }: DateRangePicke
                     className={cn(
                       "h-10 flex items-center justify-center text-sm font-medium transition-all relative select-none",
                       // Range fill (no border-radius on middle cells)
-                      inRange && "bg-section-tint text-slate-100",
+                      inRange && "bg-foreground/[0.04] text-foreground",
                       // Start cap
                       isStart && "bg-primary text-primary-foreground rounded-l-full shadow-sm",
                       // End cap
@@ -216,14 +216,14 @@ export function DateRangePicker({ startDate, endDate, onChange }: DateRangePicke
                       isSingle && "bg-primary text-primary-foreground rounded-full shadow-sm",
                       // Default
                       !isStart && !isEnd && !isSingle && !inRange && [
-                        "rounded-full hover:bg-foreground/10",
-                        isToday ? "text-section-soft font-bold" : "text-slate-300",
+                        "rounded-full hover:bg-foreground/[0.08]",
+                        isToday ? "text-primary font-bold" : "text-foreground/85",
                       ]
                     )}
                   >
                     {day}
                     {isToday && !isStart && !isEnd && !isSingle && (
-                      <span className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-section" />
+                      <span className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary" />
                     )}
                   </button>
                 );

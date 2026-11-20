@@ -34,8 +34,10 @@ import { SectionLabel } from "@/components/shared/SectionLabel";
 import { Stagger, StaggerItem } from "@/components/motion/Stagger";
 import { TripCover } from "@/components/trips/TripCover";
 import { springSoft } from "@/lib/motion";
+import { ClientOnly } from "@/components/shared/ClientOnly";
+import { PageSkeleton } from "@/components/shared/Skeleton";
 
-export default function TripsPage() {
+function TripsPageContent() {
   const { trips, loading, refetch: refetchTrips, deleteTrip } = useTrips();
   const { profile } = useProfile();
   const { isAnonymous } = useAuthUser();
@@ -247,7 +249,7 @@ export default function TripsPage() {
             }
             description={
               <>
-                <span className="text-slate-200">
+                <span className="text-foreground">
                   {deletingEntry?.name ?? ""}
                 </span>{" "}
                 et toutes ses données (dépenses
@@ -341,5 +343,13 @@ function FirstTimeEmptyState() {
         </Link>
       </div>
     </div>
+  );
+}
+
+export default function TripsPage() {
+  return (
+    <ClientOnly fallback={<div className="mx-auto max-w-3xl px-5 pt-16"><PageSkeleton /></div>}>
+      <TripsPageContent />
+    </ClientOnly>
   );
 }

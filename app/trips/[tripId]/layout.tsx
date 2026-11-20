@@ -2,8 +2,8 @@ import { MeshGradientBackground } from "@/components/layout/MeshGradientBackgrou
 import { TripAppHeader } from "@/components/layout/TripAppHeader";
 import { TripNav } from "@/components/layout/TripNav";
 import { TripClientProviders } from "@/components/layout/TripClientProviders";
-import { createClient } from "@/lib/supabase/server";
-import type { TripType } from "@/types";
+import { ClientOnly } from "@/components/shared/ClientOnly";
+import { PageSkeleton } from "@/components/shared/Skeleton";
 
 interface TripLayoutProps {
   children: React.ReactNode;
@@ -12,13 +12,11 @@ interface TripLayoutProps {
 
 export default async function TripLayout({ children, params }: TripLayoutProps) {
   const { tripId } = await params;
-  const supabase = await createClient();
-  const { data } = await supabase.from("trips").select("type").eq("id", tripId).single();
-  const tripType: TripType = (data?.type as TripType | undefined) ?? "trip";
 
   return (
     <TripClientProviders>
       <MeshGradientBackground />
+      <ClientOnly fallback={<div className="mx-auto w-full max-w-3xl px-4 pt-16"><PageSkeleton /></div>}>
       <div className="min-h-screen flex flex-col">
         <TripAppHeader tripId={tripId} />
         <main
@@ -30,8 +28,9 @@ export default async function TripLayout({ children, params }: TripLayoutProps) 
         >
           {children}
         </main>
-        <TripNav tripId={tripId} tripType={tripType} />
+        <TripNav tripId={tripId} />
       </div>
+      </ClientOnly>
     </TripClientProviders>
   );
 }

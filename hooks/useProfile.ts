@@ -1,32 +1,26 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useCachedQuery } from "@/hooks/useCachedQuery";
+import { clearDataCache } from "@/lib/data/swr";
 import { createClient } from "@/lib/supabase/client";
 import { syncMyParticipantAvatars } from "@/lib/avatar-sync";
 import type { Profile } from "@/types";
 
+async function fetchProfileRow(): Promise<Profile | null> {
+  const supabase = createClient();
+  const { data: { session } } = await supabase.auth.getSession();
+  const user = session?.user;
+  if (!user) return null;
+  const { data } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+  return (data as Profile | null) ?? null;
+}
+
 export function useProfile() {
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  const fetchProfile = useCallback(async () => {
-    const supabase = createClient();
-    setLoading(true);
-    const { data: { session } } = await supabase.auth.getSession();
-    const user = session?.user;
-    if (!user) { setLoading(false); return; }
-
-    const { data } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", user.id)
-      .single();
-
-    setProfile(data ?? null);
-    setLoading(false);
-  }, []);
-
-  useEffect(() => { fetchProfile(); }, [fetchProfile]);
+  const { data: profile, loading, set: setProfile, refetch: fetchProfile } = useCachedQuery<Profile | null>(
+    "profile",
+    fetchProfileRow,
+    null
+  );
 
   const updateProfile = async (
     updates: {
@@ -51,6 +45,7 @@ export function useProfile() {
   };
 
   const signOut = async (): Promise<void> => {
+    clearDataCache();
     await createClient().auth.signOut();
     window.location.href = "/login";
   };

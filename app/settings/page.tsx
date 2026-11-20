@@ -35,8 +35,10 @@ import { Label } from "@/components/ui/label";
 import { useProfile } from "@/hooks/useProfile";
 import { useTheme } from "@/hooks/useTheme";
 import { useUserId } from "@/hooks/useUserId";
+import { ClientOnly } from "@/components/shared/ClientOnly";
+import { PageSkeleton } from "@/components/shared/Skeleton";
 
-export default function SettingsPage() {
+function SettingsPageContent() {
   const { profile, loading, updateProfile, signOut } = useProfile();
   const { preference, setPreference } = useTheme();
   const { isAnonymous } = useAuthUser();
@@ -136,7 +138,7 @@ export default function SettingsPage() {
                       }
                     />
                   ) : (
-                    <div className="w-[88px] h-[88px] rounded-full bg-foreground/8" />
+                    <div className="w-[88px] h-[88px] rounded-full bg-foreground/[0.06]" />
                   )}
                   <p className="text-sm text-muted-foreground">Touche la photo pour en importer une</p>
                 </motion.div>
@@ -178,7 +180,7 @@ export default function SettingsPage() {
                       disabled
                       className="cursor-not-allowed"
                     />
-                    <p className="text-sm text-slate-500">
+                    <p className="text-sm text-muted-foreground">
                       Géré par ton compte Google.
                     </p>
                   </div>
@@ -205,7 +207,7 @@ export default function SettingsPage() {
               {/* ─── Section Paiement ────────────────────────────────── */}
               <Section label="Remboursements">
                 <GlassCard className="space-y-4">
-                  <p className="text-sm text-slate-400 -mt-1">
+                  <p className="text-sm text-muted-foreground -mt-1">
                     Tes infos seront visibles par les autres membres d&apos;un voyage
                     quand ils auront un solde à te rembourser. Elles ne sont
                     jamais exposées ailleurs.
@@ -225,7 +227,7 @@ export default function SettingsPage() {
                       spellCheck={false}
                       className="font-mono text-sm tracking-wide"
                     />
-                    <p className="text-sm text-slate-500">
+                    <p className="text-sm text-muted-foreground">
                       Pour les virements classiques.
                     </p>
                   </div>
@@ -302,10 +304,10 @@ export default function SettingsPage() {
                   <div className="flex items-center gap-3 border-b border-border px-4 py-3.5">
                     <UserAvatar src={profileAvatar(profile)} name={profile?.name} size={40} />
                     <div className="flex-1 min-w-0">
-                      <p className="text-base text-slate-100 font-semibold truncate">
+                      <p className="text-base text-foreground font-semibold truncate">
                         {profile?.name ?? "Utilisateur"}
                       </p>
-                      <p className="text-sm text-slate-500 truncate">
+                      <p className="text-sm text-muted-foreground truncate">
                         {isAnonymous ? "Données sur cet appareil uniquement" : profile?.email}
                       </p>
                     </div>
@@ -353,5 +355,13 @@ function Section({
         <div className="space-y-3">{children}</div>
       </section>
     </StaggerItem>
+  );
+}
+
+export default function SettingsPage() {
+  return (
+    <ClientOnly fallback={<div className="mx-auto max-w-3xl px-5 pt-16"><PageSkeleton /></div>}>
+      <SettingsPageContent />
+    </ClientOnly>
   );
 }
