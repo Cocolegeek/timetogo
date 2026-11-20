@@ -2,9 +2,6 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-:root {
-  color-scheme: dark;
-}
 
 html, body {
   overflow-x: clip;
@@ -15,7 +12,8 @@ html, body {
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-inter);
+  --font-display: var(--font-bricolage);
   --font-mono: var(--font-geist-mono);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -49,223 +47,171 @@ html, body {
   --radius-3xl: calc(var(--radius) * 2.6);
 }
 
-/* ── Light theme (default :root) ─────────────────────────────────────── */
+/* ── Voyou design system ───────────────────────────────────────────────
+ * Papier chaud + encre + une couleur vive. Clair par défaut, sombre
+ * chaud (pas de bleu nuit). Plus de verre, plus d'orbes.
+ */
 :root {
-  --background: oklch(0.98 0.005 240);
-  --foreground: oklch(0.18 0.02 264);
+  --background: oklch(0.98 0.008 85);
+  --foreground: oklch(0.22 0.005 85);
 
-  --card: oklch(1 0 0 / 70%);
-  --card-foreground: oklch(0.18 0.02 264);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.22 0.005 85);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.22 0.005 85);
 
-  --popover: oklch(1 0 0 / 96%);
-  --popover-foreground: oklch(0.18 0.02 264);
+  --primary: oklch(0.56 0.20 33);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.95 0.012 85);
+  --secondary-foreground: oklch(0.25 0.006 85);
+  --muted: oklch(0.95 0.012 85);
+  --muted-foreground: oklch(0.50 0.01 85);
+  --accent: oklch(0.95 0.012 85);
+  --accent-foreground: oklch(0.22 0.005 85);
 
-  --primary: oklch(0.55 0.22 264);
-  --primary-foreground: oklch(0.99 0 0);
+  --destructive: oklch(0.55 0.21 27);
+  --border: oklch(0.90 0.015 85);
+  --input: oklch(0.90 0.015 85);
+  --ring: oklch(0.56 0.20 33 / 55%);
 
-  --secondary: oklch(0.92 0.01 240);
-  --secondary-foreground: oklch(0.25 0.02 264);
+  --chart-1: oklch(0.56 0.20 33);
+  --chart-2: oklch(0.80 0.15 80);
+  --chart-3: oklch(0.52 0.13 155);
+  --chart-4: oklch(0.48 0.15 255);
+  --chart-5: oklch(0.22 0.005 85);
 
-  --muted: oklch(0.94 0.01 240);
-  --muted-foreground: oklch(0.45 0.02 240);
+  --radius: 0.875rem;
 
-  --accent: oklch(0.50 0.25 295);
-  --accent-foreground: oklch(0.99 0 0);
+  --sidebar: oklch(1 0 0);
+  --sidebar-foreground: oklch(0.22 0.005 85);
+  --sidebar-primary: oklch(0.56 0.20 33);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.95 0.012 85);
+  --sidebar-accent-foreground: oklch(0.22 0.005 85);
+  --sidebar-border: oklch(0.90 0.015 85);
+  --sidebar-ring: oklch(0.56 0.20 33 / 55%);
 
-  --destructive: oklch(0.55 0.22 27);
-  --border: oklch(0.18 0.02 264 / 10%);
-  --input: oklch(0.18 0.02 264 / 8%);
-  --ring: oklch(0.55 0.22 264 / 50%);
-
-  --chart-1: oklch(0.55 0.22 264);
-  --chart-2: oklch(0.50 0.25 295);
-  --chart-3: oklch(0.55 0.20 200);
-  --chart-4: oklch(0.55 0.20 150);
-  --chart-5: oklch(0.60 0.22 60);
-
-  --radius: 0.75rem;
-
-  --sidebar: oklch(0.96 0.01 240 / 90%);
-  --sidebar-foreground: oklch(0.18 0.02 264);
-  --sidebar-primary: oklch(0.55 0.22 264);
-  --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent: oklch(0.92 0.01 240);
-  --sidebar-accent-foreground: oklch(0.25 0.02 264);
-  --sidebar-border: oklch(0.18 0.02 264 / 10%);
-  --sidebar-ring: oklch(0.55 0.22 264 / 50%);
+  /* Surfaces (kept under the historical glass-* names) */
+  --glass-bg: oklch(1 0 0);
+  --glass-strong-bg: oklch(1 0 0);
+  --glass-subtle-bg: oklch(0.95 0.012 85);
+  --glass-border: oklch(0.93 0.012 85);
+  --glass-border-strong: oklch(0.90 0.015 85);
+  --glass-border-subtle: transparent;
+  --mesh-bg: oklch(0.98 0.008 85);
+  --mesh-grid: oklch(0.22 0.005 85);
 }
 
-/* ── Glass Dark Design System ─────────────────────────────────────────── */
 .dark {
-  --background: oklch(0.07 0.02 264);
-  --foreground: oklch(0.97 0.005 240);
+  --background: oklch(0.17 0.006 70);
+  --foreground: oklch(0.96 0.006 85);
 
-  --card: oklch(0.11 0.02 264 / 60%);
-  --card-foreground: oklch(0.97 0.005 240);
+  --card: oklch(0.22 0.008 70);
+  --card-foreground: oklch(0.96 0.006 85);
+  --popover: oklch(0.22 0.008 70);
+  --popover-foreground: oklch(0.96 0.006 85);
 
-  --popover: oklch(0.10 0.025 264 / 95%);
-  --popover-foreground: oklch(0.97 0.005 240);
+  --primary: oklch(0.64 0.20 33);
+  --primary-foreground: oklch(0.15 0.01 33);
+  --secondary: oklch(0.26 0.008 70);
+  --secondary-foreground: oklch(0.90 0.006 85);
+  --muted: oklch(0.26 0.008 70);
+  --muted-foreground: oklch(0.72 0.008 85);
+  --accent: oklch(0.26 0.008 70);
+  --accent-foreground: oklch(0.96 0.006 85);
 
-  --primary: oklch(0.60 0.22 264);
-  --primary-foreground: oklch(0.97 0.005 240);
+  --destructive: oklch(0.65 0.20 27);
+  --border: oklch(1 0 0 / 11%);
+  --input: oklch(1 0 0 / 14%);
+  --ring: oklch(0.64 0.20 33 / 60%);
 
-  --secondary: oklch(0.15 0.025 264 / 70%);
-  --secondary-foreground: oklch(0.85 0.01 240);
+  --chart-1: oklch(0.64 0.20 33);
+  --chart-2: oklch(0.82 0.14 80);
+  --chart-3: oklch(0.66 0.14 155);
+  --chart-4: oklch(0.66 0.14 255);
+  --chart-5: oklch(0.96 0.006 85);
 
-  --muted: oklch(0.15 0.02 264 / 50%);
-  --muted-foreground: oklch(0.60 0.01 240);
+  --sidebar: oklch(0.22 0.008 70);
+  --sidebar-foreground: oklch(0.96 0.006 85);
+  --sidebar-primary: oklch(0.64 0.20 33);
+  --sidebar-primary-foreground: oklch(0.15 0.01 33);
+  --sidebar-accent: oklch(0.26 0.008 70);
+  --sidebar-accent-foreground: oklch(0.96 0.006 85);
+  --sidebar-border: oklch(1 0 0 / 11%);
+  --sidebar-ring: oklch(0.64 0.20 33 / 60%);
 
-  --accent: oklch(0.55 0.25 295);
-  --accent-foreground: oklch(0.97 0.005 240);
-
-  --destructive: oklch(0.60 0.22 27);
-  --border: oklch(1 0 0 / 8%);
-  --input: oklch(1 0 0 / 10%);
-  --ring: oklch(0.60 0.22 264 / 60%);
-
-  --chart-1: oklch(0.60 0.22 264);
-  --chart-2: oklch(0.55 0.25 295);
-  --chart-3: oklch(0.65 0.20 200);
-  --chart-4: oklch(0.60 0.20 150);
-  --chart-5: oklch(0.65 0.22 60);
-
-  --sidebar: oklch(0.09 0.02 264 / 80%);
-  --sidebar-foreground: oklch(0.97 0.005 240);
-  --sidebar-primary: oklch(0.60 0.22 264);
-  --sidebar-primary-foreground: oklch(0.97 0.005 240);
-  --sidebar-accent: oklch(0.15 0.02 264 / 60%);
-  --sidebar-accent-foreground: oklch(0.85 0.01 240);
-  --sidebar-border: oklch(1 0 0 / 8%);
-  --sidebar-ring: oklch(0.60 0.22 264 / 60%);
-}
-
-/* ── Layout offsets (single source of truth so FABs stay above the nav) */
-:root {
-  /* Top of the bottom TripNav from the viewport bottom edge, including the
-   * iOS home-indicator safe area. Nav sits at safe + 0.75rem and is ~5rem tall,
-   * which is what this value captures with a tiny safety margin. */
-  --bottom-nav-top: calc(env(safe-area-inset-bottom) + 6rem);
-  /* Where every FAB inside a trip page (Budget, Planning…) should anchor.
-   * Adds a 1.5rem buffer above the nav so they never overlap. */
-  --fab-bottom: calc(var(--bottom-nav-top) + 1.5rem);
-}
-
-/* ── Glass + Mesh theme tokens (driven by .dark on <html>) ─────────── */
-:root {
-  /* Glass surfaces */
-  --glass-bg: oklch(1 0 0 / 70%);
-  --glass-strong-bg: oklch(1 0 0 / 85%);
-  --glass-subtle-bg: oklch(1 0 0 / 50%);
-  --glass-border: oklch(0.18 0.02 264 / 10%);
-  --glass-border-strong: oklch(0.18 0.02 264 / 14%);
-  --glass-border-subtle: oklch(0.18 0.02 264 / 6%);
-
-  /* Page mesh background — light mode */
-  --mesh-bg: oklch(0.97 0.005 240);
-  --mesh-grid: oklch(0.18 0.02 264);
-}
-.dark {
-  /* Glass surfaces */
-  --glass-bg: oklch(0.11 0.02 264 / 55%);
-  --glass-strong-bg: oklch(0.09 0.025 264 / 80%);
-  --glass-subtle-bg: oklch(0.13 0.02 264 / 35%);
+  --glass-bg: oklch(0.22 0.008 70);
+  --glass-strong-bg: oklch(0.22 0.008 70);
+  --glass-subtle-bg: oklch(0.26 0.008 70);
   --glass-border: oklch(1 0 0 / 8%);
   --glass-border-strong: oklch(1 0 0 / 12%);
-  --glass-border-subtle: oklch(1 0 0 / 6%);
-
-  /* Page mesh background — dark mode */
-  --mesh-bg: oklch(0.05 0.015 264);
+  --glass-border-subtle: transparent;
+  --mesh-bg: oklch(0.17 0.006 70);
   --mesh-grid: oklch(1 0 0);
 }
 
-/* ── Voyou brand accent (single color across the whole app) ────────────
- * Couleur unique = indigo Voyou (#6366f1 ≈ oklch(0.61 0.20 275)). Plus
- * de variation par onglet : tout reste cohérent visuellement.
- *
- * Variables exposed:
- *   --accent-h           hue (oklch)
- *   --accent-c           chroma (oklch)
- *   --accent-500..-300   color stops
- *   --accent-soft        20% alpha (chip bg)
- *   --accent-border      30% alpha
- *   --accent-glow        40% alpha (shadows, ring)
- *   --mesh-orb-1/-2/-3   gradient orbs in the background
- */
+/* Layout offsets: bottom nav is 76px + safe area */
 :root {
-  --accent-h: 270;
-  --accent-c: 0.22;
-  --accent-500: oklch(0.60 var(--accent-c) var(--accent-h));
-  --accent-400: oklch(0.70 var(--accent-c) var(--accent-h));
-  --accent-300: oklch(0.78 calc(var(--accent-c) * 0.7) var(--accent-h));
-  --accent-soft: oklch(0.60 var(--accent-c) var(--accent-h) / 20%);
-  --accent-border: oklch(0.60 var(--accent-c) var(--accent-h) / 30%);
-  --accent-glow: oklch(0.60 var(--accent-c) var(--accent-h) / 40%);
+  --bottom-nav-top: calc(env(safe-area-inset-bottom) + 4.75rem);
+  --fab-bottom: calc(var(--bottom-nav-top) + 1rem);
+}
 
-  /* Mesh orbs — variations subtiles autour de l'indigo Voyou */
-  --mesh-orb-1: oklch(0.65 0.22 270 / 22%);
-  --mesh-orb-2: oklch(0.70 0.20 285 / 16%);
-  --mesh-orb-3: oklch(0.65 0.18 255 / 12%);
+/* Brand accent: one color across the whole app */
+:root {
+  --accent-h: 33;
+  --accent-c: 0.20;
+  --accent-500: oklch(0.56 var(--accent-c) var(--accent-h));
+  --accent-400: oklch(0.52 var(--accent-c) var(--accent-h));
+  --accent-300: oklch(0.46 var(--accent-c) var(--accent-h));
+  --accent-soft: oklch(0.56 var(--accent-c) var(--accent-h) / 12%);
+  --accent-border: oklch(0.56 var(--accent-c) var(--accent-h) / 30%);
+  --accent-glow: oklch(0.56 var(--accent-c) var(--accent-h) / 40%);
 }
 .dark {
-  --mesh-orb-1: oklch(0.50 0.25 270 / 40%);
-  --mesh-orb-2: oklch(0.45 0.22 285 / 26%);
-  --mesh-orb-3: oklch(0.50 0.20 255 / 18%);
+  --accent-500: oklch(0.64 var(--accent-c) var(--accent-h));
+  --accent-400: oklch(0.72 0.16 var(--accent-h));
+  --accent-300: oklch(0.80 0.11 var(--accent-h));
+  --accent-soft: oklch(0.64 var(--accent-c) var(--accent-h) / 18%);
+  --accent-border: oklch(0.64 var(--accent-c) var(--accent-h) / 35%);
 }
 
-/* ── Custom Glass Utilities ───────────────────────────────────────────── */
+/* ── Surfaces ──────────────────────────────────────────────────────── */
 @utility glass {
   background-color: var(--glass-bg);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
   border: 1px solid var(--glass-border);
+  box-shadow: 0 1px 0 var(--glass-border-strong);
 }
 
 @utility glass-strong {
   background-color: var(--glass-strong-bg);
-  backdrop-filter: blur(40px) saturate(200%);
-  -webkit-backdrop-filter: blur(40px) saturate(200%);
   border: 1px solid var(--glass-border-strong);
 }
 
 @utility glass-subtle {
   background-color: var(--glass-subtle-bg);
-  backdrop-filter: blur(12px) saturate(160%);
-  -webkit-backdrop-filter: blur(12px) saturate(160%);
   border: 1px solid var(--glass-border-subtle);
 }
 
 @utility gradient-primary {
-  background: linear-gradient(
-    135deg,
-    oklch(0.55 var(--accent-c) var(--accent-h)),
-    oklch(0.50 calc(var(--accent-c) + 0.03) calc(var(--accent-h) + 25))
-  );
+  background: var(--accent-500);
 }
 
 @utility gradient-text {
-  background: linear-gradient(
-    135deg,
-    oklch(0.78 calc(var(--accent-c) * 0.7) var(--accent-h)),
-    oklch(0.72 calc(var(--accent-c) * 0.85) calc(var(--accent-h) + 20))
-  );
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--accent-500);
 }
 
-/* ── Section-aware accent utilities ────────────────────────────────────
- * Use these on elements that should follow the current section color.
- * Hardcoded semantic colors (matin/midi/soir, categories…) MUST NOT use
- * these — they have their own fixed Tailwind classes.
- */
+@utility font-display {
+  font-family: var(--font-display), var(--font-sans), sans-serif;
+}
+
 @utility text-section {
-  color: var(--accent-400);
+  color: var(--accent-500);
 }
 @utility text-section-strong {
   color: var(--accent-500);
 }
 @utility text-section-soft {
-  color: var(--accent-300);
+  color: var(--accent-400);
 }
 @utility bg-section {
   background-color: var(--accent-500);
@@ -274,13 +220,13 @@ html, body {
   background-color: var(--accent-soft);
 }
 @utility bg-section-tint {
-  background-color: oklch(0.60 var(--accent-c) var(--accent-h) / 10%);
+  background-color: oklch(0.56 var(--accent-c) var(--accent-h) / 8%);
 }
 @utility bg-section-medium {
-  background-color: oklch(0.60 var(--accent-c) var(--accent-h) / 30%);
+  background-color: oklch(0.56 var(--accent-c) var(--accent-h) / 22%);
 }
 @utility border-section-strong {
-  border-color: oklch(0.60 var(--accent-c) var(--accent-h) / 50%);
+  border-color: oklch(0.56 var(--accent-c) var(--accent-h) / 50%);
 }
 @utility border-section {
   border-color: var(--accent-border);
@@ -289,43 +235,42 @@ html, body {
   --tw-ring-color: var(--accent-glow);
 }
 @utility shadow-section {
-  box-shadow: 0 10px 30px -10px var(--accent-glow);
+  box-shadow: 0 10px 24px -12px var(--accent-glow);
 }
 @utility shadow-section-strong {
-  box-shadow: 0 14px 40px -8px var(--accent-glow);
+  box-shadow: 0 14px 30px -10px var(--accent-glow);
 }
 
-/* ── Slate scale inversion for light mode ──────────────────────────────
- * The whole UI is dark-first and uses `text-slate-100..400` for primary
- * text, `bg-white/x` and `border-white/x` for surfaces. By overriding the
- * native slate tokens (and a couple of "white-as-surface" helpers) when
- * the document is NOT in dark mode, we get a usable light theme without
- * having to add dark: variants to every component.
- *
- * Tailwind v4 exposes the colour palette as `--color-slate-*` CSS vars,
- * so reassigning them here filters down to every utility class. */
-:root:not(.dark) {
-  /* Slate (neutral) — used for text + subtle surfaces */
-  --color-slate-50:  oklch(0.13 0.02 264);
-  --color-slate-100: oklch(0.18 0.02 264);
-  --color-slate-200: oklch(0.25 0.02 264);
-  --color-slate-300: oklch(0.32 0.02 264);
-  --color-slate-400: oklch(0.45 0.015 240);
-  --color-slate-500: oklch(0.55 0.01 240);
-  --color-slate-600: oklch(0.70 0.008 240);
-  --color-slate-700: oklch(0.82 0.008 240);
-  --color-slate-800: oklch(0.90 0.008 240);
-  --color-slate-900: oklch(0.95 0.005 240);
-  --color-slate-950: oklch(0.97 0.005 240);
+/* ── Palette remap ─────────────────────────────────────────────────────
+ * The code base uses text-slate-100..600 as "primary → tertiary text" and
+ * indigo/violet as the brand. Remapping the scales gives warm neutrals
+ * and a single coral brand everywhere, in both themes. */
+:root {
+  --color-slate-50:  oklch(0.18 0.005 85);
+  --color-slate-100: oklch(0.22 0.005 85);
+  --color-slate-200: oklch(0.28 0.006 85);
+  --color-slate-300: oklch(0.36 0.008 85);
+  --color-slate-400: oklch(0.46 0.01 85);
+  --color-slate-500: oklch(0.50 0.01 85);
+  --color-slate-600: oklch(0.52 0.01 85);
+  --color-slate-700: oklch(0.82 0.012 85);
+  --color-slate-800: oklch(0.90 0.012 85);
+  --color-slate-900: oklch(0.95 0.01 85);
+  --color-slate-950: oklch(0.97 0.008 85);
 
-  /* Coloured accents — darken the 100..400 shades so pale text used on
-   * tinted backgrounds (e.g. text-indigo-200 on bg-indigo-500/15) stays
-   * readable on light surfaces. The 500 shade (brand) is left intact so
-   * gradients and tinted backgrounds keep their identity. */
-  --color-indigo-100: oklch(0.30 0.20 264);
-  --color-indigo-200: oklch(0.36 0.22 264);
-  --color-indigo-300: oklch(0.42 0.22 264);
-  --color-indigo-400: oklch(0.50 0.22 264);
+  --color-indigo-100: oklch(0.34 0.14 33);
+  --color-indigo-200: oklch(0.40 0.16 33);
+  --color-indigo-300: oklch(0.46 0.19 33);
+  --color-indigo-400: oklch(0.52 0.20 33);
+  --color-indigo-500: oklch(0.56 0.20 33);
+  --color-indigo-600: oklch(0.50 0.20 33);
+  --color-indigo-700: oklch(0.44 0.18 33);
+  --color-violet-100: oklch(0.34 0.14 33);
+  --color-violet-200: oklch(0.40 0.16 33);
+  --color-violet-300: oklch(0.46 0.19 33);
+  --color-violet-400: oklch(0.52 0.20 33);
+  --color-violet-500: oklch(0.56 0.20 33);
+  --color-violet-600: oklch(0.50 0.20 33);
 
   --color-emerald-100: oklch(0.30 0.16 162);
   --color-emerald-200: oklch(0.36 0.18 162);
@@ -347,11 +292,6 @@ html, body {
   --color-sky-300: oklch(0.48 0.18 230);
   --color-sky-400: oklch(0.55 0.18 230);
 
-  --color-violet-100: oklch(0.32 0.22 295);
-  --color-violet-200: oklch(0.38 0.24 295);
-  --color-violet-300: oklch(0.44 0.24 295);
-  --color-violet-400: oklch(0.52 0.24 295);
-
   --color-red-100: oklch(0.40 0.22 27);
   --color-red-200: oklch(0.46 0.22 27);
   --color-red-300: oklch(0.52 0.22 27);
@@ -363,6 +303,33 @@ html, body {
   --color-orange-400: oklch(0.60 0.20 50);
 }
 
+.dark {
+  --color-slate-50:  oklch(0.99 0.004 85);
+  --color-slate-100: oklch(0.96 0.006 85);
+  --color-slate-200: oklch(0.90 0.006 85);
+  --color-slate-300: oklch(0.82 0.007 85);
+  --color-slate-400: oklch(0.74 0.008 85);
+  --color-slate-500: oklch(0.70 0.008 85);
+  --color-slate-600: oklch(0.64 0.008 85);
+  --color-slate-700: oklch(0.36 0.008 70);
+  --color-slate-800: oklch(0.28 0.008 70);
+  --color-slate-900: oklch(0.22 0.008 70);
+  --color-slate-950: oklch(0.17 0.006 70);
+
+  --color-indigo-100: oklch(0.94 0.03 33);
+  --color-indigo-200: oklch(0.88 0.06 33);
+  --color-indigo-300: oklch(0.80 0.11 33);
+  --color-indigo-400: oklch(0.72 0.16 33);
+  --color-indigo-500: oklch(0.64 0.20 33);
+  --color-indigo-600: oklch(0.58 0.20 33);
+  --color-indigo-700: oklch(0.50 0.18 33);
+  --color-violet-100: oklch(0.94 0.03 33);
+  --color-violet-200: oklch(0.88 0.06 33);
+  --color-violet-300: oklch(0.80 0.11 33);
+  --color-violet-400: oklch(0.72 0.16 33);
+  --color-violet-500: oklch(0.64 0.20 33);
+  --color-violet-600: oklch(0.58 0.20 33);
+}
 
 /* ── Base ─────────────────────────────────────────────────────────────── */
 @layer base {
@@ -382,12 +349,18 @@ html, body {
     color-scheme: dark;
   }
 
+  h1, h2, h3 {
+    font-family: var(--font-display), var(--font-sans), sans-serif;
+    letter-spacing: -0.015em;
+  }
+
   body {
     @apply bg-background text-foreground min-h-full;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     /* Prevent the rubber-band effect from bleeding past the layout */
     overscroll-behavior-y: none;
+    background-image: none;
   }
 
   /* Mobile UX defaults */
@@ -428,10 +401,10 @@ html, body {
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: oklch(1 0 0 / 15%);
+    background: color-mix(in oklch, var(--foreground) 22%, transparent);
     border-radius: 99px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: oklch(1 0 0 / 25%);
+    background: color-mix(in oklch, var(--foreground) 35%, transparent);
   }
 }

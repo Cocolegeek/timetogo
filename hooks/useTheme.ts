@@ -9,12 +9,12 @@ const STORAGE_KEY = "voyou-theme";
 /** Read the current theme from <html>.classList — kept in sync with the
  *  no-FOUC inline script that runs before React. */
 function getInitialTheme(): Theme {
-  if (typeof document === "undefined") return "dark";
+  if (typeof document === "undefined") return "light";
   return document.documentElement.classList.contains("dark") ? "dark" : "light";
 }
 
 export function useTheme() {
-  const [theme, setThemeState] = useState<Theme>("dark");
+  const [theme, setThemeState] = useState<Theme>("light");
 
   // Sync state from DOM after hydration
   useEffect(() => {

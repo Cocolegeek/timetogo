@@ -14,6 +14,7 @@ import dynamic from "next/dynamic";
 import { GlassCard } from "@/components/layout/GlassCard";
 import { getBudgetColor, getBudgetTextColor } from "@/lib/budget/budget-color";
 import { CATEGORIES } from "@/lib/budget/categories";
+import { TripCover } from "@/components/trips/TripCover";
 import { IdentityPicker } from "@/components/trips/IdentityPicker";
 
 const BudgetEditDialog = dynamic(
@@ -123,10 +124,10 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
               draggable={false}
             />
           ) : (
-            <span className="text-5xl">{trip.emoji}</span>
+            <TripCover seed={trip.id} className="w-16 h-16 rounded-2xl shrink-0" />
           )}
           <div className="min-w-0 flex-1">
-            <h1 className="text-3xl font-bold text-slate-100 leading-tight truncate">
+            <h1 className="font-display text-3xl font-extrabold text-slate-100 leading-tight truncate">
               {trip.name}
             </h1>
             {isVoyage(trip) && trip.destination && (

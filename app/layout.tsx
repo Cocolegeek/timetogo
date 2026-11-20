@@ -1,13 +1,19 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Bricolage_Grotesque, Inter, Geist_Mono } from "next/font/google";
 import { PwaRegister } from "./pwa-register";
 import { AppInstallBanner } from "@/components/shared/IosInstallBanner";
 import { SectionThemeController } from "@/components/layout/SectionThemeController";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
+});
+
+const bricolage = Bricolage_Grotesque({
+  variable: "--font-bricolage",
+  subsets: ["latin"],
+  weight: ["500", "700", "800"],
 });
 
 const geistMono = Geist_Mono({
@@ -52,27 +58,29 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0a0c14",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#FAF7F2" },
+    { media: "(prefers-color-scheme: dark)", color: "#171513" },
+  ],
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
   viewportFit: "cover",
-  colorScheme: "dark",
+  colorScheme: "light dark",
 };
 
 const themeScript = `
   (function() {
     try {
-      var t = localStorage.getItem('voyou-theme');
-      if (t === 'light') {
-        document.documentElement.classList.remove('dark');
-      } else {
-        document.documentElement.classList.add('dark');
-      }
-    } catch (e) {
-      document.documentElement.classList.add('dark');
-    }
+      var t = null;
+      try { t = localStorage.getItem('voyou-theme'); } catch (e) {}
+      var mq = window.matchMedia('(prefers-color-scheme: dark)');
+      var apply = function () {
+        var dark = t === 'dark' || (t !== 'light' && mq.matches);
+        document.documentElement.classList.toggle('dark', dark);
+      };
+      apply();
+      if (t !== 'light' && t !== 'dark') mq.addEventListener('change', apply);
+    } catch (e) {}
   })();
 `;
 
@@ -82,7 +90,7 @@ export default function RootLayout({
   return (
     <html
       lang="fr"
-      className={`${geistSans.variable} ${geistMono.variable} dark h-full antialiased`}
+      className={`${inter.variable} ${bricolage.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <head>
