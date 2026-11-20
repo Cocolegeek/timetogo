@@ -1,31 +1,30 @@
 "use client";
 
-import { use, useEffect, useMemo, useState } from "react";
+import { use, useEffect, useMemo, useRef, useState } from "react";
 import {
   Plus,
   Map,
-  Clock,
   MapPin,
-  Hourglass,
-  MoreVertical,
+  MoreHorizontal,
   Pencil,
   Trash2,
-  CalendarDays,
+  CalendarPlus,
   Route,
-  Car,
-  PersonStanding,
-  Bike,
-  Bus,
-  Plane,
-  ArrowRight,
+  Hourglass,
+  Navigation,
+  Sun,
 } from "lucide-react";
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from "framer-motion";
-import { GlassCard } from "@/components/layout/GlassCard";
+import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 import { useOpenLocation, useOpenRoute } from "@/components/shared/MapAppPicker";
 import { ConfirmDeleteDialog } from "@/components/shared/ConfirmDeleteDialog";
 import { DayHeader } from "@/components/shared/DayHeader";
 import { DayTabs } from "@/components/shared/DayTabs";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { ParticipantStack } from "@/components/shared/ParticipantStack";
+import { Fab } from "@/components/shared/Fab";
+import { PageHeader } from "@/components/layout/PageHeader";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,51 +32,30 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useRouter } from "next/navigation";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { useTrip } from "@/hooks/useTrip";
 import { useItinerary } from "@/hooks/useItinerary";
 import { isVoyage } from "@/lib/trip-features";
-import dynamic from "next/dynamic";
-import type { ItineraryFormValues } from "@/components/planning/ItineraryItemForm";
-const ItineraryItemForm = dynamic(() => import("@/components/planning/ItineraryItemForm").then(m => ({ default: m.ItineraryItemForm })), { ssr: false });
-const JourneyForm = dynamic(() => import("@/components/planning/JourneyForm").then(m => ({ default: m.JourneyForm })), { ssr: false });
-import { ParticipantStack } from "@/components/shared/ParticipantStack";
+import { ITINERARY_TYPES, JOURNEY_MODES } from "@/lib/itinerary-types";
 import { eachDate } from "@/lib/meals/slots";
 import { formatDuration } from "@/lib/format-date";
+import { EASE_OUT, fadeUp, stagger } from "@/lib/motion";
 import { cn } from "@/lib/utils";
-import type { ItineraryItem, ItineraryType, JourneyMode, Participant } from "@/types";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import type { ItineraryFormValues } from "@/components/planning/ItineraryItemForm";
+import type { ItineraryItem, Participant } from "@/types";
+
+const ItineraryItemForm = dynamic(() => import("@/components/planning/ItineraryItemForm").then((m) => ({ default: m.ItineraryItemForm })), { ssr: false });
+const JourneyForm = dynamic(() => import("@/components/planning/JourneyForm").then((m) => ({ default: m.JourneyForm })), { ssr: false });
 
 interface PlanningPageProps {
   params: Promise<{ tripId: string }>;
 }
 
-const TYPE_CONFIG: Record<
-  ItineraryType,
-  { label: string; color: string; bg: string }
-> = {
-  transport:     { label: "Transport",   color: "text-sky-400",     bg: "bg-sky-400/10"     },
-  accommodation: { label: "Hébergement", color: "text-violet-400",  bg: "bg-violet-400/10"  },
-  activity:      { label: "Activité",    color: "text-emerald-400", bg: "bg-emerald-400/10" },
-  food:          { label: "Resto",       color: "text-amber-400",   bg: "bg-amber-400/10"   },
-  other:         { label: "Autre",       color: "text-slate-400",   bg: "bg-slate-400/10"   },
-  journey:       { label: "Trajet",      color: "text-sky-400",     bg: "bg-sky-400/10"     },
-};
-
-const JOURNEY_MODE_ICON: Record<JourneyMode, React.ComponentType<{ size?: number; className?: string }>> = {
-  car:     Car,
-  foot:    PersonStanding,
-  bike:    Bike,
-  transit: Bus,
-  plane:   Plane,
-};
-
 export default function PlanningPage({ params }: PlanningPageProps) {
   const { tripId } = use(params);
   const router = useRouter();
   const { trip } = useTrip(tripId);
-  const { items, loading, addItem, updateItem, deleteItem } =
-    useItinerary(tripId);
+  const { items, addItem, updateItem, deleteItem } = useItinerary(tripId);
 
   useEffect(() => {
     if (trip && !isVoyage(trip)) {
@@ -87,22 +65,35 @@ export default function PlanningPage({ params }: PlanningPageProps) {
 
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerDate, setPickerDate] = useState<string | undefined>();
-
   const [formOpen, setFormOpen] = useState(false);
   const [journeyFormOpen, setJourneyFormOpen] = useState(false);
   const [formDefaultDate, setFormDefaultDate] = useState<string | undefined>();
   const [editingItem, setEditingItem] = useState<ItineraryItem | undefined>();
   const [confirmDelete, setConfirmDelete] = useState<ItineraryItem | null>(null);
-  const [activeDate, setActiveDate] = useState<string | null>(null);
+  const [selection, setSelection] = useState<{ date: string | null; dir: number }>({ date: null, dir: 1 });
+  const selectedDate = selection.date;
+  const dir = selection.dir;
 
   const today = useMemo(() => new Date().toISOString().split("T")[0], []);
+  const dates = useMemo(
+    () => (trip && isVoyage(trip) ? eachDate(trip.startDate, trip.endDate) : []),
+    [trip]
+  );
+  const currentDate = selectedDate ?? (dates.includes(today) ? today : dates[0]) ?? today;
 
-  const dates = trip && isVoyage(trip) ? eachDate(trip.startDate, trip.endDate) : [];
+  const byDate = useMemo(
+    () =>
+      items.reduce<Record<string, ItineraryItem[]>>((acc, item) => {
+        (acc[item.date] ??= []).push(item);
+        return acc;
+      }, {}),
+    [items]
+  );
+  const marked = useMemo(() => new Set(Object.keys(byDate)), [byDate]);
 
-  useEffect(() => {
-    if (dates.length === 0 || activeDate) return;
-    setActiveDate(dates.includes(today) ? today : dates[0]);
-  }, [dates, today, activeDate]);
+  const selectDate = (d: string) => {
+    setSelection({ date: d, dir: d > currentDate ? 1 : -1 });
+  };
 
   const openPicker = (date?: string) => {
     setPickerDate(date);
@@ -126,19 +117,13 @@ export default function PlanningPage({ params }: PlanningPageProps) {
   const openForEdit = (item: ItineraryItem) => {
     setEditingItem(item);
     setFormDefaultDate(item.date);
-    if (item.type === "journey") {
-      setJourneyFormOpen(true);
-    } else {
-      setFormOpen(true);
-    }
+    if (item.type === "journey") setJourneyFormOpen(true);
+    else setFormOpen(true);
   };
 
   const handleSubmit = async (values: ItineraryFormValues) => {
-    if (editingItem) {
-      await updateItem(editingItem.id, values);
-    } else {
-      await addItem(values);
-    }
+    if (editingItem) await updateItem(editingItem.id, values);
+    else await addItem(values);
     setEditingItem(undefined);
   };
 
@@ -148,131 +133,130 @@ export default function PlanningPage({ params }: PlanningPageProps) {
     setConfirmDelete(null);
   };
 
-  const byDate = items.reduce<Record<string, typeof items>>((acc, item) => {
-    if (!acc[item.date]) acc[item.date] = [];
-    acc[item.date].push(item);
-    return acc;
-  }, {});
-
-  const currentDate = activeDate ?? dates[0] ?? today;
-  const currentIsToday = currentDate === today;
-  const currentIsPast = currentDate < today;
   const dayItems = byDate[currentDate] ?? [];
+  const participants = trip?.participants ?? [];
+  const fallbackDate = formDefaultDate ?? (trip && isVoyage(trip) ? trip.startDate : undefined) ?? today;
 
   return (
-    <div className="space-y-4 pt-2">
+    <div className="space-y-3 pt-1">
+      <PageHeader eyebrow={trip?.name} title="Planning" />
+
       {dates.length > 0 && (
-        <DayTabs
-          dates={dates}
-          activeDate={currentDate}
-          onChange={setActiveDate}
-          today={today}
-          accent="sky"
-        />
+        <DayTabs id="planning" dates={dates} activeDate={currentDate} onChange={selectDate} today={today} marked={marked} />
       )}
 
       {dates.length === 0 ? (
-        <EmptyState
-          icon={Map}
-          title="Aucun jour de voyage"
-          description="Vérifie les dates du voyage pour afficher le planning."
-        />
+        <EmptyState icon={Map} title="Aucun jour de voyage" description="Vérifie les dates du voyage pour afficher le planning." />
       ) : (
-        <motion.div
-          key={currentDate}
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: currentIsPast ? 0.7 : 1, y: 0 }}
-          transition={{ duration: 0.2 }}
-        >
-          <DayHeader date={currentDate} isToday={currentIsToday} isPast={currentIsPast} />
-          <div className="relative pl-4 border-l border-foreground/8 space-y-3">
-            <AnimatePresence>
-              {dayItems.map((item) => (
-                <ItineraryCard
-                  key={item.id}
-                  item={item}
-                  participants={trip?.participants ?? []}
-                  onEdit={() => openForEdit(item)}
-                  onDelete={() => setConfirmDelete(item)}
-                  onSwipeDelete={async () => { await deleteItem(item.id); }}
-                />
-              ))}
-            </AnimatePresence>
-            <button
-              type="button"
-              onClick={() => openPicker(currentDate)}
-              className="w-full text-left px-3.5 py-3 rounded-2xl border border-dashed border-foreground/15 bg-foreground/3 hover:border-section/40 hover:bg-section/5 active:bg-foreground/10 transition-all flex items-center gap-2.5 text-slate-400 hover:text-section-soft"
-            >
-              <Plus size={16} className="shrink-0" />
-              <span className="text-sm font-medium">Ajouter au planning</span>
-            </button>
-          </div>
-        </motion.div>
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.section
+            key={currentDate}
+           
+            initial={{ opacity: 0, x: 28 * dir }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -28 * dir }}
+            transition={{ duration: 0.28, ease: EASE_OUT }}
+            className="pt-2"
+          >
+            <DayHeader date={currentDate} isToday={currentDate === today} isPast={currentDate < today} />
+
+            {dayItems.length === 0 ? (
+              <button
+                type="button"
+                onClick={() => openPicker(currentDate)}
+                className="pressable flex w-full flex-col items-center gap-3 rounded-[1.5rem] border border-dashed border-foreground/20 px-6 py-10 text-center transition-colors hover:border-foreground/35"
+              >
+                <span className="flex size-12 items-center justify-center rounded-2xl bg-secondary text-muted-foreground">
+                  <Sun size={22} />
+                </span>
+                <span className="font-display text-lg font-bold tracking-tight">Journée libre</span>
+                <span className="text-sm text-muted-foreground">Ajoute une activité, un resto ou un trajet.</span>
+              </button>
+            ) : (
+              <motion.ol variants={stagger(0.05)} initial="hidden" animate="show" className="space-y-2.5">
+                <AnimatePresence initial={false}>
+                  {dayItems.map((item, i) => (
+                    <TimelineRow key={item.id} item={item} last={i === dayItems.length - 1}>
+                      <ItineraryCard
+                        item={item}
+                        participants={participants}
+                        onEdit={() => openForEdit(item)}
+                        onDelete={() => setConfirmDelete(item)}
+                        onSwipeDelete={async () => {
+                          await deleteItem(item.id);
+                        }}
+                      />
+                    </TimelineRow>
+                  ))}
+                </AnimatePresence>
+                <li className="grid grid-cols-[3rem_minmax(0,1fr)] gap-3">
+                  <span />
+                  <button
+                    type="button"
+                    onClick={() => openPicker(currentDate)}
+                    className="pressable flex h-12 items-center justify-center gap-2 rounded-2xl border border-dashed border-foreground/20 text-sm font-semibold text-muted-foreground transition-colors hover:border-foreground/35 hover:text-foreground"
+                  >
+                    <Plus size={16} />
+                    Ajouter une étape
+                  </button>
+                </li>
+              </motion.ol>
+            )}
+          </motion.section>
+        </AnimatePresence>
       )}
 
-      {/* Type picker */}
+      {dates.length > 0 && <Fab onClick={() => openPicker(currentDate)} label="Ajouter au planning" />}
+
       <Dialog open={pickerOpen} onOpenChange={setPickerOpen}>
-        <DialogContent className="glass-strong border-foreground/10 max-w-xs p-6 gap-4">
-          <p className="text-center text-sm font-semibold text-slate-300 uppercase tracking-wider">Ajouter au planning</p>
+        <DialogContent className="max-w-sm">
+          <div className="space-y-1 pr-10">
+            <DialogTitle>Ajouter au planning</DialogTitle>
+            <DialogDescription>Une étape sur place ou un déplacement entre deux lieux.</DialogDescription>
+          </div>
           <div className="grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={openEventForm}
-              className="flex flex-col items-center gap-3 px-4 py-5 rounded-2xl border border-foreground/10 bg-foreground/4 hover:bg-foreground/8 active:scale-95 transition-all"
-            >
-              <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 flex items-center justify-center">
-                <CalendarDays size={22} className="text-emerald-400" />
-              </div>
-              <span className="text-sm font-semibold text-slate-200">Événement</span>
-            </button>
-            <button
-              type="button"
-              onClick={openJourneyForm}
-              className="flex flex-col items-center gap-3 px-4 py-5 rounded-2xl border border-foreground/10 bg-foreground/4 hover:bg-foreground/8 active:scale-95 transition-all"
-            >
-              <div className="w-12 h-12 rounded-2xl bg-sky-500/15 flex items-center justify-center">
-                <Route size={22} className="text-sky-400" />
-              </div>
-              <span className="text-sm font-semibold text-slate-200">Trajet</span>
-            </button>
+            <PickerOption icon={CalendarPlus} tile="bg-emerald-500/12 text-emerald-400" label="Étape" hint="Activité, resto, logement" onClick={openEventForm} />
+            <PickerOption icon={Route} tile="bg-sky-500/12 text-sky-400" label="Trajet" hint="D'un lieu à l'autre" onClick={openJourneyForm} />
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Event form */}
       <ItineraryItemForm
         open={formOpen}
         onOpenChange={(open) => {
           setFormOpen(open);
-          if (!open) { setEditingItem(undefined); setFormDefaultDate(undefined); }
+          if (!open) {
+            setEditingItem(undefined);
+            setFormDefaultDate(undefined);
+          }
         }}
-        participants={trip?.participants ?? []}
-        defaultDate={formDefaultDate ?? (trip && isVoyage(trip) ? trip.startDate : undefined) ?? new Date().toISOString().split("T")[0]}
+        participants={participants}
+        defaultDate={fallbackDate}
         initialValues={editingItem}
         onSubmit={handleSubmit}
       />
 
-      {/* Journey form */}
       <JourneyForm
         open={journeyFormOpen}
         onOpenChange={(open) => {
           setJourneyFormOpen(open);
-          if (!open) { setEditingItem(undefined); setFormDefaultDate(undefined); }
+          if (!open) {
+            setEditingItem(undefined);
+            setFormDefaultDate(undefined);
+          }
         }}
-        participants={trip?.participants ?? []}
-        defaultDate={formDefaultDate ?? (trip && isVoyage(trip) ? trip.startDate : undefined) ?? new Date().toISOString().split("T")[0]}
+        participants={participants}
+        defaultDate={fallbackDate}
         initialValues={editingItem}
         onSubmit={handleSubmit}
       />
 
-      {/* Confirm delete */}
       {confirmDelete && (
         <ConfirmDeleteDialog
           title="Supprimer cette étape ?"
           description={
             <>
-              <span className="text-slate-200">{confirmDelete.title}</span> sera
-              définitivement supprimée du planning.
+              <span className="font-semibold text-foreground">{confirmDelete.title}</span> sera retirée du planning.
             </>
           }
           onCancel={() => setConfirmDelete(null)}
@@ -280,6 +264,55 @@ export default function PlanningPage({ params }: PlanningPageProps) {
         />
       )}
     </div>
+  );
+}
+
+function PickerOption({
+  icon: Icon,
+  tile,
+  label,
+  hint,
+  onClick,
+}: {
+  icon: typeof Route;
+  tile: string;
+  label: string;
+  hint: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="pressable flex flex-col items-start gap-3 rounded-[1.25rem] bg-secondary p-4 text-left transition-colors hover:bg-foreground/[0.08]"
+    >
+      <span className={cn("flex size-11 items-center justify-center rounded-2xl", tile)}>
+        <Icon size={22} />
+      </span>
+      <span>
+        <span className="block font-semibold">{label}</span>
+        <span className="block text-sm text-muted-foreground">{hint}</span>
+      </span>
+    </button>
+  );
+}
+
+function TimelineRow({ item, last, children }: { item: ItineraryItem; last: boolean; children: React.ReactNode }) {
+  return (
+    <motion.li
+      layout="position"
+      variants={fadeUp}
+      exit={{ opacity: 0, height: 0, transition: { duration: 0.25, ease: EASE_OUT } }}
+      className="relative grid grid-cols-[3rem_minmax(0,1fr)] gap-3"
+    >
+      <span className="tabular pt-4 text-right text-sm font-semibold text-muted-foreground">
+        {item.time ? item.time.slice(0, 5) : "—"}
+      </span>
+      <div className="relative">
+        {!last && <span aria-hidden="true" className="absolute top-full left-6 h-2.5 w-px bg-border" />}
+        {children}
+      </div>
+    </motion.li>
   );
 }
 
@@ -300,54 +333,41 @@ function ItineraryCard({
 }) {
   const openLocation = useOpenLocation();
   const openRoute = useOpenRoute();
-  const cfg = TYPE_CONFIG[item.type];
-  const durationLabel = formatDuration(item.durationMinutes);
   const x = useMotionValue(0);
-  const [isDragging, setIsDragging] = useState(false);
-  const bgOpacity = useTransform(x, [SWIPE_THRESHOLD, -10, 0], [1, 0.2, 0]);
-  const trashScale = useTransform(x, [SWIPE_THRESHOLD - 20, -40, 0], [1.2, 0.9, 0.6]);
+  const dragged = useRef(false);
+  const revealOpacity = useTransform(x, [SWIPE_THRESHOLD, -24, 0], [1, 0.4, 0]);
+  const trashScale = useTransform(x, [SWIPE_THRESHOLD - 20, -40, 0], [1.15, 0.85, 0.6]);
 
   const handleDragEnd = () => {
-    setIsDragging(false);
     if (x.get() <= SWIPE_THRESHOLD) {
-      animate(x, -window.innerWidth, {
-        duration: 0.25,
-        onComplete: () => onSwipeDelete(),
-      });
+      animate(x, -window.innerWidth, { duration: 0.22, ease: [0.4, 0, 1, 1], onComplete: () => onSwipeDelete() });
     } else {
-      animate(x, 0, { type: "spring", stiffness: 400, damping: 30 });
+      animate(x, 0, { type: "spring", stiffness: 520, damping: 38 });
     }
+    setTimeout(() => (dragged.current = false), 0);
   };
 
-  const involved =
-    item.participantIds && item.participantIds.length > 0
-      ? participants.filter((p) => item.participantIds.includes(p.id))
-      : [];
+  const involved = item.participantIds?.length ? participants.filter((p) => item.participantIds.includes(p.id)) : [];
   const everyone = involved.length === participants.length && participants.length > 0;
   const isJourney = item.type === "journey";
+  const cfg = ITINERARY_TYPES[item.type];
+  const Icon = isJourney && item.journeyMode ? JOURNEY_MODES[item.journeyMode].icon : cfg.icon;
+  const duration = formatDuration(item.durationMinutes);
+  const journeyOpts = item.journeyMode ? { mode: item.journeyMode } : undefined;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, x: -10 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0 }}
-      className="relative rounded-xl overflow-hidden"
-    >
-      {/* Red gradient revealed on swipe */}
+    <div className="relative overflow-hidden rounded-[1.25rem]">
       <motion.div
-        className="absolute inset-0 flex items-center justify-end pr-6 pointer-events-none"
-        style={{
-          background: "linear-gradient(90deg, rgba(239,68,68,0.0) 0%, rgba(239,68,68,0.45) 60%, rgba(220,38,38,0.85) 100%)",
-          opacity: bgOpacity,
-        }}
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 flex items-center justify-end bg-red-500 pr-6 text-white"
+        style={{ opacity: revealOpacity }}
       >
-        <motion.div className="flex items-center gap-2 text-white" style={{ scale: trashScale }}>
+        <motion.span className="flex items-center gap-2 text-sm font-semibold" style={{ scale: trashScale }}>
           <Trash2 size={18} />
-          <span className="text-sm font-semibold">Supprimer</span>
-        </motion.div>
+          Supprimer
+        </motion.span>
       </motion.div>
 
-      {/* Draggable card */}
       <motion.div
         data-no-tab-swipe
         drag="x"
@@ -355,213 +375,97 @@ function ItineraryCard({
         dragElastic={{ left: 0.2, right: 0 }}
         dragDirectionLock
         style={{ x }}
-        onDragStart={() => setIsDragging(true)}
+        onDragStart={() => (dragged.current = true)}
         onDragEnd={handleDragEnd}
+        className={cn(
+          "relative flex touch-pan-y items-start gap-3 rounded-[1.25rem] p-3.5 select-none",
+          isJourney ? "bg-sky-500/[0.09] ring-1 ring-sky-500/15 ring-inset" : "bg-card shadow-card"
+        )}
       >
-        <GlassCard padding={false}>
-          <div
-            role="button"
-            tabIndex={0}
-            onClick={() => { if (!isDragging) onEdit(); }}
-            onKeyDown={(e) => { if (e.key === "Enter") onEdit(); }}
-            className="p-3.5 flex items-start gap-3 cursor-pointer active:bg-foreground/4 transition-colors touch-pan-y select-none"
-          >
-            {isJourney ? (
-              <JourneyCardContent
-                item={item}
-                involved={involved}
-                everyone={everyone}
-                openLocation={openLocation}
-                openRoute={openRoute}
-              />
-            ) : (
-              <EventCardContent item={item} cfg={cfg} durationLabel={durationLabel} involved={involved} everyone={everyone} openLocation={openLocation} />
-            )}
-
-            <div onClick={(e) => e.stopPropagation()}>
-              <DropdownMenu>
-                <DropdownMenuTrigger
-                  className="p-2 rounded-xl text-slate-500 hover:text-slate-200 hover:bg-foreground/8 active:bg-foreground/12 transition-all focus:outline-none"
-                  aria-label="Actions"
-                >
-                  <MoreVertical size={16} />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  align="end"
-                  className="glass-strong border-foreground/10 text-slate-200 min-w-44 bg-slate-900/95 backdrop-blur"
-                >
-                  <DropdownMenuItem className="gap-2 cursor-pointer" onClick={onEdit}>
-                    <Pencil size={14} className="text-slate-400" />
-                    Modifier
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    className="gap-2 cursor-pointer text-red-400"
-                    onClick={onDelete}
-                    variant="destructive"
-                  >
-                    <Trash2 size={14} />
-                    Supprimer
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
-        </GlassCard>
-      </motion.div>
-    </motion.div>
-  );
-}
-
-function EventCardContent({
-  item,
-  cfg,
-  durationLabel,
-  involved,
-  everyone,
-  openLocation,
-}: {
-  item: ItineraryItem;
-  cfg: { label: string; color: string; bg: string };
-  durationLabel: string | undefined;
-  involved: Participant[];
-  everyone: boolean;
-  openLocation: (q: string, options?: { mode?: ItineraryItem["journeyMode"] }) => void;
-}) {
-  return (
-    <div className="flex-1 min-w-0 pr-1">
-      <div className="flex items-center gap-2 flex-wrap">
-        <span className={cn("text-sm px-2.5 py-0.5 rounded-full font-medium", cfg.bg, cfg.color)}>
-          {cfg.label}
+        <span className={cn("flex size-11 shrink-0 items-center justify-center rounded-2xl", isJourney ? "bg-sky-500/15 text-sky-400" : cfg.tile)}>
+          <Icon size={20} />
         </span>
-        {item.time && (
-          <span className="flex items-center gap-1.5 text-base text-slate-300 font-medium tabular-nums">
-            <Clock size={13} />
-            {item.time}
-          </span>
-        )}
-        {durationLabel && (
-          <span className="flex items-center gap-1.5 text-base text-slate-300">
-            <Hourglass size={13} />
-            {durationLabel}
-          </span>
-        )}
-      </div>
-      <p className="text-xl font-semibold text-slate-100 leading-tight mt-2">{item.title}</p>
-      {item.location && (
+
         <button
           type="button"
-          onClick={(e) => { e.stopPropagation(); openLocation(item.location!); }}
-          className="flex items-center gap-1.5 text-base text-slate-400 mt-1.5 hover:text-sky-400 active:text-sky-300 transition-colors"
-        >
-          <MapPin size={13} className="shrink-0" />
-          <span className="truncate">{item.location}</span>
-        </button>
-      )}
-      {item.description && (
-        <p className="text-base text-slate-400 mt-1.5">{item.description}</p>
-      )}
-      {involved.length > 0 && (
-        <div className="mt-2.5">
-          <ParticipantStack participants={involved} everyone={everyone} />
-        </div>
-      )}
-    </div>
-  );
-}
-
-function JourneyCardContent({
-  item,
-  involved,
-  everyone,
-  openLocation,
-  openRoute,
-}: {
-  item: ItineraryItem;
-  involved: Participant[];
-  everyone: boolean;
-  openLocation: (q: string, options?: { mode?: ItineraryItem["journeyMode"] }) => void;
-  openRoute: (from: string, to: string, options?: { mode?: ItineraryItem["journeyMode"] }) => void;
-}) {
-  const ModeIcon = item.journeyMode ? JOURNEY_MODE_ICON[item.journeyMode] : Route;
-  const durationLabel = formatDuration(item.durationMinutes) || undefined;
-  const journeyOpts = item.journeyMode ? { mode: item.journeyMode } : undefined;
-  const hasFullRoute = !!(item.location && item.destination);
-
-  return (
-    <div className="flex-1 min-w-0 pr-1">
-      <div className="flex items-center gap-2 flex-wrap">
-        <span className="flex items-center gap-1.5 text-sm px-2.5 py-0.5 rounded-full font-medium bg-sky-400/10 text-sky-400">
-          <ModeIcon size={12} />
-          Trajet
-        </span>
-        {item.time && (
-          <span className="flex items-center gap-1.5 text-base text-slate-300 font-medium tabular-nums">
-            <Clock size={13} />
-            {item.time}
-          </span>
-        )}
-        {durationLabel && (
-          <span className="flex items-center gap-1.5 text-base text-slate-300">
-            <Hourglass size={13} />
-            {durationLabel}
-          </span>
-        )}
-      </div>
-
-      {/* From → To */}
-      <div className="mt-2 space-y-1">
-        {item.location && (
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); openLocation(item.location!, journeyOpts); }}
-            className="flex items-center gap-1.5 text-base text-slate-200 font-semibold hover:text-sky-400 transition-colors"
-          >
-            <MapPin size={13} className="text-slate-500 shrink-0" />
-            <span className="truncate">{item.location}</span>
-          </button>
-        )}
-        {item.location && item.destination && (
-          <div className="flex items-center gap-1.5 pl-0.5">
-            <ArrowRight size={13} className="text-slate-600 shrink-0" />
-          </div>
-        )}
-        {item.destination && (
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); openLocation(item.destination!, journeyOpts); }}
-            className="flex items-center gap-1.5 text-base text-slate-200 font-semibold hover:text-sky-400 transition-colors"
-          >
-            <MapPin size={13} className="text-sky-500 shrink-0" />
-            <span className="truncate">{item.destination}</span>
-          </button>
-        )}
-        {!item.location && !item.destination && (
-          <p className="text-xl font-semibold text-slate-100 leading-tight">{item.title}</p>
-        )}
-      </div>
-
-      {hasFullRoute && (
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            openRoute(item.location!, item.destination!, journeyOpts);
+          onClick={() => {
+            if (!dragged.current) onEdit();
           }}
-          className="inline-flex items-center gap-1.5 mt-2.5 px-2.5 py-1 rounded-full text-sm font-semibold border border-sky-400/30 bg-sky-400/10 text-sky-300 hover:bg-sky-400/15 hover:border-sky-400/50 active:scale-95 transition-all"
+          className="min-w-0 flex-1 pt-0.5 text-left outline-none"
         >
-          <Route size={13} />
-          Itinéraire
-        </button>
-      )}
+          <span className="block text-[1rem] leading-snug font-semibold">{item.title}</span>
+          {isJourney && item.location && item.destination ? (
+            <span className="mt-0.5 block truncate text-sm text-muted-foreground">
+              {item.location.split(",")[0]} → {item.destination.split(",")[0]}
+            </span>
+          ) : item.location ? (
+            <span className="mt-0.5 block truncate text-sm text-muted-foreground">{item.location}</span>
+          ) : null}
+          {item.description && <span className="mt-1 block text-sm text-muted-foreground">{item.description}</span>}
 
-      {involved.length > 0 && (
-        <div className="mt-2.5">
-          <ParticipantStack participants={involved} everyone={everyone} />
+          {(duration || (involved.length > 0 && !everyone)) && (
+            <span className="mt-2.5 flex flex-wrap items-center gap-2">
+              {duration && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-foreground/[0.06] px-2.5 py-1 text-xs font-semibold text-muted-foreground">
+                  <Hourglass size={12} />
+                  {duration}
+                </span>
+              )}
+              {involved.length > 0 && !everyone && <ParticipantStack participants={involved} />}
+            </span>
+          )}
+        </button>
+
+        <div className="-mt-1 -mr-1 flex shrink-0 flex-col items-center">
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              className="flex size-10 items-center justify-center rounded-full text-muted-foreground outline-none transition-colors hover:bg-foreground/[0.06] hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+              aria-label={`Actions pour ${item.title}`}
+            >
+              <MoreHorizontal size={19} />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="min-w-48">
+              {isJourney && item.location && item.destination ? (
+                <DropdownMenuItem onClick={() => openRoute(item.location!, item.destination!, journeyOpts)}>
+                  <Navigation />
+                  Itinéraire
+                </DropdownMenuItem>
+              ) : item.location ? (
+                <DropdownMenuItem onClick={() => openLocation(item.location!)}>
+                  <MapPin />
+                  Ouvrir dans une app
+                </DropdownMenuItem>
+              ) : null}
+              <DropdownMenuItem onClick={onEdit}>
+                <Pencil />
+                Modifier
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={onDelete} variant="destructive">
+                <Trash2 />
+                Supprimer
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          {(isJourney ? item.location && item.destination : item.location) && (
+            <button
+              type="button"
+              onClick={() =>
+                isJourney
+                  ? openRoute(item.location!, item.destination!, journeyOpts)
+                  : openLocation(item.location!)
+              }
+              className={cn(
+                "flex size-10 items-center justify-center rounded-full transition-colors",
+                isJourney ? "text-sky-400 hover:bg-sky-500/15" : "text-primary hover:bg-primary/10"
+              )}
+              aria-label={isJourney ? "Voir l'itinéraire" : `Ouvrir ${item.location} dans une app de cartes`}
+            >
+              {isJourney ? <Navigation size={18} /> : <MapPin size={18} />}
+            </button>
+          )}
         </div>
-      )}
+      </motion.div>
     </div>
   );
 }
-
-

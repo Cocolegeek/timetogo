@@ -119,17 +119,17 @@ export function TripWizard() {
   return (
     <form onSubmit={handleSubmit(onSubmit as never)} className="space-y-4">
       {/* Tab navigation */}
-      <div className="flex gap-1 bg-foreground/4 p-1 rounded-xl border border-foreground/8">
+      <div role="tablist" className="flex h-11 gap-1 rounded-full bg-foreground/[0.06] p-1">
         {(["Infos", "Participants"] as NavTab[]).map((tab) => (
           <button
             key={tab}
             type="button"
             onClick={() => setActiveTab(tab)}
             className={cn(
-              "flex-1 py-2 rounded-lg text-sm font-medium transition-all",
+              "flex-1 rounded-full text-sm font-semibold transition-all",
               activeTab === tab
-                ? "bg-section-soft text-section-soft ring-1 ring-section"
-                : "text-slate-400 hover:text-slate-200"
+                ? "bg-card text-foreground shadow-card dark:bg-foreground/[0.12]"
+                : "text-muted-foreground hover:text-foreground"
             )}
           >
             {tab}
@@ -145,12 +145,12 @@ export function TripWizard() {
         <div className="space-y-4">
           {/* Name + emoji */}
           <div className="space-y-1.5">
-            <Label className="text-slate-300 text-sm font-medium">Nom du voyage</Label>
-            <div className="flex items-stretch gap-2 bg-foreground/8 border border-foreground/10 rounded-lg focus-within:ring-3 focus-within:ring-section transition-all overflow-hidden">
+            <Label className="px-1 text-sm font-semibold text-foreground">Nom du voyage</Label>
+            <div className="flex items-stretch gap-2 h-12 rounded-2xl border border-input bg-card transition-[border-color,box-shadow] focus-within:border-primary/60 focus-within:ring-4 focus-within:ring-primary/12 overflow-hidden">
               <button
                 type="button"
                 onClick={() => setEmojiPickerOpen((v) => !v)}
-                className="w-12 h-11 flex items-center justify-center text-2xl hover:bg-foreground/8 active:bg-foreground/12 transition-colors shrink-0"
+                className="w-12 h-full flex items-center justify-center text-2xl hover:bg-foreground/8 active:bg-foreground/12 transition-colors shrink-0"
                 aria-label="Changer l'emoji"
               >
                 {selectedEmoji}
@@ -182,7 +182,7 @@ export function TripWizard() {
                         className={cn(
                           "w-10 h-10 rounded-lg text-xl transition-all",
                           selectedEmoji === e
-                            ? "bg-section-soft ring-1 ring-section"
+                            ? "bg-primary/12 ring-2 ring-primary"
                             : "hover:bg-foreground/8 active:bg-foreground/12"
                         )}
                       >
@@ -200,14 +200,13 @@ export function TripWizard() {
 
           {/* Destination */}
           <div className="space-y-1.5">
-            <Label className="text-slate-300 text-sm font-medium">Destination</Label>
+            <Label className="px-1 text-sm font-semibold text-foreground">Destination</Label>
             <LocationPickerSheet
               value={destination}
               onChange={(v) =>
                 setValue("destination", v, { shouldValidate: true, shouldDirty: true })
               }
               placeholder="Rome, Italie"
-              className="bg-foreground/8 border-foreground/10"
             />
             {errors.destination && (
               <p className="text-xs text-red-400">{errors.destination.message}</p>
@@ -226,7 +225,7 @@ export function TripWizard() {
 
           {/* Currency */}
           <div className="space-y-2">
-            <Label className="text-slate-300 text-sm font-medium">Devise principale</Label>
+            <Label className="px-1 text-sm font-semibold text-foreground">Devise principale</Label>
             <div className="flex gap-2 flex-wrap">
               {CURRENCIES.map((c) => (
                 <button
@@ -234,10 +233,10 @@ export function TripWizard() {
                   type="button"
                   onClick={() => setValue("currency", c)}
                   className={cn(
-                    "px-3 py-1.5 rounded-xl text-sm font-medium transition-all",
+                    "pressable h-10 rounded-full px-4 text-sm font-semibold transition-colors",
                     selectedCurrency === c
-                      ? "bg-section-soft text-section-soft ring-1 ring-section"
-                      : "bg-foreground/5 text-slate-400 hover:bg-foreground/10 hover:text-slate-300"
+                      ? "bg-foreground text-background"
+                      : "bg-foreground/[0.06] text-foreground hover:bg-foreground/10"
                   )}
                 >
                   {c}
@@ -249,7 +248,7 @@ export function TripWizard() {
           {/* Budget prévisionnel */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <Label className="text-slate-300 text-sm font-medium">
+              <Label className="px-1 text-sm font-semibold text-foreground">
                 Budget prévisionnel{" "}
                 <span className="text-slate-500 font-normal">(optionnel)</span>
               </Label>
@@ -257,15 +256,15 @@ export function TripWizard() {
                 type="button"
                 onClick={() => setBudgetEnabled((v) => !v)}
                 className={cn(
-                  "relative w-10 h-6 rounded-full transition-colors",
-                  budgetEnabled ? "bg-section" : "bg-foreground/10"
+                  "relative h-7 w-12 shrink-0 rounded-full transition-colors",
+                  budgetEnabled ? "bg-primary" : "bg-foreground/15"
                 )}
                 aria-label="Activer le budget prévisionnel"
               >
                 <span
                   className={cn(
-                    "absolute top-0.5 w-5 h-5 rounded-full bg-white transition-transform",
-                    budgetEnabled ? "translate-x-[18px]" : "translate-x-0.5"
+                    "absolute top-0.5 left-0.5 size-6 rounded-full bg-white shadow-card transition-transform duration-300 ease-(--ease-out)",
+                    budgetEnabled ? "translate-x-5" : "translate-x-0"
                   )}
                 />
               </button>
@@ -288,7 +287,7 @@ export function TripWizard() {
                       }
                       onFocus={(e) => e.target.select()}
                       placeholder="ex: 1500"
-                      className="bg-foreground/8 border-foreground/10 text-slate-100 placeholder:text-slate-500 pr-14 tabular-nums"
+                      className="pr-14 tabular-nums"
                     />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-500 pointer-events-none">
                       {selectedCurrency}
@@ -306,7 +305,7 @@ export function TripWizard() {
           <button
             type="button"
             onClick={() => setActiveTab("Participants")}
-            className="w-full py-2.5 text-sm text-slate-400 hover:text-slate-200 border border-foreground/8 rounded-xl hover:bg-foreground/4 transition-all"
+            className="pressable flex h-12 w-full items-center justify-center rounded-full bg-foreground/[0.06] text-sm font-semibold text-foreground transition-colors hover:bg-foreground/10"
           >
             Ajouter des participants →
           </button>
@@ -327,12 +326,12 @@ export function TripWizard() {
                 }
               }}
               placeholder="Prénom du participant"
-              className="bg-foreground/8 border-foreground/10 text-slate-100 placeholder:text-slate-500 focus-visible:ring-section"
+              className="focus-visible:ring-primary/30"
             />
             <Button
               type="button"
               onClick={addParticipant}
-              className="shrink-0 bg-section-soft hover:bg-section-medium text-section-soft border border-section"
+              size="icon" className="size-12 shrink-0 rounded-2xl"
             >
               <Plus size={16} />
             </Button>
@@ -345,30 +344,30 @@ export function TripWizard() {
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
-                className="flex items-center gap-2 py-1"
+                className="flex items-center gap-3 overflow-hidden rounded-2xl bg-secondary px-3 py-2"
               >
                 <div
-                  className="w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-xs font-bold text-white"
+                  className="flex size-9 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
                   style={{ backgroundColor: p.color }}
                 >
                   {p.name.slice(0, 2).toUpperCase()}
                 </div>
-                <span className="text-sm text-slate-300 flex-1">{p.name}</span>
+                <span className="flex-1 text-[0.95rem] font-medium text-foreground">{p.name}</span>
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7 text-slate-500 hover:text-red-400"
+                  className="size-9 rounded-full text-muted-foreground hover:text-red-400"
                   onClick={() => removeParticipant(i)}
                 >
-                  <X size={14} />
+                  <X size={16} />
                 </Button>
               </motion.div>
             ))}
           </AnimatePresence>
 
           {participants.length === 0 && (
-            <p className="text-xs text-slate-600">
+            <p className="px-1 text-sm text-muted-foreground">
               Ajoute au moins un participant (toi et tes compagnons de voyage).
             </p>
           )}
@@ -376,7 +375,7 @@ export function TripWizard() {
       )}
 
       {submitError && (
-        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+        <div className="rounded-2xl bg-red-500/10 px-4 py-3 text-sm text-red-400">
           {submitError}
         </div>
       )}
@@ -384,12 +383,12 @@ export function TripWizard() {
       <Button
         type="submit"
         disabled={isSubmitting || participants.length === 0}
-        className="w-full gradient-primary text-white border-0 py-6 text-base font-semibold disabled:opacity-40"
+        size="lg" className="w-full shadow-section disabled:shadow-none"
       >
         {isSubmitting ? (
           <Loader2 size={18} className="animate-spin" />
         ) : (
-          "On embarque 🚀"
+          "Créer le voyage"
         )}
       </Button>
     </form>

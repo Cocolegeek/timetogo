@@ -9,7 +9,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Lock } from "lucide-react";
+import { Lock, Loader2, UserPlus } from "lucide-react";
+import { motion } from "framer-motion";
+import { spring } from "@/lib/motion";
+import { ParticipantAvatar } from "@/components/shared/ParticipantAvatar";
 import { CATEGORIES, CATEGORY_ORDER } from "@/lib/budget/categories";
 import { computeShares } from "@/lib/budget/splits";
 import { currencySymbol } from "@/lib/format-currency";
@@ -401,18 +404,16 @@ export function ExpenseForm({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="bottom"
-        className="glass-strong border-foreground/10 rounded-t-2xl p-0 flex flex-col overflow-hidden"
+        className="p-0 flex flex-col overflow-hidden"
         style={{ height: "92dvh" }}
       >
         {/* Header */}
-        <div className="px-5 pt-5 pb-3 shrink-0 pr-14">
-          <SheetTitle className="text-slate-100 text-xl font-bold">
-            {isEdit ? "Modifier la dépense" : "Nouvelle dépense"}
-          </SheetTitle>
+        <div className="shrink-0 px-5 pt-7 pr-16 pb-3">
+          <SheetTitle>{isEdit ? "Modifier la dépense" : "Nouvelle dépense"}</SheetTitle>
         </div>
 
         {/* Tab navigation */}
-        <div className="flex gap-1 px-5 pb-3 border-b border-foreground/8 shrink-0">
+        <div role="tablist" className="mx-5 mb-1 flex h-11 shrink-0 gap-1 rounded-full bg-foreground/[0.06] p-1">
           {NAV_TABS.map((tab) => {
             const isActive = activeTab === tab;
             const hasIssue =
@@ -423,30 +424,38 @@ export function ExpenseForm({
               <button
                 key={tab}
                 type="button"
+                role="tab"
+                aria-selected={isActive}
                 onClick={() => setActiveTab(tab)}
                 className={cn(
-                  "flex-1 py-1.5 rounded-lg text-sm font-medium transition-all",
-                  isActive
-                    ? "bg-section-soft text-section-soft ring-1 ring-section"
-                    : hasIssue
-                    ? "text-amber-400 bg-amber-500/8"
-                    : "text-slate-400 hover:text-slate-200 hover:bg-foreground/8"
+                  "relative flex flex-1 items-center justify-center gap-1.5 rounded-full text-sm font-semibold transition-colors",
+                  isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                {tab}
+                {isActive && (
+                  <motion.span
+                    layoutId="expense-form-tab"
+                    transition={spring}
+                    className="absolute inset-0 rounded-full bg-card shadow-card dark:bg-foreground/[0.12]"
+                  />
+                )}
+                <span className="relative">{tab}</span>
+                {hasIssue && <span className="relative size-1.5 rounded-full bg-amber-400" aria-label="à compléter" />}
               </button>
             );
           })}
         </div>
 
         {/* Tab content */}
-        <div className="flex-1 overflow-y-auto px-5 py-5 space-y-5">
+        <div className="flex-1 space-y-6 overflow-y-auto px-5 py-5">
 
           {/* ── Infos ── */}
           {activeTab === "Infos" && (
             <>
-              <div className="text-center">
+              <div className="py-3 text-center">
+                <label htmlFor="expense-amount" className="text-sm font-medium text-muted-foreground">Montant</label>
                 <input
+                  id="expense-amount"
                   type="text"
                   inputMode="decimal"
                   value={amountStr}
@@ -454,24 +463,25 @@ export function ExpenseForm({
                     setAmountStr(e.target.value.replace(/[^0-9.,]/g, ""))
                   }
                   placeholder={`0,00 ${sym}`}
-                  className="w-full text-center bg-transparent text-6xl font-bold text-slate-100 placeholder:text-slate-700 focus:outline-none tabular-nums"
+                  className="tabular mt-1 w-full bg-transparent text-center font-display text-[3.75rem] leading-none font-extrabold tracking-[-0.04em] text-foreground placeholder:text-foreground/20 focus:outline-none"
                   autoFocus={!isEdit}
                   onFocus={(e) => e.target.select()}
                 />
               </div>
 
-              <Input
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Restaurant, courses, taxi…"
-                className="bg-foreground/8 border-foreground/10 text-slate-100 placeholder:text-slate-500 focus-visible:ring-section text-base h-12"
-              />
+              <div className="space-y-2">
+                <label htmlFor="expense-title" className="px-1 text-sm font-semibold">Pour quoi ?</label>
+                <Input
+                  id="expense-title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Restaurant, courses, taxi…"
+                />
+              </div>
 
               <div className="space-y-2">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                  Catégorie
-                </p>
-                <div className="flex gap-2 overflow-x-auto pb-1 -mx-5 px-5 scrollbar-none">
+                <p className="px-1 text-sm font-semibold">Catégorie</p>
+                <div className="no-scrollbar -mx-5 flex gap-2 overflow-x-auto px-5 pb-1">
                   {CATEGORY_ORDER.map((cat) => {
                     const cfg = CATEGORIES[cat];
                     const Icon = cfg.icon;
@@ -481,15 +491,16 @@ export function ExpenseForm({
                         key={cat}
                         type="button"
                         onClick={() => setCategory(cat)}
+                        aria-pressed={selected}
                         className={cn(
-                          "flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl border transition-all active:scale-95",
+                          "pressable flex h-11 shrink-0 items-center gap-2 rounded-full pr-4 pl-3 transition-colors",
                           selected
-                            ? cn(cfg.bg, cfg.color, "border-current ring-1", cfg.ring)
-                            : "bg-foreground/4 border-foreground/8 text-slate-400 hover:bg-foreground/8"
+                            ? "bg-foreground text-background"
+                            : "bg-foreground/[0.06] text-foreground hover:bg-foreground/10"
                         )}
                       >
-                        <Icon size={16} />
-                        <span className="text-xs font-medium whitespace-nowrap">
+                        <Icon size={17} className={selected ? undefined : cfg.color} />
+                        <span className="text-sm font-semibold whitespace-nowrap">
                           {cfg.label}
                         </span>
                       </button>
@@ -498,15 +509,13 @@ export function ExpenseForm({
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                  Date
-                </p>
+              <div className="space-y-2">
+                <label htmlFor="expense-date" className="px-1 text-sm font-semibold">Date</label>
                 <Input
+                  id="expense-date"
                   type="date"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="bg-foreground/8 border-foreground/10 text-slate-100 [color-scheme:dark]"
                 />
               </div>
             </>
@@ -514,8 +523,9 @@ export function ExpenseForm({
 
           {/* ── Payé par ── */}
           {activeTab === "Payé par" && (
-            <div className="space-y-3">
-              <div className="flex gap-2 flex-wrap">
+            <div className="space-y-4">
+              <p className="px-1 text-sm text-muted-foreground">Qui a avancé l&apos;argent ? Sélectionne plusieurs personnes pour partager le paiement.</p>
+              <div className="flex flex-wrap gap-2">
                 {participants.map((p) => {
                   const selected = payers.some((py) => py.participantId === p.id);
                   return (
@@ -523,18 +533,16 @@ export function ExpenseForm({
                       key={p.id}
                       type="button"
                       onClick={() => togglePayer(p.id)}
+                      aria-pressed={selected}
                       className={cn(
-                        "flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all active:scale-95",
+                        "pressable flex h-11 items-center gap-2 rounded-full pr-4 pl-1.5 transition-colors",
                         selected
-                          ? "border-section bg-section-soft text-section-soft"
-                          : "border-foreground/10 bg-foreground/4 text-slate-300 hover:bg-foreground/8"
+                          ? "bg-primary text-primary-foreground shadow-section"
+                          : "bg-foreground/[0.06] text-foreground hover:bg-foreground/10"
                       )}
                     >
-                      <span
-                        className="w-2 h-2 rounded-full shrink-0"
-                        style={{ backgroundColor: p.color }}
-                      />
-                      <span className="text-sm font-medium">{p.name}</span>
+                      <ParticipantAvatar participant={p} size="sm" className={selected ? "ring-primary" : undefined} />
+                      <span className="text-sm font-semibold">{p.name}</span>
                     </button>
                   );
                 })}
@@ -550,15 +558,13 @@ export function ExpenseForm({
                     return (
                       <div
                         key={payer.participantId}
-                        className="flex items-center gap-3 px-3 py-2 rounded-xl border border-foreground/8 bg-foreground/4"
+                        className="flex items-center gap-3 rounded-2xl bg-secondary px-3 py-2"
                       >
                         <span
                           className="w-2.5 h-2.5 rounded-full shrink-0"
                           style={{ backgroundColor: p.color }}
                         />
-                        <span className="text-sm text-slate-200 flex-1 truncate">
-                          {p.name}
-                        </span>
+                        <span className="flex-1 truncate text-[0.95rem] font-medium">{p.name}</span>
                         <input
                           type="number"
                           inputMode="decimal"
@@ -572,7 +578,7 @@ export function ExpenseForm({
                             )
                           }
                           onFocus={(e) => e.target.select()}
-                          className="w-20 text-right bg-foreground/8 border border-foreground/10 rounded-lg px-2 py-1 text-sm text-slate-100 focus:outline-none focus:border-section tabular-nums"
+                          className="tabular h-10 w-24 rounded-xl border border-input bg-card px-3 text-right text-base outline-none focus:border-primary/60 focus:ring-4 focus:ring-primary/12"
                         />
                         <span className="text-xs text-slate-500 w-8">{sym}</span>
                       </div>
@@ -580,7 +586,7 @@ export function ExpenseForm({
                   })}
                   <p
                     className={cn(
-                      "text-center text-xs",
+                      "text-center text-sm font-medium",
                       Math.abs(payerTotal - amount) < 0.01
                         ? "text-emerald-400"
                         : "text-amber-400"
@@ -599,21 +605,19 @@ export function ExpenseForm({
           {activeTab === "Pour qui" && (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                  Répartition
-                </p>
+                <p className="px-1 text-sm font-semibold">Répartition</p>
                 <button
                   type="button"
                   onClick={handleEqualForAll}
-                  className="text-xs text-section-soft bg-section/8 border border-section/20 px-2.5 py-1 rounded-full hover:bg-section/15 transition-colors active:scale-95"
+                  className="pressable h-9 rounded-full bg-primary/10 px-3.5 text-sm font-semibold text-primary transition-colors hover:bg-primary/15"
                 >
                   Tous — équitable
                 </button>
               </div>
 
               {newMemberIds.size > 0 && (
-                <div className="px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-xs text-amber-200 flex items-start gap-2">
-                  <span className="text-base leading-none">👋</span>
+                <div className="flex items-start gap-2.5 rounded-2xl bg-amber-500/12 px-3.5 py-3 text-sm text-amber-200">
+                  <UserPlus size={16} className="mt-0.5 shrink-0" />
                   <span>
                     {newMemberIds.size === 1
                       ? "Un nouveau membre a rejoint le voyage. Coche-le si cette dépense le concerne."
@@ -623,29 +627,14 @@ export function ExpenseForm({
               )}
 
               <Tabs value={splitMode} onValueChange={handleSplitModeChange}>
-                <TabsList className="grid grid-cols-3 w-full bg-foreground/4 border border-foreground/8">
-                  <TabsTrigger
-                    value="equal"
-                    className="data-[state=active]:bg-section-soft data-[state=active]:text-section"
-                  >
-                    Équitable
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="percentage"
-                    className="data-[state=active]:bg-section-soft data-[state=active]:text-section"
-                  >
-                    %
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="fixed"
-                    className="data-[state=active]:bg-section-soft data-[state=active]:text-section"
-                  >
-                    Montants
-                  </TabsTrigger>
+                <TabsList className="grid w-full grid-cols-3 bg-foreground/[0.06]">
+                  <TabsTrigger value="equal">Équitable</TabsTrigger>
+                  <TabsTrigger value="percentage">Pourcentages</TabsTrigger>
+                  <TabsTrigger value="fixed">Montants</TabsTrigger>
                 </TabsList>
               </Tabs>
 
-              <div className="space-y-1.5">
+              <div className="space-y-2">
                 {participants.map((p) => {
                   const split = splits.find((s) => s.participantId === p.id);
                   if (!split) return null;
@@ -659,23 +648,24 @@ export function ExpenseForm({
                     <div
                       key={p.id}
                       className={cn(
-                        "flex items-center gap-3 px-3 py-2 rounded-xl border transition-all",
+                        "flex min-h-14 items-center gap-3 rounded-2xl px-3 py-2 transition-[background-color,opacity]",
                         split.excluded
                           ? isNew
-                            ? "border-amber-500/40 bg-amber-500/5"
-                            : "border-foreground/4 bg-foreground/2 opacity-50"
-                          : "border-foreground/8 bg-foreground/4"
+                            ? "bg-amber-500/10 ring-1 ring-amber-500/30 ring-inset"
+                            : "bg-secondary/60 opacity-55"
+                          : "bg-secondary"
                       )}
                     >
                       {splitMode === "equal" && (
                         <button
                           type="button"
                           onClick={() => toggleInclusion(p.id)}
+                          role="checkbox"
+                          aria-checked={!split.excluded}
+                          aria-label={`Inclure ${p.name}`}
                           className={cn(
-                            "w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all",
-                            split.excluded
-                              ? "border-slate-600"
-                              : "border-section bg-section"
+                            "flex size-6 shrink-0 items-center justify-center rounded-lg border-2 transition-colors",
+                            split.excluded ? "border-foreground/25" : "border-primary bg-primary"
                           )}
                         >
                           {!split.excluded && (
@@ -692,20 +682,17 @@ export function ExpenseForm({
                         </button>
                       )}
 
-                      <span
-                        className="w-2.5 h-2.5 rounded-full shrink-0"
-                        style={{ backgroundColor: p.color }}
-                      />
-                      <span className="text-sm text-slate-200 truncate">{p.name}</span>
+                      <ParticipantAvatar participant={p} size="sm" />
+                      <span className="truncate text-[0.95rem] font-medium">{p.name}</span>
                       {isNew && (
-                        <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0">
+                        <span className="shrink-0 rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-semibold text-amber-300">
                           Nouveau
                         </span>
                       )}
                       <span className="flex-1" />
 
                       {splitMode === "equal" && (
-                        <span className="text-sm font-medium text-slate-300 tabular-nums">
+                        <span className="tabular text-[0.95rem] font-semibold">
                           {split.excluded ? "—" : formatCurrency(share, currency)}
                         </span>
                       )}
@@ -734,10 +721,10 @@ export function ExpenseForm({
                             }
                             onFocus={(e) => e.target.select()}
                             className={cn(
-                              "w-16 text-right border rounded-lg px-2 py-1 text-sm text-slate-100 focus:outline-none focus:border-section tabular-nums",
+                              "tabular h-10 w-16 rounded-xl border px-2 text-right text-base outline-none focus:border-primary/60 focus:ring-4 focus:ring-primary/12",
                               split.pinned && !split.excluded
-                                ? "bg-section/10 border-section/40"
-                                : "bg-foreground/8 border-foreground/10"
+                                ? "border-primary/40 bg-primary/10"
+                                : "border-input bg-card"
                             )}
                           />
                           <span className="text-xs text-slate-500">%</span>
@@ -770,10 +757,10 @@ export function ExpenseForm({
                             }
                             onFocus={(e) => e.target.select()}
                             className={cn(
-                              "w-20 text-right border rounded-lg px-2 py-1 text-sm text-slate-100 focus:outline-none focus:border-section tabular-nums",
+                              "tabular h-10 w-24 rounded-xl border px-3 text-right text-base outline-none focus:border-primary/60 focus:ring-4 focus:ring-primary/12",
                               split.pinned && !split.excluded
-                                ? "bg-section/10 border-section/40"
-                                : "bg-foreground/8 border-foreground/10"
+                                ? "border-primary/40 bg-primary/10"
+                                : "border-input bg-card"
                             )}
                           />
                           <span className="text-xs text-slate-500 w-6">{sym}</span>
@@ -796,24 +783,18 @@ export function ExpenseForm({
         </div>
 
         {/* Footer — toujours visible */}
-        <div
-          className="px-5 py-3 border-t border-foreground/8 bg-slate-900/50 shrink-0"
-          style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 0.75rem)" }}
-        >
+        <div className="shrink-0 border-t border-border bg-popover px-5 pt-3 pb-4">
           <div className="flex gap-2">
-            <Button
-              variant="ghost"
-              onClick={() => onOpenChange(false)}
-              className="flex-1 text-slate-400 hover:text-slate-200 hover:bg-foreground/8"
-            >
+            <Button variant="secondary" size="lg" onClick={() => onOpenChange(false)} className="flex-1">
               Annuler
             </Button>
             <Button
+              size="lg"
               onClick={handleSubmit}
               disabled={!formValid || submitting}
-              className="flex-1 gradient-primary text-white border-0 disabled:opacity-40"
+              className="flex-[2] shadow-section disabled:shadow-none"
             >
-              {submitting ? "…" : isEdit ? "Modifier" : "Ajouter"}
+              {submitting ? <Loader2 size={18} className="animate-spin" /> : isEdit ? "Enregistrer" : "Ajouter la dépense"}
             </Button>
           </div>
         </div>
@@ -839,7 +820,7 @@ function SplitTotalFeedback({
 }) {
   if (activeCount === 0) {
     return (
-      <p className="text-center text-xs text-amber-400">
+      <p className="text-center text-sm font-medium text-amber-400">
         Sélectionne au moins un bénéficiaire
       </p>
     );
@@ -848,12 +829,12 @@ function SplitTotalFeedback({
   if (mode === "equal") {
     const each = amount > 0 ? amount / activeCount : 0;
     return (
-      <p className="text-center text-xs text-slate-500">
+      <p className="text-center text-sm text-muted-foreground">
         Réparti entre {activeCount} personne{activeCount !== 1 ? "s" : ""}
         {amount > 0 && (
           <>
             {" · "}
-            <span className="text-slate-300 font-medium">
+            <span className="font-semibold text-foreground">
               {formatCurrency(each, currency)} chacun
             </span>
           </>
@@ -868,7 +849,7 @@ function SplitTotalFeedback({
     return (
       <div
         className={cn(
-          "text-center text-xs flex items-center justify-center gap-1.5",
+          "flex items-center justify-center gap-1.5 text-center text-sm font-medium",
           ok ? "text-emerald-400" : "text-amber-400"
         )}
       >
@@ -892,7 +873,7 @@ function SplitTotalFeedback({
   return (
     <div
       className={cn(
-        "text-center text-xs flex items-center justify-center gap-1.5",
+        "flex items-center justify-center gap-1.5 text-center text-sm font-medium",
         ok ? "text-emerald-400" : "text-amber-400"
       )}
     >

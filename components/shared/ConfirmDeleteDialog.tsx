@@ -1,63 +1,51 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { Loader2, Trash2 } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 interface ConfirmDeleteDialogProps {
   title: string;
   description: React.ReactNode;
   onCancel: () => void;
-  onConfirm: () => void;
+  onConfirm: () => void | Promise<void>;
 }
 
-export function ConfirmDeleteDialog({
-  title,
-  description,
-  onCancel,
-  onConfirm,
-}: ConfirmDeleteDialogProps) {
+export function ConfirmDeleteDialog({ title, description, onCancel, onConfirm }: ConfirmDeleteDialogProps) {
   const [deleting, setDeleting] = useState(false);
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-      onClick={onCancel}
-    >
-      <motion.div
-        initial={{ scale: 0.95, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        onClick={(e) => e.stopPropagation()}
-        className="glass-strong border border-foreground/10 rounded-2xl p-5 max-w-sm w-full space-y-4"
-      >
-        <div>
-          <h3 className="text-lg font-bold text-slate-100">{title}</h3>
-          <p className="text-sm text-slate-400 mt-1">{description}</p>
+    <Dialog open onOpenChange={(open) => { if (!open && !deleting) onCancel(); }}>
+      <DialogContent showCloseButton={false} className="max-w-sm text-center">
+        <span className="mx-auto flex size-14 items-center justify-center rounded-[1.1rem] bg-red-500/12 text-red-400">
+          <Trash2 size={24} />
+        </span>
+        <div className="space-y-1.5">
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription className="text-[0.95rem] leading-relaxed">{description}</DialogDescription>
         </div>
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={onCancel}
-            disabled={deleting}
-            className="flex-1 h-11 rounded-lg bg-foreground/5 hover:bg-foreground/8 text-slate-300 text-sm font-medium transition-colors disabled:opacity-50"
-          >
+        <div className="mt-1 grid grid-cols-2 gap-2">
+          <Button variant="secondary" onClick={onCancel} disabled={deleting}>
             Annuler
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="destructive"
+            className="bg-red-500 text-white hover:bg-red-500/90 dark:bg-red-500 dark:hover:bg-red-500/90"
+            disabled={deleting}
             onClick={async () => {
               setDeleting(true);
-              await onConfirm();
-              setDeleting(false);
+              try {
+                await onConfirm();
+              } finally {
+                setDeleting(false);
+              }
             }}
-            disabled={deleting}
-            className="flex-1 h-11 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 text-sm font-semibold border border-red-500/30 transition-colors disabled:opacity-50"
           >
-            {deleting ? "…" : "Supprimer"}
-          </button>
+            {deleting ? <Loader2 size={18} className="animate-spin" /> : "Supprimer"}
+          </Button>
         </div>
-      </motion.div>
-    </motion.div>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -1,8 +1,8 @@
 "use client";
 
 import { use, useState } from "react";
-import { Plus, Receipt, Scale } from "lucide-react";
-import { motion } from "framer-motion";
+import { useSearchParams } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 import dynamic from "next/dynamic";
 const ExpenseForm = dynamic(() => import("@/components/budget/ExpenseForm").then(m => ({ default: m.ExpenseForm })), { ssr: false });
 import { ExpenseList } from "@/components/budget/ExpenseList";
@@ -12,7 +12,12 @@ import { ExpenseDetailSheet } from "@/components/budget/ExpenseDetailSheet";
 import { useTrip } from "@/hooks/useTrip";
 import { useBudget } from "@/hooks/useBudget";
 import { useDebts } from "@/hooks/useDebts";
-import { cn } from "@/lib/utils";
+import { formatCurrency } from "@/lib/format-currency";
+import { EASE_OUT } from "@/lib/motion";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { SegmentedControl } from "@/components/shared/SegmentedControl";
+import { NumberTicker } from "@/components/motion/NumberTicker";
+import { Fab } from "@/components/shared/Fab";
 import type { Expense, Payer, Settlement } from "@/types";
 
 type BudgetTab = "expenses" | "balances";
@@ -34,7 +39,10 @@ export default function BudgetPage({ params }: BudgetPageProps) {
   const [formOpen, setFormOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | undefined>();
   const [detailExpense, setDetailExpense] = useState<Expense | null>(null);
-  const [activeTab, setActiveTab] = useState<BudgetTab>("expenses");
+  const searchParams = useSearchParams();
+  const [activeTab, setActiveTab] = useState<BudgetTab>(
+    searchParams.get("tab") === "balances" ? "balances" : "expenses"
+  );
 
   const participants = trip?.participants ?? [];
   const currency = trip?.currency ?? "EUR";
@@ -111,31 +119,88 @@ export default function BudgetPage({ params }: BudgetPageProps) {
     });
   };
 
+  const myBalance = myId ? balances.find((b) => b.participantId === myId) : undefined;
+  const totalSpent = expenses
+    .filter((e) => e.category !== "reimbursement")
+    .reduce((sum, e) => sum + e.amountInTripCurrency, 0);
+  const formatMoney = (n: number) => formatCurrency(n, currency);
+  const pendingCount = myId ? settlements.filter((s) => s.fromId === myId || s.toId === myId).length : settlements.length;
+
   if (!trip) {
     return <Spinner />;
   }
 
   return (
-    <div
-      className="flex flex-col"
-      style={{
-        height: "calc(100dvh - env(safe-area-inset-top) - 1.25rem - var(--bottom-nav-top) - 1.5rem)",
-      }}
-    >
-      {/* ── Tab switcher anchored ── */}
-      <div className="shrink-0">
-        <BudgetTabSwitcher active={activeTab} onChange={setActiveTab} />
+    <div className="space-y-5 pt-1">
+      <PageHeader eyebrow={trip.name} title="Budget" />
+
+      {/* ── Summary ── */}
+      <section className="relative overflow-hidden rounded-[1.75rem] bg-primary p-5 text-primary-foreground shadow-section">
+        <svg aria-hidden="true" viewBox="0 0 200 200" className="pointer-events-none absolute -top-16 -right-16 size-56 opacity-[0.14]">
+          <circle cx="100" cy="100" r="96" fill="none" stroke="currentColor" strokeWidth="2" />
+          <circle cx="100" cy="100" r="64" fill="none" stroke="currentColor" strokeWidth="2" />
+          <circle cx="100" cy="100" r="32" fill="none" stroke="currentColor" strokeWidth="2" />
+        </svg>
+        <p className="text-sm font-medium text-white/75">Total dépensé</p>
+        <NumberTicker
+          value={totalSpent}
+          format={formatMoney}
+          className="tabular mt-1 block font-display text-[2.75rem] leading-none font-extrabold tracking-[-0.035em]"
+        />
+        <dl className="mt-5 grid grid-cols-2 gap-3 border-t border-white/15 pt-4">
+          {myBalance ? (
+            <>
+              <div>
+                <dt className="text-xs font-medium text-white/70">Ta part</dt>
+                <dd className="tabular mt-0.5 text-lg font-semibold">{formatMoney(myBalance.owes)}</dd>
+              </div>
+              <div>
+                <dt className="text-xs font-medium text-white/70">Tu as payé</dt>
+                <dd className="tabular mt-0.5 text-lg font-semibold">{formatMoney(myBalance.paid)}</dd>
+              </div>
+            </>
+          ) : (
+            <>
+              <div>
+                <dt className="text-xs font-medium text-white/70">Par personne</dt>
+                <dd className="tabular mt-0.5 text-lg font-semibold">
+                  {formatMoney(participants.length ? totalSpent / participants.length : 0)}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs font-medium text-white/70">Dépenses</dt>
+                <dd className="tabular mt-0.5 text-lg font-semibold">{expenses.length}</dd>
+              </div>
+            </>
+          )}
+        </dl>
+      </section>
+
+      {/* ── Tabs ── */}
+      <div
+        className="sticky z-20 -mx-4 bg-background/85 px-4 py-2 backdrop-blur-xl backdrop-saturate-150"
+        style={{ top: "calc(env(safe-area-inset-top) + 3.5rem)" }}
+      >
+        <SegmentedControl
+          id="budget"
+          value={activeTab}
+          onChange={setActiveTab}
+          options={[
+            { value: "expenses", label: "Dépenses" },
+            { value: "balances", label: "Soldes", badge: pendingCount },
+          ]}
+        />
       </div>
 
-      {/* ── Scrollable tab content ── */}
-      <div className="flex-1 overflow-y-auto mt-4 pb-4">
+      <AnimatePresence mode="wait" initial={false}>
         <motion.div
           key={activeTab}
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.2 }}
+          initial={{ opacity: 0, x: activeTab === "balances" ? 24 : -24 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: activeTab === "balances" ? -24 : 24 }}
+          transition={{ duration: 0.28, ease: EASE_OUT }}
         >
-          {activeTab === "expenses" && (
+          {activeTab === "expenses" ? (
             <ExpenseList
               expenses={expenses}
               participants={participants}
@@ -143,9 +208,7 @@ export default function BudgetPage({ params }: BudgetPageProps) {
               onDelete={handleDelete}
               onEdit={handleTap}
             />
-          )}
-
-          {activeTab === "balances" && (
+          ) : (
             <BalancesView
               myId={myId}
               balances={balances}
@@ -156,9 +219,8 @@ export default function BudgetPage({ params }: BudgetPageProps) {
             />
           )}
         </motion.div>
-      </div>
+      </AnimatePresence>
 
-      {/* Expense Detail — tap on card opens this first */}
       <ExpenseDetailSheet
         expense={detailExpense}
         participants={participants}
@@ -169,7 +231,6 @@ export default function BudgetPage({ params }: BudgetPageProps) {
         onDelete={handleDeleteFromDetail}
       />
 
-      {/* Expense Form */}
       <ExpenseForm
         open={formOpen}
         onOpenChange={(open) => {
@@ -183,69 +244,7 @@ export default function BudgetPage({ params }: BudgetPageProps) {
         initialValues={editingExpense}
       />
 
-      {/* FAB */}
-      <button
-        onClick={handleOpenForm}
-        className="fixed right-4 z-30 w-14 h-14 rounded-full gradient-primary text-white shadow-section-strong flex items-center justify-center active:scale-95 hover:scale-105 transition-all"
-        style={{ bottom: "var(--fab-bottom)" }}
-        aria-label="Nouvelle dépense"
-        title="Nouvelle dépense"
-      >
-        <Plus size={26} strokeWidth={2.5} />
-      </button>
-    </div>
-  );
-}
-
-// ─── BudgetTabSwitcher ──────────────────────────────────────────────────────
-
-const TABS: { id: BudgetTab; label: string; icon: typeof Receipt }[] = [
-  { id: "expenses", label: "Dépenses", icon: Receipt },
-  { id: "balances", label: "Soldes",   icon: Scale   },
-];
-
-function BudgetTabSwitcher({
-  active,
-  onChange,
-}: {
-  active: BudgetTab;
-  onChange: (tab: BudgetTab) => void;
-}) {
-  return (
-    <div className="relative flex items-center gap-1 p-1 rounded-2xl bg-foreground/5 border border-foreground/8">
-      {TABS.map((tab) => {
-        const isActive = active === tab.id;
-        const Icon = tab.icon;
-        return (
-          <button
-            key={tab.id}
-            type="button"
-            onClick={() => onChange(tab.id)}
-            className={cn(
-              "relative flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl text-sm font-semibold transition-colors active:scale-[0.98]",
-              isActive ? "text-white" : "text-slate-400 hover:text-slate-200"
-            )}
-            aria-current={isActive ? "page" : undefined}
-          >
-            {isActive && (
-              <motion.span
-                layoutId="budget-tab-pill"
-                transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                className="absolute inset-0 rounded-xl"
-                style={{
-                  background:
-                    "linear-gradient(135deg, var(--accent-500), oklch(0.50 calc(var(--accent-c) + 0.03) calc(var(--accent-h) + 25)))",
-                  boxShadow: "0 6px 18px -6px var(--accent-glow)",
-                }}
-              />
-            )}
-            <span className="relative flex items-center gap-1.5">
-              <Icon size={15} strokeWidth={isActive ? 2.4 : 2} />
-              <span>{tab.label}</span>
-            </span>
-          </button>
-        );
-      })}
+      <Fab onClick={handleOpenForm} label="Nouvelle dépense" />
     </div>
   );
 }

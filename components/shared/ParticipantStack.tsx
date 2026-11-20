@@ -14,12 +14,13 @@ interface ParticipantStackProps {
   size?: "sm" | "md";
   /** Color of the ring around each avatar (so they pop on the card). */
   ringColor?: string;
+  showLabel?: boolean;
   className?: string;
 }
 
 const SIZES = {
-  sm: { box: "w-6 h-6", text: "text-[10px]", overlap: "-space-x-1.5" },
-  md: { box: "w-7 h-7", text: "text-[11px]", overlap: "-space-x-2" },
+  sm: { box: "w-6 h-6", text: "text-[0.625rem]", overlap: "-space-x-1.5" },
+  md: { box: "w-7 h-7", text: "text-[0.6875rem]", overlap: "-space-x-2" },
 };
 
 export function ParticipantStack({
@@ -27,7 +28,8 @@ export function ParticipantStack({
   everyone = false,
   max = 4,
   size = "sm",
-  ringColor = "ring-slate-900",
+  ringColor = "ring-card",
+  showLabel = true,
   className,
 }: ParticipantStackProps) {
   if (participants.length === 0) return null;
@@ -63,7 +65,7 @@ export function ParticipantStack({
         {overflow > 0 && (
           <span
             className={cn(
-              "rounded-full flex items-center justify-center font-bold text-slate-200 bg-slate-700 ring-2",
+              "rounded-full flex items-center justify-center font-bold text-foreground bg-secondary ring-2",
               cfg.box,
               cfg.text,
               ringColor
@@ -73,7 +75,7 @@ export function ParticipantStack({
           </span>
         )}
       </div>
-      <span className="text-xs text-slate-400 truncate">{label}</span>
+      {showLabel && <span className="text-[0.8125rem] text-muted-foreground truncate">{label}</span>}
     </div>
   );
 }

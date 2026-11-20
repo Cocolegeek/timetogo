@@ -3,8 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Plus, Compass, Wallet, Sparkles } from "lucide-react";
-import { MeshGradientBackground } from "@/components/layout/MeshGradientBackground";
+import { Plus, Compass, Wallet, ArrowRight } from "lucide-react";
 import dynamic from "next/dynamic";
 import { TripCard } from "@/components/trips/TripCard";
 import { ConfirmDeleteDialog } from "@/components/shared/ConfirmDeleteDialog";
@@ -25,11 +24,14 @@ import { Spinner } from "@/components/shared/Spinner";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { useTrips } from "@/hooks/useTrip";
 import { useProfile } from "@/hooks/useProfile";
-import { PwaInstallBanner } from "@/components/shared/PwaInstallBanner";
 import { daysUntil } from "@/lib/format-date";
-import { cn } from "@/lib/utils";
 import { isVoyage } from "@/lib/trip-features";
-import type { VoyageTrip, GroupTrip } from "@/types";
+import type { VoyageTrip, GroupTrip, Trip } from "@/types";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { SectionLabel } from "@/components/shared/SectionLabel";
+import { Stagger, StaggerItem } from "@/components/motion/Stagger";
+import { TripCover } from "@/components/trips/TripCover";
+import { springSoft } from "@/lib/motion";
 
 export default function TripsPage() {
   const { trips, loading, refetch: refetchTrips, deleteTrip } = useTrips();
@@ -79,20 +81,16 @@ export default function TripsPage() {
     });
   }, [trips]);
 
-  const ongoingCount = useMemo(
-    () =>
-      sortedVoyages.filter((t) => {
-        const s = daysUntil(t.startDate);
-        const e = daysUntil(t.endDate);
-        return s <= 0 && e >= 0;
-      }).length,
+  const featured = useMemo(
+    () => sortedVoyages.find((t) => daysUntil(t.endDate) >= 0) ?? null,
     [sortedVoyages]
   );
+  const upcoming = sortedVoyages.filter((t) => t !== featured && daysUntil(t.endDate) >= 0);
+  const past = sortedVoyages.filter((t) => daysUntil(t.endDate) < 0);
 
   const [editingTripId, setEditingTripId] = useState<string | null>(null);
   const [sharingTripId, setSharingTripId] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"voyages" | "budgets">("voyages");
 
   const firstName = profile?.name?.split(" ")[0] ?? null;
 
@@ -109,111 +107,101 @@ export default function TripsPage() {
     ? trips.find((t) => t.id === confirmDelete)
     : null;
 
+  const cardProps = {
+    onEdit: (t: { id: string }) => setEditingTripId(t.id),
+    onDelete: handleDelete,
+    onShare: (t: { id: string }) => setSharingTripId(t.id),
+  };
+
   return (
     <>
-      <MeshGradientBackground />
-
-      <div className="min-h-screen">
+      <div className="min-h-dvh bg-background">
         <AppHeader />
 
-        <PwaInstallBanner />
-
-        {/* ─── Main content ──────────────────────────────────────────── */}
         <main
-          className="max-w-3xl mx-auto px-4 pt-5 pb-32"
+          className="mx-auto max-w-3xl px-5 pt-2"
           style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 7rem)" }}
         >
           {loading ? (
             <Spinner />
           ) : (
-            <>
-              {/* ─── Hero greeting card ─────────────────────────────── */}
-              <HeroGreeting
-                firstName={firstName}
-                voyageCount={sortedVoyages.length}
-                groupCount={sortedGroups.length}
-                ongoingCount={ongoingCount}
-                isEmpty={isEmpty}
-              />
+            <Stagger step={0.06} className="space-y-8">
+              <StaggerItem>
+                <PageHeader
+                  eyebrow={`Salut ${firstName ?? "toi"}`}
+                  title="Tes voyages"
+                />
+              </StaggerItem>
 
               {isEmpty ? (
-                <FirstTimeEmptyState />
+                <StaggerItem>
+                  <FirstTimeEmptyState />
+                </StaggerItem>
               ) : (
-                <div className="mt-7">
-                  <TabSwitcher
-                    active={activeTab}
-                    onChange={setActiveTab}
-                    voyageCount={sortedVoyages.length}
-                    groupCount={sortedGroups.length}
-                  />
+                <>
+                  {featured && (
+                    <StaggerItem>
+                      <TripCard trip={featured} variant="featured" {...cardProps} />
+                    </StaggerItem>
+                  )}
 
-                  <motion.div
-                    key={activeTab}
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="mt-4"
-                  >
-                    {activeTab === "voyages" ? (
-                      sortedVoyages.length === 0 ? (
-                        <SectionEmpty
-                          icon={Compass}
-                          text="Pas encore de voyage à l'horizon"
-                          ctaLabel="Créer un voyage"
-                          href="/trips/new"
-                        />
-                      ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          {sortedVoyages.map((trip, i) => (
-                            <TripCard
-                              key={trip.id}
-                              trip={trip}
-                              onEdit={(t) => setEditingTripId(t.id)}
-                              onDelete={handleDelete}
-                              onShare={(t) => setSharingTripId(t.id)}
-                              index={i}
-                            />
-                          ))}
-                        </div>
-                      )
-                    ) : sortedGroups.length === 0 ? (
+                  {upcoming.length > 0 && (
+                    <StaggerItem>
+                      <TripSection title="À venir" trips={upcoming} cardProps={cardProps} />
+                    </StaggerItem>
+                  )}
+
+                  <StaggerItem>
+                    {sortedGroups.length > 0 ? (
+                      <TripSection title="Groupes" trips={sortedGroups} cardProps={cardProps} />
+                    ) : (
                       <SectionEmpty
                         icon={Wallet}
-                        text="Pas encore de cagnotte partagée"
-                        ctaLabel="Créer un budget"
+                        text="Un budget partagé, sans voyage"
+                        ctaLabel="Créer un groupe"
                         href="/trips/new"
                       />
-                    ) : (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {sortedGroups.map((trip, i) => (
-                          <TripCard
-                            key={trip.id}
-                            trip={trip}
-                            onEdit={(t) => setEditingTripId(t.id)}
-                            onDelete={handleDelete}
-                            onShare={(t) => setSharingTripId(t.id)}
-                            index={i}
-                          />
-                        ))}
-                      </div>
                     )}
-                  </motion.div>
-                </div>
+                  </StaggerItem>
+
+                  {!featured && upcoming.length === 0 && (
+                    <StaggerItem>
+                      <SectionEmpty
+                        icon={Compass}
+                        text="Pas encore de voyage à l'horizon"
+                        ctaLabel="Créer un voyage"
+                        href="/trips/new"
+                      />
+                    </StaggerItem>
+                  )}
+
+                  {past.length > 0 && (
+                    <StaggerItem>
+                      <TripSection title="Souvenirs" trips={past} cardProps={cardProps} />
+                    </StaggerItem>
+                  )}
+                </>
               )}
-            </>
+            </Stagger>
           )}
         </main>
 
-        {/* ─── FAB ───────────────────────────────────────────────────── */}
         {!loading && trips.length > 0 && (
-          <Link
-            href="/trips/new"
-            className="fixed left-1/2 -translate-x-1/2 z-40 h-14 px-6 rounded-full bg-primary text-primary-foreground shadow-section-strong flex items-center gap-2 font-semibold active:scale-95 transition-all"
+          <motion.div
+            initial={{ y: 96, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ ...springSoft, delay: 0.25 }}
+            className="fixed inset-x-0 z-40 flex justify-center pointer-events-none"
             style={{ bottom: "calc(env(safe-area-inset-bottom) + 1.25rem)" }}
           >
-            <Plus size={20} strokeWidth={2.4} />
-            Nouveau
-          </Link>
+            <Link
+              href="/trips/new"
+              className="pressable pointer-events-auto flex h-14 items-center gap-2 rounded-full bg-foreground px-6 text-[0.95rem] font-semibold text-background shadow-float outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <Plus size={20} strokeWidth={2.4} />
+              Nouveau
+            </Link>
+          </motion.div>
         )}
 
         {/* Dialogs */}
@@ -267,107 +255,26 @@ export default function TripsPage() {
   );
 }
 
-// ─── HeroGreeting ───────────────────────────────────────────────────────────
+// ─── TripSection ────────────────────────────────────────────────────────────
 
-function HeroGreeting({
-  firstName,
-  voyageCount,
-  groupCount,
-  ongoingCount,
-  isEmpty,
+function TripSection({
+  title,
+  trips,
+  cardProps,
 }: {
-  firstName: string | null;
-  voyageCount: number;
-  groupCount: number;
-  ongoingCount: number;
-  isEmpty: boolean;
+  title: string;
+  trips: Trip[];
+  cardProps: Pick<React.ComponentProps<typeof TripCard>, "onEdit" | "onDelete" | "onShare">;
 }) {
-  const total = voyageCount + groupCount;
-  const subtitle = isEmpty
-    ? "Prêt à planifier ton premier voyage ?"
-    : total === 1
-      ? "1 entrée dans ta collection"
-      : `${total} entrées · ${voyageCount} voyage${voyageCount !== 1 ? "s" : ""} · ${groupCount} budget${groupCount !== 1 ? "s" : ""}`;
-
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-    >
-      <p className="text-sm text-slate-400">Salut {firstName ?? "voyageur"}</p>
-      <h1 className="font-display text-4xl font-extrabold leading-[1.05] tracking-tight text-slate-100 mt-0.5">
-        Tes voyages
-      </h1>
-      <p className="text-sm text-slate-400 mt-2">{subtitle}</p>
-      {ongoingCount > 0 && (
-        <p className="mt-3 inline-flex items-center gap-2 rounded-full bg-emerald-500/15 px-3 py-1.5 text-sm font-semibold text-emerald-300">
-          <Sparkles size={14} />
-          {ongoingCount} voyage{ongoingCount !== 1 ? "s" : ""} en cours
-        </p>
-      )}
-    </motion.div>
-  );
-}
-
-// ─── TabSwitcher ────────────────────────────────────────────────────────────
-
-function TabSwitcher({
-  active,
-  onChange,
-  voyageCount,
-  groupCount,
-}: {
-  active: "voyages" | "budgets";
-  onChange: (tab: "voyages" | "budgets") => void;
-  voyageCount: number;
-  groupCount: number;
-}) {
-  const tabs = [
-    { id: "voyages" as const, label: "Voyages", icon: Compass, count: voyageCount },
-    { id: "budgets" as const, label: "Budgets", icon: Wallet, count: groupCount },
-  ];
-
-  return (
-    <div className="relative flex items-center gap-1 p-1 rounded-full bg-secondary">
-      {tabs.map((tab) => {
-        const isActive = active === tab.id;
-        const Icon = tab.icon;
-        return (
-          <button
-            key={tab.id}
-            type="button"
-            onClick={() => onChange(tab.id)}
-            className={cn(
-              "relative flex-1 flex items-center justify-center gap-2 px-3 h-11 rounded-full text-sm font-semibold transition-colors active:scale-[0.98]",
-              isActive ? "text-slate-100" : "text-slate-400 hover:text-slate-200"
-            )}
-          >
-            {isActive && (
-              <motion.span
-                layoutId="tab-pill"
-                transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                className="absolute inset-0 rounded-full bg-card shadow-sm"
-              />
-            )}
-            <span className="relative flex items-center gap-2">
-              <Icon size={15} strokeWidth={isActive ? 2.4 : 2} />
-              <span>{tab.label}</span>
-              <span
-                className={cn(
-                  "text-xs font-bold px-2 py-0.5 rounded-full tabular-nums leading-none",
-                  isActive
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-foreground/10 text-slate-400"
-                )}
-              >
-                {tab.count}
-              </span>
-            </span>
-          </button>
-        );
-      })}
-    </div>
+    <section>
+      <SectionLabel count={trips.length}>{title}</SectionLabel>
+      <div className="-mx-2.5 space-y-1">
+        {trips.map((trip) => (
+          <TripCard key={trip.id} trip={trip} {...cardProps} />
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -387,15 +294,16 @@ function SectionEmpty({
   return (
     <Link
       href={href}
-      className="flex items-center gap-3 px-4 py-4 rounded-[1.375rem] border border-dashed border-foreground/25 bg-transparent hover:bg-foreground/6 hover:border-foreground/25 transition-all active:scale-[0.99]"
+      className="pressable flex items-center gap-4 rounded-[1.5rem] border border-dashed border-foreground/20 p-4 transition-colors hover:border-foreground/35 hover:bg-foreground/[0.02]"
     >
-      <div className="w-10 h-10 rounded-xl bg-foreground/5 flex items-center justify-center shrink-0">
-        <Icon size={18} className="text-slate-500" />
+      <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-secondary">
+        <Icon size={20} className="text-muted-foreground" />
       </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm text-slate-300 font-medium">{text}</p>
-        <p className="text-xs text-section font-semibold mt-0.5">
-          {ctaLabel} →
+      <div className="min-w-0 flex-1">
+        <p className="text-[0.95rem] font-medium text-foreground">{text}</p>
+        <p className="mt-0.5 flex items-center gap-1 text-sm font-semibold text-primary">
+          {ctaLabel}
+          <ArrowRight size={14} />
         </p>
       </div>
     </Link>
@@ -406,35 +314,23 @@ function SectionEmpty({
 
 function FirstTimeEmptyState() {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.1 }}
-      className="mt-8"
-    >
-      <div className="glass rounded-[1.75rem] p-8 text-center space-y-5">
-        <div className="w-16 h-16 mx-auto rounded-2xl bg-section-soft flex items-center justify-center">
-          <Compass size={32} className="text-section" />
-        </div>
+    <div className="overflow-hidden rounded-[1.75rem] bg-card shadow-raised">
+      <TripCover seed="welcome" className="h-44" />
+      <div className="space-y-4 p-6">
         <div className="space-y-1.5">
-          <h3 className="text-xl font-bold text-slate-100">
-            Bienvenue dans la bande !
-          </h3>
-          <p className="text-sm text-slate-400 max-w-xs mx-auto leading-relaxed">
-            Crée ton premier voyage pour planifier ton itinéraire, partager le
-            budget et organiser les repas avec tes voyageurs.
+          <h2 className="font-display text-2xl font-bold tracking-tight">Bienvenue dans la bande</h2>
+          <p className="text-[0.95rem] leading-relaxed text-muted-foreground">
+            Crée ton premier voyage pour partager le budget, caler le planning et organiser les repas avec tes potes.
           </p>
         </div>
         <Link
           href="/trips/new"
-          className={cn(
-            "inline-flex items-center justify-center gap-1.5 px-6 h-11 rounded-full bg-primary text-primary-foreground font-semibold shadow-section-strong active:scale-95 transition-all"
-          )}
+          className="pressable inline-flex h-12 items-center justify-center gap-2 rounded-full bg-primary px-6 font-semibold text-primary-foreground shadow-section"
         >
-          <Plus size={16} />
-          Commencer
+          <Plus size={18} strokeWidth={2.4} />
+          Créer un voyage
         </Link>
       </div>
-    </motion.div>
+    </div>
   );
 }

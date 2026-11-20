@@ -24,8 +24,8 @@ export default async function TripLayout({ children, params }: TripLayoutProps) 
         <main
           className="flex-1 max-w-3xl w-full mx-auto px-4"
           style={{
-            paddingTop: "1.25rem",
-            paddingBottom: "calc(var(--bottom-nav-top) + 1.5rem)",
+            paddingTop: "0.25rem",
+            paddingBottom: "calc(var(--bottom-nav-top) + 2rem)",
           }}
         >
           {children}

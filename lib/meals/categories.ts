@@ -13,22 +13,20 @@ export interface CategoryConfig {
 export const CATEGORY_CONFIG: Record<MealCategory, CategoryConfig> = {
   home: {
     category: "home",
-    label: "À Table",
-    badgeClass:
-      "bg-slate-500/20 text-slate-200 border border-slate-500/40",
+    label: "À la maison",
+    badgeClass: "bg-foreground/[0.07] text-muted-foreground",
     stripClass: "bg-slate-500",
   },
   picnic: {
     category: "picnic",
     label: "Pique-nique",
-    badgeClass:
-      "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40",
+    badgeClass: "bg-emerald-500/12 text-emerald-400",
     stripClass: "bg-emerald-500",
   },
   restaurant: {
     category: "restaurant",
     label: "Resto",
-    badgeClass: "bg-red-500/20 text-red-300 border border-red-500/40",
+    badgeClass: "bg-rose-500/12 text-rose-400",
     stripClass: "bg-red-500",
   },
 };

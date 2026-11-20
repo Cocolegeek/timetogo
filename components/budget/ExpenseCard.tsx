@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef } from "react";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import { Trash2 } from "lucide-react";
 import { CATEGORIES } from "@/lib/budget/categories";
@@ -14,136 +14,106 @@ interface ExpenseCardProps {
   currency: string;
   onDelete: (id: string) => void;
   onEdit: (expense: Expense) => void;
+  /** Hide the top divider (first row of a group). */
+  first?: boolean;
 }
 
 const SWIPE_THRESHOLD = -110;
 
-export function ExpenseCard({
-  expense,
-  participants,
-  currency,
-  onDelete,
-  onEdit,
-}: ExpenseCardProps) {
+/** One expense row inside a grouped list. Swipe left to delete, tap to open. */
+export function ExpenseCard({ expense, participants, currency, onDelete, onEdit, first }: ExpenseCardProps) {
   const payers = expense.payers
     .map((p) => participants.find((part) => part.id === p.participantId))
-    .filter(Boolean) as typeof participants;
+    .filter(Boolean) as Participant[];
   const cfg = CATEGORIES[expense.category] ?? CATEGORIES.other;
   const Icon = cfg.icon;
 
   const x = useMotionValue(0);
-  const [isDragging, setIsDragging] = useState(false);
-
-  // Background opacity grows as user swipes left
-  const bgOpacity = useTransform(x, [SWIPE_THRESHOLD, -10, 0], [1, 0.2, 0]);
-  const trashScale = useTransform(x, [SWIPE_THRESHOLD - 20, -40, 0], [1.2, 0.9, 0.6]);
+  const dragged = useRef(false);
+  const revealOpacity = useTransform(x, [SWIPE_THRESHOLD, -24, 0], [1, 0.4, 0]);
+  const trashScale = useTransform(x, [SWIPE_THRESHOLD - 20, -40, 0], [1.15, 0.85, 0.6]);
 
   const handleDragEnd = () => {
-    setIsDragging(false);
     if (x.get() <= SWIPE_THRESHOLD) {
-      // Confirm delete
       animate(x, -window.innerWidth, {
-        duration: 0.25,
+        duration: 0.22,
+        ease: [0.4, 0, 1, 1],
         onComplete: () => onDelete(expense.id),
       });
     } else {
-      animate(x, 0, { type: "spring", stiffness: 400, damping: 30 });
+      animate(x, 0, { type: "spring", stiffness: 520, damping: 38 });
     }
+    setTimeout(() => (dragged.current = false), 0);
   };
 
+  const payerLabel =
+    expense.category === "reimbursement"
+      ? "Remboursement"
+      : payers.length > 0
+        ? `Payé par ${payers.map((p) => p.name).join(" & ")}`
+        : "Payeur inconnu";
+
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, x: -100 }}
-      transition={{ duration: 0.2 }}
-      className="relative rounded-2xl overflow-hidden"
+    <motion.li
+      layout="position"
+      initial={false}
+      exit={{ opacity: 0, height: 0, transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] } }}
+      className="relative overflow-hidden"
     >
-      {/* Red gradient background revealed by swipe */}
       <motion.div
-        className="absolute inset-0 flex items-center justify-end pr-6 pointer-events-none"
-        style={{
-          background:
-            "linear-gradient(90deg, rgba(239,68,68,0.0) 0%, rgba(239,68,68,0.45) 60%, rgba(220,38,38,0.85) 100%)",
-          opacity: bgOpacity,
-        }}
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 flex items-center justify-end bg-red-500 pr-6 text-white"
+        style={{ opacity: revealOpacity }}
       >
-        <motion.div
-          className="flex items-center gap-2 text-white"
-          style={{ scale: trashScale }}
-        >
+        <motion.span className="flex items-center gap-2 text-sm font-semibold" style={{ scale: trashScale }}>
           <Trash2 size={18} />
-          <span className="text-sm font-semibold">Supprimer</span>
-        </motion.div>
+          Supprimer
+        </motion.span>
       </motion.div>
 
-      {/* Foreground draggable card — opt out of layout-level tab swipe */}
-      <motion.div
+      <motion.button
+        type="button"
         data-no-tab-swipe
         drag="x"
         dragConstraints={{ left: -200, right: 0 }}
         dragElastic={{ left: 0.2, right: 0 }}
         dragDirectionLock
         style={{ x }}
-        onDragStart={() => setIsDragging(true)}
+        onDragStart={() => (dragged.current = true)}
         onDragEnd={handleDragEnd}
         onClick={() => {
-          if (!isDragging) onEdit(expense);
+          if (!dragged.current) onEdit(expense);
         }}
-        className={cn(
-          "glass-subtle rounded-2xl px-4 py-3.5 cursor-pointer touch-pan-y select-none",
-          "active:bg-foreground/8 transition-colors"
-        )}
+        aria-label={`${expense.title}, ${formatCurrency(expense.amountInTripCurrency, currency)}, ${payerLabel}`}
+        className="relative flex w-full touch-pan-y items-center gap-3.5 bg-card px-4 text-left outline-none select-none transition-colors active:bg-secondary focus-visible:bg-secondary"
       >
-        <div className="flex items-center gap-3">
-          {/* Category icon */}
-          <div
-            className={cn(
-              "w-12 h-12 rounded-xl flex items-center justify-center shrink-0",
-              cfg.bg
-            )}
-          >
-            <Icon size={22} className={cfg.color} />
-          </div>
-
-          {/* Content */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between gap-2">
-              <p className="font-semibold text-slate-100 text-lg truncate leading-tight">
-                {expense.title}
-              </p>
-              <span className="font-bold text-slate-100 text-lg shrink-0 tabular-nums">
-                {formatCurrency(expense.amountInTripCurrency, currency)}
-              </span>
-            </div>
-
-            <div className="flex items-center gap-2 mt-1.5">
+        <span className={cn("flex size-11 shrink-0 items-center justify-center rounded-2xl", cfg.bg)}>
+          <Icon size={20} className={cfg.color} />
+        </span>
+        <span
+          className={cn(
+            "flex min-w-0 flex-1 items-center gap-3 py-3.5",
+            !first && "border-t border-border"
+          )}
+        >
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-[1rem] font-semibold text-foreground">{expense.title}</span>
+            <span className="mt-0.5 flex items-center gap-1.5 text-sm text-muted-foreground">
               {payers.length > 0 && (
-                <div className="flex items-center gap-1.5 min-w-0">
-                  {payers.map((p) => (
-                    <span
-                      key={p.id}
-                      className="w-2 h-2 rounded-full shrink-0"
-                      style={{ backgroundColor: p.color }}
-                    />
+                <span className="flex -space-x-1">
+                  {payers.slice(0, 3).map((p) => (
+                    <span key={p.id} className="size-2.5 rounded-full ring-2 ring-card" style={{ backgroundColor: p.color }} />
                   ))}
-                  <span className="text-base text-slate-400 truncate">
-                    {payers.map((p) => p.name).join(" & ")}
-                  </span>
-                </div>
+                </span>
               )}
-              <span className="text-sm text-slate-600">·</span>
-              <span className="text-sm text-slate-500 shrink-0">
-                {new Date(expense.date).toLocaleDateString("fr-FR", {
-                  day: "numeric",
-                  month: "short",
-                })}
-              </span>
-            </div>
-          </div>
-        </div>
-      </motion.div>
-    </motion.div>
+              <span className="truncate">{payerLabel}</span>
+            </span>
+          </span>
+          <span className="tabular shrink-0 font-display text-[1.0625rem] font-bold tracking-tight">
+            {formatCurrency(expense.amountInTripCurrency, currency)}
+          </span>
+        </span>
+      </motion.button>
+    </motion.li>
   );
 }

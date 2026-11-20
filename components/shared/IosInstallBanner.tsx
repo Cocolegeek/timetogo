@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
+import { VoyouLogo } from "@/components/layout/VoyouLogo";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -66,28 +67,24 @@ export function AppInstallBanner() {
   if (!visible) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 px-4">
-      <div
-        className="mb-4 mx-auto max-w-sm rounded-2xl border border-foreground/10 bg-slate-900/95 backdrop-blur-xl shadow-2xl"
-        style={{ paddingBottom: "max(0.875rem, env(safe-area-inset-bottom))" }}
-      >
+    <div className="fixed inset-x-0 z-50 px-4" style={{ bottom: "calc(env(safe-area-inset-bottom) + 5.5rem)" }}>
+      <div role="dialog" aria-label="Installer Voyou" className="animate-fade-up mx-auto max-w-sm rounded-[1.5rem] bg-popover shadow-float">
         <div className="flex items-center gap-3 px-4 py-3.5">
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-slate-100">Installer Voyou</p>
+          <VoyouLogo size={40} />
+          <div className="min-w-0 flex-1">
+            <p className="text-[0.95rem] font-semibold text-foreground">Installer Voyou</p>
             {platform === "ios" ? (
-              <p className="text-sm text-slate-400 mt-0.5 leading-snug">
+              <p className="mt-0.5 text-sm leading-snug text-muted-foreground">
                 Dans Safari, appuie sur{" "}
-                <svg width="13" height="13" viewBox="0 0 50 50" fill="currentColor" className="inline mx-0.5 -mt-0.5 text-slate-200 shrink-0">
+                <svg width="13" height="13" viewBox="0 0 50 50" fill="currentColor" className="mx-0.5 -mt-0.5 inline shrink-0 text-foreground">
                   <path d="M30.3 13.7L25 8.4l-5.3 5.3-1.4-1.4L25 5.6l6.7 6.7z"/>
                   <path d="M24 7h2v21h-2z"/>
                   <path d="M35 40H15c-1.7 0-3-1.3-3-3V19c0-1.7 1.3-3 3-3h7v2h-7c-.6 0-1 .4-1 1v18c0 .6.4 1 1 1h20c.6 0 1-.4 1-1V19c0-.6-.4-1-1-1h-7v-2h7c1.7 0 3 1.3 3 3v18c0 1.7-1.3 3-3 3z"/>
                 </svg>{" "}
-                puis <span className="text-slate-200 font-medium">"Sur l'écran d'accueil"</span>
+                puis <span className="font-medium text-foreground">« Sur l&apos;écran d&apos;accueil »</span>
               </p>
             ) : (
-              <p className="text-sm text-slate-400 mt-0.5">
-                Meilleure expérience en version app
-              </p>
+              <p className="mt-0.5 text-sm text-muted-foreground">Plus rapide, en plein écran.</p>
             )}
           </div>
 
@@ -95,7 +92,7 @@ export function AppInstallBanner() {
             <button
               type="button"
               onClick={install}
-              className="px-3.5 py-2 rounded-xl bg-section-soft text-section-soft border border-section text-sm font-semibold hover:bg-section-medium active:scale-95 transition-all shrink-0"
+              className="pressable h-9 shrink-0 rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground"
             >
               Installer
             </button>
@@ -104,7 +101,7 @@ export function AppInstallBanner() {
           <button
             type="button"
             onClick={dismiss}
-            className="p-1 rounded-lg text-slate-500 hover:text-slate-300 shrink-0"
+            className="flex size-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-foreground/[0.06] hover:text-foreground"
             aria-label="Fermer"
           >
             <X size={16} />

@@ -1,25 +1,25 @@
+import { cn } from "@/lib/utils";
+
 interface SectionLabelProps {
   children: React.ReactNode;
   count?: number;
+  action?: React.ReactNode;
   className?: string;
 }
 
-/**
- * Small structural section header used to divide content within a page
- * (e.g. "Tous les soldes", "Me concerne", "Entre les autres").
- * Lighter than a full section title — sits above cards without competing.
- */
-export function SectionLabel({ children, count, className }: SectionLabelProps) {
+/** Section title inside a screen ("Ils me doivent", "À venir"…). */
+export function SectionLabel({ children, count, action, className }: SectionLabelProps) {
   return (
-    <div className={`flex items-baseline gap-2 px-1 mb-3 ${className ?? ""}`}>
-      <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+    <div className={cn("mb-3 flex items-center justify-between gap-3 px-1", className)}>
+      <h2 className="flex items-center gap-2 font-display text-[1.15rem] font-bold tracking-tight text-foreground">
         {children}
-      </h3>
-      {count !== undefined && count > 0 && (
-        <span className="text-[10px] font-bold tabular-nums text-slate-500 bg-foreground/8 px-1.5 py-0.5 rounded-full leading-none">
-          {count}
-        </span>
-      )}
+        {count !== undefined && count > 0 && (
+          <span className="tabular rounded-full bg-foreground/[0.07] px-2 py-0.5 font-sans text-xs font-semibold text-muted-foreground">
+            {count}
+          </span>
+        )}
+      </h2>
+      {action}
     </div>
   );
 }

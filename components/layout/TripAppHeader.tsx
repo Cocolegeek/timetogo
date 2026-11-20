@@ -2,11 +2,18 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Pencil, Share2 } from "lucide-react";
+import { ChevronLeft, MoreHorizontal, Pencil, Settings, Share } from "lucide-react";
 import dynamic from "next/dynamic";
-import { VoyouLogo } from "@/components/layout/VoyouLogo";
-import { UserMenu } from "@/components/layout/UserMenu";
+import { useRouter } from "next/navigation";
 import { useTrip } from "@/hooks/useTrip";
+import { useScrolled } from "@/hooks/useScrolled";
+import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const TripEditDialog = dynamic(
   () => import("@/components/trips/TripEditDialog").then((m) => ({ default: m.TripEditDialog })),
@@ -17,48 +24,64 @@ const ShareModal = dynamic(
   { ssr: false }
 );
 
+const ICON_BTN =
+  "flex size-10 items-center justify-center rounded-full text-foreground transition-colors hover:bg-foreground/[0.06] active:bg-foreground/10 outline-none focus-visible:ring-2 focus-visible:ring-ring";
+
 export function TripAppHeader({ tripId }: { tripId: string }) {
   const { trip, updateTrip, addParticipant, updateParticipant, deleteParticipant } =
     useTrip(tripId);
   const [editOpen, setEditOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const scrolled = useScrolled(4);
+  const router = useRouter();
 
   return (
     <header
-      className="sticky top-0 z-30 glass-strong border-b border-foreground/8"
+      className={cn(
+        "sticky top-0 z-30 transition-[background-color,border-color,backdrop-filter] duration-300",
+        scrolled
+          ? "border-b border-border bg-background/85 backdrop-blur-xl backdrop-saturate-150"
+          : "border-b border-transparent bg-background"
+      )}
       style={{ paddingTop: "env(safe-area-inset-top)" }}
     >
-      <div className="max-w-3xl mx-auto px-4 py-2.5 flex items-center gap-2">
-        {/* Logo */}
-        <Link href="/trips" aria-label="Accueil" className="shrink-0">
-          <VoyouLogo />
+      <div className="mx-auto flex h-14 max-w-3xl items-center gap-1 px-2">
+        <Link href="/trips" aria-label="Tous les voyages" className={ICON_BTN}>
+          <ChevronLeft size={24} strokeWidth={2.2} />
         </Link>
 
-        {/* Spacer */}
-        <div className="flex-1" />
-
-        {/* Actions */}
-        <div className="flex items-center gap-0.5 shrink-0">
-          {trip && (
-            <>
-              <button
-                onClick={() => setEditOpen(true)}
-                className="p-2 rounded-xl hover:bg-foreground/8 active:bg-foreground/12 text-slate-500 hover:text-slate-200 transition-all"
-                aria-label="Modifier"
-              >
-                <Pencil size={15} />
-              </button>
-              <button
-                onClick={() => setShareOpen(true)}
-                className="p-2 rounded-xl hover:bg-foreground/8 active:bg-foreground/12 text-slate-500 hover:text-section-soft transition-all"
-                aria-label="Partager"
-              >
-                <Share2 size={15} />
-              </button>
-            </>
+        <p
+          className={cn(
+            "min-w-0 flex-1 truncate font-display text-[1.05rem] font-bold tracking-tight transition-opacity duration-300",
+            scrolled ? "opacity-100" : "opacity-0"
           )}
-          <UserMenu />
-        </div>
+          aria-hidden={!scrolled}
+        >
+          {trip?.name}
+        </p>
+
+        {trip && (
+          <div className="flex shrink-0 items-center">
+            <button type="button" onClick={() => setShareOpen(true)} className={ICON_BTN} aria-label="Partager le voyage">
+              <Share size={19} strokeWidth={2} />
+            </button>
+            <DropdownMenu>
+              <DropdownMenuTrigger className={ICON_BTN} aria-label="Plus d'actions">
+                <MoreHorizontal size={21} strokeWidth={2} />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="min-w-52">
+                <DropdownMenuItem onClick={() => setEditOpen(true)}>
+                  <Pencil />
+                  Modifier {trip.type === "group" ? "le groupe" : "le voyage"}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push("/settings")}>
+                  <Settings />
+                  Paramètres
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        )}
       </div>
 
       {trip && (

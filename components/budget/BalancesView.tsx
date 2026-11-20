@@ -2,13 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  ArrowDownLeft,
-  ArrowUpRight,
-  ChevronDown,
-  Check,
-  Loader2,
-} from "lucide-react";
+import { ArrowRight, ChevronDown, ChevronRight, Check, Loader2 } from "lucide-react";
 import { formatCurrency, currencySymbol } from "@/lib/format-currency";
 import { ParticipantAvatar } from "@/components/shared/ParticipantAvatar";
 import { ParticipantPaymentSheet } from "./ParticipantPaymentSheet";
@@ -25,6 +19,10 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { SectionLabel } from "@/components/shared/SectionLabel";
+import { NumberTicker } from "@/components/motion/NumberTicker";
+import { Stagger, StaggerItem } from "@/components/motion/Stagger";
+import { EASE_OUT, spring } from "@/lib/motion";
 import type { Balance, Participant, Settlement } from "@/types";
 
 interface BalancesViewProps {
@@ -67,179 +65,185 @@ export function BalancesView({
 
   const participantBy = (id: string) => participants.find((p) => p.id === id);
 
+  const net = myBalance?.net ?? 0;
+  const formatMoney = (n: number) => formatCurrency(n, currency);
+
   return (
-    <div className="space-y-5">
-      {myId ? (
-        meSettled && iOweThem.length === 0 && theyOweMe.length === 0 ? (
-          <div className="glass-subtle border border-foreground/8 rounded-2xl p-4">
-            <IAmSettledEmpty />
-          </div>
-        ) : (
-          <>
-            {/* Ils me doivent */}
-            {theyOweMe.length > 0 && (
-              <SettlementSection
-                tone="positive"
-                icon={<ArrowDownLeft size={14} />}
-                label="Ils me doivent"
-                count={theyOweMe.length}
-                total={theyOweMe.reduce((sum, s) => sum + s.amount, 0)}
-                currency={currency}
-              >
-                {theyOweMe.map((s) => {
-                  const from = participantBy(s.fromId);
-                  if (!from) return null;
-                  return (
-                    <BalanceRow
-                      key={`${s.fromId}-${s.toId}`}
-                      participant={from}
-                      amount={s.amount}
-                      currency={currency}
-                      tone="positive"
-                      onClick={() => setOpenParticipant(from)}
-                    />
-                  );
-                })}
-              </SettlementSection>
+    <Stagger step={0.05} className="space-y-6">
+      {myId && myBalance && (
+        <StaggerItem>
+          <div
+            className={cn(
+              "rounded-[1.75rem] p-5",
+              meSettled ? "bg-emerald-500/12" : net > 0 ? "bg-emerald-500/12" : "bg-rose-500/12"
             )}
-
-            {/* Je leur dois */}
-            {iOweThem.length > 0 && (
-              <SettlementSection
-                tone="negative"
-                icon={<ArrowUpRight size={14} />}
-                label="Je leur dois"
-                count={iOweThem.length}
-                total={iOweThem.reduce((sum, s) => sum + s.amount, 0)}
-                currency={currency}
-              >
-                {iOweThem.map((s) => {
-                  const to = participantBy(s.toId);
-                  if (!to) return null;
-                  return (
-                    <BalanceRow
-                      key={`${s.fromId}-${s.toId}`}
-                      participant={to}
-                      amount={s.amount}
-                      currency={currency}
-                      tone="negative"
-                      onClick={() => setDebtTarget(s)}
-                    />
-                  );
-                })}
-              </SettlementSection>
-            )}
-          </>
-        )
-      ) : null}
-
-      {/* Autres règlements — dépliable */}
-      {otherSettlements.length > 0 && (
-        <div className="rounded-2xl border border-foreground/8 bg-foreground/3 overflow-hidden">
-          <button
-            type="button"
-            onClick={() => setOthersOpen((v) => !v)}
-            className="w-full flex items-center justify-between gap-3 px-4 py-3.5 hover:bg-foreground/4 transition-colors"
           >
-            <span className="flex items-center gap-2 text-sm font-semibold text-slate-300">
-              {myId ? "Entre les autres" : "Remboursements"}
-              <span className="text-xs text-slate-500 font-normal">
-                ({otherSettlements.length})
-              </span>
-            </span>
-            <ChevronDown
-              size={16}
-              className={cn(
-                "text-slate-500 transition-transform",
-                othersOpen && "rotate-180"
-              )}
-            />
-          </button>
-          <AnimatePresence initial={false}>
-            {othersOpen && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="overflow-hidden"
-              >
-                <div className="px-3 pb-3 pt-1 space-y-1.5">
-                  {otherSettlements.map((s) => {
-                    const from = participantBy(s.fromId);
-                    const to = participantBy(s.toId);
-                    if (!from || !to) return null;
-                    return (
-                      <ThirdPartyRow
-                        key={`${s.fromId}-${s.toId}`}
-                        from={from}
-                        to={to}
-                        amount={s.amount}
-                        currency={currency}
-                        onSettle={() => onSettle(s)}
-                      />
-                    );
-                  })}
-                </div>
-              </motion.div>
+            {meSettled ? (
+              <IAmSettledEmpty />
+            ) : (
+              <>
+                <p className={cn("text-sm font-semibold", net > 0 ? "text-emerald-300" : "text-rose-300")}>
+                  {net > 0 ? "En tout, on te doit" : "En tout, tu dois"}
+                </p>
+                <NumberTicker
+                  value={Math.abs(net)}
+                  format={formatMoney}
+                  className={cn(
+                    "tabular mt-1 block font-display text-[2.75rem] leading-none font-extrabold tracking-[-0.035em]",
+                    net > 0 ? "text-emerald-200" : "text-rose-200"
+                  )}
+                />
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {net > 0
+                    ? `${theyOweMe.length} personne${theyOweMe.length > 1 ? "s" : ""} à relancer`
+                    : `${iOweThem.length} virement${iOweThem.length > 1 ? "s" : ""} à faire`}
+                </p>
+              </>
             )}
-          </AnimatePresence>
-        </div>
+          </div>
+        </StaggerItem>
       )}
 
-      {/* Tous les soldes — résumé compact en bas */}
+      {iOweThem.length > 0 && (
+        <StaggerItem>
+          <SectionLabel>Tu dois</SectionLabel>
+          <ul className="overflow-hidden rounded-[1.5rem] bg-card shadow-card">
+            {iOweThem.map((s, i) => {
+              const to = participantBy(s.toId);
+              if (!to) return null;
+              return (
+                <BalanceRow
+                  key={`${s.fromId}-${s.toId}`}
+                  participant={to}
+                  amount={formatMoney(s.amount)}
+                  tone="negative"
+                  first={i === 0}
+                  onClick={() => setDebtTarget(s)}
+                  action="Régler"
+                />
+              );
+            })}
+          </ul>
+        </StaggerItem>
+      )}
+
+      {theyOweMe.length > 0 && (
+        <StaggerItem>
+          <SectionLabel>On te doit</SectionLabel>
+          <ul className="overflow-hidden rounded-[1.5rem] bg-card shadow-card">
+            {theyOweMe.map((s, i) => {
+              const from = participantBy(s.fromId);
+              if (!from) return null;
+              return (
+                <BalanceRow
+                  key={`${s.fromId}-${s.toId}`}
+                  participant={from}
+                  amount={formatMoney(s.amount)}
+                  tone="positive"
+                  first={i === 0}
+                  onClick={() => setOpenParticipant(from)}
+                />
+              );
+            })}
+          </ul>
+        </StaggerItem>
+      )}
+
+      {otherSettlements.length > 0 && (
+        <StaggerItem>
+          <div className="overflow-hidden rounded-[1.5rem] bg-card shadow-card">
+            <button
+              type="button"
+              onClick={() => setOthersOpen((v) => !v)}
+              aria-expanded={othersOpen}
+              className="flex min-h-14 w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-foreground/[0.03]"
+            >
+              <span className="flex items-center gap-2 font-semibold">
+                {myId ? "Entre les autres" : "Remboursements"}
+                <span className="tabular rounded-full bg-foreground/[0.07] px-2 py-0.5 text-xs font-semibold text-muted-foreground">
+                  {otherSettlements.length}
+                </span>
+              </span>
+              <motion.span animate={{ rotate: othersOpen ? 180 : 0 }} transition={spring}>
+                <ChevronDown size={18} className="text-muted-foreground" />
+              </motion.span>
+            </button>
+            <AnimatePresence initial={false}>
+              {othersOpen && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.35, ease: EASE_OUT }}
+                  className="overflow-hidden"
+                >
+                  <ul className="border-t border-border">
+                    {otherSettlements.map((s, i) => {
+                      const from = participantBy(s.fromId);
+                      const to = participantBy(s.toId);
+                      if (!from || !to) return null;
+                      return (
+                        <ThirdPartyRow
+                          key={`${s.fromId}-${s.toId}`}
+                          from={from}
+                          to={to}
+                          amount={s.amount}
+                          currency={currency}
+                          first={i === 0}
+                          onSettle={() => onSettle(s)}
+                        />
+                      );
+                    })}
+                  </ul>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </StaggerItem>
+      )}
+
       {balances.length > 0 && (
-        <div className="space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 px-1">
-            Tous les soldes
-          </p>
-          <div className="grid grid-cols-2 gap-2">
+        <StaggerItem>
+          <SectionLabel>Tous les soldes</SectionLabel>
+          <div className="grid grid-cols-2 gap-2.5">
             {balances.map((balance) => {
               const p = participantBy(balance.participantId);
               if (!p) return null;
               const isCreditor = balance.net > 0.005;
               const isDebtor = balance.net < -0.005;
-              const sign = isCreditor ? "+" : isDebtor ? "-" : "";
-              const tone = isCreditor
-                ? "text-emerald-400"
-                : isDebtor
-                  ? "text-red-400"
-                  : "text-slate-500";
               return (
                 <button
                   key={balance.participantId}
                   type="button"
                   onClick={() => setOpenParticipant(p)}
-                  className="flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl glass-subtle border border-foreground/8 hover:bg-foreground/5 active:scale-[0.99] transition-all text-left"
+                  className="pressable flex items-center gap-2.5 rounded-2xl bg-card px-3 py-3 text-left shadow-card"
                 >
-                  <span className="flex items-center gap-2 min-w-0">
+                  <ParticipantAvatar participant={p} size="sm" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-medium">{p.name}</span>
                     <span
-                      className="w-2 h-2 rounded-full shrink-0"
-                      style={{ backgroundColor: p.color }}
-                    />
-                    <span className="text-sm font-medium text-slate-200 truncate">
-                      {p.name}
+                      className={cn(
+                        "tabular block text-sm font-semibold",
+                        isCreditor ? "text-emerald-400" : isDebtor ? "text-rose-400" : "text-muted-foreground"
+                      )}
+                    >
+                      {isCreditor ? "+" : isDebtor ? "−" : ""}
+                      {formatMoney(Math.abs(balance.net))}
                     </span>
-                  </span>
-                  <span className={cn("text-sm font-semibold tabular-nums shrink-0", tone)}>
-                    {sign}
-                    {formatCurrency(Math.abs(balance.net), currency)}
                   </span>
                 </button>
               );
             })}
           </div>
-        </div>
+        </StaggerItem>
       )}
 
-      {/* Sheet de paiement (creditor view — pour donner mes infos / consulter celles d'un autre) */}
       <ParticipantPaymentSheet
         open={!!openParticipant}
         onOpenChange={(open) => { if (!open) setOpenParticipant(null); }}
         participant={openParticipant}
       />
 
-      {/* Modal "régler ma dette" — debtor → creditor */}
       <SettleDebtDialog
         settlement={debtTarget}
         from={debtTarget ? participantBy(debtTarget.fromId) ?? null : null}
@@ -248,89 +252,53 @@ export function BalancesView({
         onClose={() => setDebtTarget(null)}
         onSettle={onSettle}
       />
-    </div>
+    </Stagger>
   );
 }
 
-// ─── SettlementSection ────────────────────────────────────────────────────────
-
-function SettlementSection({
-  tone,
-  icon,
-  label,
-  count,
-  total,
-  currency,
-  children,
-}: {
-  tone: "positive" | "negative";
-  icon: React.ReactNode;
-  label: string;
-  count: number;
-  total: number;
-  currency: string;
-  children: React.ReactNode;
-}) {
-  const accent =
-    tone === "positive"
-      ? { text: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/20" }
-      : { text: "text-red-400", bg: "bg-red-500/10", border: "border-red-500/20" };
-
-  return (
-    <div className={cn("rounded-2xl border p-3 space-y-2", accent.border, accent.bg)}>
-      <div className="flex items-center justify-between gap-3 px-1">
-        <span className={cn("flex items-center gap-1.5 text-sm font-semibold", accent.text)}>
-          {icon}
-          {label}
-          <span className="text-xs opacity-70 font-normal">({count})</span>
-        </span>
-        <span className={cn("text-sm font-bold tabular-nums", accent.text)}>
-          {tone === "positive" ? "+" : "-"}
-          {formatCurrency(total, currency)}
-        </span>
-      </div>
-      <div className="space-y-1.5">{children}</div>
-    </div>
-  );
-}
-
-// ─── BalanceRow (used in "Ils me doivent" / "Je leur dois") ───────────────────
+// ─── BalanceRow ───────────────────────────────────────────────────────────────
 
 function BalanceRow({
   participant,
   amount,
-  currency,
   tone,
+  first,
   onClick,
+  action,
 }: {
   participant: Participant;
-  amount: number;
-  currency: string;
+  amount: string;
   tone: "positive" | "negative";
+  first?: boolean;
   onClick: () => void;
+  action?: string;
 }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-foreground/4 hover:bg-foreground/8 border border-foreground/8 active:scale-[0.99] transition-all text-left"
-    >
-      <ParticipantAvatar participant={participant} size="sm" />
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-slate-100 truncate">
-          {participant.name}
-        </p>
-      </div>
-      <span
-        className={cn(
-          "text-base font-bold tabular-nums shrink-0",
-          tone === "positive" ? "text-emerald-400" : "text-red-400"
-        )}
+    <li>
+      <button
+        type="button"
+        onClick={onClick}
+        className="flex w-full items-center gap-3.5 px-4 text-left transition-colors active:bg-secondary"
       >
-        {tone === "positive" ? "+" : "-"}
-        {formatCurrency(amount, currency)}
-      </span>
-    </button>
+        <ParticipantAvatar participant={participant} size="md" />
+        <span className={cn("flex min-w-0 flex-1 items-center gap-3 py-3.5", !first && "border-t border-border")}>
+          <span className="min-w-0 flex-1 truncate font-semibold">{participant.name}</span>
+          <span
+            className={cn(
+              "tabular shrink-0 font-display text-[1.0625rem] font-bold",
+              tone === "positive" ? "text-emerald-400" : "text-rose-400"
+            )}
+          >
+            {amount}
+          </span>
+          {action ? (
+            <span className="shrink-0 rounded-full bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground">{action}</span>
+          ) : (
+            <ChevronRight size={18} className="shrink-0 text-muted-foreground" />
+          )}
+        </span>
+      </button>
+    </li>
   );
 }
 
@@ -341,12 +309,14 @@ function ThirdPartyRow({
   to,
   amount,
   currency,
+  first,
   onSettle,
 }: {
   from: Participant;
   to: Participant;
   amount: number;
   currency: string;
+  first?: boolean;
   onSettle: () => Promise<void>;
 }) {
   const [confirming, setConfirming] = useState(false);
@@ -364,56 +334,40 @@ function ThirdPartyRow({
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setConfirming(true)}
-        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl bg-foreground/4 hover:bg-foreground/8 border border-foreground/8 active:scale-[0.99] transition-all text-left"
-      >
-        <span className="flex items-center gap-1.5 min-w-0">
-          <span
-            className="w-2 h-2 rounded-full shrink-0"
-            style={{ backgroundColor: from.color }}
-          />
-          <span className="text-sm text-slate-200 truncate">{from.name}</span>
-        </span>
-        <ArrowUpRight size={12} className="text-slate-500 shrink-0" />
-        <span className="flex items-center gap-1.5 min-w-0 flex-1">
-          <span
-            className="w-2 h-2 rounded-full shrink-0"
-            style={{ backgroundColor: to.color }}
-          />
-          <span className="text-sm text-slate-200 truncate">{to.name}</span>
-        </span>
-        <span className="text-sm font-semibold text-slate-300 tabular-nums shrink-0">
-          {formatCurrency(amount, currency)}
-        </span>
-      </button>
+      <li>
+        <button
+          type="button"
+          onClick={() => setConfirming(true)}
+          className="flex w-full items-center px-4 text-left transition-colors active:bg-secondary"
+        >
+          <span className={cn("flex min-w-0 flex-1 items-center gap-2.5 py-3.5", !first && "border-t border-border")}>
+            <ParticipantAvatar participant={from} size="xs" />
+            <span className="truncate text-[0.95rem] font-medium">{from.name}</span>
+            <ArrowRight size={14} className="shrink-0 text-muted-foreground" />
+            <ParticipantAvatar participant={to} size="xs" />
+            <span className="min-w-0 flex-1 truncate text-[0.95rem] font-medium">{to.name}</span>
+            <span className="tabular shrink-0 font-semibold">{formatCurrency(amount, currency)}</span>
+          </span>
+        </button>
+      </li>
 
       <Dialog open={confirming} onOpenChange={(o) => { if (!o && !loading) setConfirming(false); }}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>Marquer comme réglé ?</DialogTitle>
           </DialogHeader>
-          <p className="text-sm text-slate-400 py-2">
+          <p className="text-[0.95rem] text-muted-foreground">
             {from.name} a remboursé {to.name} de{" "}
-            <span className="text-slate-200 font-semibold tabular-nums">
+            <span className="tabular font-semibold text-foreground">
               {formatCurrency(amount, currency)}
             </span>
             .
           </p>
           <DialogFooter className="gap-2">
-            <Button
-              variant="ghost"
-              onClick={() => setConfirming(false)}
-              disabled={loading}
-            >
+            <Button variant="secondary" onClick={() => setConfirming(false)} disabled={loading}>
               Annuler
             </Button>
-            <Button
-              onClick={handleConfirm}
-              disabled={loading}
-              className="gradient-primary text-white border-0"
-            >
+            <Button onClick={handleConfirm} disabled={loading}>
               {loading ? <Loader2 size={15} className="animate-spin" /> : "Régler"}
             </Button>
           </DialogFooter>
@@ -481,35 +435,28 @@ function SettleDebtDialog({
         </DialogHeader>
 
         {settlement && from && to && (
-          <div className="py-2 space-y-4">
-            <div className="glass-subtle rounded-xl px-4 py-4 space-y-3">
-              <div className="flex items-center gap-2">
-                <span
-                  className="w-3 h-3 rounded-full shrink-0"
-                  style={{ backgroundColor: from.color }}
-                />
-                <span className="font-semibold text-slate-100">{from.name}</span>
-                <span className="text-slate-500 text-sm">rembourse</span>
-                <span
-                  className="w-3 h-3 rounded-full shrink-0"
-                  style={{ backgroundColor: to.color }}
-                />
-                <span className="font-semibold text-slate-100">{to.name}</span>
+          <div className="space-y-4">
+            <div className="rounded-[1.25rem] bg-secondary px-4 py-5 text-center">
+              <div className="flex items-center justify-center gap-2">
+                <ParticipantAvatar participant={from} size="sm" />
+                <ArrowRight size={16} className="text-muted-foreground" />
+                <ParticipantAvatar participant={to} size="sm" />
               </div>
-              <p className="text-2xl font-bold text-section-soft tabular-nums">
+              <p className="tabular mt-3 font-display text-[2.25rem] leading-none font-extrabold tracking-tight">
                 {formatCurrency(settlement.amount, currency)}
+              </p>
+              <p className="mt-1.5 text-sm text-muted-foreground">
+                {from.name} rembourse {to.name}
               </p>
             </div>
 
             {loadingInfo ? (
               <div className="flex items-center justify-center py-2">
-                <Loader2 size={14} className="animate-spin text-slate-500" />
+                <Loader2 size={16} className="animate-spin text-muted-foreground" />
               </div>
             ) : info && (info.iban || info.phone) ? (
               <div className="space-y-2">
-                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Infos de {to.name}
-                </p>
+                <p className="px-1 text-sm font-semibold text-muted-foreground">Infos de {to.name}</p>
                 {info.iban && (
                   <CopyRow label="IBAN" display={formatIban(info.iban)} raw={info.iban} mono />
                 )}
@@ -525,7 +472,7 @@ function SettleDebtDialog({
                 <button
                   type="button"
                   onClick={handleShare}
-                  className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-sm font-semibold border border-section bg-section-soft text-section-soft hover:bg-section-medium transition-colors active:scale-[0.99]"
+                  className="pressable flex h-11 w-full items-center justify-center gap-2 rounded-full bg-primary/10 text-sm font-semibold text-primary transition-colors hover:bg-primary/15"
                 >
                   {shared === "shared" ? <><Check size={14} /> Partagé</>
                     : shared === "copied" ? <><Check size={14} /> Copié</>
@@ -534,7 +481,7 @@ function SettleDebtDialog({
                 </button>
               </div>
             ) : (
-              <p className="text-sm text-slate-500 italic">
+              <p className="text-sm text-muted-foreground">
                 {to.name} n&apos;a pas renseigné ses infos de paiement.
               </p>
             )}
@@ -542,14 +489,10 @@ function SettleDebtDialog({
         )}
 
         <DialogFooter className="gap-2">
-          <Button variant="ghost" onClick={onClose} disabled={loading}>
+          <Button variant="secondary" onClick={onClose} disabled={loading}>
             Annuler
           </Button>
-          <Button
-            onClick={handleConfirm}
-            disabled={loading}
-            className="gradient-primary text-white border-0"
-          >
+          <Button onClick={handleConfirm} disabled={loading}>
             {loading ? <Loader2 size={15} className="animate-spin" /> : "C'est réglé"}
           </Button>
         </DialogFooter>
@@ -580,19 +523,17 @@ function CopyRow({
     }
   };
   return (
-    <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-foreground/8 bg-foreground/4">
-      <div className="flex-1 min-w-0">
-        <p className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold">
-          {label}
-        </p>
-        <p className={cn("text-sm text-slate-100 truncate", mono && "font-mono tracking-wide")}>
+    <div className="flex items-center gap-3 rounded-2xl bg-secondary px-4 py-2.5">
+      <div className="min-w-0 flex-1">
+        <p className="text-xs font-medium text-muted-foreground">{label}</p>
+        <p className={cn("truncate text-[0.95rem] text-foreground", mono && "font-mono tracking-wide")}>
           {display}
         </p>
       </div>
       <button
         type="button"
         onClick={handleCopy}
-        className="text-xs text-section-soft hover:text-section font-semibold px-2 py-1 rounded-md hover:bg-foreground/8 transition-colors"
+        className="flex h-9 min-w-16 items-center justify-center rounded-full px-3 text-sm font-semibold text-primary transition-colors hover:bg-primary/10"
       >
         {copied ? <Check size={14} className="text-emerald-400" /> : "Copier"}
       </button>

@@ -112,17 +112,17 @@ export function GroupWizard() {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       {/* Tab navigation */}
-      <div className="flex gap-1 bg-foreground/4 p-1 rounded-xl border border-foreground/8">
+      <div role="tablist" className="flex h-11 gap-1 rounded-full bg-foreground/[0.06] p-1">
         {(["Infos", "Participants"] as NavTab[]).map((tab) => (
           <button
             key={tab}
             type="button"
             onClick={() => setActiveTab(tab)}
             className={cn(
-              "flex-1 py-2 rounded-lg text-sm font-medium transition-all",
+              "flex-1 rounded-full text-sm font-semibold transition-all",
               activeTab === tab
-                ? "bg-section-soft text-section-soft ring-1 ring-section"
-                : "text-slate-400 hover:text-slate-200"
+                ? "bg-card text-foreground shadow-card dark:bg-foreground/[0.12]"
+                : "text-muted-foreground hover:text-foreground"
             )}
           >
             {tab}
@@ -138,12 +138,12 @@ export function GroupWizard() {
         <div className="space-y-4">
           {/* Name + emoji */}
           <div className="space-y-1.5">
-            <Label className="text-slate-300 text-sm font-medium">Nom du budget</Label>
-            <div className="flex items-stretch gap-2 bg-foreground/8 border border-foreground/10 rounded-lg focus-within:ring-3 focus-within:ring-section transition-all overflow-hidden">
+            <Label className="px-1 text-sm font-semibold text-foreground">Nom du budget</Label>
+            <div className="flex items-stretch gap-2 h-12 rounded-2xl border border-input bg-card transition-[border-color,box-shadow] focus-within:border-primary/60 focus-within:ring-4 focus-within:ring-primary/12 overflow-hidden">
               <button
                 type="button"
                 onClick={() => setEmojiPickerOpen((v) => !v)}
-                className="w-12 h-11 flex items-center justify-center text-2xl hover:bg-foreground/8 active:bg-foreground/12 transition-colors shrink-0"
+                className="w-12 h-full flex items-center justify-center text-2xl hover:bg-foreground/8 active:bg-foreground/12 transition-colors shrink-0"
               >
                 {selectedEmoji}
               </button>
@@ -177,7 +177,7 @@ export function GroupWizard() {
                         className={cn(
                           "w-10 h-10 rounded-lg text-xl transition-all",
                           selectedEmoji === e
-                            ? "bg-section-soft ring-1 ring-section"
+                            ? "bg-primary/12 ring-2 ring-primary"
                             : "hover:bg-foreground/8 active:bg-foreground/12"
                         )}
                       >
@@ -192,7 +192,7 @@ export function GroupWizard() {
 
           {/* Currency */}
           <div className="space-y-2">
-            <Label className="text-slate-300 text-sm font-medium">Devise</Label>
+            <Label className="px-1 text-sm font-semibold text-foreground">Devise</Label>
             <div className="flex gap-2 flex-wrap">
               {CURRENCIES.map((c) => (
                 <button
@@ -202,7 +202,7 @@ export function GroupWizard() {
                   className={cn(
                     "px-3 py-1.5 rounded-xl text-sm font-medium transition-all active:scale-95",
                     selectedCurrency === c
-                      ? "bg-section-soft text-section-soft ring-1 ring-section"
+                      ? "bg-primary/10 text-primary ring-1 ring-primary/40"
                       : "bg-foreground/5 text-slate-400 hover:bg-foreground/10"
                   )}
                 >
@@ -214,7 +214,7 @@ export function GroupWizard() {
 
           {/* Date mode */}
           <div className="space-y-2">
-            <Label className="text-slate-300 text-sm font-medium">Période</Label>
+            <Label className="px-1 text-sm font-semibold text-foreground">Période</Label>
             <div className="flex gap-2">
               {(
                 [
@@ -234,7 +234,7 @@ export function GroupWizard() {
                   className={cn(
                     "flex-1 flex flex-col items-center gap-1 py-2.5 px-2 rounded-xl text-xs font-medium transition-all active:scale-95",
                     dateMode === mode
-                      ? "bg-section-soft text-section-soft ring-1 ring-section"
+                      ? "bg-primary/10 text-primary ring-1 ring-primary/40"
                       : "bg-foreground/5 text-slate-400 hover:bg-foreground/10"
                   )}
                 >
@@ -278,7 +278,7 @@ export function GroupWizard() {
                         type="date"
                         value={startDate ?? ""}
                         onChange={(e) => setValue("startDate", e.target.value || undefined)}
-                        className="w-full bg-foreground/8 border border-foreground/10 rounded-lg px-3 py-2 text-sm text-slate-100 outline-none focus:ring-2 focus:ring-section"
+                        className="w-full border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-section border-input bg-card rounded-2xl h-12 placeholder:text-muted-foreground focus:border-primary/60 focus:ring-4 focus:ring-primary/12 tabular"
                       />
                       {errors.startDate && (
                         <p className="text-xs text-red-400">{errors.startDate.message}</p>
@@ -294,7 +294,7 @@ export function GroupWizard() {
           <button
             type="button"
             onClick={() => setActiveTab("Participants")}
-            className="w-full py-2.5 text-sm text-slate-400 hover:text-slate-200 border border-foreground/8 rounded-xl hover:bg-foreground/4 transition-all"
+            className="pressable flex h-12 w-full items-center justify-center rounded-full bg-foreground/[0.06] text-sm font-semibold text-foreground transition-colors hover:bg-foreground/10"
           >
             Ajouter des participants →
           </button>
@@ -308,19 +308,22 @@ export function GroupWizard() {
             {participants.map((p, i) => (
               <div
                 key={i}
-                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-foreground/4 border border-foreground/8"
+                className="flex items-center gap-3 rounded-2xl bg-secondary px-3 py-2"
               >
                 <span
-                  className="w-3 h-3 rounded-full shrink-0"
+                  className="flex size-9 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
                   style={{ backgroundColor: p.color }}
-                />
-                <span className="flex-1 text-sm text-slate-200 truncate">{p.name}</span>
+                >
+                  {p.name.charAt(0).toUpperCase()}
+                </span>
+                <span className="flex-1 truncate text-[0.95rem] font-medium">{p.name}</span>
                 <button
                   type="button"
                   onClick={() => removeParticipant(i)}
-                  className="p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10"
+                  aria-label={`Retirer ${p.name}`}
+                  className="flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-red-500/10 hover:text-red-400"
                 >
-                  <X size={14} />
+                  <X size={16} />
                 </button>
               </div>
             ))}
@@ -337,7 +340,7 @@ export function GroupWizard() {
                 }
               }}
               placeholder="Embarquer quelqu'un"
-              className="flex-1 bg-foreground/8 border border-foreground/10 rounded-lg px-3 py-2 text-base text-slate-100 placeholder:text-slate-500 outline-none focus:ring-3 focus:ring-section"
+              className="flex-1 border px-3 py-2 text-base outline-none focus:ring-section border-input bg-card rounded-2xl h-12 placeholder:text-muted-foreground focus:border-primary/60 focus:ring-4 focus:ring-primary/12 tabular"
             />
             <Button
               type="button"
@@ -355,7 +358,7 @@ export function GroupWizard() {
       )}
 
       {submitError && (
-        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+        <div className="rounded-2xl bg-red-500/10 px-4 py-3 text-sm text-red-400">
           {submitError}
         </div>
       )}
@@ -363,7 +366,7 @@ export function GroupWizard() {
       <Button
         type="submit"
         disabled={isSubmitting}
-        className="w-full gradient-primary text-white border-0 h-12"
+        className="w-full bg-primary text-primary-foreground border-0 h-12"
       >
         {isSubmitting ? (
           <Loader2 size={16} className="animate-spin" />

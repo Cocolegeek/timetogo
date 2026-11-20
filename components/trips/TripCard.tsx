@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
-import { MoreVertical, Pencil, Trash2, Calendar, Users, Wallet, Share2 } from "lucide-react";
+import { MoreHorizontal, Pencil, Trash2, Share } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,171 +12,171 @@ import {
 import { formatDateRange, tripDuration, daysUntil } from "@/lib/format-date";
 import { cn } from "@/lib/utils";
 import { TripCover } from "@/components/trips/TripCover";
-import { isVoyage, TRIP_TYPE_LABELS } from "@/lib/trip-features";
+import { ParticipantStack } from "@/components/shared/ParticipantStack";
+import { isVoyage } from "@/lib/trip-features";
 import type { Trip } from "@/types";
+
+export type TripStatus =
+  | { kind: "ongoing"; label: string }
+  | { kind: "upcoming"; label: string }
+  | { kind: "past"; label: string }
+  | { kind: "permanent"; label: string };
+
+export function tripStatus(trip: Trip): TripStatus {
+  const start = trip.startDate;
+  const end = isVoyage(trip) ? trip.endDate : trip.endDate ?? trip.startDate;
+  if (!start || !end) return { kind: "permanent", label: "Budget partagé" };
+  const startDays = daysUntil(start);
+  const endDays = daysUntil(end);
+  if (endDays < 0) return { kind: "past", label: "Terminé" };
+  if (startDays > 0) {
+    return { kind: "upcoming", label: startDays === 1 ? "Demain" : `Dans ${startDays} jours` };
+  }
+  const total = tripDuration(start, end) + 1;
+  const day = Math.min(total, 1 - startDays);
+  return { kind: "ongoing", label: `En cours · jour ${day}/${total}` };
+}
+
+function subtitle(trip: Trip): string {
+  if (isVoyage(trip)) {
+    const dates = formatDateRange(trip.startDate, trip.endDate);
+    return trip.destination ? `${dates} · ${trip.destination.split(",")[0]}` : dates;
+  }
+  const n = trip.participants.length;
+  return `Groupe · ${n} personne${n > 1 ? "s" : ""}`;
+}
 
 interface TripCardProps {
   trip: Trip;
   onEdit: (trip: Trip) => void;
   onDelete: (id: string) => void;
   onShare?: (trip: Trip) => void;
-  index: number;
+  variant?: "featured" | "row";
 }
 
-export function TripCard({ trip, onEdit, onDelete, onShare, index }: TripCardProps) {
-
-  // Status badge — voyages always have dates; groups only when a date was set.
-  let badge: { label: string; className: string } | null = null;
-  const badgeStart = isVoyage(trip) ? trip.startDate : trip.startDate;
-  const badgeEnd = isVoyage(trip) ? trip.endDate : (trip.endDate ?? trip.startDate);
-  if (badgeStart) {
-    const endDays = daysUntil(badgeEnd!);
-    const startDays = daysUntil(badgeStart);
-    if (endDays < 0) {
-      badge = { label: "Passé", className: "bg-secondary text-slate-400" };
-    } else if (startDays > 0) {
-      badge = { label: "Planifié", className: "bg-secondary text-slate-200" };
-    } else {
-      badge = { label: "En cours", className: "bg-emerald-500/15 text-emerald-300" };
-    }
-  }
-
-  const typeLabel = TRIP_TYPE_LABELS[trip.type];
-  const typeBadgeClass = trip.type === "group"
-    ? "bg-secondary text-slate-200"
-    : "bg-secondary text-slate-200";
-
-  const href = trip.type === "group" ? `/trips/${trip.id}/budget` : `/trips/${trip.id}`;
-
+function TripActions({
+  trip,
+  onEdit,
+  onDelete,
+  onShare,
+  floating,
+}: Omit<TripCardProps, "variant"> & { floating?: boolean }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.05 }}
-      className="relative glass rounded-[1.375rem] overflow-hidden hover:border-foreground/20 transition-all duration-200 active:scale-[0.99]"
-    >
-      <Link href={href} className="block p-4">
-        <div className="flex items-center gap-3 pr-12">
-          {trip.iconUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={trip.iconUrl}
-              alt=""
-              className="w-16 h-16 rounded-2xl object-cover shrink-0"
-              draggable={false}
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        className={cn(
+          "flex size-10 items-center justify-center rounded-full outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring",
+          floating
+            ? "bg-white/90 text-[#1C1840] shadow-card backdrop-blur hover:bg-white"
+            : "text-muted-foreground hover:bg-foreground/[0.06] hover:text-foreground"
+        )}
+        aria-label={`Actions pour ${trip.name}`}
+      >
+        <MoreHorizontal size={20} />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="min-w-48">
+        <DropdownMenuItem onClick={() => onEdit(trip)}>
+          <Pencil />
+          Modifier
+        </DropdownMenuItem>
+        {onShare && (
+          <DropdownMenuItem onClick={() => onShare(trip)}>
+            <Share />
+            Partager
+          </DropdownMenuItem>
+        )}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => onDelete(trip.id)} variant="destructive">
+          <Trash2 />
+          Supprimer
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+function Cover({ trip, className }: { trip: Trip; className?: string }) {
+  if (trip.iconUrl) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img src={trip.iconUrl} alt="" draggable={false} className={cn("object-cover", className)} />
+    );
+  }
+  return <TripCover seed={trip.id} className={className} />;
+}
+
+export function TripCard({ trip, onEdit, onDelete, onShare, variant = "row" }: TripCardProps) {
+  const href = trip.type === "group" ? `/trips/${trip.id}/budget` : `/trips/${trip.id}`;
+  const status = tripStatus(trip);
+
+  if (variant === "featured") {
+    return (
+      <article className="group relative overflow-hidden rounded-[1.75rem] bg-card shadow-raised">
+        <Link href={href} className="block outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          <div className="relative h-52 overflow-hidden">
+            <Cover
+              trip={trip}
+              className="h-full w-full transition-transform duration-700 ease-(--ease-out) group-hover:scale-[1.04]"
             />
-          ) : (
-            <TripCover seed={trip.id} className="w-16 h-16 rounded-2xl shrink-0" />
-          )}
-
-          <div className="flex-1 min-w-0 space-y-1">
-            <h3 className="font-display font-bold text-slate-100 text-xl truncate leading-tight">
-              {trip.name}
-            </h3>
-            {isVoyage(trip) && trip.destination && (
-              <p className="text-base text-slate-400 truncate">{trip.destination}</p>
-            )}
-          </div>
-        </div>
-
-        {/* Badges row — type + status (status only for voyages) */}
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          <span
-            className={cn(
-              "inline-flex items-center text-[13px] px-3 py-1.5 rounded-full font-semibold",
-              typeBadgeClass
-            )}
-          >
-            {typeLabel}
-          </span>
-          {badge && (
             <span
               className={cn(
-                "inline-flex items-center text-[13px] px-3 py-1.5 rounded-full font-semibold",
-                badge.className
+                "absolute top-4 left-4 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[0.8125rem] font-semibold shadow-card backdrop-blur",
+                "bg-white/90 text-[#1C1840]"
               )}
             >
-              {badge.label}
+              {status.kind === "ongoing" && (
+                <span className="relative flex size-2">
+                  <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-500 opacity-60" />
+                  <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
+                </span>
+              )}
+              {status.label}
             </span>
-          )}
+          </div>
+          <div className="px-5 pt-4 pb-5">
+            <h3 className="truncate font-display text-[1.5rem] leading-tight font-bold tracking-tight">{trip.name}</h3>
+            <p className="mt-1 truncate text-[0.95rem] text-muted-foreground">{subtitle(trip)}</p>
+            <div className="mt-4 flex items-center justify-between">
+              <ParticipantStack participants={trip.participants} size="md" max={4} />
+            </div>
+          </div>
+        </Link>
+        <div className="absolute top-3 right-3">
+          <TripActions trip={trip} onEdit={onEdit} onDelete={onDelete} onShare={onShare} floating />
         </div>
+      </article>
+    );
+  }
 
-        {/* Footer */}
-        <div className="flex items-center gap-3 mt-3 text-base text-slate-500">
-          {isVoyage(trip) ? (
-            <>
-              <span className="flex items-center gap-1.5">
-                <Calendar size={13} />
-                {formatDateRange(trip.startDate, trip.endDate)}
-              </span>
-              <span className="text-slate-700">·</span>
-              <span>{tripDuration(trip.startDate, trip.endDate)} j</span>
-            </>
-          ) : trip.startDate ? (
-            <span className="flex items-center gap-1.5">
-              <Calendar size={13} />
-              {trip.endDate && trip.endDate !== trip.startDate
-                ? formatDateRange(trip.startDate, trip.endDate)
-                : formatDateRange(trip.startDate, trip.startDate)}
-            </span>
-          ) : (
-            <span className="flex items-center gap-1.5">
-              <Wallet size={13} />
-              Budget permanent
-            </span>
+  return (
+    <article className="relative flex items-center">
+      <Link
+        href={href}
+        className="pressable flex min-w-0 flex-1 items-center gap-4 rounded-[1.25rem] py-2.5 pr-12 pl-2.5 outline-none hover:bg-foreground/[0.03] focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <Cover trip={trip} className="size-16 shrink-0 overflow-hidden rounded-2xl" />
+        <div className="min-w-0 flex-1">
+          <h3 className="truncate font-display text-[1.1rem] leading-tight font-bold tracking-tight">{trip.name}</h3>
+          <p className="mt-0.5 truncate text-sm text-muted-foreground">{subtitle(trip)}</p>
+          {status.kind !== "permanent" && (
+            <p
+              className={cn(
+                "mt-1 text-[0.8125rem] font-semibold",
+                status.kind === "ongoing"
+                  ? "text-emerald-400"
+                  : status.kind === "upcoming"
+                    ? "text-primary"
+                    : "text-muted-foreground"
+              )}
+            >
+              {status.label}
+            </p>
           )}
-          <span className="text-slate-700">·</span>
-          <span className="flex items-center gap-1">
-            <Users size={13} />
-            {trip.participants.length}
-          </span>
-          <span className="ml-auto font-medium text-slate-400">
-            {trip.currency}
-          </span>
         </div>
       </Link>
-
-      <div className="absolute top-2.5 right-2.5">
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            className="size-11 flex items-center justify-center rounded-full text-slate-500 hover:text-slate-200 hover:bg-foreground/8 active:bg-foreground/12 transition-all focus:outline-none"
-            aria-label="Actions"
-          >
-            <MoreVertical size={18} />
-          </DropdownMenuTrigger>
-
-          <DropdownMenuContent
-            align="end"
-            className="min-w-44"
-          >
-            <DropdownMenuItem
-              className="gap-2 cursor-pointer"
-              onClick={() => onEdit(trip)}
-            >
-              <Pencil size={14} className="text-slate-400" />
-              Modifier
-            </DropdownMenuItem>
-            {onShare && (
-              <DropdownMenuItem
-                className="gap-2 cursor-pointer"
-                onClick={() => onShare(trip)}
-              >
-                <Share2 size={14} className="text-section" />
-                Partager
-              </DropdownMenuItem>
-            )}
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={() => onDelete(trip.id)}
-              className="gap-2 cursor-pointer text-destructive"
-              variant="destructive"
-            >
-              <Trash2 size={14} />
-              Supprimer
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+      <div className="absolute right-1.5">
+        <TripActions trip={trip} onEdit={onEdit} onDelete={onDelete} onShare={onShare} />
       </div>
-    </motion.div>
+    </article>
   );
 }

@@ -1,7 +1,8 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
+import { ChevronRight } from "lucide-react";
 import {
   GoogleMapsIcon,
   WazeIcon,
@@ -216,32 +217,29 @@ export function MapAppPickerProvider({ children }: { children: React.ReactNode }
       <Sheet open={state !== null} onOpenChange={(o) => { if (!o) setState(null); }}>
         <SheetContent
           side="bottom"
-          className="glass-strong border-foreground/10 rounded-t-2xl px-0 pb-0"
+          className="px-0 pb-0"
         >
-          <div className="px-5 pt-4 pb-2">
-            <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold text-center">
-              {headerLabel}
-            </p>
-            {subtitle && (
-              <p className="text-sm text-slate-300 text-center mt-1 truncate">{subtitle}</p>
-            )}
+          <div className="px-6 pt-8 pr-16 pb-2">
+            <SheetTitle>{headerLabel}</SheetTitle>
+            {subtitle && <p className="mt-1 truncate text-[0.95rem] text-muted-foreground">{subtitle}</p>}
           </div>
 
-          <div className="divide-y divide-foreground/8">
+          <div className="space-y-1 px-3 pb-3">
             {orderedApps.map(({ id, name, description, Icon }) => (
               <button
                 key={id}
                 type="button"
                 onClick={() => handlePick(id)}
-                className="w-full flex items-center gap-4 px-5 py-4 hover:bg-foreground/6 active:bg-foreground/10 transition-colors text-left"
+                className="pressable flex w-full items-center gap-4 rounded-2xl px-3 py-3 text-left transition-colors hover:bg-foreground/[0.04] active:bg-secondary"
               >
-                <div className="w-12 h-12 flex items-center justify-center shrink-0">
+                <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-[0.9rem] shadow-card">
                   <Icon size={48} />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-base font-semibold text-slate-100">{name}</p>
-                  <p className="text-sm text-slate-500">{description}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-base font-semibold">{name}</p>
+                  <p className="text-sm text-muted-foreground">{description}</p>
                 </div>
+                <ChevronRight size={18} className="shrink-0 text-muted-foreground" />
               </button>
             ))}
           </div>

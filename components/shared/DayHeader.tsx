@@ -7,23 +7,24 @@ interface DayHeaderProps {
 }
 
 export function DayHeader({ date, isToday, isPast }: DayHeaderProps) {
+  const label = new Date(date).toLocaleDateString("fr-FR", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
   return (
-    <div className="flex items-baseline gap-2 mb-3 px-1">
-      <p
+    <div className="mb-3 flex items-center gap-2 px-1">
+      <h2
         className={cn(
-          "text-base font-semibold uppercase tracking-wider",
-          isToday ? "text-section-soft" : isPast ? "text-slate-500" : "text-slate-300"
+          "font-display text-[1.15rem] font-bold tracking-tight first-letter:uppercase",
+          isPast && !isToday ? "text-muted-foreground" : "text-foreground"
         )}
       >
-        {new Date(date).toLocaleDateString("fr-FR", {
-          weekday: "long",
-          day: "numeric",
-          month: "long",
-        })}
-      </p>
+        {label}
+      </h2>
       {isToday && (
-        <span className="text-xs px-2 py-0.5 rounded-full bg-section-soft text-section-soft font-bold tracking-normal">
-          AUJ.
+        <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">
+          Aujourd&apos;hui
         </span>
       )}
     </div>

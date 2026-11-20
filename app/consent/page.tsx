@@ -2,10 +2,9 @@
 
 import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Shield } from "lucide-react";
+import { Check, Loader2, Shield } from "lucide-react";
 import { motion } from "framer-motion";
-import { GlassCard } from "@/components/layout/GlassCard";
-import { MeshGradientBackground } from "@/components/layout/MeshGradientBackground";
+import { EASE_OUT } from "@/lib/motion";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -41,95 +40,61 @@ function ConsentContent() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <MeshGradientBackground />
+    <div className="flex min-h-dvh flex-col bg-background">
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-        className="w-full max-w-md"
+        transition={{ duration: 0.5, ease: EASE_OUT }}
+        className="mx-auto flex w-full max-w-md flex-1 flex-col px-6"
+        style={{
+          paddingTop: "calc(env(safe-area-inset-top) + 3.5rem)",
+          paddingBottom: "calc(env(safe-area-inset-bottom) + 2rem)",
+        }}
       >
-        <GlassCard className="space-y-6">
-          {/* Header */}
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-section-soft flex items-center justify-center shrink-0">
-              <Shield size={20} className="text-section" />
-            </div>
-            <div>
-              <h1 className="text-lg font-bold text-slate-100">Confidentialité</h1>
-              <p className="text-xs text-slate-500">Requis une seule fois</p>
-            </div>
-          </div>
+        <span className="flex size-14 items-center justify-center rounded-[1.1rem] bg-primary text-primary-foreground shadow-section">
+          <Shield size={26} />
+        </span>
+        <h1 className="mt-6 font-display text-[2.25rem] leading-[1.05] font-extrabold tracking-[-0.03em]">
+          Tes données restent les tiennes.
+        </h1>
+        <div className="mt-4 space-y-3 text-[0.98rem] leading-relaxed text-muted-foreground">
+          <p>
+            Pour fonctionner, Voyou utilise ton nom, ton adresse e-mail et les infos de voyage que tu crées.
+          </p>
+          <p>
+            Elles sont stockées de façon sécurisée et ne sont{" "}
+            <span className="font-semibold text-foreground">jamais vendues ni exploitées</span> à des fins commerciales ou publicitaires.
+          </p>
+          <p>Tu peux demander leur suppression à tout moment depuis les réglages.</p>
+        </div>
 
-          {/* Body */}
-          <div className="space-y-3 text-sm text-slate-400 leading-relaxed">
-            <p>
-              Pour utiliser Voyou, nous traitons certaines de tes données
-              personnelles : ton nom, ton adresse e-mail et les informations de
-              voyage que tu crées.
-            </p>
-            <p>
-              Ces données sont stockées de façon sécurisée et ne sont{" "}
-              <span className="text-slate-200 font-medium">
-                jamais vendues ni exploitées
-              </span>{" "}
-              à des fins commerciales ou publicitaires.
-            </p>
-            <p>
-              Tu peux demander la suppression de tes données à tout moment
-              depuis les paramètres de l'application.
-            </p>
-          </div>
-
-          {/* Checkbox */}
+        <div className="mt-auto space-y-4 pt-8">
           <button
             type="button"
+            role="checkbox"
+            aria-checked={checked}
             onClick={() => setChecked((v) => !v)}
-            className="w-full flex items-start gap-3 text-left group"
+            className="flex w-full items-start gap-3 rounded-[1.25rem] bg-card p-4 text-left shadow-card"
           >
-            <div className="mt-0.5 shrink-0">
-              <div
-                className={cn(
-                  "w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all",
-                  checked
-                    ? "border-section bg-section"
-                    : "border-slate-600 group-hover:border-slate-400"
-                )}
-              >
-                {checked && (
-                  <svg width="11" height="11" viewBox="0 0 16 16" fill="none">
-                    <path
-                      d="M3 8l3 3 7-7"
-                      stroke="white"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                )}
-              </div>
-            </div>
-            <span className="text-sm text-slate-300 leading-snug">
-              J'ai lu et j'accepte que mes données personnelles soient traitées
-              conformément à la politique de confidentialité.
+            <span
+              className={cn(
+                "mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-lg border-2 transition-colors",
+                checked ? "border-primary bg-primary text-primary-foreground" : "border-foreground/25"
+              )}
+            >
+              {checked && <Check size={15} strokeWidth={3} />}
+            </span>
+            <span className="text-[0.95rem] leading-snug">
+              J&apos;ai lu et j&apos;accepte que mes données personnelles soient traitées conformément à la politique de confidentialité.
             </span>
           </button>
 
-          {error && (
-            <p className="text-xs text-red-400 text-center">
-              Une erreur est survenue, réessaie.
-            </p>
-          )}
+          {error && <p className="text-center text-sm text-red-400">Une erreur est survenue, réessaie.</p>}
 
-          {/* CTA */}
-          <Button
-            onClick={handleAccept}
-            disabled={!checked || loading}
-            className="w-full gradient-primary text-white border-0 py-5 text-sm font-semibold disabled:opacity-40"
-          >
-            {loading ? "…" : "Continuer vers l'application"}
+          <Button size="lg" onClick={handleAccept} disabled={!checked || loading} className="w-full shadow-section disabled:shadow-none">
+            {loading ? <Loader2 size={18} className="animate-spin" /> : "Continuer"}
           </Button>
-        </GlassCard>
+        </div>
       </motion.div>
     </div>
   );

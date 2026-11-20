@@ -16,11 +16,13 @@ import {
   Dialog,
   DialogContent,
   DialogTitle,
+FULLSCREEN_DIALOG,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { SLOT_CONFIG } from "@/lib/meals/slots";
 import { CATEGORY_CONFIG, CATEGORY_ORDER } from "@/lib/meals/categories";
 import { cn } from "@/lib/utils";
+import { COURSES, COURSE_BY_ID, COURSE_ORDER } from "@/lib/meals/courses";
 import type {
   Dish,
   DishCourse,
@@ -29,19 +31,6 @@ import type {
   MealCategory,
   Participant,
 } from "@/types";
-
-const COURSES: { id: DishCourse; label: string; emoji: string }[] = [
-  { id: "starter", label: "Entrée",   emoji: "🥗" },
-  { id: "main",    label: "Plat",     emoji: "🍽️" },
-  { id: "cheese",  label: "Fromage",  emoji: "🧀" },
-  { id: "dessert", label: "Dessert",  emoji: "🍰" },
-  { id: "other",   label: "Autre",    emoji: "🍴" },
-];
-
-const COURSE_BY_ID: Record<DishCourse, (typeof COURSES)[number]> =
-  Object.fromEntries(COURSES.map((c) => [c.id, c])) as never;
-
-const COURSE_ORDER: DishCourse[] = ["starter", "main", "cheese", "dessert", "other"];
 
 function newDish(course: DishCourse = "main"): Dish {
   return { id: uuidv4(), course, name: "", ingredients: [] };
@@ -235,40 +224,32 @@ export function MealEditDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         showCloseButton={false}
-        className={cn(
-          "!fixed !top-0 !left-0 !translate-x-0 !translate-y-0",
-          "!w-full !max-w-full !h-[100dvh]",
-          "!rounded-none !p-0 !gap-0 !border-0",
-          "sm:!top-1/2 sm:!left-1/2 sm:!-translate-x-1/2 sm:!-translate-y-1/2",
-          "sm:!max-w-md sm:!h-auto sm:!max-h-[92vh]",
-          "sm:!rounded-2xl sm:!border sm:!border-foreground/10",
-          "glass-strong flex flex-col overflow-hidden"
-        )}
+        className={FULLSCREEN_DIALOG}
       >
         {/* App bar */}
         <div
-          className="flex items-center justify-between gap-3 px-3 py-2.5 border-b border-foreground/8"
+          className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-2 pb-2"
           style={{ paddingTop: "calc(env(safe-area-inset-top) + 0.625rem)" }}
         >
           <button
             type="button"
             onClick={() => onOpenChange(false)}
             aria-label="Fermer"
-            className="p-2 -ml-1 rounded-xl text-slate-300 hover:bg-foreground/8 active:bg-foreground/12 transition-all"
+            className="flex size-11 items-center justify-center rounded-full text-foreground transition-colors hover:bg-foreground/[0.06]"
           >
             <X size={22} />
           </button>
-          <DialogTitle className="text-base font-semibold text-slate-100 flex items-center gap-1.5">
-            {slotCfg && <span>{slotCfg.emoji}</span>}
-            <span>{slotCfg?.shortLabel ?? "Repas"}</span>
+          <DialogTitle className="flex items-center gap-2 font-display text-[1.05rem] font-bold tracking-tight">
+            {slotCfg && <slotCfg.icon size={18} className={slotCfg.textClass} />}
+            <span>{slotCfg?.label ?? "Repas"}</span>
           </DialogTitle>
           <button
             type="button"
             onClick={handleSave}
             disabled={saving}
             className={cn(
-              "px-4 h-10 rounded-full text-sm font-semibold transition-all",
-              "gradient-primary text-white",
+              "h-10 rounded-full px-5 text-sm font-semibold transition-all",
+              "bg-primary text-primary-foreground shadow-section",
               "disabled:opacity-40 disabled:pointer-events-none",
               "active:scale-95"
             )}
@@ -278,17 +259,17 @@ export function MealEditDialog({
         </div>
 
         {/* Tab navigation */}
-        <div className="flex gap-1 px-5 py-2 border-b border-foreground/8 shrink-0">
+        <div role="tablist" className="mx-4 my-3 flex h-11 shrink-0 gap-1 rounded-full bg-foreground/[0.06] p-1">
           {tabs.map((tab) => (
             <button
               key={tab}
               type="button"
               onClick={() => setActiveTab(tab)}
               className={cn(
-                "flex-1 py-1.5 rounded-lg text-sm font-medium transition-all",
+                "flex-1 rounded-full text-sm font-semibold transition-all",
                 activeTab === tab
-                  ? "bg-section-soft text-section-soft ring-1 ring-section"
-                  : "text-slate-400 hover:text-slate-200 hover:bg-foreground/8"
+                  ? "bg-card text-foreground shadow-card dark:bg-foreground/[0.12]"
+                  : "text-muted-foreground hover:text-foreground"
               )}
             >
               {tab}
@@ -315,10 +296,10 @@ export function MealEditDialog({
                         type="button"
                         onClick={() => setCategory(cat)}
                         className={cn(
-                          "flex items-center justify-center py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95",
+                          "pressable flex h-11 items-center justify-center rounded-full text-sm font-semibold transition-colors",
                           selected
-                            ? cfg.badgeClass
-                            : "bg-foreground/4 text-slate-400 border border-foreground/8 hover:bg-foreground/8"
+                            ? "bg-foreground text-background"
+                            : "bg-foreground/[0.06] text-foreground hover:bg-foreground/10"
                         )}
                       >
                         {cfg.label}
@@ -335,7 +316,7 @@ export function MealEditDialog({
                   placeholder={
                     isRestaurant ? "Le bistrot de Léa…" : "Ex: chez Léa, repas léger…"
                   }
-                  className="bg-foreground/5 border-foreground/10 text-slate-100 placeholder:text-slate-500"
+                  className=""
                 />
               </Section>
 
@@ -352,7 +333,7 @@ export function MealEditDialog({
                       : "Allergies, idées de courses…"
                   }
                   rows={3}
-                  className="w-full bg-foreground/5 border border-foreground/10 rounded-lg px-3 py-2 text-base text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-3 focus:ring-section resize-none"
+                  className="w-full border px-3 py-2 text-base resize-none border-input bg-card rounded-2xl h-12 outline-none placeholder:text-muted-foreground focus:border-primary/60 focus:ring-4 focus:ring-primary/12 tabular"
                 />
               </Section>
             </>
@@ -409,7 +390,7 @@ export function MealEditDialog({
                             className={cn(
                               "flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium transition-all active:scale-95",
                               sel
-                                ? "border-section bg-section-soft text-section-soft"
+                                ? "bg-primary/10 text-primary ring-1 ring-primary/40 border-transparent"
                                 : "border-foreground/10 bg-foreground/5 text-slate-300 hover:bg-foreground/10"
                             )}
                           >
@@ -512,7 +493,7 @@ function DishRow({
       animate={{ opacity: 1, height: "auto" }}
       exit={{ opacity: 0, height: 0 }}
       transition={{ duration: 0.18 }}
-      className="rounded-xl border border-foreground/8 bg-foreground/4 overflow-hidden"
+      className="rounded-2xl bg-secondary overflow-hidden"
     >
       <div className="flex items-stretch">
         <button
@@ -520,8 +501,8 @@ function DishRow({
           onClick={onToggle}
           className="flex-1 flex items-center gap-2.5 px-3 py-2.5 text-left hover:bg-foreground/4 transition-colors min-w-0"
         >
-          <span className="text-base shrink-0">{courseCfg.emoji}</span>
-          <span className="text-xs font-semibold uppercase tracking-wider text-slate-400 shrink-0">
+          <courseCfg.icon size={16} className="shrink-0 text-muted-foreground" />
+          <span className="text-sm font-semibold text-muted-foreground shrink-0">
             {courseCfg.label}
           </span>
           {dish.name && (
@@ -552,7 +533,7 @@ function DishRow({
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden border-t border-foreground/8"
+            className="overflow-hidden border-t border-border"
           >
             <div className="p-3 space-y-3">
               {/* Course select */}
@@ -567,11 +548,11 @@ function DishRow({
                       className={cn(
                         "flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border transition-all active:scale-95",
                         sel
-                          ? "border-section bg-section-soft text-section-soft"
+                          ? "bg-primary/10 text-primary ring-1 ring-primary/40 border-transparent"
                           : "border-foreground/10 bg-foreground/4 text-slate-400 hover:bg-foreground/8"
                       )}
                     >
-                      <span>{c.emoji}</span>
+                      <c.icon size={14} />
                       <span>{c.label}</span>
                     </button>
                   );
@@ -583,12 +564,12 @@ function DishRow({
                 value={dish.name}
                 onChange={(e) => onUpdate({ name: e.target.value })}
                 placeholder="Nom du plat (ex: œufs mimosa)"
-                className="bg-foreground/5 border-foreground/10 text-slate-100 placeholder:text-slate-500"
+                className=""
               />
 
               {/* Ingredients */}
               <div className="space-y-1.5">
-                <p className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold px-1">
+                <p className="text-xs font-medium text-muted-foreground px-1">
                   Ingrédients
                 </p>
                 <AnimatePresence initial={false}>
@@ -607,7 +588,7 @@ function DishRow({
                           onUpdateIngredient(ing.id, "name", e.target.value)
                         }
                         placeholder="Tomates"
-                        className="bg-foreground/5 border-foreground/10 text-slate-100 placeholder:text-slate-500 h-9 text-sm"
+                        className="h-9 text-sm"
                       />
                       <Input
                         value={ing.quantity}
@@ -615,7 +596,7 @@ function DishRow({
                           onUpdateIngredient(ing.id, "quantity", e.target.value)
                         }
                         placeholder="500g"
-                        className="bg-foreground/5 border-foreground/10 text-slate-100 placeholder:text-slate-500 h-9 text-sm"
+                        className="h-9 text-sm"
                       />
                       <button
                         type="button"
@@ -660,10 +641,10 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <div className="px-5 py-4 border-t border-foreground/8 space-y-2.5 first:border-t-0">
+    <div className="px-5 py-4 border-t border-border space-y-2.5 first:border-t-0">
       <div className="flex items-center gap-1.5">
         {icon}
-        <p className="text-xs font-semibold uppercase tracking-wider text-slate-300">
+        <p className="text-sm font-semibold text-foreground">
           {label}
         </p>
         {hint && (
@@ -690,7 +671,7 @@ function PeoplePills({
 }) {
   const tones = {
     amber: "border-amber-400 bg-amber-500/15 text-amber-200",
-    section: "border-section bg-section-soft text-section-soft",
+    section: "bg-primary/10 text-primary ring-1 ring-primary/40 border-transparent",
   };
   return (
     <div className="flex gap-1.5 flex-wrap">

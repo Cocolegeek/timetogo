@@ -199,33 +199,35 @@ export function TripEditDialog({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="bottom"
-        className="glass-strong border-foreground/10 rounded-t-2xl p-0 flex flex-col overflow-hidden"
+        className="p-0 flex flex-col overflow-hidden"
         style={{ height: "92dvh" }}
       >
         {/* Header */}
-        <div className="px-5 pt-5 pb-3 shrink-0 pr-14">
-          <SheetTitle className="text-slate-100 text-xl font-bold">
+        <div className="shrink-0 px-5 pt-7 pr-16 pb-3">
+          <SheetTitle>
             {isVoyage(trip) ? "Modifier le voyage" : "Modifier le budget"}
           </SheetTitle>
         </div>
 
         {/* Tab navigation */}
-        <div className="flex gap-1 px-5 pb-3 border-b border-foreground/8 shrink-0">
+        <div role="tablist" className="mx-5 mb-2 flex h-11 shrink-0 gap-1 rounded-full bg-foreground/[0.06] p-1">
           {(["Général", "Participants"] as NavTab[]).map((tab) => (
             <button
               key={tab}
               type="button"
+              role="tab"
+              aria-selected={activeTab === tab}
               onClick={() => setActiveTab(tab)}
               className={cn(
-                "flex-1 py-1.5 rounded-lg text-sm font-medium transition-all",
+                "flex-1 rounded-full text-sm font-semibold transition-all",
                 activeTab === tab
-                  ? "bg-section-soft text-section-soft ring-1 ring-section"
-                  : "text-slate-400 hover:text-slate-200 hover:bg-foreground/8"
+                  ? "bg-card text-foreground shadow-card dark:bg-foreground/[0.12]"
+                  : "text-muted-foreground hover:text-foreground"
               )}
             >
               {tab}
               {tab === "Participants" && (
-                <span className="ml-1.5 text-xs text-slate-500">
+                <span className="ml-1.5 text-xs text-muted-foreground">
                   ({trip.participants.length})
                 </span>
               )}
@@ -259,14 +261,14 @@ export function TripEditDialog({
               )}
 
               <div className="space-y-1.5">
-                <Label className="text-slate-300 text-sm font-medium">
+                <Label className="px-1 text-sm font-semibold text-foreground">
                   {isVoyage(trip) ? "Nom du voyage" : "Nom du budget"}
                 </Label>
-                <div className="flex items-stretch gap-2 bg-foreground/8 border border-foreground/10 rounded-lg focus-within:ring-3 focus-within:ring-section transition-all overflow-hidden">
+                <div className="flex items-stretch gap-2 h-12 rounded-2xl border border-input bg-card transition-[border-color,box-shadow] focus-within:border-primary/60 focus-within:ring-4 focus-within:ring-primary/12 overflow-hidden">
                   <button
                     type="button"
                     onClick={() => setEmojiPickerOpen((v) => !v)}
-                    className="w-12 h-11 flex items-center justify-center text-2xl hover:bg-foreground/8 active:bg-foreground/12 transition-colors shrink-0"
+                    className="w-12 h-full flex items-center justify-center text-2xl hover:bg-foreground/8 active:bg-foreground/12 transition-colors shrink-0"
                     aria-label="Changer l'emoji"
                   >
                     {emoji}
@@ -314,19 +316,19 @@ export function TripEditDialog({
 
               {features.hasDestination && (
                 <div className="space-y-1.5">
-                  <Label className="text-slate-300 text-sm font-medium">Destination</Label>
+                  <Label className="px-1 text-sm font-semibold text-foreground">Destination</Label>
                   <LocationPickerSheet
                     value={destination}
                     onChange={setDestination}
                     placeholder="Rome, Italie"
-                    className="bg-foreground/8 border-foreground/10"
+
                   />
                 </div>
               )}
 
               {!isVoyage(trip) && (
                 <div className="space-y-2">
-                  <Label className="text-slate-300 text-sm font-medium">Période</Label>
+                  <Label className="px-1 text-sm font-semibold text-foreground">Période</Label>
                   <div className="flex gap-2">
                     {(
                       [
@@ -346,7 +348,7 @@ export function TripEditDialog({
                         className={cn(
                           "flex-1 flex flex-col items-center gap-1 py-2.5 px-2 rounded-xl text-xs font-medium transition-all active:scale-95",
                           groupDateMode === mode
-                            ? "bg-section-soft text-section-soft ring-1 ring-section"
+                            ? "bg-primary/10 text-primary ring-1 ring-primary/40"
                             : "bg-foreground/5 text-slate-400 hover:bg-foreground/10"
                         )}
                       >
@@ -373,7 +375,7 @@ export function TripEditDialog({
                               type="date"
                               value={startDate}
                               onChange={(e) => setStartDate(e.target.value)}
-                              className="w-full bg-foreground/8 border border-foreground/10 rounded-lg px-3 py-2 text-sm text-slate-100 outline-none focus:ring-2 focus:ring-section [color-scheme:dark]"
+                              className="w-full border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-section border-input bg-card rounded-2xl h-12 placeholder:text-muted-foreground focus:border-primary/60 focus:ring-4 focus:ring-primary/12 tabular"
                             />
                           </div>
                           {groupDateMode === "creneau" && (
@@ -384,7 +386,7 @@ export function TripEditDialog({
                                 value={endDate}
                                 onChange={(e) => setEndDate(e.target.value)}
                                 min={startDate || undefined}
-                                className="w-full bg-foreground/8 border border-foreground/10 rounded-lg px-3 py-2 text-sm text-slate-100 outline-none focus:ring-2 focus:ring-section [color-scheme:dark]"
+                                className="w-full border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-section border-input bg-card rounded-2xl h-12 placeholder:text-muted-foreground focus:border-primary/60 focus:ring-4 focus:ring-primary/12 tabular"
                               />
                             </div>
                           )}
@@ -404,7 +406,7 @@ export function TripEditDialog({
               )}
 
               <div className="space-y-2">
-                <Label className="text-slate-300 text-sm font-medium">
+                <Label className="px-1 text-sm font-semibold text-foreground">
                   Devise principale
                 </Label>
                 <div className="flex gap-2 flex-wrap">
@@ -416,7 +418,7 @@ export function TripEditDialog({
                       className={cn(
                         "px-3 py-1.5 rounded-xl text-sm font-medium transition-all active:scale-95",
                         currency === c
-                          ? "bg-section-soft text-section-soft ring-1 ring-section"
+                          ? "bg-primary/10 text-primary ring-1 ring-primary/40"
                           : "bg-foreground/5 text-slate-400 hover:bg-foreground/10"
                       )}
                     >
@@ -505,7 +507,7 @@ export function TripEditDialog({
                     }
                   }}
                   placeholder="Embarquer quelqu'un"
-                  className="bg-foreground/8 border-foreground/10 text-slate-100 placeholder:text-slate-500"
+                  
                 />
                 <Button
                   type="button"
@@ -522,21 +524,18 @@ export function TripEditDialog({
 
         {/* Footer — toujours visible */}
         <div
-          className="px-5 py-3 border-t border-foreground/8 bg-slate-900/50 shrink-0 flex gap-2"
+          className="px-5 py-3 border-t border-foreground/8 bg-popover shrink-0 flex gap-2"
           style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 0.75rem)" }}
         >
-          <Button
-            onClick={() => onOpenChange(false)}
-            variant="ghost"
-            className="flex-1 text-slate-400 hover:text-slate-200 hover:bg-foreground/8"
-          >
+          <Button onClick={() => onOpenChange(false)} variant="secondary" size="lg" className="flex-1">
             Fermer
           </Button>
           {activeTab === "Général" && (
             <Button
               onClick={handleSaveTrip}
               disabled={saving || !dirty || !formValid}
-              className="flex-1 gradient-primary text-white border-0 disabled:opacity-40"
+              size="lg"
+              className="flex-[2] shadow-section disabled:shadow-none"
             >
               {saving ? <Loader2 size={16} className="animate-spin" /> : "Enregistrer"}
             </Button>

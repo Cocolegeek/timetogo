@@ -12,9 +12,14 @@ import {
   LogOut,
   CreditCard,
   Phone,
+  Check,
+  SunMoon,
 } from "lucide-react";
 import { AppHeader } from "@/components/layout/AppHeader";
-import { MeshGradientBackground } from "@/components/layout/MeshGradientBackground";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { SectionLabel } from "@/components/shared/SectionLabel";
+import { SegmentedControl } from "@/components/shared/SegmentedControl";
+import { Stagger, StaggerItem } from "@/components/motion/Stagger";
 import { Spinner } from "@/components/shared/Spinner";
 import { GlassCard } from "@/components/layout/GlassCard";
 import { AvatarUpload } from "@/components/shared/AvatarUpload";
@@ -24,11 +29,10 @@ import { Label } from "@/components/ui/label";
 import { useProfile } from "@/hooks/useProfile";
 import { useTheme } from "@/hooks/useTheme";
 import { useUserId } from "@/hooks/useUserId";
-import { cn } from "@/lib/utils";
 
 export default function SettingsPage() {
   const { profile, loading, updateProfile, signOut } = useProfile();
-  const { theme, toggle } = useTheme();
+  const { preference, setPreference } = useTheme();
   const userId = useUserId();
 
   const [name, setName] = useState("");
@@ -72,16 +76,14 @@ export default function SettingsPage() {
     (iban.trim().replace(/\s+/g, "").toUpperCase() || null) !== (profile?.iban ?? null) ||
     (phone.trim() || null) !== (profile?.phone ?? null);
 
-  const isDark = theme === "dark";
 
   return (
     <>
-      <MeshGradientBackground />
-      <div className="min-h-screen">
+      <div className="min-h-dvh bg-background">
         <AppHeader />
 
         <main
-          className="max-w-lg mx-auto px-4 py-5 space-y-7"
+          className="mx-auto max-w-lg space-y-8 px-5 pt-2"
           style={{
             paddingBottom: "calc(env(safe-area-inset-bottom) + 1.5rem)",
           }}
@@ -89,7 +91,10 @@ export default function SettingsPage() {
           {loading ? (
             <Spinner />
           ) : (
-            <>
+            <Stagger step={0.06} className="space-y-8">
+              <StaggerItem>
+                <PageHeader title="Réglages" />
+              </StaggerItem>
               {/* ─── Section Profil ──────────────────────────────────── */}
               <Section label="Profil">
                 {/* Avatar */}
@@ -104,11 +109,11 @@ export default function SettingsPage() {
                       path={`${userId}/avatar.webp`}
                       currentUrl={profile?.custom_avatar_url ?? profile?.avatar_url ?? null}
                       size={88}
-                      ringClass="ring-2 ring-section/40"
+                      ringClass="ring-4 ring-card shadow-raised"
                       dialogTitle="Recadrer la photo"
                       placeholder={
-                        <div className="w-full h-full bg-section-soft flex items-center justify-center">
-                          <User size={32} className="text-section" />
+                        <div className="flex h-full w-full items-center justify-center bg-primary font-display text-3xl font-extrabold text-primary-foreground">
+                          {(profile?.name ?? "?").charAt(0).toUpperCase()}
                         </div>
                       }
                       onUploaded={async (url) => {
@@ -135,7 +140,7 @@ export default function SettingsPage() {
                 {/* Form */}
                 <GlassCard className="space-y-4">
                   <div className="space-y-1.5">
-                    <Label className="text-slate-300 text-sm font-medium flex items-center gap-1.5">
+                    <Label className="flex items-center gap-1.5 px-1 text-sm font-semibold text-foreground">
                       <User size={14} />
                       Nom affiché
                     </Label>
@@ -143,22 +148,22 @@ export default function SettingsPage() {
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       placeholder="Ton prénom"
-                      className="bg-foreground/8 border-foreground/10 text-slate-100 placeholder:text-slate-500"
+                      
                     />
-                    <p className="text-sm text-slate-500">
-                      Utilisé pour t'identifier dans les voyages.
+                    <p className="px-1 text-sm text-muted-foreground">
+                      Utilisé pour t&apos;identifier dans les voyages.
                     </p>
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label className="text-slate-300 text-sm font-medium flex items-center gap-1.5">
+                    <Label className="flex items-center gap-1.5 px-1 text-sm font-semibold text-foreground">
                       <Mail size={14} />
                       Email
                     </Label>
                     <Input
                       value={profile?.email ?? ""}
                       disabled
-                      className="bg-foreground/4 border-foreground/8 text-slate-500 cursor-not-allowed"
+                      className="cursor-not-allowed"
                     />
                     <p className="text-sm text-slate-500">
                       Géré par ton compte Google.
@@ -168,12 +173,12 @@ export default function SettingsPage() {
                   <Button
                     onClick={handleSave}
                     disabled={saving || !name.trim()}
-                    className="w-full gradient-primary text-white border-0"
+                    size="lg" className="w-full"
                   >
                     {saving ? (
                       <Loader2 size={15} className="animate-spin" />
                     ) : saved ? (
-                      "✓ Sauvegardé"
+                      <><Check size={16} /> Sauvegardé</>
                     ) : (
                       <>
                         <Save size={15} />
@@ -188,13 +193,13 @@ export default function SettingsPage() {
               <Section label="Remboursements">
                 <GlassCard className="space-y-4">
                   <p className="text-sm text-slate-400 -mt-1">
-                    Tes infos seront visibles par les autres membres d'un voyage
+                    Tes infos seront visibles par les autres membres d&apos;un voyage
                     quand ils auront un solde à te rembourser. Elles ne sont
                     jamais exposées ailleurs.
                   </p>
 
                   <div className="space-y-1.5">
-                    <Label className="text-slate-300 text-sm font-medium flex items-center gap-1.5">
+                    <Label className="flex items-center gap-1.5 px-1 text-sm font-semibold text-foreground">
                       <CreditCard size={14} />
                       IBAN
                     </Label>
@@ -205,7 +210,7 @@ export default function SettingsPage() {
                       autoComplete="off"
                       autoCapitalize="characters"
                       spellCheck={false}
-                      className="bg-foreground/8 border-foreground/10 text-slate-100 placeholder:text-slate-500 font-mono text-sm tracking-wide"
+                      className="font-mono text-sm tracking-wide"
                     />
                     <p className="text-sm text-slate-500">
                       Pour les virements classiques.
@@ -213,7 +218,7 @@ export default function SettingsPage() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label className="text-slate-300 text-sm font-medium flex items-center gap-1.5">
+                    <Label className="flex items-center gap-1.5 px-1 text-sm font-semibold text-foreground">
                       <Phone size={14} />
                       Numéro de téléphone
                     </Label>
@@ -224,9 +229,9 @@ export default function SettingsPage() {
                       onFocus={(e) => e.target.select()}
                       placeholder="+33 6 12 34 56 78"
                       autoComplete="tel"
-                      className="bg-foreground/8 border-foreground/10 text-slate-100 placeholder:text-slate-500"
+                      
                     />
-                    <p className="text-sm text-slate-500">
+                    <p className="px-1 text-sm text-muted-foreground">
                       Utilisé pour générer des liens Lydia / Wero.
                     </p>
                   </div>
@@ -234,12 +239,12 @@ export default function SettingsPage() {
                   <Button
                     onClick={handleSavePayment}
                     disabled={savingPayment || !paymentDirty}
-                    className="w-full gradient-primary text-white border-0 disabled:opacity-40"
+                    size="lg" className="w-full"
                   >
                     {savingPayment ? (
                       <Loader2 size={15} className="animate-spin" />
                     ) : savedPayment ? (
-                      "✓ Enregistré"
+                      <><Check size={16} /> Enregistré</>
                     ) : (
                       <>
                         <Save size={15} />
@@ -252,36 +257,35 @@ export default function SettingsPage() {
 
               {/* ─── Section Apparence ───────────────────────────────── */}
               <Section label="Apparence">
-                <GlassCard padding={false}>
-                  <button
-                    type="button"
-                    onClick={toggle}
-                    className="w-full flex items-center gap-3 px-4 py-4 active:bg-foreground/4 transition-colors"
-                  >
-                    <div className="w-10 h-10 rounded-xl bg-section-soft flex items-center justify-center shrink-0">
-                      {isDark ? (
-                        <Moon size={18} className="text-section-soft" />
-                      ) : (
-                        <Sun size={18} className="text-amber-400" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0 text-left">
-                      <p className="text-base font-semibold text-slate-100">
-                        Mode sombre
-                      </p>
-                      <p className="text-sm text-slate-500">
-                        {isDark ? "Activé" : "Désactivé"}
+                <GlassCard className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <span className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                      {preference === "dark" ? <Moon size={18} /> : preference === "light" ? <Sun size={18} /> : <SunMoon size={18} />}
+                    </span>
+                    <div>
+                      <p className="font-semibold">Thème</p>
+                      <p className="text-sm text-muted-foreground">
+                        {preference === "system" ? "Suit le réglage de ton téléphone" : preference === "dark" ? "Toujours sombre" : "Toujours clair"}
                       </p>
                     </div>
-                    <Switch checked={isDark} />
-                  </button>
+                  </div>
+                  <SegmentedControl
+                    id="theme"
+                    value={preference}
+                    onChange={setPreference}
+                    options={[
+                      { value: "system", label: "Auto" },
+                      { value: "light", label: "Clair" },
+                      { value: "dark", label: "Sombre" },
+                    ]}
+                  />
                 </GlassCard>
               </Section>
 
               {/* ─── Section Compte ──────────────────────────────────── */}
               <Section label="Compte">
                 <GlassCard padding={false}>
-                  <div className="px-4 py-3 flex items-center gap-3 border-b border-foreground/8">
+                  <div className="flex items-center gap-3 border-b border-border px-4 py-3.5">
                     {profile?.custom_avatar_url || profile?.avatar_url ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
@@ -290,8 +294,8 @@ export default function SettingsPage() {
                         className="w-10 h-10 rounded-full object-cover"
                       />
                     ) : (
-                      <div className="w-10 h-10 rounded-full bg-section-soft flex items-center justify-center">
-                        <User size={16} className="text-section" />
+                      <div className="flex size-10 items-center justify-center rounded-full bg-primary font-display font-bold text-primary-foreground">
+                        {(profile?.name ?? "?").charAt(0).toUpperCase()}
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
@@ -302,7 +306,7 @@ export default function SettingsPage() {
                         {profile?.email}
                       </p>
                     </div>
-                    <span className="text-xs px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 font-semibold">
+                    <span className="rounded-full bg-foreground/[0.06] px-2.5 py-1 text-xs font-semibold text-muted-foreground">
                       Google
                     </span>
                   </div>
@@ -310,9 +314,9 @@ export default function SettingsPage() {
                   <button
                     type="button"
                     onClick={signOut}
-                    className="w-full flex items-center gap-3 px-4 py-4 text-red-400 hover:bg-red-500/10 active:bg-red-500/15 transition-colors"
+                    className="flex w-full items-center gap-3 px-4 py-3.5 text-red-400 transition-colors hover:bg-red-500/[0.06] active:bg-red-500/10"
                   >
-                    <div className="w-10 h-10 rounded-xl bg-red-500/15 flex items-center justify-center shrink-0">
+                    <div className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-red-500/12">
                       <LogOut size={18} />
                     </div>
                     <span className="text-base font-semibold">
@@ -321,7 +325,7 @@ export default function SettingsPage() {
                   </button>
                 </GlassCard>
               </Section>
-            </>
+            </Stagger>
           )}
         </main>
       </div>
@@ -339,30 +343,11 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="space-y-2">
-      <p className="text-base text-slate-400 font-semibold uppercase tracking-wider px-1">
-        {label}
-      </p>
-      <div className="space-y-3">{children}</div>
-    </section>
-  );
-}
-
-function Switch({ checked }: { checked: boolean }) {
-  return (
-    <span
-      aria-hidden
-      className={cn(
-        "relative inline-flex w-11 h-6 rounded-full transition-colors shrink-0",
-        checked ? "bg-section" : "bg-foreground/15"
-      )}
-    >
-      <span
-        className={cn(
-          "absolute top-0.5 w-5 h-5 rounded-full bg-white transition-transform shadow-sm",
-          checked ? "translate-x-[22px]" : "translate-x-0.5"
-        )}
-      />
-    </span>
+    <StaggerItem>
+      <section>
+        <SectionLabel>{label}</SectionLabel>
+        <div className="space-y-3">{children}</div>
+      </section>
+    </StaggerItem>
   );
 }

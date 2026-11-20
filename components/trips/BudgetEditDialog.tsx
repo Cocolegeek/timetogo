@@ -107,25 +107,27 @@ export function BudgetEditDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="glass-strong border-foreground/10 max-w-sm">
+      <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle className="text-slate-100 text-lg flex items-center gap-2">
-            <Wallet size={18} className="text-section" />
+          <DialogTitle className="flex items-center gap-2.5 pr-10">
+            <span className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <Wallet size={18} />
+            </span>
             Budget prévisionnel
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 pt-1">
           {/* Mode selector */}
-          <div className="grid grid-cols-2 gap-1 p-1 bg-foreground/4 border border-foreground/8 rounded-lg">
+          <div className="grid h-11 grid-cols-2 gap-1 rounded-full bg-foreground/[0.06] p-1">
             <button
               type="button"
               onClick={() => switchMode("total")}
               className={cn(
-                "py-2 rounded-md text-sm font-medium transition-all",
+                "rounded-full text-sm font-semibold transition-all",
                 mode === "total"
-                  ? "bg-section-soft text-section-soft"
-                  : "text-slate-400 hover:text-slate-200"
+                  ? "bg-card text-foreground shadow-card dark:bg-foreground/[0.12]"
+                  : "text-muted-foreground hover:text-foreground"
               )}
             >
               Total
@@ -134,10 +136,10 @@ export function BudgetEditDialog({
               type="button"
               onClick={() => switchMode("per-person")}
               className={cn(
-                "py-2 rounded-md text-sm font-medium transition-all",
+                "rounded-full text-sm font-semibold transition-all",
                 mode === "per-person"
-                  ? "bg-section-soft text-section-soft"
-                  : "text-slate-400 hover:text-slate-200"
+                  ? "bg-card text-foreground shadow-card dark:bg-foreground/[0.12]"
+                  : "text-muted-foreground hover:text-foreground"
               )}
               disabled={participantCount === 0}
             >
@@ -146,7 +148,7 @@ export function BudgetEditDialog({
           </div>
 
           <div className="space-y-2">
-            <Label className="text-slate-300 text-sm font-medium">
+            <Label className="px-1 text-sm font-semibold text-foreground">
               {mode === "per-person" ? "Montant par personne" : "Montant total"}
             </Label>
             <div className="relative">
@@ -158,7 +160,7 @@ export function BudgetEditDialog({
                   setValue(e.target.value.replace(/[^0-9.,]/g, ""))
                 }
                 placeholder={mode === "per-person" ? "ex: 400" : "ex: 1500"}
-                className="bg-foreground/8 border-foreground/10 text-slate-100 placeholder:text-slate-500 pr-14 tabular-nums"
+                className="tabular h-14 pr-14 font-display text-2xl font-bold"
                 autoFocus
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-500 pointer-events-none">
@@ -203,7 +205,7 @@ export function BudgetEditDialog({
           <Button
             onClick={() => handleSave(false)}
             disabled={saving || numericValue <= 0}
-            className="flex-1 gradient-primary text-white border-0 disabled:opacity-40"
+            className="flex-1"
           >
             {saving ? <Loader2 size={16} className="animate-spin" /> : "Enregistrer"}
           </Button>

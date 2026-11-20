@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { UserCheck, UserPlus, X, Loader2, AlertTriangle } from "lucide-react";
+import { Check, UserPlus, X, Loader2, AlertTriangle } from "lucide-react";
 import { ParticipantAvatar } from "@/components/shared/ParticipantAvatar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -111,17 +111,6 @@ export function IdentityPicker({
 
   return (
     <div className="space-y-3">
-      {!compact && (
-        <div className="flex items-center gap-3 pb-1">
-          <div className="w-9 h-9 rounded-xl bg-section-soft flex items-center justify-center shrink-0">
-            <UserCheck size={20} className="text-section" />
-          </div>
-          <p className="text-lg font-semibold text-slate-100 leading-snug">
-            Qui es-tu parmi les voyageurs ?
-          </p>
-        </div>
-      )}
-
       <div className={cn("grid gap-2", compact ? "grid-cols-2 sm:grid-cols-3" : "grid-cols-1 sm:grid-cols-2")}>
         {participants.map((p, i) => {
           const isSelected = selectedId === p.id;
@@ -136,10 +125,10 @@ export function IdentityPicker({
               type="button"
               onClick={() => handleParticipantClick(p)}
               className={cn(
-                "flex items-center gap-3 p-3 rounded-xl border transition-all duration-200 text-left",
+                "pressable flex min-h-14 items-center gap-3 rounded-2xl p-3 text-left transition-colors",
                 isSelected
-                  ? "border-section-strong bg-section-tint ring-1 ring-section"
-                  : "border-foreground/8 bg-foreground/4 hover:border-foreground/15 hover:bg-foreground/8"
+                  ? "bg-primary/10 ring-2 ring-primary"
+                  : "bg-secondary hover:bg-foreground/[0.08]"
               )}
             >
               <ParticipantAvatar participant={p} size={compact ? "sm" : "md"} />
@@ -147,13 +136,13 @@ export function IdentityPicker({
                 <p
                   className={cn(
                     "font-semibold text-base truncate",
-                    isSelected ? "text-section-soft" : "text-slate-200"
+                    isSelected ? "text-primary" : "text-foreground"
                   )}
                 >
                   {p.name}
                 </p>
                 {isSelected ? (
-                  <p className="text-sm text-section">C&apos;est moi</p>
+                  <p className="text-sm font-medium text-primary">C&apos;est moi</p>
                 ) : claimedByOther ? (
                   <p className="text-sm text-amber-400 truncate">
                     Lié à {primary?.userName ?? "un autre membre"}
@@ -161,7 +150,9 @@ export function IdentityPicker({
                 ) : null}
               </div>
               {isSelected && (
-                <div className="w-2 h-2 rounded-full bg-section shrink-0" />
+                <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                  <Check size={14} strokeWidth={3} />
+                </span>
               )}
             </motion.button>
           );
@@ -174,13 +165,13 @@ export function IdentityPicker({
             transition={{ delay: participants.length * 0.04 }}
             type="button"
             onClick={() => setAddOpen(true)}
-            className="flex items-center gap-3 p-3 rounded-xl border border-dashed border-foreground/20 bg-foreground/2 hover:border-section hover:bg-section-tint transition-all duration-200 text-left group"
+            className="group pressable flex min-h-14 items-center gap-3 rounded-2xl border border-dashed border-foreground/25 p-3 text-left transition-colors hover:border-primary/50 hover:bg-primary/[0.04]"
           >
-            <div className="w-10 h-10 rounded-full bg-foreground/8 group-hover:bg-section-soft flex items-center justify-center shrink-0 transition-colors">
-              <UserPlus size={18} className="text-slate-400 group-hover:text-section transition-colors" />
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-foreground/[0.07] text-muted-foreground transition-colors group-hover:bg-primary/10 group-hover:text-primary">
+              <UserPlus size={18} />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-semibold text-base text-slate-300 group-hover:text-section-soft transition-colors">
+              <p className="text-base font-semibold text-foreground">
                 Je ne suis pas dans la liste
               </p>
               <p className="text-sm text-slate-500">
@@ -200,7 +191,7 @@ export function IdentityPicker({
             transition={{ duration: 0.18 }}
             className="overflow-hidden"
           >
-            <div className="p-3 rounded-xl border border-section bg-section-tint space-y-3">
+            <div className="space-y-3 rounded-2xl bg-primary/[0.06] p-3 ring-1 ring-primary/25">
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5 min-w-0">
                   <span
@@ -234,7 +225,7 @@ export function IdentityPicker({
                 }}
                 placeholder="Ton prénom"
                 autoFocus
-                className="w-full bg-foreground/8 border border-foreground/10 rounded-lg px-3 py-2.5 text-base text-slate-100 placeholder:text-slate-500 outline-none focus:ring-2 focus:ring-section focus:border-section"
+                className="w-full border px-3 py-2.5 text-base outline-none border-input bg-card rounded-2xl h-12 placeholder:text-muted-foreground focus:border-primary/60 focus:ring-4 focus:ring-primary/12 tabular"
               />
 
               {error && (
@@ -245,7 +236,7 @@ export function IdentityPicker({
                 type="button"
                 onClick={handleCreate}
                 disabled={!newName.trim() || creating}
-                className="w-full gradient-primary text-white border-0 rounded-lg py-2.5 text-sm font-semibold disabled:opacity-40 transition-all active:scale-[0.99] flex items-center justify-center gap-2"
+                className="pressable flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary text-[0.95rem] font-semibold text-primary-foreground disabled:opacity-40"
               >
                 {creating ? (
                   <Loader2 size={15} className="animate-spin" />
@@ -268,7 +259,7 @@ export function IdentityPicker({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-4"
+            className="fixed inset-0 z-50 flex items-end justify-center bg-black/45 p-4 sm:items-center dark:bg-black/65"
             onClick={() => !claiming && setConfirmTarget(null)}
           >
             <motion.div
@@ -276,15 +267,15 @@ export function IdentityPicker({
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 32, opacity: 0 }}
               transition={{ type: "spring", damping: 26, stiffness: 280 }}
-              className="w-full max-w-sm bg-slate-900 border border-foreground/10 rounded-2xl p-5 space-y-4 glass-strong"
+              className="w-full max-w-sm space-y-5 rounded-[1.75rem] bg-popover p-6 shadow-float"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center shrink-0">
+                <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-amber-500/15">
                   <AlertTriangle size={18} className="text-amber-400" />
                 </div>
                 <div className="space-y-1 min-w-0">
-                  <h3 className="text-base font-semibold text-slate-100">
+                  <h3 className="font-display text-lg font-bold tracking-tight">
                     Identité déjà revendiquée
                   </h3>
                   <p className="text-sm text-slate-400 leading-snug">
@@ -303,17 +294,17 @@ export function IdentityPicker({
 
               <div className="flex gap-2">
                 <Button
-                  variant="ghost"
+                  variant="secondary"
                   onClick={() => setConfirmTarget(null)}
                   disabled={claiming}
-                  className="flex-1 text-slate-400 hover:text-slate-200 hover:bg-foreground/8"
+                  className="flex-1"
                 >
                   Annuler
                 </Button>
                 <Button
                   onClick={handleConfirmClaim}
                   disabled={claiming}
-                  className="flex-1 gradient-primary text-white border-0"
+                  className="flex-1"
                 >
                   {claiming ? (
                     <Loader2 size={15} className="animate-spin" />

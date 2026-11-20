@@ -15,14 +15,12 @@ export function UserMenu() {
   const { profile, signOut } = useProfile();
   const router = useRouter();
 
-  const initials = profile?.name
-    ? profile.name.slice(0, 2).toUpperCase()
-    : "?";
+  const initials = profile?.name ? profile.name.charAt(0).toUpperCase() : "?";
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        className="rounded-full w-9 h-9 p-0 overflow-hidden border border-foreground/10 hover:border-foreground/20 transition-colors focus:outline-none"
+        className="size-10 overflow-hidden rounded-full p-0 ring-1 ring-border transition-shadow outline-none hover:ring-foreground/20 focus-visible:ring-2 focus-visible:ring-ring"
         aria-label="Menu utilisateur"
       >
         {profile?.custom_avatar_url || profile?.avatar_url ? (
@@ -33,7 +31,7 @@ export function UserMenu() {
             className="w-full h-full object-cover"
           />
         ) : (
-          <span className="text-xs font-bold text-slate-300 bg-section-soft w-full h-full flex items-center justify-center">
+          <span className="flex h-full w-full items-center justify-center bg-foreground font-display text-sm font-bold text-background">
             {initials}
           </span>
         )}
@@ -41,36 +39,29 @@ export function UserMenu() {
 
       <DropdownMenuContent
         align="end"
-        className="glass-strong border-foreground/10 text-slate-200 min-w-48 bg-slate-900/95 backdrop-blur"
+        className="min-w-56"
       >
         {profile && (
           <>
-            <div className="px-3 py-2">
-              <p className="text-sm font-medium text-slate-100 truncate">
+            <div className="px-3 py-2.5">
+              <p className="truncate font-semibold text-foreground">
                 {profile.name ?? "Utilisateur"}
               </p>
-              <p className="text-xs text-slate-500 truncate">{profile.email}</p>
+              <p className="truncate text-sm text-muted-foreground">{profile.email}</p>
             </div>
             <DropdownMenuSeparator />
           </>
         )}
 
-        <DropdownMenuItem
-          className="gap-2 cursor-pointer"
-          onClick={() => router.push("/settings")}
-        >
-          <Settings size={14} className="text-slate-400" />
+        <DropdownMenuItem onClick={() => router.push("/settings")}>
+          <Settings />
           Paramètres
         </DropdownMenuItem>
 
         <DropdownMenuSeparator />
 
-        <DropdownMenuItem
-          onClick={signOut}
-          className="gap-2 cursor-pointer text-red-400"
-          variant="destructive"
-        >
-          <LogOut size={14} />
+        <DropdownMenuItem onClick={signOut} variant="destructive">
+          <LogOut />
           Se déconnecter
         </DropdownMenuItem>
       </DropdownMenuContent>

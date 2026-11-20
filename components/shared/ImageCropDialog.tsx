@@ -64,7 +64,7 @@ export function ImageCropDialog({
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o && !busy) onCancel(); }}>
       <DialogContent
-        className="glass-strong border-foreground/10 w-[calc(100vw-2rem)] max-w-md p-0 max-h-[92vh] flex flex-col overflow-hidden"
+        className="w-[calc(100vw-2rem)] max-w-md p-0 max-h-[92vh] flex flex-col overflow-hidden"
         showCloseButton={false}
       >
         <DialogHeader className="px-5 pt-5 pb-3 border-b border-foreground/8 shrink-0">
@@ -116,7 +116,7 @@ export function ImageCropDialog({
           <Button
             onClick={handleConfirm}
             disabled={busy || !cropPixels}
-            className="gradient-primary text-white border-0"
+            className="bg-primary text-primary-foreground border-0"
           >
             {busy ? <Loader2 size={15} className="animate-spin" /> : "Confirmer"}
           </Button>

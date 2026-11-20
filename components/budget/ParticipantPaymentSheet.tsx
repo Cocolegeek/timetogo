@@ -30,30 +30,21 @@ export function ParticipantPaymentSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="bottom"
-        className="glass-strong border-foreground/10 rounded-t-2xl p-0 flex flex-col overflow-hidden"
+        className="p-0 flex flex-col overflow-hidden"
         style={{ maxHeight: "70dvh" }}
       >
-        <div className="px-5 pt-5 pb-3 border-b border-foreground/8 shrink-0 pr-14">
-          <SheetTitle className="text-slate-100 text-lg font-bold flex items-center gap-3">
-            {participant && (
-              <>
-                <ParticipantAvatar participant={participant} size="sm" />
-                <span>Remboursements — {participant.name}</span>
-              </>
-            )}
-          </SheetTitle>
+        <div className="flex shrink-0 flex-col items-center gap-3 px-5 pt-9 pb-2 text-center">
+          {participant && <ParticipantAvatar participant={participant} size="lg" />}
+          <SheetTitle>{participant ? `Payer ${participant.name}` : "Paiement"}</SheetTitle>
         </div>
 
-        <div
-          className="flex-1 overflow-y-auto px-5 py-5 space-y-3"
-          style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 1.25rem)" }}
-        >
+        <div className="flex-1 space-y-2.5 overflow-y-auto px-5 pt-3 pb-6">
           {loading ? (
             <div className="flex items-center justify-center py-10">
-              <Loader2 size={18} className="animate-spin text-slate-500" />
+              <Loader2 size={18} className="animate-spin text-muted-foreground" />
             </div>
           ) : !hasInfo ? (
-            <p className="text-sm text-slate-500 italic py-2">
+            <p className="py-2 text-center text-[0.95rem] text-muted-foreground">
               {participant?.name} n&apos;a pas (encore) renseigné ses infos de
               paiement.
             </p>
@@ -116,7 +107,7 @@ function ShareButton({
     <button
       type="button"
       onClick={handleShare}
-      className="w-full flex items-center justify-center gap-2 px-3 py-3 rounded-xl text-sm font-semibold border border-section bg-section-soft text-section-soft hover:bg-section-medium transition-colors active:scale-[0.99]"
+      className="pressable mt-2 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary text-[0.95rem] font-semibold text-primary-foreground shadow-section"
     >
       {feedback === "shared" ? (
         <><Check size={15} /> Partagé</>
@@ -155,14 +146,12 @@ function CopyRow({
   };
 
   return (
-    <div className="flex items-center gap-3 px-3 py-3 rounded-xl border border-foreground/8 bg-foreground/4">
-      <span className="text-slate-500 shrink-0">{icon}</span>
-      <div className="flex-1 min-w-0">
-        <p className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold">
-          {label}
-        </p>
+    <div className="flex items-center gap-3 rounded-2xl bg-secondary px-4 py-3">
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-card text-muted-foreground">{icon}</span>
+      <div className="min-w-0 flex-1">
+        <p className="text-xs font-medium text-muted-foreground">{label}</p>
         <p
-          className={`text-sm text-slate-100 truncate ${
+          className={`truncate text-[0.95rem] text-foreground ${
             monospace ? "font-mono tracking-wide" : ""
           }`}
         >
@@ -172,7 +161,7 @@ function CopyRow({
       <button
         type="button"
         onClick={handleCopy}
-        className="p-2 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-foreground/8 transition-colors shrink-0"
+        className="flex size-10 shrink-0 items-center justify-center rounded-full text-primary transition-colors hover:bg-primary/10"
         aria-label={`Copier ${label}`}
       >
         {copied ? <Check size={15} className="text-emerald-400" /> : <Copy size={15} />}

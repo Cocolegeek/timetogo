@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import {
   X,
   Calendar,
-  Clock,
   Hourglass,
   Tag,
   MapPin,
@@ -16,39 +15,18 @@ import {
   Dialog,
   DialogContent,
   DialogTitle,
+FULLSCREEN_DIALOG,
 } from "@/components/ui/dialog";
 import { LocationPickerSheet } from "@/components/shared/LocationPickerSheet";
 import { cn } from "@/lib/utils";
+import { ITINERARY_TYPES } from "@/lib/itinerary-types";
 import type { ItineraryItem, ItineraryType, JourneyMode, Participant } from "@/types";
 
-const TYPE_CONFIG: Partial<Record<
-  ItineraryType,
-  { label: string; emoji: string; color: string; bg: string }
->> = {
-  accommodation: {
-    label: "Hébergement",
-    emoji: "🏨",
-    color: "text-violet-300",
-    bg: "bg-violet-500/15 ring-violet-500/40",
-  },
-  activity: {
-    label: "Activité",
-    emoji: "🎯",
-    color: "text-emerald-300",
-    bg: "bg-emerald-500/15 ring-emerald-500/40",
-  },
-  food: {
-    label: "Resto",
-    emoji: "🍽️",
-    color: "text-amber-300",
-    bg: "bg-amber-500/15 ring-amber-500/40",
-  },
-  other: {
-    label: "Autre",
-    emoji: "📍",
-    color: "text-slate-300",
-    bg: "bg-slate-500/15 ring-slate-500/40",
-  },
+const TYPE_CONFIG: Partial<Record<ItineraryType, (typeof ITINERARY_TYPES)[ItineraryType]>> = {
+  accommodation: ITINERARY_TYPES.accommodation,
+  activity: ITINERARY_TYPES.activity,
+  food: ITINERARY_TYPES.food,
+  other: ITINERARY_TYPES.other,
 };
 
 const QUICK_DURATIONS: { label: string; minutes: number }[] = [
@@ -200,33 +178,22 @@ export function ItineraryItemForm({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         showCloseButton={false}
-        className={cn(
-          // Mobile: full-screen sheet
-          "!fixed !top-0 !left-0 !translate-x-0 !translate-y-0",
-          "!w-full !max-w-full !h-[100dvh]",
-          "!rounded-none !p-0 !gap-0 !border-0",
-          // Desktop: centered modal
-          "sm:!top-1/2 sm:!left-1/2 sm:!-translate-x-1/2 sm:!-translate-y-1/2",
-          "sm:!max-w-md sm:!h-auto sm:!max-h-[92vh]",
-          "sm:!rounded-2xl sm:!border sm:!border-foreground/10",
-          // Glass background
-          "glass-strong flex flex-col overflow-hidden"
-        )}
+        className={FULLSCREEN_DIALOG}
       >
         {/* Top app bar */}
         <div
-          className="flex items-center justify-between gap-3 px-3 py-2.5 border-b border-foreground/8"
+          className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-2 pb-2"
           style={{ paddingTop: "calc(env(safe-area-inset-top) + 0.625rem)" }}
         >
           <button
             type="button"
             onClick={() => onOpenChange(false)}
             aria-label="Fermer"
-            className="p-2 -ml-1 rounded-xl text-slate-300 hover:bg-foreground/8 active:bg-foreground/12 transition-all"
+            className="flex size-11 items-center justify-center rounded-full text-foreground transition-colors hover:bg-foreground/[0.06]"
           >
             <X size={22} />
           </button>
-          <DialogTitle className="text-base font-semibold text-slate-100">
+          <DialogTitle className="font-display text-[1.05rem] font-bold tracking-tight">
             {isEdit ? "Modifier l'étape" : "Nouvelle étape"}
           </DialogTitle>
           <button
@@ -234,8 +201,8 @@ export function ItineraryItemForm({
             onClick={handleSubmit}
             disabled={!formValid || saving}
             className={cn(
-              "px-4 h-10 rounded-full text-sm font-semibold transition-all",
-              "gradient-primary text-white",
+              "h-10 rounded-full px-5 text-sm font-semibold transition-all",
+              "bg-primary text-primary-foreground shadow-section",
               "disabled:opacity-40 disabled:pointer-events-none",
               "active:scale-95"
             )}
@@ -251,7 +218,7 @@ export function ItineraryItemForm({
         </div>
 
         {/* Title — sticky, persistent across tabs */}
-        <div className="px-5 pt-4 pb-3 border-b border-foreground/8 shrink-0">
+        <div className="px-5 pt-4 pb-3 border-b border-border shrink-0">
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -262,17 +229,17 @@ export function ItineraryItemForm({
         </div>
 
         {/* Tab navigation */}
-        <div className="flex gap-1 px-5 py-2 border-b border-foreground/8 shrink-0">
+        <div role="tablist" className="mx-4 my-3 flex h-11 shrink-0 gap-1 rounded-full bg-foreground/[0.06] p-1">
           {(["Quand", "Quoi", "Qui"] as ItineraryNavTab[]).map((tab) => (
             <button
               key={tab}
               type="button"
               onClick={() => setActiveTab(tab)}
               className={cn(
-                "flex-1 py-1.5 rounded-lg text-sm font-medium transition-all",
+                "flex-1 rounded-full text-sm font-semibold transition-all",
                 activeTab === tab
-                  ? "bg-section-soft text-section-soft ring-1 ring-section"
-                  : "text-slate-400 hover:text-slate-200 hover:bg-foreground/8"
+                  ? "bg-card text-foreground shadow-card dark:bg-foreground/[0.12]"
+                  : "text-muted-foreground hover:text-foreground"
               )}
             >
               {tab}
@@ -308,7 +275,7 @@ export function ItineraryItemForm({
                         className={cn(
                           "px-3 py-1.5 rounded-full text-sm font-medium transition-all active:scale-95",
                           selected
-                            ? "bg-section-soft text-section-soft ring-1 ring-section"
+                            ? "bg-primary/10 text-primary ring-1 ring-primary/40"
                             : "bg-foreground/5 text-slate-400 hover:bg-foreground/10"
                         )}
                       >
@@ -346,14 +313,15 @@ export function ItineraryItemForm({
                         key={t}
                         type="button"
                         onClick={() => setType(t)}
+                        aria-pressed={selected}
                         className={cn(
-                          "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all active:scale-95",
+                          "pressable flex h-11 items-center gap-2 rounded-full pr-4 pl-3 text-sm font-semibold transition-colors",
                           selected
-                            ? cn(cfg.bg, cfg.color, "ring-1")
-                            : "bg-foreground/5 text-slate-400 hover:bg-foreground/10"
+                            ? "bg-foreground text-background"
+                            : "bg-foreground/[0.06] text-foreground hover:bg-foreground/10"
                         )}
                       >
-                        <span>{cfg.emoji}</span>
+                        <cfg.icon size={17} />
                         {cfg.label}
                       </button>
                     );
@@ -376,7 +344,7 @@ export function ItineraryItemForm({
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Ajouter une description"
                   rows={3}
-                  className="w-full bg-foreground/5 border border-foreground/10 rounded-lg px-3 py-2 text-base text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-3 focus:ring-section resize-none"
+                  className="w-full border px-3 py-2 text-base resize-none border-input bg-card rounded-2xl h-12 outline-none placeholder:text-muted-foreground focus:border-primary/60 focus:ring-4 focus:ring-primary/12 tabular"
                 />
               </Row>
             </>
@@ -412,7 +380,7 @@ export function ItineraryItemForm({
                         className={cn(
                           "flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium transition-all active:scale-95",
                           sel
-                            ? "border-section bg-section-soft text-section-soft"
+                            ? "bg-primary/10 text-primary ring-1 ring-primary/40 border-transparent"
                             : "border-foreground/10 bg-foreground/5 text-slate-300 hover:bg-foreground/10"
                         )}
                       >
@@ -452,11 +420,11 @@ function Row({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex items-start gap-4 px-5 py-3.5 border-t border-foreground/8">
+    <div className="flex items-start gap-4 px-5 py-3.5 border-t border-border">
       <div className="text-slate-400 mt-2 shrink-0">{icon}</div>
       <div className="flex-1 min-w-0 space-y-2">
         {label && (
-          <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">
+          <p className="text-xs text-slate-500 font-medium">
             {label}
           </p>
         )}
@@ -479,7 +447,7 @@ function DateInput({
       type="date"
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full bg-foreground/5 border border-foreground/10 rounded-lg px-3 h-10 text-base text-slate-100 [color-scheme:dark] focus:outline-none focus:ring-3 focus:ring-section tabular-nums"
+      className="w-full border px-3 text-base border-input bg-card rounded-2xl h-12 outline-none placeholder:text-muted-foreground focus:border-primary/60 focus:ring-4 focus:ring-primary/12 tabular"
     />
   );
 }
@@ -494,15 +462,11 @@ function TimeInput({
 }) {
   return (
     <div className="relative">
-      <Clock
-        size={14}
-        className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none"
-      />
       <input
         type="time"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full bg-foreground/5 border border-foreground/10 rounded-lg pl-9 pr-3 h-10 text-base text-slate-100 [color-scheme:dark] focus:outline-none focus:ring-3 focus:ring-section tabular-nums"
+        className="w-full border px-4 text-base border-input bg-card rounded-2xl h-12 outline-none placeholder:text-muted-foreground focus:border-primary/60 focus:ring-4 focus:ring-primary/12 tabular"
       />
     </div>
   );
@@ -529,7 +493,7 @@ function NumberPill({
         value={value}
         onChange={(e) => onChange(e.target.value.replace(/[^0-9]/g, ""))}
         placeholder="0"
-        className="w-full bg-foreground/5 border border-foreground/10 rounded-lg px-3 h-10 text-base text-slate-100 placeholder:text-slate-500 tabular-nums focus:outline-none focus:ring-3 focus:ring-section pr-12"
+        className="w-full border px-3 text-base pr-12 border-input bg-card rounded-2xl h-12 outline-none placeholder:text-muted-foreground focus:border-primary/60 focus:ring-4 focus:ring-primary/12 tabular"
       />
       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-500 pointer-events-none">
         {suffix}

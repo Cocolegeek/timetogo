@@ -5,7 +5,7 @@
 ## Stack
 - **Next.js 16 / React 19** — App Router, TypeScript, no Pages Router
 - **Supabase** — PostgreSQL + RLS + Google OAuth via `@supabase/ssr`
-- **UI** — shadcn/ui (style: base-nova) + Tailwind CSS 4 + Framer Motion + Lucide
+- **UI** — shadcn/ui (style: base-nova, primitives restylés) + Tailwind CSS 4 + Framer Motion + Lucide
 - **Forms** — react-hook-form + Zod v4
 - **State** — Custom hooks + local useState (no Redux/Zustand)
 
@@ -54,20 +54,25 @@ components/
               ExpenseForm,         — Sheet 92dvh, 3 tabs Infos | Payé par | Pour qui
               ExpenseList,         — grouped by date, sticky headers with daily total
               ParticipantPaymentSheet — bottom sheet: copy IBAN/tél, share via navigator.share
-  layout/     AppHeader, GlassCard, MeshGradientBackground, SectionThemeController,
-              TripAppHeader, TripNav, TripClientProviders, UserMenu, VoyouLogo
+  layout/     AppHeader, GlassCard (= carte pleine, plus de verre), MeshGradientBackground (= fond uni),
+              PageHeader (grand titre), SectionThemeController, TripAppHeader, TripNav, TripClientProviders,
+              UserMenu, VoyouLogo (logo officiel /icons/icon.png)
+  motion/     MotionProvider (reducedMotion="user"), PageTransition (templates), Stagger/StaggerItem,
+              NumberTicker (montants animés)
   menus/      MealEditDialog
   planning/   ItineraryItemForm,  — full-screen dialog: title/date/type/location/participants
               JourneyForm          — full-screen dialog: from→to, mode, routing/duration, participants
-  shared/     AvatarUpload, ConfirmDeleteDialog, DateRangePicker, DayHeader, EmptyState,
+  shared/     AvatarUpload, ConfirmDeleteDialog, DateRangePicker, DayHeader, DayTabs, EmptyState, Fab,
+              SegmentedControl, Skeleton (Spinner = squelette de page),
               ImageCropDialog, IosInstallBanner,
               LocationPickerSheet, — tap → 88dvh Sheet with large search + Nominatim results;
                                      exports LocationCoord; onChangeCoord passes lat/lon directly
               MapAppIcons,         — GoogleMapsIcon, WazeIcon, AppleMapsIcon, CityMapperIcon, GoogleFlightsIcon
               MapAppPicker,        — MapAppPickerProvider + useOpenLocation() context hook
-              ParticipantAvatar, ParticipantStack, PwaInstallBanner, SectionLabel, Spinner
+              ParticipantAvatar, ParticipantStack, SectionLabel, Spinner
   trips/      BudgetEditDialog, GroupWizard, IdentityPicker, OnboardingModal, ShareModal,
-              TripCard, TripEditDialog, TripEditWrapper, TripWizard
+              TripCard (variants featured | row, tripStatus()), TripCover (illustrations en aplats),
+              TripEditDialog, TripEditWrapper, TripWizard
   ui/         shadcn primitives (button, card, dialog, dropdown-menu, input, label,
               progress, select, separator, sheet, tabs, textarea, badge)
 ```
@@ -140,6 +145,25 @@ itinerary_items   id, trip_id, date, time, title, location, type, duration_minut
 RPCs: `create_trip_with_owner`, `join_trip`, `get_join_preview` (all SECURITY DEFINER — see schema.sql).
 DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip()` / `rowToExpense()` etc. for conversion.
 
+## Design system (enforced — do not regress)
+
+- **Marque** : violet-bleu du logo `#635BFF` = `bg-primary`. Le texte de marque utilise `text-primary`
+  (surchargé dans globals.css vers une teinte qui garde 4.5:1). Une seule couleur vive : pas d'orange/corail.
+- **Neutres** froids, clair + sombre natifs. Thème = système par défaut (`useTheme()` → `preference`
+  `system | light | dark`, clé localStorage `voyou-theme`). Toujours utiliser les tokens
+  (`bg-card`, `bg-secondary`, `text-foreground`, `text-muted-foreground`, `border-border`).
+  Les échelles `slate`/`indigo`/`violet` sont remappées dans globals.css pour le code existant.
+- **Typo** : Bricolage Grotesque (`font-display`) pour titres et montants, Inter pour le texte.
+  Montants en `tabular` + `font-display`. Pas de petites capitales en `uppercase tracking-wider`.
+- **Surfaces** : cartes pleines `bg-card shadow-card rounded-[1.5rem]` (ou `glass` = même rendu),
+  listes groupées façon iOS (rangées séparées par `border-t border-border`). Jamais de verre dépoli,
+  d'orbes, de dégradés décoratifs (`gradient-primary` = aplat) ni d'emoji comme icône.
+- **Illustrations** : `TripCover` (aplats violet / nuit / lilas / soleil), choisie par `seed` = id.
+- **Motion** : `lib/motion.ts` (`EASE_OUT`, `EASE_SHEET`, `spring`, `fadeUp`, `stagger`). Indicateurs
+  glissants via `layoutId` (TripNav, SegmentedControl, DayTabs). Respect de `prefers-reduced-motion`
+  (MotionConfig + CSS). `pressable` pour le retour tactile.
+- **Accessibilité** : zoom autorisé, cibles ≥ 44 px, `aria-label` sur les boutons icônes.
+
 ## UX Patterns (enforced — do not regress)
 
 ### Location input
@@ -153,10 +177,12 @@ All creation/edit forms are full-screen or near-full-screen on mobile:
 - **Sheet 92dvh** (bottom): `ExpenseForm`, `MapAppPicker`
 - **Sheet 88dvh** (bottom): `LocationPickerSheet`, `ExpenseDetailSheet`
 - **Dialog full-screen mobile / centered desktop**: `ItineraryItemForm`, `JourneyForm`, `MealEditDialog`
+  (className `FULLSCREEN_DIALOG` exporté par `components/ui/dialog.tsx`)
 
 ### Expense flow
 Tap card → `ExpenseDetailSheet` (read-only: amount, payers, splits) → "Modifier" → `ExpenseForm`.
 Swipe left on card = direct delete (no extra confirmation needed — the gesture is the confirmation).
+Budget page accepts `?tab=balances` to open the Soldes tab (used by the dashboard balance tiles).
 
 ### Number inputs
 All `<input type="number">` and amount text inputs must have `onFocus={(e) => e.target.select()}` so tapping replaces the value immediately.

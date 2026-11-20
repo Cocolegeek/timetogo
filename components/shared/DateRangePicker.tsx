@@ -108,12 +108,12 @@ export function DateRangePicker({ startDate, endDate, onChange }: DateRangePicke
 
         <div className="flex-1 flex items-center gap-3 min-w-0">
           <div className="flex-1 min-w-0">
-            <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Départ</p>
+            <p className="text-xs text-slate-500 font-semibold">Départ</p>
             <p className="text-sm font-semibold text-slate-100 truncate">{fmtShort(startDate)}</p>
           </div>
           <div className="w-px h-7 bg-foreground/10 shrink-0" />
           <div className="flex-1 min-w-0">
-            <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Retour</p>
+            <p className="text-xs text-slate-500 font-semibold">Retour</p>
             <p className="text-sm font-semibold text-slate-100 truncate">{fmtShort(endDate)}</p>
           </div>
         </div>
@@ -176,7 +176,7 @@ export function DateRangePicker({ startDate, endDate, onChange }: DateRangePicke
             {/* Day-of-week headers */}
             <div className="grid grid-cols-7 px-3">
               {DAYS_FR.map((d, i) => (
-                <div key={i} className="text-center text-[11px] font-bold text-slate-600 uppercase py-1.5">
+                <div key={i} className="text-center text-xs font-bold text-slate-600 uppercase py-1.5">
                   {d}
                 </div>
               ))}

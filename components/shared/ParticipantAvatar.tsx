@@ -8,7 +8,7 @@ interface ParticipantAvatarProps {
 }
 
 const SIZES = {
-  xs: "w-6 h-6 text-[11px]",
+  xs: "w-6 h-6 text-[0.6875rem]",
   sm: "w-7 h-7 text-xs",
   md: "w-9 h-9 text-sm",
   lg: "w-12 h-12 text-base",
@@ -29,7 +29,7 @@ export function ParticipantAvatar({
   return (
     <div
       className={cn(
-        "rounded-full flex items-center justify-center font-semibold text-white shrink-0 ring-2 ring-white/10",
+        "rounded-full flex items-center justify-center font-semibold text-white shrink-0 ring-2 ring-card",
         SIZES[size],
         className
       )}

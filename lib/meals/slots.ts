@@ -1,3 +1,4 @@
+import { Coffee, Sun, Cookie, Moon, type LucideIcon } from "lucide-react";
 import type { MealSlot } from "@/types";
 
 export interface SlotConfig {
@@ -6,6 +7,9 @@ export interface SlotConfig {
   shortLabel: string;
   position: number;
   emoji: string;
+  icon: LucideIcon;
+  /** Full label ("Petit-déjeuner"). */
+  label: string;
   /** Tailwind class for the colored left-strip when the meal is filled. */
   stripClass: string;
   /** Tailwind text-color class matching the strip (used on badges/etc.). */
@@ -21,36 +25,44 @@ export const DEFAULT_SLOTS: SlotConfig[] = [
     shortLabel: "Matin",
     position: 0,
     emoji: "🥐",
+    icon: Coffee,
+    label: "Petit-déjeuner",
     stripClass: "bg-amber-500",
     textClass: "text-amber-400",
-    bgClass: "bg-amber-400/10",
+    bgClass: "bg-amber-400/15",
   },
   {
     slot: "lunch",
     shortLabel: "Midi",
     position: 1,
     emoji: "🍝",
+    icon: Sun,
+    label: "Déjeuner",
     stripClass: "bg-sky-500",
     textClass: "text-sky-400",
-    bgClass: "bg-sky-400/10",
+    bgClass: "bg-sky-400/15",
   },
   {
     slot: "snack",
     shortLabel: "Goûter",
     position: 2,
     emoji: "🍪",
+    icon: Cookie,
+    label: "Goûter",
     stripClass: "bg-pink-500",
     textClass: "text-pink-400",
-    bgClass: "bg-pink-400/10",
+    bgClass: "bg-pink-400/15",
   },
   {
     slot: "dinner",
     shortLabel: "Soir",
     position: 3,
     emoji: "🍽️",
+    icon: Moon,
+    label: "Dîner",
     stripClass: "bg-violet-500",
     textClass: "text-violet-400",
-    bgClass: "bg-violet-400/10",
+    bgClass: "bg-violet-400/15",
   },
 ];
 

@@ -2,43 +2,53 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-export type Theme = "light" | "dark";
+export type ThemePreference = "system" | "light" | "dark";
 
 const STORAGE_KEY = "voyou-theme";
 
-/** Read the current theme from <html>.classList — kept in sync with the
- *  no-FOUC inline script that runs before React. */
-function getInitialTheme(): Theme {
-  if (typeof document === "undefined") return "light";
-  return document.documentElement.classList.contains("dark") ? "dark" : "light";
+function readPreference(): ThemePreference {
+  try {
+    const v = localStorage.getItem(STORAGE_KEY);
+    return v === "light" || v === "dark" ? v : "system";
+  } catch {
+    return "system";
+  }
 }
 
+function applyPreference(pref: ThemePreference) {
+  const dark =
+    pref === "dark" || (pref === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+  document.documentElement.classList.toggle("dark", dark);
+}
+
+/** Theme preference: follows the OS by default, can be forced light or dark. */
 export function useTheme() {
-  const [theme, setThemeState] = useState<Theme>("light");
+  const [preference, setPreferenceState] = useState<ThemePreference>("system");
 
-  // Sync state from DOM after hydration
   useEffect(() => {
-    setThemeState(getInitialTheme());
+    // Sync from storage after hydration (the inline script already applied it).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setPreferenceState(readPreference());
   }, []);
 
-  const applyTheme = useCallback((next: Theme) => {
-    if (typeof document === "undefined") return;
-    if (next === "dark") {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
+  useEffect(() => {
+    if (preference !== "system") return;
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    const onChange = () => applyPreference("system");
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, [preference]);
+
+  const setPreference = useCallback((next: ThemePreference) => {
     try {
-      localStorage.setItem(STORAGE_KEY, next);
+      if (next === "system") localStorage.removeItem(STORAGE_KEY);
+      else localStorage.setItem(STORAGE_KEY, next);
     } catch {
-      // Ignore quota / privacy mode errors
+      // storage unavailable: the choice lasts for this page only
     }
-    setThemeState(next);
+    applyPreference(next);
+    setPreferenceState(next);
   }, []);
 
-  const toggle = useCallback(() => {
-    applyTheme(theme === "dark" ? "light" : "dark");
-  }, [theme, applyTheme]);
-
-  return { theme, setTheme: applyTheme, toggle };
+  return { preference, setPreference };
 }

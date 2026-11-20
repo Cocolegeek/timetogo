@@ -5,8 +5,9 @@ import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { CATEGORIES } from "@/lib/budget/categories";
 import { computeShares } from "@/lib/budget/splits";
-import { formatCurrency, currencySymbol } from "@/lib/format-currency";
+import { formatCurrency } from "@/lib/format-currency";
 import { cn } from "@/lib/utils";
+import { ParticipantAvatar } from "@/components/shared/ParticipantAvatar";
 import type { Expense, Participant } from "@/types";
 
 interface ExpenseDetailSheetProps {
@@ -52,35 +53,28 @@ export function ExpenseDetailSheet({
   );
   const activeSplits = computedSplits.filter((s) => !s.excluded);
 
-  const sym = currencySymbol(currency);
   const multiPayer = expense.payers.length > 1;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="bottom"
-        className="glass-strong border-foreground/10 rounded-t-2xl p-0 flex flex-col overflow-hidden"
+        className="p-0 flex flex-col overflow-hidden"
         style={{ maxHeight: "88dvh" }}
       >
         <SheetTitle className="sr-only">Détail de la dépense</SheetTitle>
 
-        {/* Scrollable body */}
         <div className="flex-1 overflow-y-auto">
-          {/* Hero — amount + title */}
-          <div className="px-6 pt-6 pb-5">
-            {/* Category chip */}
-            <div className={cn("inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full mb-4", cfg.bg)}>
-              <Icon size={13} className={cfg.color} />
-              <span className={cn("text-xs font-semibold", cfg.color)}>{cfg.label}</span>
-            </div>
-
-            <p className="text-5xl font-bold text-white tabular-nums leading-none">
+          <div className="px-6 pt-9 pb-6 text-center">
+            <span className={cn("mx-auto flex size-14 items-center justify-center rounded-[1.1rem]", cfg.bg)}>
+              <Icon size={26} className={cfg.color} />
+            </span>
+            <p className="tabular mt-4 font-display text-[3rem] leading-none font-extrabold tracking-[-0.04em]">
               {formatCurrency(expense.amountInTripCurrency, currency)}
             </p>
-            <p className="text-xl font-semibold text-slate-200 mt-2 leading-snug">
-              {expense.title}
-            </p>
-            <p className="text-sm text-slate-500 mt-1">
+            <p className="mt-2 text-lg font-semibold">{expense.title}</p>
+            <p className="mt-1 text-sm text-muted-foreground first-letter:uppercase">
+              {cfg.label} ·{" "}
               {parseLocalDate(expense.date).toLocaleDateString("fr-FR", {
                 weekday: "long",
                 day: "numeric",
@@ -89,98 +83,63 @@ export function ExpenseDetailSheet({
             </p>
           </div>
 
-          {/* Payé par */}
-          <div className="border-t border-foreground/8 px-6 py-4">
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
-              Payé par
-            </p>
-            <div className="space-y-2.5">
-              {payers.map((p) => (
-                <div key={p.id} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <span
-                      className="w-2.5 h-2.5 rounded-full shrink-0"
-                      style={{ backgroundColor: p.color }}
-                    />
-                    <span className="text-base font-medium text-slate-200">{p.name}</span>
-                  </div>
-                  {multiPayer && (
-                    <span className="text-base font-semibold text-slate-300 tabular-nums">
-                      {formatCurrency(p.amount, currency)}
-                    </span>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
+          <div className="space-y-5 px-5 pb-6">
+            <section>
+              <h3 className="mb-2 px-1 text-sm font-semibold text-muted-foreground">Payé par</h3>
+              <ul className="overflow-hidden rounded-[1.25rem] bg-secondary">
+                {payers.map((p, i) => (
+                  <li key={p.id} className={cn("flex items-center gap-3 px-4 py-3", i > 0 && "border-t border-border")}>
+                    <ParticipantAvatar participant={p} size="sm" />
+                    <span className="flex-1 font-medium">{p.name}</span>
+                    <span className="tabular font-semibold">{formatCurrency(multiPayer ? p.amount : expense.amountInTripCurrency, currency)}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
 
-          {/* Pour qui */}
-          <div className="border-t border-foreground/8 px-6 py-4">
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
-              Pour qui
-            </p>
-            <div className="space-y-2.5">
-              {activeSplits.map((split) => {
-                const p = participants.find((pt) => pt.id === split.participantId);
-                if (!p) return null;
-                return (
-                  <div key={split.participantId} className="flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <span
-                        className="w-2.5 h-2.5 rounded-full shrink-0"
-                        style={{ backgroundColor: p.color }}
-                      />
-                      <span className="text-base font-medium text-slate-200">{p.name}</span>
-                    </div>
-                    <span className="text-base font-semibold text-slate-300 tabular-nums">
-                      {formatCurrency(split.share ?? 0, currency)}
+            <section>
+              <h3 className="mb-2 flex items-center justify-between px-1 text-sm font-semibold text-muted-foreground">
+                <span>Pour qui</span>
+                <span className="font-medium">
+                  {expense.splitMode === "equal"
+                    ? `Équitable${activeSplits.length !== participants.length ? ` · ${activeSplits.length}/${participants.length}` : ""}`
+                    : expense.splitMode === "percentage"
+                      ? "En pourcentages"
+                      : "Montants fixes"}
+                </span>
+              </h3>
+              <ul className="overflow-hidden rounded-[1.25rem] bg-secondary">
+                {activeSplits.map((split, i) => {
+                  const p = participants.find((pt) => pt.id === split.participantId);
+                  if (!p) return null;
+                  return (
+                    <li key={split.participantId} className={cn("flex items-center gap-3 px-4 py-3", i > 0 && "border-t border-border")}>
+                      <ParticipantAvatar participant={p} size="sm" />
+                      <span className="flex-1 font-medium">{p.name}</span>
                       {expense.splitMode === "percentage" && split.percentage != null && (
-                        <span className="text-xs text-slate-500 ml-1.5">
-                          {Math.round(split.percentage)}%
-                        </span>
+                        <span className="text-sm text-muted-foreground">{Math.round(split.percentage)} %</span>
                       )}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-            {activeSplits.length !== participants.length && (
-              <p className="text-xs text-slate-600 mt-3">
-                {activeSplits.length} / {participants.length} participants
-              </p>
-            )}
-          </div>
-
-          {/* Mode de répartition badge */}
-          <div className="px-6 pb-5">
-            <span className="text-xs text-slate-600 bg-foreground/5 border border-foreground/8 px-2.5 py-1 rounded-full">
-              {expense.splitMode === "equal"
-                ? `Équitable · ${sym}`
-                : expense.splitMode === "percentage"
-                ? "Répartition %"
-                : "Montants fixes"}
-            </span>
+                      <span className="tabular font-semibold">{formatCurrency(split.share ?? 0, currency)}</span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
           </div>
         </div>
 
-        {/* Footer actions */}
-        <div
-          className="shrink-0 border-t border-foreground/8 px-5 py-4 flex gap-3"
-          style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 1rem)" }}
-        >
+        <div className="flex shrink-0 gap-2 border-t border-border px-5 pt-3 pb-4">
           <Button
-            variant="ghost"
+            variant="secondary"
+            size="lg"
             onClick={onDelete}
-            className="text-red-400 hover:text-red-300 hover:bg-red-500/10 gap-2"
+            className="text-red-400 hover:text-red-400"
+            aria-label="Supprimer la dépense"
           >
-            <Trash2 size={16} />
-            Supprimer
+            <Trash2 size={18} />
           </Button>
-          <Button
-            onClick={onEdit}
-            className="flex-1 gradient-primary text-white border-0 gap-2"
-          >
-            <Pencil size={15} />
+          <Button size="lg" onClick={onEdit} className="flex-1 shadow-section">
+            <Pencil size={16} />
             Modifier
           </Button>
         </div>

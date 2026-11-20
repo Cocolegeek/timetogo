@@ -127,19 +127,19 @@ export function LocationPickerSheet({
         type="button"
         onClick={openPicker}
         className={cn(
-          "w-full flex items-center gap-2.5 text-left h-10 rounded-lg px-3 border transition-colors",
-          "hover:brightness-[1.15] active:brightness-90",
-          className ?? "bg-foreground/8 border-foreground/10"
+          "flex h-12 w-full items-center gap-3 rounded-2xl border border-input bg-card px-4 text-left transition-colors",
+          "hover:border-foreground/25 active:bg-secondary",
+          className
         )}
       >
         <MapPin
-          size={15}
-          className={cn("shrink-0", value ? "text-section" : "text-slate-500")}
+          size={17}
+          className={cn("shrink-0", value ? "text-primary" : "text-muted-foreground")}
         />
         <span
           className={cn(
-            "flex-1 truncate text-sm",
-            value ? "text-slate-100" : "text-slate-500"
+            "flex-1 truncate text-base",
+            value ? "text-foreground" : "text-muted-foreground"
           )}
         >
           {value || placeholder}
@@ -149,12 +149,13 @@ export function LocationPickerSheet({
             role="button"
             tabIndex={-1}
             onClick={clearValue}
-            className="p-0.5 text-slate-500 hover:text-slate-300 shrink-0 rounded"
+            aria-label="Effacer le lieu"
+            className="-mr-1 flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-foreground/[0.06] hover:text-foreground"
           >
-            <X size={13} />
+            <X size={15} />
           </span>
         ) : (
-          <Search size={13} className="text-slate-600 shrink-0" />
+          <Search size={15} className="shrink-0 text-muted-foreground" />
         )}
       </button>
 
@@ -162,13 +163,13 @@ export function LocationPickerSheet({
       <Sheet open={pickerOpen} onOpenChange={setPickerOpen}>
         <SheetContent
           side="bottom"
-          className="glass-strong border-foreground/10 rounded-t-2xl p-0 flex flex-col overflow-hidden"
+          className="p-0 flex flex-col overflow-hidden"
           style={{ height: "88dvh" }}
         >
           <SheetTitle className="sr-only">Rechercher un lieu</SheetTitle>
 
           {/* Search header */}
-          <div className="px-4 pt-4 pb-3 border-b border-foreground/8 shrink-0 pr-16">
+          <div className="shrink-0 border-b border-border px-4 pt-7 pr-16 pb-3">
             <div className="relative">
               <Search
                 size={18}
@@ -180,7 +181,7 @@ export function LocationPickerSheet({
                 onChange={handleQueryChange}
                 placeholder={placeholder}
                 autoComplete="off"
-                className="w-full bg-foreground/8 border border-foreground/10 rounded-xl pl-10 pr-10 h-12 text-lg text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-section"
+                className="w-full border pl-10 pr-10 h-12 text-lg border-input bg-card rounded-2xl outline-none placeholder:text-muted-foreground focus:border-primary/60 focus:ring-4 focus:ring-primary/12 tabular"
               />
               {loading ? (
                 <Loader2
@@ -210,10 +211,10 @@ export function LocationPickerSheet({
                       key={s.place_id}
                       type="button"
                       onClick={() => selectSuggestion(s)}
-                      className="w-full flex items-center gap-4 px-5 py-4 border-b border-foreground/6 hover:bg-foreground/5 active:bg-foreground/8 transition-colors text-left"
+                      className="flex w-full items-center gap-4 border-b border-border px-5 py-3.5 text-left transition-colors hover:bg-foreground/[0.03] active:bg-secondary"
                     >
-                      <div className="w-9 h-9 rounded-full bg-foreground/8 flex items-center justify-center shrink-0">
-                        <MapPin size={16} className="text-slate-400" />
+                      <div className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                        <MapPin size={17} />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-base font-semibold text-slate-100 truncate leading-snug">

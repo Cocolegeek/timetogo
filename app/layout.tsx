@@ -3,6 +3,7 @@ import { Bricolage_Grotesque, Inter, Geist_Mono } from "next/font/google";
 import { PwaRegister } from "./pwa-register";
 import { AppInstallBanner } from "@/components/shared/IosInstallBanner";
 import { SectionThemeController } from "@/components/layout/SectionThemeController";
+import { MotionProvider } from "@/components/motion/MotionProvider";
 import "./globals.css";
 
 const inter = Inter({
@@ -59,8 +60,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#FAF7F2" },
-    { media: "(prefers-color-scheme: dark)", color: "#171513" },
+    { media: "(prefers-color-scheme: light)", color: "#F6F6F9" },
+    { media: "(prefers-color-scheme: dark)", color: "#141318" },
   ],
   width: "device-width",
   initialScale: 1,
@@ -100,7 +101,7 @@ export default function RootLayout({
         <SectionThemeController />
         <PwaRegister />
         <AppInstallBanner />
-        {children}
+        <MotionProvider>{children}</MotionProvider>
       </body>
     </html>
   );
