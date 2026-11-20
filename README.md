@@ -21,7 +21,10 @@ Application de planification de voyage collaborative — budget partagé, planni
 - Planning d'itinéraire jour par jour
 - Menus (petit-déj, déjeuner, dîner) avec liste de courses
 - Partage par code 6 caractères — les contributeurs peuvent tout voir et modifier
-- Profil utilisateur (nom, photo, avatar)
+- **Listes** : « À apporter » (qui ramène quoi) et « À faire », avec qui s'en charge
+- **Ta bande** : les gens avec qui tu voyages (et ceux ajoutés par lien) s'embarquent en un geste dans un nouveau voyage
+- **Notifications push** (dépenses, remboursements, listes, bande, planning), réglables par type
+- Réglages en sous-menus : profil, bande, remboursements, notifications, apparence et confort, compte
 - Recherche dans un voyage, ajout rapide, annulation des suppressions
 - PWA installable (iOS + Android)
 
@@ -38,11 +41,24 @@ cp .env.local.example .env.local
 npm run dev
 ```
 
-### Supabase : mode invité
+### Supabase : migrations récentes
 
-Appliquer `lib/supabase/migrations/021_guest_accounts.sql`, puis dans le dashboard Supabase
-(Authentication) activer **Allow anonymous sign-ins** et **Allow manual linking**.
-Un CAPTCHA (Attack Protection) est recommandé pour limiter la création de comptes invités.
+1. `lib/supabase/migrations/021_guest_accounts.sql` (mode invité), puis dans le dashboard Supabase
+   (Authentication) activer **Allow anonymous sign-ins** et **Allow manual linking**.
+   Un CAPTCHA (Attack Protection) est recommandé pour limiter la création de comptes invités.
+2. `lib/supabase/migrations/022_friends_notifications_lists.sql` (Ta bande, notifications push, Listes).
+
+### Notifications push
+
+L'envoi passe par `app/api/notify` (Web Push / VAPID). La clé publique est dans
+`lib/notifications/vapid.ts` ; la clé **privée** doit être fournie au serveur :
+
+- `VAPID_PRIVATE_KEY` (obligatoire pour envoyer)
+- `VAPID_SUBJECT` (optionnel, ex. `mailto:toi@exemple.fr` ; par défaut l'URL du site)
+- Pour changer de paire : `npx web-push generate-vapid-keys`, puis `NEXT_PUBLIC_VAPID_PUBLIC_KEY`
+  + `VAPID_PRIVATE_KEY`. Sans clé privée, l'app marche normalement, seules les notifications sont muettes.
+
+Sur iPhone, les notifications web demandent iOS 16.4+ et l'app installée sur l'écran d'accueil.
 
 Ouvre http://localhost:3000.
 
@@ -63,6 +79,7 @@ Ouvre http://localhost:3000.
 2. Ajoute les variables d'environnement :
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `VAPID_PRIVATE_KEY` (notifications push, voir plus haut)
 3. Deploy
 
 ### 3. Boucle Google OAuth
@@ -76,9 +93,11 @@ app/                      # Routes (App Router)
   ├── login/              # Page de connexion Google
   ├── auth/callback/      # Callback OAuth
   ├── consent/            # GDPR consent (une seule fois après connexion)
-  ├── settings/           # Profil utilisateur + thème
+  ├── settings/           # Réglages + sous-pages (profil, bande, remboursements, notifications…)
+  ├── friends/add/        # Lien d'invitation dans la bande
+  ├── api/notify/         # Envoi des notifications push
   ├── join/               # Rejoindre un voyage via code
-  └── trips/[tripId]/     # Voyage : budget, planning, menus
+  └── trips/[tripId]/     # Voyage : budget, planning, menus, listes
 components/               # Composants UI
 hooks/                    # Hooks Supabase (useTrip, useBudget, useMeals…)
 lib/

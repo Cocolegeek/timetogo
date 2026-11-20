@@ -86,6 +86,7 @@ const themeScript = `
       };
       apply();
       if (t !== 'light' && t !== 'dark') mq.addEventListener('change', apply);
+      try { if (localStorage.getItem('voyou-motion') === 'reduced') document.documentElement.classList.add('reduce-motion'); } catch (e) {}
     } catch (e) {}
   })();
 `;

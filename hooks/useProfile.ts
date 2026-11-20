@@ -4,7 +4,7 @@ import { useCachedQuery } from "@/hooks/useCachedQuery";
 import { clearDataCache } from "@/lib/data/swr";
 import { createClient } from "@/lib/supabase/client";
 import { syncMyParticipantAvatars } from "@/lib/avatar-sync";
-import type { Profile } from "@/types";
+import type { NotificationPrefs, Profile } from "@/types";
 
 async function fetchProfileRow(): Promise<Profile | null> {
   const supabase = createClient();
@@ -28,6 +28,7 @@ export function useProfile() {
       custom_avatar_url?: string | null;
       iban?: string | null;
       phone?: string | null;
+      notification_prefs?: NotificationPrefs;
     }
   ): Promise<void> => {
     const supabase = createClient();

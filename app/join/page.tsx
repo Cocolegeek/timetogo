@@ -16,6 +16,7 @@ import { createClient } from "@/lib/supabase/client";
 import { syncMyParticipantAvatars } from "@/lib/avatar-sync";
 import type { Participant } from "@/types";
 import { PARTICIPANT_COLORS } from "@/lib/participant-colors";
+import { notify } from "@/lib/notifications/notify";
 
 interface TripPreview {
   id: string;
@@ -149,6 +150,7 @@ function JoinContent() {
       });
       if (rpcError) throw rpcError;
       await syncMyParticipantAvatars();
+      notify({ event: "trip_joined", tripId: tripPreview.id });
       router.push(`/trips/${tripPreview.id}`);
     } catch {
       setError("Impossible de rejoindre l'aventure. Réessaie.");

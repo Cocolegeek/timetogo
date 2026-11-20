@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/client";
 import { computeShares } from "@/lib/budget/splits";
 import { useCachedQuery } from "@/hooks/useCachedQuery";
 import type { Expense, Payer } from "@/types";
+import { notify } from "@/lib/notifications/notify";
 
 function rowToExpense(row: Record<string, unknown>): Expense {
   return {
@@ -76,6 +77,7 @@ export function useBudget(tripId: string) {
     setExpenses(prev =>
       [newExpense, ...prev].sort((a, b) => b.date.localeCompare(a.date))
     );
+    notify({ event: "expense", tripId: data.tripId, id: row.id });
     return row.id;
   };
 

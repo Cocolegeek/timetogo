@@ -3,12 +3,13 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { ArrowUpRight, CalendarDays, Scale, Search, UtensilsCrossed, X } from "lucide-react";
+import { ArrowUpRight, CalendarDays, Check, ListChecks, Scale, Search, UtensilsCrossed, X } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { ParticipantAvatar } from "@/components/shared/ParticipantAvatar";
 import { useBudget } from "@/hooks/useBudget";
 import { useItinerary } from "@/hooks/useItinerary";
 import { useMeals } from "@/hooks/useMeals";
+import { useChecklist } from "@/hooks/useChecklist";
 import { CATEGORIES } from "@/lib/budget/categories";
 import { ITINERARY_TYPES } from "@/lib/itinerary-types";
 import { SLOT_CONFIG } from "@/lib/meals/slots";
@@ -52,6 +53,7 @@ function SearchBody({ trip, onClose }: { trip: Trip; onClose: () => void }) {
   const { expenses } = useBudget(trip.id);
   const { items } = useItinerary(trip.id);
   const { meals } = useMeals(trip.id);
+  const { items: listItems } = useChecklist(trip.id);
   const base = `/trips/${trip.id}`;
   const nameOf = (id: string) => trip.participants.find((p) => p.id === id)?.name ?? "";
 
@@ -120,6 +122,24 @@ function SearchBody({ trip, onClose }: { trip: Trip; onClose: () => void }) {
         };
       });
 
+    const listResults: Result[] = listItems
+      .filter((i) => match(i.title, i.note, ...i.assigneeIds.map(nameOf)))
+      .slice(0, 8)
+      .map((i) => {
+        const who = i.assigneeIds.map(nameOf).filter(Boolean).join(", ");
+        return {
+          id: i.id,
+          title: i.title,
+          subtitle: [i.list === "bring" ? "À apporter" : "À faire", who || "Personne pour l'instant", i.done ? "fait" : null].filter(Boolean).join(" · "),
+          href: `${base}/lists?item=${i.id}`,
+          icon: (
+            <span className="flex size-10 items-center justify-center rounded-2xl bg-amber-500/12 text-amber-400">
+              {i.done ? <Check size={18} strokeWidth={2.6} /> : <ListChecks size={18} />}
+            </span>
+          ),
+        };
+      });
+
     const peopleResults: Result[] = trip.participants
       .filter((p) => match(p.name))
       .map((p) => ({
@@ -134,10 +154,11 @@ function SearchBody({ trip, onClose }: { trip: Trip; onClose: () => void }) {
       { title: "Dépenses", results: expenseResults },
       { title: "Planning", results: planningResults },
       { title: "Repas", results: mealResults },
+      { title: "Listes", results: listResults },
       { title: "Participants", results: peopleResults },
     ].filter((s) => s.results.length > 0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query, expenses, items, meals, trip]);
+  }, [query, expenses, items, meals, listItems, trip]);
 
   const go = (href: string) => {
     onClose();
@@ -148,6 +169,7 @@ function SearchBody({ trip, onClose }: { trip: Trip; onClose: () => void }) {
     { label: "Qui doit quoi", href: `${base}/budget?tab=balances`, icon: Scale, show: true },
     { label: "Le planning du jour", href: `${base}/planning`, icon: CalendarDays, show: trip.type === "trip" },
     { label: "Les repas du jour", href: `${base}/menus`, icon: UtensilsCrossed, show: trip.type === "trip" },
+    { label: "Qui ramène quoi", href: `${base}/lists`, icon: ListChecks, show: true },
   ].filter((s) => s.show);
 
   return (

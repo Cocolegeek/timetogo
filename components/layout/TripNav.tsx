@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import {
   CalendarPlus,
   House,
+  ListChecks,
   Map,
   Plus,
   Route,
@@ -31,6 +32,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Budget", href: "/budget", icon: Wallet },
   { label: "Planning", href: "/planning", icon: Map },
   { label: "Menus", href: "/menus", icon: UtensilsCrossed },
+  { label: "Listes", href: "/lists", icon: ListChecks },
 ];
 
 const QUICK_ADD: {
@@ -46,6 +48,7 @@ const QUICK_ADD: {
   { kind: "step", label: "Étape", hint: "Activité, resto, logement", icon: CalendarPlus, tile: "bg-emerald-500 text-white", href: "/planning", voyageOnly: true },
   { kind: "journey", label: "Trajet", hint: "D'un lieu à l'autre", icon: Route, tile: "bg-sky-500 text-white", href: "/planning", voyageOnly: true },
   { kind: "meal", label: "Repas", hint: "Menu, courses, cuisiniers", icon: UtensilsCrossed, tile: "bg-rose-500 text-white", href: "/menus", voyageOnly: true },
+  { kind: "item", label: "Liste", hint: "À apporter, à faire", icon: ListChecks, tile: "bg-amber-500 text-white", href: "/lists", voyageOnly: false },
 ];
 
 /** Glass material for the floating navigation layer only (never on content). */
@@ -70,6 +73,7 @@ export function TripNav({ tripId }: TripNavProps) {
   const items = NAV_ITEMS.filter((item) => {
     if (item.href === "/planning") return features.hasPlanning;
     if (item.href === "/menus") return features.hasMenus;
+    if (item.href === "/lists") return features.hasLists;
     return true;
   });
   const actions = QUICK_ADD.filter((a) => !a.voyageOnly || tripType === "trip");

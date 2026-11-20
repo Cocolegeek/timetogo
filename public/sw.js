@@ -1,5 +1,5 @@
 // Voyou service worker — bump CACHE when cached assets change (old caches are purged on activate).
-const CACHE = 'voyou-v3';
+const CACHE = 'voyou-v4';
 const PRECACHE = ['/icons/icon.svg', '/icons/icon-192.png', '/manifest.json'];
 
 self.addEventListener('install', (e) => {
@@ -61,4 +61,36 @@ self.addEventListener('fetch', (e) => {
         .catch(() => caches.match(request).then((cached) => cached || caches.match('/trips')))
     );
   }
+});
+
+// ─── Push notifications (payload: { title, body, url, tag }) ───
+self.addEventListener('push', (e) => {
+  let data = {};
+  try {
+    data = e.data ? e.data.json() : {};
+  } catch {
+    data = { body: e.data ? e.data.text() : '' };
+  }
+  e.waitUntil(
+    self.registration.showNotification(data.title || 'Voyou', {
+      body: data.body || '',
+      icon: '/icons/icon-192.png',
+      badge: '/icons/badge-96.png',
+      tag: data.tag,
+      renotify: !!data.tag,
+      data: { url: data.url || '/trips' },
+    })
+  );
+});
+
+self.addEventListener('notificationclick', (e) => {
+  e.notification.close();
+  const url = new URL((e.notification.data && e.notification.data.url) || '/trips', self.location.origin).href;
+  e.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windows) => {
+      const open = windows.find((w) => w.url.startsWith(self.location.origin));
+      if (open) return open.focus().then((w) => (w && 'navigate' in w ? w.navigate(url) : null));
+      return self.clients.openWindow(url);
+    })
+  );
 });

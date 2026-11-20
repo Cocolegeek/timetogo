@@ -31,7 +31,10 @@ app/
   api/geocode/route.ts   → GET ?q= → { lat, lon } via Nominatim (server-side)
   api/routing/route.ts   → GET ?from=&to=&mode= → { durationMinutes, distanceKm } via OSRM
   join/page.tsx          → join trip by share code
-  settings/page.tsx      → profile + theme
+  settings/page.tsx      → menu Réglages (carte profil + lignes vers les sous-pages)
+  settings/{profile,friends,payments,notifications,appearance,account}/page.tsx → sous-pages
+  friends/add/page.tsx   → ?code= : aperçu + « Ajouter à ma bande » (lien d'invitation)
+  api/notify/route.ts    → POST NotifyEvent → compose (RLS de l'appelant) + Web Push (VAPID) ; GET → { configured }
   trips/
     page.tsx             → list all trips
     new/page.tsx         → trip creation wizard (TripWizard | GroupWizard)
@@ -40,6 +43,7 @@ app/
       page.tsx           → trip dashboard
       budget/page.tsx    → 2-tab expense tracker (Dépenses / Soldes+Régler)
       menus/page.tsx     → meal planning
+      lists/page.tsx     → Listes « À apporter » / « À faire » (?item=<id>, ?list=todo)
       planning/page.tsx  → itinerary builder (étapes + trajets)
   trips/template.tsx + [tripId]/template.tsx → page transitions (PageTransition)
 proxy.ts                 → middleware (getClaims): enforces auth on all routes except /login /auth/callback /join /consent
@@ -83,14 +87,18 @@ components/
               TripSearch, DayAgendaCard (journée utile du tableau de bord : étape en cours / à suivre + reste du jour),
               TripCard (variants featured | row, tripStatus()), TripCover (illustrations en aplats),
               TripEditDialog, TripEditWrapper, TripWizard
-  ui/         shadcn primitives (button, card, dialog, dropdown-menu, input, label,
+  settings/   SettingsShell (retour + grand titre), SettingsList (SettingsGroup, SettingsRow, SettingsToggle)
+  trips/      FriendPicker (rangée « Ta bande » : un pote choisi = membre lié, le voyage apparaît chez lui),
+              MyListCard (tableau de bord : « On compte sur toi » / « n choses sans personne »)
+  ui/         switch (interrupteur iOS) +
+              shadcn primitives (button, card, dialog, dropdown-menu, input, label,
               progress, select, separator, sheet, tabs, textarea, badge)
 ```
 
 ## Hooks (all `"use client"`, call `createClient()` internally)
 
 Les hooks de données reposent sur SWR via `useCachedQuery` (clés : `trips`, `trip:<id>`, `claims:<id>`,
-`expenses:<id>`, `itinerary:<id>`, `meals:<id>`, `profile`). Le cache est partagé, dédupliqué et persisté
+`expenses:<id>`, `itinerary:<id>`, `meals:<id>`, `checklist:<id>`, `profile`, `friends`, `friend-code`). Le cache est partagé, dédupliqué et persisté
 dans localStorage (`voyou-cache-v1`, `lib/data/swr.tsx` → `DataProvider`, `clearDataCache()` à la
 déconnexion / au changement de compte) : affichage instantané, revalidation en arrière-plan (focus, reconnexion).
 Les mutations font `set()` (optimiste) puis `refetch()`.
@@ -112,6 +120,8 @@ useDebts(id)            → computed balances/settlements (no direct DB)
 useTheme()              → { preference: system|light|dark, setPreference } (key: "voyou-theme")
 useUserId()             → current user uuid (fast, no extra fetch)
 useCachedQuery(key, fetcher, fallback) → { data, loading, set, refetch }  // base de tous les hooks de données
+useFriends()            → { friends, code, addByCode, remove, refetch }  // + addFriendsToTrip(), previewFriend()
+useChecklist(id)        → { items, addItem, updateItem, deleteItem }     // notifie les nouveaux assignés
 ```
 
 ## Lib / Utils
@@ -119,17 +129,21 @@ useCachedQuery(key, fetcher, fallback) → { data, loading, set, refetch }  // b
 lib/
   supabase/client.ts    → createBrowserClient() — use in hooks/client components
   supabase/server.ts    → createServerClient() with cookies — use in server components/API routes
-  supabase/schema.sql   → canonical schema with RLS (up to migration 021)
+  supabase/schema.sql   → canonical schema with RLS (up to migration 022)
   supabase/migrations/  → 001..021_*.sql (008: RGPD, 009: multi-payer, 010: trip type,
                           011: lock join lookups, 012: join_trip RPC, 013: custom avatars,
                           014: anon join preview, 015: create_trip_with_owner RPC, 016: journeys,
                           017: payment info, 018: identity claim, 019: get_payment_info,
-                          020: multi-dish meals, 021: guest accounts + transfer)
+                          020: multi-dish meals, 021: guest accounts + transfer,
+                          022: friendships + push_subscriptions + checklist_items)
   auth/guest.ts         → continueAsGuest(), startGoogleUpgrade(), signInToExistingGoogle(),
                           claimGuestTransfer(), syncProfileFromGoogle()
   avatars.ts            → AVATAR_PRESETS, presetUrl(), isImageAvatar(), defaultPreset(), profileAvatar()
   avatar-sync.ts        → syncMyParticipantAvatars() (avatar du profil → participants liés)
   data/swr.tsx          → DataProvider (SWRConfig + cache localStorage persistant), clearDataCache()
+  notifications/        → events.ts (NotifyEvent, NOTIFICATION_KINDS, isKindEnabled), notify.ts (fire-and-forget),
+                          push.ts (getPushState / enablePush / disablePush), vapid.ts (clé publique)
+  device-prefs.ts       → useDevicePref("motion" | "haptics") — confort par appareil (localStorage)
   participant-colors.ts → PARTICIPANT_COLORS (palette unique des participants)
   itinerary-types.ts    → icône / libellé / teinte par type d'étape et mode de trajet
   meals/courses.ts      → COURSES (icônes Lucide), COURSE_ORDER
@@ -175,9 +189,16 @@ itinerary_items   id, trip_id, date, time, title, location, type, duration_minut
                   // type: 'accommodation'|'activity'|'food'|'other'|'journey'
                   // journey extras: destination (text), journey_mode ('car'|'foot'|'bike'|'transit'|'plane')
 guest_transfers   token, guest_id, expires_at, claimed_by/at — jetons à usage unique (021, pas de policy)
+profiles (+022)   friend_code (UNIQUE, généré par get_my_friend_code), notification_prefs jsonb
+friendships       user_id, friend_id, source 'trip'|'invite' — une ligne par sens ; remplie par le trigger
+                  trip_members_link_friends (voyager ensemble = être dans la bande) + ajout par code
+push_subscriptions endpoint (PK), user_id, p256dh, auth — un appareil = une ligne (save_push_subscription)
+checklist_items   id, trip_id, list 'bring'|'todo', title, note, assignee_ids uuid[] (participants), done, position
 ```
 RPCs: `create_trip_with_owner`, `join_trip`, `get_join_preview`, `claim_participant`,
-`create_guest_transfer`, `claim_guest_transfer` (all SECURITY DEFINER — see schema.sql).
+`create_guest_transfer`, `claim_guest_transfer`, `get_my_friend_code`, `get_friend_preview`, `add_friend_by_code`,
+`remove_friend`, `get_my_friends`, `add_friends_to_trip`, `save_push_subscription`, `get_push_targets`,
+`prune_push_subscription` (all SECURITY DEFINER — see schema.sql).
 DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip()` / `rowToExpense()` etc. for conversion.
 
 ## Design system (enforced — do not regress)
@@ -214,17 +235,17 @@ DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip(
 
 - **Épure** : n'afficher que ce qui diffère du défaut (pas de « Tout le monde », « À la maison », compteurs à 1,
   tuile à 0 €) ; une action = un seul endroit (pas de menu « … » qui répète un geste ou un bouton visible).
-- **Réglages** : carte identité (avatar → feuille photo + avatars), champs en liste groupée, un seul bouton
-  « Enregistrer » flottant qui n'apparaît que si quelque chose a changé.
+- **Réglages** : carte profil → sous-pages (profil, bande, remboursements, notifications, apparence, compte) ;
+  champs en liste groupée, un seul bouton « Enregistrer » flottant qui n'apparaît que si quelque chose a changé.
 
 - **Navigation voyage** : barre d'onglets flottante (matière translucide = seule zone « verre » autorisée),
   qui se compacte au défilement ; toucher l'onglet actif ou le titre de l'en-tête remonte en haut.
-- **Ajout rapide** : le bouton « + » de la barre ouvre la feuille Ajouter (dépense, étape, trajet, repas).
+- **Ajout rapide** : le bouton « + » de la barre ouvre la feuille Ajouter (dépense, étape, trajet, repas, liste).
   Les pages ouvrent leur formulaire via `useQuickAdd()` (événement si déjà sur la page, sinon `?new=<kind>`).
   Pas de FAB par page.
-- **Recherche** : `TripSearch` (loupe de l'en-tête) cherche dans dépenses, planning, repas et participants
+- **Recherche** : `TripSearch` (loupe de l'en-tête) cherche dans dépenses, planning, repas, listes et participants
   (sans accents). Liens profonds : `budget?expense=<id>`, `budget?tab=balances`,
-  `planning?date=YYYY-MM-DD&item=<id>`, `menus?date=YYYY-MM-DD`.
+  `planning?date=YYYY-MM-DD&item=<id>`, `menus?date=YYYY-MM-DD`, `lists?item=<id>`.
 - **Retours** : `useToast()` (`ToastProvider` à la racine) après chaque création / modification / suppression,
   `haptic()` sur les gestes. Feuilles du bas fermables en glissant la poignée.
 - **Tableau de bord** : `GettingStarted` (n'affiche que les étapes restantes) puis budget, solde, `DayAgendaCard`
@@ -243,6 +264,22 @@ DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip(
 - **Middleware** (`proxy.ts`) : `supabase.auth.getClaims()` (vérif locale du JWT, pas d'aller-retour réseau).
 - **Service worker** (`public/sw.js`) : cache-first pour `/_next/static`, `/avatars`, `/icons` ;
   network-first pour les pages (repli hors-ligne). Incrémenter `CACHE` quand les assets précachés changent.
+
+## Bande, notifications, listes (enforced — do not regress)
+
+- **Promesse** : Voyou = « les voyages entre potes, sans embrouilles » → qui paie, qui fait quoi, quand.
+  Un nouvel espace doit résoudre une embrouille de groupe ; pas de chat, pas d'album photo (WhatsApp/Photos le font).
+- **Listes** : un seul espace, deux listes (« À apporter », « À faire »), assignation à des participants,
+  coche directe, suggestions dans l'état vide. `tripFeatures().hasLists` (voyages et groupes).
+- **Ta bande** : jamais saisie à la main — elle se remplit en voyageant (trigger) ou par lien `/friends/add?code=`.
+  À la création (TripWizard/GroupWizard, `?with=<id>`) ou dans l'édition du voyage, `FriendPicker` +
+  `addFriendsToTrip()` (RPC `add_friends_to_trip`) : participant + membre lié, sans code de partage.
+- **Notifications** : le client n'envoie qu'un `NotifyEvent` via `notify()` (jamais de texte) ; le serveur lit les
+  données avec la RLS de l'appelant, rédige et cible (`get_push_targets` filtre bande/voyage + préférences).
+  Préférences par type dans Réglages › Notifications (défaut : tout sauf « planning »). Sans `VAPID_PRIVATE_KEY`
+  l'app marche, seules les notifications sont muettes. Sur iPhone : PWA installée requise.
+- **Réglages** : menu + sous-pages via `SettingsShell` / `SettingsGroup`. Confort par appareil (animations,
+  vibrations) dans `device-prefs.ts`, préférences de compte dans `profiles`.
 
 ## Comptes invités (enforced — do not regress)
 

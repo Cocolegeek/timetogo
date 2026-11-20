@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
-export type QuickAddKind = "expense" | "step" | "journey" | "meal";
+export type QuickAddKind = "expense" | "step" | "journey" | "meal" | "item";
 
 const EVENT = "voyou:quick-add";
 

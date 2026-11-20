@@ -16,6 +16,7 @@ import { CATEGORIES } from "@/lib/budget/categories";
 import { IdentityPicker } from "@/components/trips/IdentityPicker";
 import { GettingStarted } from "@/components/trips/GettingStarted";
 import { DayAgendaCard } from "@/components/trips/DayAgendaCard";
+import { MyListCard } from "@/components/trips/MyListCard";
 import { useRouter } from "next/navigation";
 import { TripCover } from "@/components/trips/TripCover";
 import { tripStatus } from "@/components/trips/TripCard";
@@ -343,6 +344,13 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
       {features.hasPlanning && (
         <StaggerItem>
           <DayAgendaCard items={itineraryItems} today={today} planningHref={`/trips/${tripId}/planning`} />
+        </StaggerItem>
+      )}
+
+      {/* ── Listes : ce qu'on attend de moi ─────────────────── */}
+      {features.hasLists && (
+        <StaggerItem>
+          <MyListCard tripId={trip.id} myId={trip.myParticipantId ?? null} />
         </StaggerItem>
       )}
 

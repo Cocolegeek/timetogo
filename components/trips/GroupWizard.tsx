@@ -15,6 +15,9 @@ import { useTrips } from "@/hooks/useTrip";
 import { cn } from "@/lib/utils";
 import { DateField } from "@/components/shared/DateTimeFields";
 import { PARTICIPANT_COLORS } from "@/lib/participant-colors";
+import { FriendPicker } from "@/components/trips/FriendPicker";
+import { UserAvatar } from "@/components/shared/UserAvatar";
+import { addFriendsToTrip, useFriends } from "@/hooks/useFriends";
 
 
 const EMOJIS = ["💰", "🎂", "🎉", "🍻", "🏠", "🎁", "🤝", "📚"];
@@ -31,6 +34,13 @@ export function GroupWizard() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [newParticipantName, setNewParticipantName] = useState("");
   const [participants, setParticipants] = useState<ParticipantInput[]>([]);
+  const [friendIds, setFriendIds] = useState<string[]>(() => {
+    const w = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("with") : null;
+    return w ? [w] : [];
+  });
+  const { friends } = useFriends();
+  const chosenFriends = friends.filter((f) => friendIds.includes(f.id));
+  const toggleFriend = (id: string) => setFriendIds((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]));
   const { profile } = useProfile();
   const creatorName = profile?.name?.split(" ")[0] ?? null;
 
@@ -96,6 +106,10 @@ export function GroupWizard() {
         endDate: resolvedEnd,
         participants,
       });
+      await addFriendsToTrip(
+        id,
+        chosenFriends.map((f, i) => ({ id: f.id, color: PARTICIPANT_COLORS[(participants.length + i) % PARTICIPANT_COLORS.length] }))
+      ).catch(() => 0);
       router.push(`/trips/${id}/budget`);
     } catch (err) {
       console.error("[group-create]", err);
@@ -133,8 +147,8 @@ export function GroupWizard() {
             )}
           >
             {tab}
-            {tab === "Participants" && participants.length > 0 && (
-              <span className="ml-1.5 text-xs opacity-70">({participants.length})</span>
+            {tab === "Participants" && participants.length + chosenFriends.length > 0 && (
+              <span className="ml-1.5 text-xs opacity-70">({participants.length + chosenFriends.length})</span>
             )}
           </button>
         ))}
@@ -306,6 +320,7 @@ export function GroupWizard() {
       {/* ── Participants ── */}
       {activeTab === "Participants" && (
         <div className="space-y-4">
+          <FriendPicker selected={friendIds} onToggle={(f) => toggleFriend(f.id)} className="pb-2" />
           <div className="space-y-1.5">
             {participants.map((p, i) => (
               <div
@@ -323,6 +338,23 @@ export function GroupWizard() {
                   type="button"
                   onClick={() => removeParticipant(i)}
                   aria-label={`Retirer ${p.name}`}
+                  className="flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-red-500/10 hover:text-red-400"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            ))}
+            {chosenFriends.map((f) => (
+              <div key={f.id} className="flex items-center gap-3 rounded-2xl bg-secondary px-3 py-2">
+                <UserAvatar src={f.avatar} name={f.name} size={36} />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[0.95rem] font-medium">{f.name?.split(" ")[0]}</span>
+                  <span className="block text-xs text-muted-foreground">Ta bande · ajouté chez lui</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => toggleFriend(f.id)}
+                  aria-label={`Retirer ${f.name?.split(" ")[0] ?? ""}`}
                   className="flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-red-500/10 hover:text-red-400"
                 >
                   <X size={16} />
@@ -348,9 +380,11 @@ export function GroupWizard() {
               type="button"
               onClick={addParticipant}
               disabled={!newParticipantName.trim()}
-              className="shrink-0 bg-foreground/[0.06] hover:bg-foreground/10 text-primary border border-foreground/30 disabled:opacity-40"
+              size="icon-lg"
+              aria-label="Ajouter"
+              className="shrink-0 rounded-full"
             >
-              <Plus size={16} />
+              <Plus size={18} />
             </Button>
           </div>
           {errors.participants && (
@@ -368,7 +402,8 @@ export function GroupWizard() {
       <Button
         type="submit"
         disabled={isSubmitting}
-        className="w-full bg-primary text-primary-foreground border-0 h-12"
+        size="lg"
+        className="w-full shadow-section disabled:shadow-none"
       >
         {isSubmitting ? (
           <Loader2 size={16} className="animate-spin" />

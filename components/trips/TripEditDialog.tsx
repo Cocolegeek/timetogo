@@ -21,6 +21,10 @@ import { ParticipantAvatar } from "@/components/shared/ParticipantAvatar";
 import { isVoyage, tripFeatures } from "@/lib/trip-features";
 import type { Trip, Participant } from "@/types";
 import { PARTICIPANT_COLORS } from "@/lib/participant-colors";
+import { FriendPicker } from "@/components/trips/FriendPicker";
+import { useToast } from "@/components/shared/Toaster";
+import { useTrip } from "@/hooks/useTrip";
+import { addFriendsToTrip } from "@/hooks/useFriends";
 
 
 const EMOJIS = ["✈️", "🏖️", "🏔️", "🗺️", "🌍", "🎒", "🏕️", "🚢"];
@@ -60,6 +64,8 @@ export function TripEditDialog({
   onUpdateParticipant,
   onDeleteParticipant,
 }: TripEditDialogProps) {
+  const toast = useToast();
+  const { claims, refetch: refetchTrip, refetchClaims } = useTrip(trip.id);
   type GroupDateMode = "permanent" | "date_fixe" | "creneau";
 
   function detectGroupDateMode(t: typeof trip): GroupDateMode {
@@ -426,6 +432,22 @@ export function TripEditDialog({
           {/* ── Participants ── */}
           {activeTab === "Participants" && (
             <div className="space-y-3">
+              <FriendPicker
+                selected={[]}
+                exclude={claims.map((c) => c.userId)}
+                className="pb-3"
+                onToggle={async (f) => {
+                  try {
+                    await addFriendsToTrip(trip.id, [
+                      { id: f.id, color: PARTICIPANT_COLORS[trip.participants.length % PARTICIPANT_COLORS.length] },
+                    ]);
+                    await Promise.all([refetchTrip(), refetchClaims()]);
+                    toast({ message: `${f.name?.split(" ")[0] ?? "Ton pote"} est embarqué`, tone: "success" });
+                  } catch {
+                    toast({ message: "Impossible de l'ajouter. Réessaie.", tone: "error" });
+                  }
+                }}
+              />
               <div className="overflow-hidden rounded-[1.25rem] bg-secondary">
                 {trip.participants.map((p, i) => {
                   const isEditing = editingParticipantId === p.id;

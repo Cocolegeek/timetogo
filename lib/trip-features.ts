@@ -10,6 +10,8 @@ export interface TripFeatures {
   hasDates: boolean;
   hasDestination: boolean;
   hasTotalBudget: boolean;
+  /** Shared « À apporter » / « À faire » lists (migration 022). */
+  hasLists: boolean;
 }
 
 const FEATURES_BY_TYPE: Record<TripType, TripFeatures> = {
@@ -19,6 +21,7 @@ const FEATURES_BY_TYPE: Record<TripType, TripFeatures> = {
     hasDates: true,
     hasDestination: true,
     hasTotalBudget: true,
+    hasLists: true,
   },
   group: {
     hasPlanning: false,
@@ -26,6 +29,7 @@ const FEATURES_BY_TYPE: Record<TripType, TripFeatures> = {
     hasDates: false,
     hasDestination: false,
     hasTotalBudget: true,
+    hasLists: true,
   },
 };
 

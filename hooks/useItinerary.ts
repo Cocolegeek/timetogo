@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { useCachedQuery } from "@/hooks/useCachedQuery";
+import { notify } from "@/lib/notifications/notify";
 import type { ItineraryItem, ItineraryType, JourneyMode } from "@/types";
 
 function rowToItem(row: Record<string, unknown>): ItineraryItem {
@@ -70,6 +71,7 @@ export function useItinerary(tripId: string) {
 
     if (error) throw new Error(error.message);
     setItems(prev => sortItems([...prev, rowToItem(row)]));
+    notify({ event: "planning", tripId, id: row.id as string });
   };
 
   const updateItem = async (

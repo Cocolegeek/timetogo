@@ -495,6 +495,14 @@ html, body {
   }
 }
 
+/* Réglages › Apparence › Animations réduites (per device). */
+html.reduce-motion *, html.reduce-motion *::before, html.reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
 /* Interface is monochrome (ink on paper): "primary" = ink in light,
  * paper in dark. Colour is reserved for meaning and illustrations. */
 .text-primary {

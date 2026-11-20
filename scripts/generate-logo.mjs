@@ -47,5 +47,7 @@ await render(logoSvg({ radius: 0, scale: 0.78 }), 512, "icons/icon-maskable-512.
 await render(logoSvg({ radius: 0, scale: 0.78 }), 192, "icons/icon-maskable-192.png");
 await render(logoSvg({ radius: 0, scale: 0.86 }), 180, "icons/apple-touch-icon.png");
 await render(logoSvg(), 32, "icons/favicon-32.png");
+// Android status-bar badge: white silhouette on transparent, face slightly enlarged.
+await render(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="40 60 432 432">${face("#FFFFFF")}</svg>`, 96, "icons/badge-96.png");
 await browser.close();
 console.log("Logo + icons written.");

@@ -8,7 +8,43 @@ export interface Profile {
   email: string | null;
   iban: string | null;
   phone: string | null;
+  friend_code?: string | null;
+  notification_prefs?: NotificationPrefs | null;
   created_at: string;
+}
+
+// ─── Notifications ───────────────────────────────────────────────────────────
+
+/** Kinds of push notification a user can mute (see migration 022). */
+export type NotificationKind = "expense" | "settlement" | "lists" | "planning" | "social";
+export type NotificationPrefs = Partial<Record<NotificationKind, boolean>>;
+
+// ─── Ta bande ────────────────────────────────────────────────────────────────
+
+export interface Friend {
+  id: string;
+  name: string | null;
+  avatar: string | null;
+  tripsInCommon: number;
+  lastTripName: string | null;
+  since: string;
+}
+
+// ─── Listes ──────────────────────────────────────────────────────────────────
+
+export type ChecklistList = "bring" | "todo";
+
+export interface ChecklistItem {
+  id: string;
+  tripId: string;
+  list: ChecklistList;
+  title: string;
+  note: string | null;
+  /** Participant ids in charge of the item. */
+  assigneeIds: string[];
+  done: boolean;
+  position: number;
+  createdAt: string;
 }
 
 // ─── Participants ─────────────────────────────────────────────────────────────

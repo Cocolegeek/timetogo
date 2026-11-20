@@ -16,6 +16,9 @@ import { tripSchema, type TripFormValues } from "@/lib/budget/schemas";
 import { useTrips } from "@/hooks/useTrip";
 import { cn } from "@/lib/utils";
 import { PARTICIPANT_COLORS } from "@/lib/participant-colors";
+import { FriendPicker } from "@/components/trips/FriendPicker";
+import { UserAvatar } from "@/components/shared/UserAvatar";
+import { addFriendsToTrip, useFriends } from "@/hooks/useFriends";
 
 
 const EMOJIS = ["✈️", "🏖️", "🏔️", "🗺️", "🌍", "🎒", "🏕️", "🚢"];
@@ -32,6 +35,14 @@ export function TripWizard() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [newParticipantName, setNewParticipantName] = useState("");
   const [participants, setParticipants] = useState<ParticipantInput[]>([]);
+  // « Ta bande »: ?with=<id> (from a friend's card) pre-selects that friend.
+  const [friendIds, setFriendIds] = useState<string[]>(() => {
+    const w = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("with") : null;
+    return w ? [w] : [];
+  });
+  const { friends } = useFriends();
+  const chosenFriends = friends.filter((f) => friendIds.includes(f.id));
+  const toggleFriend = (id: string) => setFriendIds((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]));
   const { profile } = useProfile();
   const creatorName = profile?.name?.split(" ")[0] ?? null;
 
@@ -102,6 +113,10 @@ export function TripWizard() {
           parsedBudget && parsedBudget > 0 ? parsedBudget : undefined,
         participants,
       });
+      await addFriendsToTrip(
+        id,
+        chosenFriends.map((f, i) => ({ id: f.id, color: PARTICIPANT_COLORS[(participants.length + i) % PARTICIPANT_COLORS.length] }))
+      ).catch(() => 0);
       router.push(`/trips/${id}/budget`);
     } catch (err) {
       console.error("[trip-create]", err);
@@ -139,8 +154,8 @@ export function TripWizard() {
             )}
           >
             {tab}
-            {tab === "Participants" && participants.length > 0 && (
-              <span className="ml-1.5 text-xs opacity-70">({participants.length})</span>
+            {tab === "Participants" && participants.length + chosenFriends.length > 0 && (
+              <span className="ml-1.5 text-xs opacity-70">({participants.length + chosenFriends.length})</span>
             )}
           </button>
         ))}
@@ -321,6 +336,7 @@ export function TripWizard() {
       {/* ── Participants ── */}
       {activeTab === "Participants" && (
         <div className="space-y-4">
+          <FriendPicker selected={friendIds} onToggle={(f) => toggleFriend(f.id)} className="pb-2" />
           <div className="flex gap-2">
             <Input
               value={newParticipantName}
@@ -370,6 +386,31 @@ export function TripWizard() {
                 </Button>
               </motion.div>
             ))}
+            {chosenFriends.map((f) => (
+              <motion.div
+                key={f.id}
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="flex items-center gap-3 overflow-hidden rounded-2xl bg-secondary px-3 py-2"
+              >
+                <UserAvatar src={f.avatar} name={f.name} size={36} />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[0.95rem] font-medium text-foreground">{f.name?.split(" ")[0]}</span>
+                  <span className="block text-xs text-muted-foreground">Ta bande · voyage ajouté chez lui</span>
+                </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  aria-label={`Retirer ${f.name?.split(" ")[0] ?? ""}`}
+                  className="size-9 rounded-full text-muted-foreground hover:text-red-400"
+                  onClick={() => toggleFriend(f.id)}
+                >
+                  <X size={16} />
+                </Button>
+              </motion.div>
+            ))}
           </AnimatePresence>
 
           {participants.length === 0 && (
@@ -388,7 +429,7 @@ export function TripWizard() {
 
       <Button
         type="submit"
-        disabled={isSubmitting || participants.length === 0}
+        disabled={isSubmitting || participants.length + chosenFriends.length === 0}
         size="lg" className="w-full shadow-section disabled:shadow-none"
       >
         {isSubmitting ? (
