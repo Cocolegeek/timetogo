@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m as motion } from "framer-motion";
 import { Loader2 } from "lucide-react";
 import { SettingsShell } from "@/components/settings/SettingsShell";
 import { SettingsGroup } from "@/components/settings/SettingsList";

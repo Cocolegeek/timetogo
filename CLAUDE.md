@@ -66,8 +66,8 @@ components/
   layout/     AppHeader, GlassCard (= carte pleine, plus de verre), MeshGradientBackground (= fond uni),
               PageHeader (grand titre), SectionThemeController, TripAppHeader (retour · recherche · partage · modifier),
               TripNav, TripClientProviders, UserMenu (avatar = lien direct vers /settings), VoyouLogo (LogoMark = visage « oyo » en SVG inline + mot-symbole)
-  motion/     MotionProvider (reducedMotion="user"), PageTransition (templates), Stagger/StaggerItem,
-              NumberTicker (montants animés)
+  motion/     MotionProvider (LazyMotion strict + MotionConfig ; features domMax chargées après le 1er rendu),
+              PageTransition (templates), Stagger/StaggerItem, NumberTicker (montants animés, rAF, sans framer)
   menus/      MealEditDialog
   planning/   ItineraryItemForm,  — full-screen dialog: title/date/type/location/participants
               JourneyForm          — full-screen dialog: from→to, mode, routing/duration, participants
@@ -85,6 +85,7 @@ components/
   trips/      BudgetEditDialog, GettingStarted, GroupWizard, IdentityPicker,
               OnboardingModal (bienvenue + « Ta tête dans la bande » : prénom + avatar), ShareModal,
               TripSearch, DayAgendaCard (journée utile du tableau de bord : étape en cours / à suivre + reste du jour),
+              TripActionsSheet (« … » d'une carte voyage), IdentityDialog (« Qui es-tu ? »), LazyOnboarding,
               TripCard (variants featured | row, tripStatus()), TripCover (illustrations en aplats),
               TripEditDialog, TripEditWrapper, TripWizard
   settings/   SettingsShell (retour + grand titre), SettingsList (SettingsGroup, SettingsRow, SettingsToggle)
@@ -120,6 +121,8 @@ useDebts(id)            → computed balances/settlements (no direct DB)
 useTheme()              → { preference: system|light|dark, setPreference } (key: "voyou-theme")
 useUserId()             → current user uuid (fast, no extra fetch)
 useCachedQuery(key, fetcher, fallback) → { data, loading, set, refetch }  // base de tous les hooks de données
+useMountOnce(open)      → true dès la 1re ouverture : monte une feuille/un dialogue chargé à la demande
+useIdlePrefetch(hrefs)  → précharge les écrans suivants une fois l'écran affiché et le thread libre
 useFriends()            → { friends, code, addByCode, remove, refetch }  // + addFriendsToTrip(), previewFriend()
 useChecklist(id)        → { items, addItem, updateItem, deleteItem }     // notifie les nouveaux assignés
 ```
@@ -144,6 +147,7 @@ lib/
   notifications/        → events.ts (NotifyEvent, NOTIFICATION_KINDS, isKindEnabled), notify.ts (fire-and-forget),
                           push.ts (getPushState / enablePush / disablePush), vapid.ts (clé publique)
   device-prefs.ts       → useDevicePref("motion" | "haptics") — confort par appareil (localStorage)
+  boot.ts               → isBootScreen() / bootInitial() : pas d'animation d'entrée sur l'écran de lancement
   participant-colors.ts → PARTICIPANT_COLORS (palette unique des participants)
   itinerary-types.ts    → icône / libellé / teinte par type d'étape et mode de trajet
   meals/courses.ts      → COURSES (icônes Lucide), COURSE_ORDER
@@ -261,9 +265,24 @@ DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip(
   `TripNav` lit le type du voyage via `useTrip()`. `loading.tsx` = squelette pendant la navigation.
 - **Navigation** : `<Link prefetch>` sur les onglets et les cartes voyage, `experimental.staleTimes`
   (next.config.ts) pour réutiliser le rendu RSC, `optimizePackageImports` (lucide, framer-motion).
-- **Middleware** (`proxy.ts`) : `supabase.auth.getClaims()` (vérif locale du JWT, pas d'aller-retour réseau).
-- **Service worker** (`public/sw.js`) : cache-first pour `/_next/static`, `/avatars`, `/icons` ;
-  network-first pour les pages (repli hors-ligne). Incrémenter `CACHE` quand les assets précachés changent.
+- **Middleware** (`proxy.ts`) : ne tourne pas pour les assets ni `/api`. Lit l'expiration du jeton dans le cookie
+  `sb-<ref>-auth-token` (éventuellement découpé en `.0`, `.1`…) : jeton valide = aucun appel réseau ; jeton qui
+  expire / illisible → `getClaims()` (rafraîchit la session), erreur → déconnecté. La RLS protège les données.
+- **Service worker** (`public/sw.js`) : cache-first pour `/_next/static`, `/avatars`, `/icons` ; écrans de l'app
+  (`/trips*`, `/settings*`) en stale-while-revalidate (cache `voyou-pages-v1` : lancement instantané). Nouveau
+  déploiement détecté (scripts différents) → cache des écrans vidé + message `voyou:new-version` → `PwaRegister`
+  recharge si rien n'a été touché, sinon navigation complète au prochain lien. `clearDataCache()` vide aussi ce
+  cache (déconnexion), et `PwaRegister` renvoie au login si un écran sauvegardé s'affiche sans session.
+  Incrémenter `CACHE` quand les assets précachés changent.
+- **Lancement** : le premier écran s'affiche tel quel (`isBootScreen()` : pas de fondu `PageTransition`, pas de
+  cascade `Stagger`, montant final direct dans `NumberTicker`, `bootInitial()` sur les pages d'entrée). Jamais
+  d'`initial={{ opacity: 0 }}` sur un contenu rendu côté serveur sans passer par `bootInitial()`.
+- **JS au lancement** : framer-motion via `m` (import `{ m as motion }`, `LazyMotion strict` — un `motion` complet
+  lève une erreur). Feuilles et dialogues fermés au départ = module à part chargé à la 1re ouverture
+  (`dynamic` + `useMountOnce`) : QuickAddSheet, MapAppPickerSheet, TripActionsSheet, IdentityDialog,
+  ConfirmDeleteDialog, bandeau d'installation, `LazyOnboarding` (seulement s'il y a quelque chose à montrer).
+  Pas de `<Link prefetch>` au lancement : `useIdlePrefetch` (onglets, voyages de la liste).
+- **Données** : la liste des voyages est lue en une requête (`trip_members` + `trips` + `participants` imbriqués).
 
 ## Bande, notifications, listes (enforced — do not regress)
 

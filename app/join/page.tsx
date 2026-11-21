@@ -2,7 +2,7 @@
 
 import { Suspense, useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { AlertCircle, Loader2, ArrowRight, Home } from "lucide-react";
 import { VoyouLogo } from "@/components/layout/VoyouLogo";
 import { TripCover } from "@/components/trips/TripCover";
@@ -17,6 +17,7 @@ import { syncMyParticipantAvatars } from "@/lib/avatar-sync";
 import type { Participant } from "@/types";
 import { PARTICIPANT_COLORS } from "@/lib/participant-colors";
 import { notify } from "@/lib/notifications/notify";
+import { bootInitial } from "@/lib/boot";
 
 interface TripPreview {
   id: string;
@@ -243,7 +244,7 @@ function InvalidLinkCard({ message, onHome }: { message: string; onHome: () => v
 function TripHero({ trip, badge }: { trip: TripPreview; badge: string }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 16, scale: 0.98 }}
+      initial={bootInitial({ opacity: 0, y: 16, scale: 0.98 })}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.6, ease: EASE_OUT }}
       className="relative overflow-hidden rounded-[1.75rem] shadow-raised"

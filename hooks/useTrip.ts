@@ -52,6 +52,25 @@ async function fetchTripList(): Promise<Trip[]> {
     const user = session?.user;
     if (!user) return [];
 
+    // One round trip: memberships with their trip and its participants embedded.
+    const { data: rows, error: embedError } = await supabase
+      .from("trip_members")
+      .select("role, participant_id, trip:trips(*, participants(*))")
+      .eq("user_id", user.id);
+
+    if (!embedError && rows) {
+      type Row = { role: string; participant_id: string | null; trip: (Record<string, unknown> & { participants?: Record<string, unknown>[] }) | null };
+      return (rows as unknown as Row[])
+        .filter((r) => r.trip)
+        .sort((a, b) => String(b.trip!.created_at).localeCompare(String(a.trip!.created_at)))
+        .map((r) => {
+          const participants = [...(r.trip!.participants ?? [])]
+            .sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)))
+            .map((p) => ({ id: p.id as string, name: p.name as string, color: p.color as string, avatar: (p.avatar as string | null) ?? undefined }));
+          return rowsToTrip(r.trip!, participants, r.role === "owner", r.participant_id ?? null);
+        });
+    }
+
     const { data: members } = await supabase
       .from("trip_members")
       .select("trip_id, role, participant_id")

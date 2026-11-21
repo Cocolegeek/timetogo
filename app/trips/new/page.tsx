@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { ChevronLeft, ArrowRight } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m as motion } from "framer-motion";
 import { TripWizard } from "@/components/trips/TripWizard";
 import { GroupWizard } from "@/components/trips/GroupWizard";
 import { TripCover } from "@/components/trips/TripCover";

@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { Check, Loader2, TriangleAlert, UsersRound } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { GoogleIcon } from "@/components/auth/GoogleIcon";
@@ -12,6 +12,7 @@ import { claimGuestTransfer, signInToExistingGoogle, startGoogleUpgrade, syncPro
 import { syncMyParticipantAvatars } from "@/lib/avatar-sync";
 import { clearDataCache } from "@/lib/data/swr";
 import { EASE_OUT } from "@/lib/motion";
+import { bootInitial } from "@/lib/boot";
 
 type Outcome =
   | { kind: "working" }
@@ -25,7 +26,7 @@ function Screen({ icon, tone, title, children }: { icon: React.ReactNode; tone: 
     tone === "ok" ? "bg-emerald-500 text-white" : tone === "warn" ? "bg-amber-500/15 text-amber-400" : "bg-foreground/[0.06] text-foreground";
   return (
     <motion.div
-      initial={{ opacity: 0, y: 16 }}
+      initial={bootInitial({ opacity: 0, y: 16 })}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: EASE_OUT }}
       className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-6"

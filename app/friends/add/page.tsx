@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { Check, Loader2, Plane, TriangleAlert } from "lucide-react";
 import { UserAvatar } from "@/components/shared/UserAvatar";
 import { PageSkeleton } from "@/components/shared/Skeleton";

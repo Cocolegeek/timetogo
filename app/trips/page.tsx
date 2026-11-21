@@ -2,11 +2,10 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { Plus } from "lucide-react";
 import dynamic from "next/dynamic";
 import { TripCard } from "@/components/trips/TripCard";
-import { ConfirmDeleteDialog } from "@/components/shared/ConfirmDeleteDialog";
 
 const TripEditWrapper = dynamic(
   () => import("@/components/trips/TripEditWrapper").then((m) => ({ default: m.TripEditWrapper })),
@@ -16,8 +15,8 @@ const ShareModal = dynamic(
   () => import("@/components/trips/ShareModal").then((m) => ({ default: m.ShareModal })),
   { ssr: false }
 );
-const OnboardingModal = dynamic(
-  () => import("@/components/trips/OnboardingModal").then((m) => ({ default: m.OnboardingModal })),
+const ConfirmDeleteDialog = dynamic(
+  () => import("@/components/shared/ConfirmDeleteDialog").then((m) => ({ default: m.ConfirmDeleteDialog })),
   { ssr: false }
 );
 import { Spinner } from "@/components/shared/Spinner";
@@ -36,9 +35,13 @@ import { TripCover } from "@/components/trips/TripCover";
 import { springSoft } from "@/lib/motion";
 import { ClientOnly } from "@/components/shared/ClientOnly";
 import { PageSkeleton } from "@/components/shared/Skeleton";
+import { useIdlePrefetch } from "@/hooks/useIdlePrefetch";
+import { LazyOnboarding } from "@/components/trips/LazyOnboarding";
 
 function TripsPageContent() {
   const { trips, loading, refetch: refetchTrips, deleteTrip } = useTrips();
+  // Warm the most likely next screens once the list is shown (not during launch).
+  useIdlePrefetch(trips.slice(0, 3).map((t) => `/trips/${t.id}`));
   const { profile } = useProfile();
   const { isAnonymous } = useAuthUser();
 
@@ -220,7 +223,7 @@ function TripsPageContent() {
           );
         })()}
 
-        <OnboardingModal />
+        <LazyOnboarding />
 
         {confirmDelete && (
           <ConfirmDeleteDialog

@@ -2,7 +2,7 @@
 
 import { use, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m as motion } from "framer-motion";
 import { ArrowUp, Check, ChevronDown, Trash2, UserRound } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { SegmentedControl } from "@/components/shared/SegmentedControl";

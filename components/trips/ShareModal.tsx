@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Copy, Check, Share, Link2 } from "lucide-react";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { TripCover } from "@/components/trips/TripCover";
 import { EASE_OUT } from "@/lib/motion";

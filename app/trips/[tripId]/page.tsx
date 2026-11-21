@@ -2,7 +2,7 @@
 
 import { use, useCallback, useMemo, useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import {
   ArrowUpRight,
   Check,
@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { CATEGORIES } from "@/lib/budget/categories";
-import { IdentityPicker } from "@/components/trips/IdentityPicker";
 import { GettingStarted } from "@/components/trips/GettingStarted";
 import { DayAgendaCard } from "@/components/trips/DayAgendaCard";
 import { MyListCard } from "@/components/trips/MyListCard";
@@ -25,21 +24,20 @@ import { ParticipantStack } from "@/components/shared/ParticipantStack";
 import { Spinner } from "@/components/shared/Spinner";
 import { NumberTicker } from "@/components/motion/NumberTicker";
 import { Stagger, StaggerItem } from "@/components/motion/Stagger";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useTrip } from "@/hooks/useTrip";
 import { useBudget } from "@/hooks/useBudget";
 import { useItinerary } from "@/hooks/useItinerary";
 import { useMeals } from "@/hooks/useMeals";
 import { useDebts } from "@/hooks/useDebts";
-import { useUserId } from "@/hooks/useUserId";
 import { SLOT_CONFIG } from "@/lib/meals/slots";
 import { formatDateRange } from "@/lib/format-date";
 import { EASE_OUT } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import { isVoyage, tripFeatures } from "@/lib/trip-features";
 import type { ExpenseCategory, Participant } from "@/types";
-import { PARTICIPANT_COLORS } from "@/lib/participant-colors";
+import { useMountOnce } from "@/hooks/useMountOnce";
 
+const IdentityDialog = dynamic(() => import("@/components/trips/IdentityDialog"), { ssr: false });
 const BudgetEditDialog = dynamic(
   () => import("@/components/trips/BudgetEditDialog").then((m) => ({ default: m.BudgetEditDialog })),
   { ssr: false }
@@ -63,15 +61,15 @@ interface TripDashboardProps {
 
 export default function TripDashboardPage({ params }: TripDashboardProps) {
   const { tripId } = use(params);
-  const { trip, claims, updateTrip, setMyParticipant, addParticipant } = useTrip(tripId);
+  const { trip, updateTrip } = useTrip(tripId);
   const { expenses, totalSpent } = useBudget(tripId);
   const { items: itineraryItems } = useItinerary(tripId);
   const { meals } = useMeals(tripId);
   const { settlements } = useDebts(expenses, trip?.participants ?? []);
-  const userId = useUserId();
   const router = useRouter();
 
   const [identityOpen, setIdentityOpen] = useState(false);
+  const identityMounted = useMountOnce(identityOpen);
   const [budgetOpen, setBudgetOpen] = useState(false);
 
   const categoryBreakdown = useMemo(() => {
@@ -400,32 +398,7 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
         }}
       />
 
-      <Dialog open={identityOpen} onOpenChange={setIdentityOpen}>
-        <DialogContent className="flex max-h-[85vh] max-w-sm flex-col">
-          <DialogHeader className="shrink-0 pr-10">
-            <DialogTitle>Qui es-tu ?</DialogTitle>
-            <DialogDescription>
-              Choisis ton nom parmi les participants pour que tes dépenses soient bien attribuées.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="-mx-1 min-h-0 flex-1 overflow-y-auto px-1">
-            <IdentityPicker
-              participants={trip.participants}
-              selectedId={trip.myParticipantId}
-              claims={claims}
-              currentUserId={userId}
-              onSelect={async (id) => {
-                await setMyParticipant(id);
-                setIdentityOpen(false);
-              }}
-              onCreate={async (name) => {
-                const color = PARTICIPANT_COLORS[trip.participants.length % PARTICIPANT_COLORS.length];
-                return await addParticipant({ name, color });
-              }}
-            />
-          </div>
-        </DialogContent>
-      </Dialog>
+      {identityMounted && <IdentityDialog tripId={trip.id} open={identityOpen} onOpenChange={setIdentityOpen} />}
     </Stagger>
   );
 }

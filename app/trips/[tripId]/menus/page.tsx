@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/compone
 import { useUndoableDelete } from "@/hooks/useUndoableDelete";
 import { useQuickAdd } from "@/hooks/useQuickAdd";
 import { useToast } from "@/components/shared/Toaster";
-import { motion, AnimatePresence, useMotionValue, useTransform, animate } from "framer-motion";
+import { m as motion, AnimatePresence, useMotionValue, useTransform, animate } from "framer-motion";
 import { UtensilsCrossed, ChefHat, Users, Plus, Trash2 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { DayHeader } from "@/components/shared/DayHeader";

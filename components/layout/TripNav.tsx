@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import {
   CalendarPlus,
   House,
@@ -15,7 +15,9 @@ import {
   Wallet,
   type LucideIcon,
 } from "lucide-react";
-import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
+import dynamic from "next/dynamic";
+import { useMountOnce } from "@/hooks/useMountOnce";
+import { useIdlePrefetch } from "@/hooks/useIdlePrefetch";
 import { useScrollDirection } from "@/hooks/useScrollDirection";
 import { useTrip } from "@/hooks/useTrip";
 import { dispatchQuickAdd, type QuickAddKind } from "@/hooks/useQuickAdd";
@@ -24,6 +26,8 @@ import { cn } from "@/lib/utils";
 import { spring } from "@/lib/motion";
 import { featuresForType } from "@/lib/trip-features";
 import type { TripType } from "@/types";
+
+const QuickAddSheet = dynamic(() => import("@/components/layout/QuickAddSheet"), { ssr: false });
 
 type NavItem = { label: string; href: string; icon: LucideIcon };
 
@@ -69,6 +73,7 @@ export function TripNav({ tripId }: TripNavProps) {
   const features = featuresForType(tripType);
   const compact = useScrollDirection() === "down";
   const [addOpen, setAddOpen] = useState(false);
+  const sheetMounted = useMountOnce(addOpen);
 
   const items = NAV_ITEMS.filter((item) => {
     if (item.href === "/planning") return features.hasPlanning;
@@ -77,6 +82,7 @@ export function TripNav({ tripId }: TripNavProps) {
     return true;
   });
   const actions = QUICK_ADD.filter((a) => !a.voyageOnly || tripType === "trip");
+  useIdlePrefetch(["/trips", ...items.map((i) => `${base}${i.href}`)]);
 
   const runAction = (kind: QuickAddKind, href: string) => {
     setAddOpen(false);
@@ -107,7 +113,7 @@ export function TripNav({ tripId }: TripNavProps) {
                 <li key={href} className="flex-1">
                   <Link
                     href={fullHref}
-                    prefetch
+                    prefetch={false}
                     aria-current={isActive ? "page" : undefined}
                     aria-label={label}
                     onClick={(e) => {
@@ -174,35 +180,7 @@ export function TripNav({ tripId }: TripNavProps) {
         </div>
       </nav>
 
-      <Sheet open={addOpen} onOpenChange={setAddOpen}>
-        <SheetContent side="bottom" className="gap-0 p-0">
-          <div className="px-6 pt-8 pr-16 pb-4">
-            <SheetTitle>Ajouter</SheetTitle>
-            <SheetDescription className="mt-1 text-[0.95rem]">Que veux-tu ajouter au voyage ?</SheetDescription>
-          </div>
-          <div className="grid grid-cols-2 gap-3 px-5 pb-6">
-            {actions.map((a, i) => (
-              <motion.button
-                key={a.kind}
-                type="button"
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ ...spring, delay: 0.05 + i * 0.04 }}
-                onClick={() => runAction(a.kind, a.href)}
-                className="pressable flex flex-col items-start gap-4 rounded-[1.5rem] bg-secondary p-4 text-left transition-colors hover:bg-foreground/[0.08]"
-              >
-                <span className={cn("flex size-12 items-center justify-center rounded-2xl shadow-card", a.tile)}>
-                  <a.icon size={22} />
-                </span>
-                <span>
-                  <span className="block text-[1.05rem] font-semibold">{a.label}</span>
-                  <span className="block text-sm text-muted-foreground">{a.hint}</span>
-                </span>
-              </motion.button>
-            ))}
-          </div>
-        </SheetContent>
-      </Sheet>
+      {sheetMounted && <QuickAddSheet open={addOpen} onOpenChange={setAddOpen} actions={actions} onPick={runAction} />}
     </>
   );
 }

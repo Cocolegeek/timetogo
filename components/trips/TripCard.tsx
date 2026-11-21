@@ -1,20 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { MoreHorizontal, Pencil, Trash2, Share } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { useState } from "react";
+import dynamic from "next/dynamic";
+import { MoreHorizontal } from "lucide-react";
+import { useMountOnce } from "@/hooks/useMountOnce";
 import { formatDateRange, tripDuration, daysUntil } from "@/lib/format-date";
 import { cn } from "@/lib/utils";
 import { TripCover } from "@/components/trips/TripCover";
 import { ParticipantStack } from "@/components/shared/ParticipantStack";
 import { isVoyage } from "@/lib/trip-features";
 import type { Trip } from "@/types";
+
+const TripActionsSheet = dynamic(() => import("@/components/trips/TripActionsSheet"), { ssr: false });
 
 export type TripStatus =
   | { kind: "ongoing"; label: string }
@@ -61,9 +59,18 @@ function TripActions({
   onShare,
   floating,
 }: Omit<TripCardProps, "variant"> & { floating?: boolean }) {
+  const [open, setOpen] = useState(false);
+  const mounted = useMountOnce(open);
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
+    <>
+      <button
+        type="button"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setOpen(true);
+        }}
+        aria-haspopup="dialog"
         className={cn(
           "flex size-10 items-center justify-center rounded-full outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring",
           floating
@@ -73,25 +80,11 @@ function TripActions({
         aria-label={`Actions pour ${trip.name}`}
       >
         <MoreHorizontal size={20} />
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="min-w-48">
-        <DropdownMenuItem onClick={() => onEdit(trip)}>
-          <Pencil />
-          Modifier
-        </DropdownMenuItem>
-        {onShare && (
-          <DropdownMenuItem onClick={() => onShare(trip)}>
-            <Share />
-            Partager
-          </DropdownMenuItem>
-        )}
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => onDelete(trip.id)} variant="destructive">
-          <Trash2 />
-          Supprimer
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+      </button>
+      {mounted && (
+        <TripActionsSheet trip={trip} open={open} onOpenChange={setOpen} onEdit={onEdit} onShare={onShare} onDelete={onDelete} />
+      )}
+    </>
   );
 }
 
@@ -112,7 +105,7 @@ export function TripCard({ trip, onEdit, onDelete, onShare, variant = "row" }: T
   if (variant === "featured") {
     return (
       <article className="group relative overflow-hidden rounded-[1.75rem] bg-card shadow-raised">
-        <Link href={href} prefetch className="block outline-none focus-visible:ring-2 focus-visible:ring-ring">
+        <Link href={href} prefetch={false} className="block outline-none focus-visible:ring-2 focus-visible:ring-ring">
           <div className="relative h-52 overflow-hidden">
             <Cover
               trip={trip}
@@ -152,6 +145,7 @@ export function TripCard({ trip, onEdit, onDelete, onShare, variant = "row" }: T
     <article className="relative flex items-center">
       <Link
         href={href}
+        prefetch={false}
         className="pressable flex min-w-0 flex-1 items-center gap-4 rounded-[1.25rem] py-2.5 pr-12 pl-2.5 outline-none hover:bg-foreground/[0.03] focus-visible:ring-2 focus-visible:ring-ring"
       >
         <Cover trip={trip} className="size-16 shrink-0 overflow-hidden rounded-2xl" />

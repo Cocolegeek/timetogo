@@ -42,6 +42,9 @@ function persistentProvider(): Cache {
 }
 
 /** Forget every cached screen (sign-out, account switch, guest merge). */
+/** Saved app screens of the service worker (see public/sw.js). */
+const PAGES_CACHE = "voyou-pages-v1";
+
 export function clearDataCache() {
   persistedCache?.clear();
   try {
@@ -49,6 +52,8 @@ export function clearDataCache() {
   } catch {
     // ignore
   }
+  // Another account must never see the previous one's screens.
+  if (typeof caches !== "undefined") void caches.delete(PAGES_CACHE).catch(() => false);
 }
 
 export function DataProvider({ children }: { children: React.ReactNode }) {

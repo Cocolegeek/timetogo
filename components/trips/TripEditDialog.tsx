@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Loader2, Plus, X, Pencil, Check, Infinity, CalendarDays, CalendarRange } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import {
   Sheet,
   SheetContent,

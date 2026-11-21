@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m as motion } from "framer-motion";
 import { Check, ChevronRight, ListChecks } from "lucide-react";
 import { useChecklist } from "@/hooks/useChecklist";
 import { haptic } from "@/lib/haptics";

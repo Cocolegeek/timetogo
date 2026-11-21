@@ -49,7 +49,7 @@ export function TripAppHeader({ tripId }: { tripId: string }) {
       style={{ paddingTop: "env(safe-area-inset-top)" }}
     >
       <div className="mx-auto flex h-14 max-w-3xl items-center gap-1 px-2">
-        <Link href="/trips" aria-label="Tous les voyages" className={ICON_BTN}>
+        <Link href="/trips" prefetch={false} aria-label="Tous les voyages" className={ICON_BTN}>
           <ChevronLeft size={24} strokeWidth={2.2} />
         </Link>
 

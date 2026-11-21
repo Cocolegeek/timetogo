@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { motion, useMotionValue, useTransform, animate } from "framer-motion";
+import { m as motion, useMotionValue, useTransform, animate } from "framer-motion";
 import { Trash2 } from "lucide-react";
 import { CATEGORIES } from "@/lib/budget/categories";
 import { formatCurrency } from "@/lib/format-currency";

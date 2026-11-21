@@ -3,10 +3,11 @@
 import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Check, Loader2, Shield } from "lucide-react";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { EASE_OUT } from "@/lib/motion";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { bootInitial } from "@/lib/boot";
 
 function ConsentContent() {
   const searchParams = useSearchParams();
@@ -42,7 +43,7 @@ function ConsentContent() {
   return (
     <div className="flex min-h-dvh flex-col bg-background">
       <motion.div
-        initial={{ opacity: 0, y: 16 }}
+        initial={bootInitial({ opacity: 0, y: 16 })}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: EASE_OUT }}
         className="mx-auto flex w-full max-w-md flex-1 flex-col px-6"

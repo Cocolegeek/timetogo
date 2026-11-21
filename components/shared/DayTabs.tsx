@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { spring } from "@/lib/motion";
 import { useScrolled } from "@/hooks/useScrolled";
 import { cn } from "@/lib/utils";

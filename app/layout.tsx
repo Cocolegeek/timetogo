@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, Inter, Geist_Mono } from "next/font/google";
 import { PwaRegister } from "./pwa-register";
-import { AppInstallBanner } from "@/components/shared/IosInstallBanner";
+import { LazyInstallBanner } from "@/components/shared/LazyInstallBanner";
 import { SectionThemeController } from "@/components/layout/SectionThemeController";
 import { MotionProvider } from "@/components/motion/MotionProvider";
 import { ToastProvider } from "@/components/shared/Toaster";
@@ -19,9 +19,11 @@ const bricolage = Bricolage_Grotesque({
   weight: ["500", "700", "800"],
 });
 
+// Only used to display an IBAN: not worth a preload on every launch.
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  preload: false,
 });
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://voyou.app";
@@ -106,7 +108,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <SectionThemeController />
         <PwaRegister />
-        <AppInstallBanner />
+        <LazyInstallBanner />
         <MotionProvider>
           <DataProvider>
             <ToastProvider>{children}</ToastProvider>

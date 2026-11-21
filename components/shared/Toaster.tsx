@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m as motion } from "framer-motion";
 import { Check, Info, TriangleAlert } from "lucide-react";
 import { spring } from "@/lib/motion";
 import { haptic } from "@/lib/haptics";

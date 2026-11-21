@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { animate, useReducedMotion } from "framer-motion";
-import { EASE_OUT } from "@/lib/motion";
+import { useEffect, useRef, useState } from "react";
+import { isBootScreen } from "@/lib/boot";
 
 interface NumberTickerProps {
   value: number;
@@ -11,38 +10,48 @@ interface NumberTickerProps {
   duration?: number;
 }
 
+const easeOutQuint = (t: number) => 1 - Math.pow(1 - t, 5);
+
+function reducedMotion(): boolean {
+  return (
+    window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ||
+    document.documentElement.classList.contains("reduce-motion")
+  );
+}
+
 /**
- * Counts from the previous value (0 on mount) to `value`. Writes to the DOM
- * directly — no re-render per frame. The rendered text never changes, so
- * React never overwrites the animated value.
+ * Counts from the previous value to `value`, writing to the DOM directly (no
+ * re-render per frame). On the launch screen the real amount shows at once;
+ * the count only plays when the value changes afterwards.
  */
 export function NumberTicker({ value, format, className, duration = 0.9 }: NumberTickerProps) {
   const ref = useRef<HTMLSpanElement>(null);
-  const from = useRef(0);
-  const reduce = useReducedMotion();
+  const [initial] = useState(() => (isBootScreen() ? value : 0));
+  const from = useRef(initial);
 
   useEffect(() => {
     const node = ref.current;
     if (!node) return;
-    if (reduce) {
+    const start = from.current;
+    from.current = value;
+    if (start === value || reducedMotion()) {
       node.textContent = format(value);
-      from.current = value;
       return;
     }
-    const controls = animate(from.current, value, {
-      duration,
-      ease: EASE_OUT,
-      onUpdate: (v) => {
-        node.textContent = format(v);
-      },
-    });
-    from.current = value;
-    return () => controls.stop();
-  }, [value, format, duration, reduce]);
+    let frame = 0;
+    const t0 = performance.now();
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - t0) / (duration * 1000));
+      node.textContent = format(start + (value - start) * easeOutQuint(t));
+      if (t < 1) frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [value, format, duration]);
 
   return (
     <span ref={ref} className={className}>
-      {format(reduce ? value : 0)}
+      {format(initial)}
     </span>
   );
 }

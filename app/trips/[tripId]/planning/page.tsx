@@ -11,7 +11,7 @@ import {
   Navigation,
   Sun,
 } from "lucide-react";
-import { motion, AnimatePresence, useMotionValue, useTransform, animate } from "framer-motion";
+import { m as motion, AnimatePresence, useMotionValue, useTransform, animate } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import { useOpenLocation, useOpenRoute } from "@/components/shared/MapAppPicker";

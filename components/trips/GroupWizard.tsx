@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { Plus, X, Loader2, Infinity, CalendarDays, CalendarRange } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import { DateRangePicker } from "@/components/shared/DateRangePicker";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";

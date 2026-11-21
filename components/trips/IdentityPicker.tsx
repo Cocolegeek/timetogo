@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import { Check, UserPlus, X, Loader2, AlertTriangle } from "lucide-react";
 import { ParticipantAvatar } from "@/components/shared/ParticipantAvatar";
 import { Button } from "@/components/ui/button";

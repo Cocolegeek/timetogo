@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Lock, Loader2, UserPlus } from "lucide-react";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { spring } from "@/lib/motion";
 import { ParticipantAvatar } from "@/components/shared/ParticipantAvatar";
 import { CATEGORIES, CATEGORY_ORDER } from "@/lib/budget/categories";

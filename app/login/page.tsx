@@ -2,7 +2,7 @@
 
 import { useState, Suspense } from "react";
 import { Loader2 } from "lucide-react";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { VoyouLogo } from "@/components/layout/VoyouLogo";
@@ -11,6 +11,7 @@ import { EASE_OUT } from "@/lib/motion";
 import { GoogleIcon } from "@/components/auth/GoogleIcon";
 import { continueAsGuest } from "@/lib/auth/guest";
 import { clearDataCache } from "@/lib/data/swr";
+import { bootInitial } from "@/lib/boot";
 
 const BUILDINGS = [
   { x: 26, y: 214, w: 54, h: 150, fill: "#1A1D24" },
@@ -96,7 +97,7 @@ function LoginForm() {
       <LoginIllustration />
 
       <motion.div
-        initial={{ opacity: 0, y: 16 }}
+        initial={bootInitial({ opacity: 0, y: 16 })}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: EASE_OUT, delay: 0.35 }}
         className="mx-auto flex w-full max-w-md flex-1 flex-col px-6 pt-6"
