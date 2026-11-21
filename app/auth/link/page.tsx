@@ -8,6 +8,7 @@ import { Check, Loader2, TriangleAlert, UsersRound } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { GoogleIcon } from "@/components/auth/GoogleIcon";
 import { PageSkeleton } from "@/components/shared/Skeleton";
+import { VoyouLoader } from "@/components/shared/VoyouLoader";
 import { claimGuestTransfer, signInToExistingGoogle, startGoogleUpgrade, syncProfileFromGoogle } from "@/lib/auth/guest";
 import { syncMyParticipantAvatars } from "@/lib/avatar-sync";
 import { clearDataCache } from "@/lib/data/swr";
@@ -88,9 +89,9 @@ function LinkFlow() {
 
   if (outcome.kind === "working") {
     return (
-      <Screen icon={<Loader2 size={28} className="animate-spin" />} tone="info" title="On sauvegarde tes voyages…">
-        <p>Quelques secondes.</p>
-      </Screen>
+      <div className="flex min-h-dvh items-center justify-center px-6">
+        <VoyouLoader label="On met tes voyages à l'abri…" />
+      </div>
     );
   }
 

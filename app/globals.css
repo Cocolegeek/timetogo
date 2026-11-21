@@ -508,3 +508,132 @@ html.reduce-motion *, html.reduce-motion *::before, html.reduce-motion *::after 
 .text-primary {
   color: var(--primary-text);
 }
+
+/* ─── VoyouLoader: the « oyo » face hops while the app gets ready ───────────
+ * CSS-only (visible in the server HTML, zero JS). Appears after --vl-delay so
+ * fast loads never see it flash. See components/shared/VoyouLoader.tsx. */
+.vl {
+  --vl-hop: 1.5s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.1rem;
+  animation: vl-in 0.5s var(--ease-out) both;
+  animation-delay: var(--vl-delay, 0ms);
+}
+.vl-stage {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  width: calc(var(--vl-size) * 1.4);
+  height: calc(var(--vl-size) * 1.55);
+}
+.vl-hop {
+  will-change: transform;
+  transform-origin: 50% 100%;
+  animation: vl-hop var(--vl-hop) cubic-bezier(0.45, 0, 0.4, 1) infinite;
+  filter: drop-shadow(0 10px 18px rgb(201 140 0 / 0.28));
+}
+.vl-shadow {
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  width: calc(var(--vl-size) * 0.8);
+  height: 10px;
+  margin-left: calc(var(--vl-size) * -0.4);
+  border-radius: 50%;
+  background: var(--foreground);
+  will-change: transform, opacity;
+  animation: vl-shadow var(--vl-hop) cubic-bezier(0.45, 0, 0.4, 1) infinite;
+}
+.vl svg .vl-eyes {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: vl-blink 3.7s ease-in-out infinite;
+}
+.vl svg .vl-look-x {
+  animation: vl-look-x calc(var(--vl-hop) * 2) ease-in-out infinite;
+}
+.vl svg .vl-look-y {
+  animation: vl-look-y var(--vl-hop) ease-in-out infinite;
+}
+.vl-msgs {
+  position: relative;
+  width: 17rem;
+  height: 1.5rem;
+  text-align: center;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--muted-foreground);
+}
+.vl-msgs > span {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  animation: vl-msg 9.5s var(--ease-out) infinite;
+  animation-delay: calc(var(--i) * 1.9s + var(--vl-delay, 0ms));
+}
+.vl-msgs > span:only-child {
+  opacity: 1;
+  animation: none;
+}
+
+@keyframes vl-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.92); }
+  to { opacity: 1; transform: none; }
+}
+/* Squash on the ground, stretch on take-off, tilt at the top, squash on landing. */
+@keyframes vl-hop {
+  0% { transform: translateY(0) scale(1.08, 0.9); }
+  12% { transform: translateY(0) scale(0.94, 1.07); }
+  44% { transform: translateY(-36%) rotate(-5deg) scale(1); }
+  56% { transform: translateY(-36%) rotate(2deg) scale(1); }
+  84% { transform: translateY(0) scale(0.96, 1.05); }
+  92% { transform: translateY(0) scale(1.1, 0.88); }
+  100% { transform: translateY(0) scale(1.08, 0.9); }
+}
+@keyframes vl-shadow {
+  0%, 12%, 92%, 100% { transform: scaleX(1.05); opacity: 0.16; }
+  44%, 56% { transform: scaleX(0.55); opacity: 0.06; }
+}
+/* Eyes: look up at the top of each hop, sideways every other hop, blink now and then. */
+@keyframes vl-look-y {
+  0%, 12%, 92%, 100% { transform: translateY(6px); }
+  44%, 56% { transform: translateY(-13px); }
+}
+@keyframes vl-look-x {
+  0%, 40% { transform: translateX(0); }
+  50%, 88% { transform: translateX(-30px); }
+  100% { transform: translateX(0); }
+}
+@keyframes vl-blink {
+  0%, 90%, 96%, 100% { transform: scaleY(1); }
+  93% { transform: scaleY(0.08); }
+}
+@keyframes vl-msg {
+  0% { opacity: 0; transform: translateY(0.6rem); }
+  3% { opacity: 1; transform: none; }
+  17% { opacity: 1; transform: none; }
+  20% { opacity: 0; transform: translateY(-0.6rem); }
+  100% { opacity: 0; transform: translateY(-0.6rem); }
+}
+
+/* Skeletons step back once the loader takes over. */
+.vl-recede {
+  animation: vl-recede 0.5s var(--ease-out) both;
+  animation-delay: var(--vl-delay, 0ms);
+}
+@keyframes vl-recede {
+  to { opacity: 0.25; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vl-hop, .vl-shadow, .vl svg .vl-eyes, .vl svg .vl-look-x, .vl svg .vl-look-y { animation: none !important; }
+  .vl-msgs > span { animation: none !important; opacity: 0; }
+  .vl-msgs > span:first-child { opacity: 1; }
+}
+html.reduce-motion .vl-hop, html.reduce-motion .vl-shadow, html.reduce-motion .vl svg .vl-eyes,
+html.reduce-motion .vl svg .vl-look-x, html.reduce-motion .vl svg .vl-look-y { animation: none !important; }
+html.reduce-motion .vl-msgs > span { animation: none !important; opacity: 0; }
+html.reduce-motion .vl-msgs > span:first-child { opacity: 1; }

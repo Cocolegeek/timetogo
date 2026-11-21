@@ -74,6 +74,7 @@ components/
   shared/     AvatarPicker (photo Google + 16 avatars), AvatarUpload, ClientOnly (rendu client après hydratation),
               ConfirmDeleteDialog, DateRangePicker, DateField / TimeField (DateTimeFields : libellé FR + sélecteur natif),
               DayHeader, DayTabs, EmptyState, SegmentedControl, Skeleton (Spinner = squelette de page),
+              VoyouLoader (visage « oyo » qui saute + phrases de voyage, CSS pur, dans PageSkeleton après 1,5 s),
               Toaster (ToastProvider + useToast), UserAvatar (photo / avatar / initiale),
               ImageCropDialog, IosInstallBanner,
               LocationPickerSheet, — tap → 88dvh Sheet with large search + Nominatim results;
@@ -233,6 +234,10 @@ DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip(
 - **Formulaires** : participants → `ParticipantPicker` ; dates/heures → `DateField` / `TimeField` ;
   listes éditables → liste groupée `rounded-[1.25rem] bg-secondary` + `ParticipantAvatar`. Sélection = encre
   (`bg-primary text-primary-foreground`), jamais une teinte (pas d'ambre/violet pour « sélectionné »).
+- **Chargement** : `PageSkeleton` montre la forme de l'écran tout de suite ; si l'attente dépasse 1,5 s, les blocs
+  s'effacent et `VoyouLoader` prend le relais (le visage saute, regarde en l'air, cligne ; phrases qui tournent).
+  CSS/SVG uniquement (classes `.vl*` dans globals.css) : visible dès le HTML, sans JS, mouvements réduits respectés.
+  Jamais de spinner générique pour une page entière ; `Loader2` reste réservé aux boutons.
 - **Accessibilité** : zoom autorisé, cibles ≥ 44 px, `aria-label` sur les boutons icônes.
 
 ## Parcours (enforced — do not regress)
