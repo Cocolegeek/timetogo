@@ -19,7 +19,7 @@ function welcomedOnThisDevice(): boolean {
 
 /**
  * The first-run flow (welcome + avatar picker + photo crop) only loads when it
- * has something to show — not on every launch.
+ * has something to show, not on every launch.
  */
 export function LazyOnboarding() {
   const { profile } = useProfile();

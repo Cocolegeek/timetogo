@@ -122,7 +122,7 @@ export function LocationPickerSheet({
 
   return (
     <>
-      {/* Trigger — looks like an input, acts as a button */}
+      {/* Trigger: looks like an input, acts as a button */}
       <button
         type="button"
         onClick={openPicker}

@@ -534,7 +534,7 @@ export function TripEditDialog({
           )}
         </div>
 
-        {/* Footer — toujours visible */}
+        {/* Footer: toujours visible */}
         <div
           className="px-5 py-3 border-t border-border bg-popover shrink-0 flex gap-2"
           style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 0.75rem)" }}

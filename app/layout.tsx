@@ -32,10 +32,10 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://voyou.app";
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Voyou — Ton complice de voyage",
+    default: "Voyou · Ton complice de voyage",
     template: "%s · Voyou",
   },
-  description: "Budget partagé, planning et menus — pour des voyages entre potes sans embrouilles.",
+  description: "Budget partagé, planning et menus pour des voyages entre potes sans embrouilles.",
   manifest: "/manifest.json",
   applicationName: "Voyou",
   appleWebApp: {
@@ -54,15 +54,15 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: "Voyou",
-    title: "Voyou — Rejoins la bande",
-    description: "Budget, planning, menus — voyages entre potes sans embrouilles.",
+    title: "Voyou · Rejoins la bande",
+    description: "Budget, planning, menus : voyages entre potes sans embrouilles.",
     locale: "fr_FR",
     url: siteUrl,
   },
   twitter: {
     card: "summary_large_image",
-    title: "Voyou — Rejoins la bande",
-    description: "Budget, planning, menus — voyages entre potes sans embrouilles.",
+    title: "Voyou · Rejoins la bande",
+    description: "Budget, planning, menus : voyages entre potes sans embrouilles.",
   },
 };
 

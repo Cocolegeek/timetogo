@@ -1,5 +1,5 @@
 -- ============================================================
--- 018 — Identity claim (primary user per participant)
+-- 018 : Identity claim (primary user per participant)
 -- ============================================================
 -- When several users link themselves to the same participant
 -- (e.g. one user accidentally claimed someone else's identity),
@@ -8,7 +8,7 @@
 --
 -- Rule: the user with `is_primary = true` for a (trip, participant)
 -- pair is the authoritative one. A user can override an existing
--- primary by calling `claim_participant` — that transactionally
+-- primary by calling `claim_participant`, that transactionally
 -- demotes the old primary and promotes the caller.
 
 -- ─── Column + partial uniqueness ─────────────────────────────

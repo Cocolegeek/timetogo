@@ -123,7 +123,7 @@ async function compose(supabase: Supabase, me: string, p: NotifyEvent): Promise<
           userId,
           kind: "expense",
           title: trip.name,
-          body: `${sender} a ajouté « ${e.title} » · ${money(e.amount_in_trip_currency)}${share ? ` — ta part ${money(share)}` : ""}`,
+          body: `${sender} a ajouté « ${e.title} » · ${money(e.amount_in_trip_currency)}${share ? ` · ta part ${money(share)}` : ""}`,
           url: `${base}/budget?expense=${p.id}`,
           tag: `expense-${p.id}`,
         });

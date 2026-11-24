@@ -42,7 +42,7 @@ function countdown(mins: number): string {
 /**
  * The dashboard's single planning block: the most relevant day, with the
  * current / next step of today pulled to the top (countdown + « Y aller »)
- * and the rest of the day underneath — each step shown once.
+ * and the rest of the day underneath: each step shown once.
  */
 export function DayAgendaCard({ items, today, planningHref }: { items: ItineraryItem[]; today: string; planningHref: string }) {
   const now = useNowMinutes();

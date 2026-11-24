@@ -21,7 +21,7 @@ interface BudgetEditDialogProps {
   currency: string;
   /** Currently saved total budget (always stored as TOTAL in the DB). */
   initialValue?: number;
-  /** Number of participants in the trip — used for the per-person mode. */
+  /** Number of participants in the trip, used for the per-person mode. */
   participantCount: number;
   /** Pass `null` to clear the budget. */
   onSave: (value: number | null) => Promise<void>;

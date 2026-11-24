@@ -1,5 +1,5 @@
 -- ============================================================
--- 013 — Custom avatars (trip icons + profile photos)
+-- 013 : Custom avatars (trip icons + profile photos)
 -- ============================================================
 -- Ajoute la possibilité d'uploader une image custom à la place de
 -- l'emoji (trips) ou de l'avatar Google (profiles).

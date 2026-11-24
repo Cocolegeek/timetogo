@@ -1,4 +1,4 @@
-# Voyou — Guide de mise en ligne : Supabase + Vercel
+# Voyou : Guide de mise en ligne, Supabase + Vercel
 
 Ce guide part du principe que **rien n'a été fait** côté Supabase, Google Cloud et Vercel pour la PR #6
 (hors-ligne, multi-devises, journal d'activité, dépenses répétées, export, suppression de compte).
@@ -711,13 +711,13 @@ Où chercher les erreurs : Vercel › projet › **Logs** (routes `/api/*`) ; Su
 
 ---
 
-## Annexe A — Migration 023 (contenu complet)
+## Annexe A : Migration 023 (contenu complet)
 
 Fichier : `lib/supabase/migrations/023_activity_recurring_account_deletion.sql`. À coller tel quel dans le SQL Editor.
 
 ```sql
 -- ============================================================
--- 023 — Journal d'activité, dépenses récurrentes, suppression de compte
+-- 023 : Journal d'activité, dépenses récurrentes, suppression de compte
 -- ============================================================
 -- 1. trip_activity : qui a créé / modifié / supprimé quoi (dépenses,
 --    remboursements, étapes). Alimenté par triggers, lecture seule côté client.
@@ -985,11 +985,11 @@ GRANT EXECUTE ON FUNCTION public.apply_recurring_expenses(uuid) TO authenticated
 GRANT EXECUTE ON FUNCTION public.delete_my_account() TO authenticated;
 ```
 
-## Annexe B — Rappel : requête de diagnostic
+## Annexe B : rappel, requête de diagnostic
 
 Voir §2.2 (même requête, à relancer après chaque série de migrations).
 
-## Annexe C — Requêtes utiles
+## Annexe C : requêtes utiles
 
 ```sql
 -- Combien d'invités abandonnés (créés il y a plus de 30 jours, sans aucun voyage) ?

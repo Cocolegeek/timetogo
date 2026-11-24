@@ -131,7 +131,7 @@ export function TripWizard() {
     if (typeof err === "object") {
       const e = err as { message?: string; details?: string; hint?: string; code?: string };
       const parts = [e.message, e.details, e.hint, e.code ? `[${e.code}]` : null].filter(Boolean);
-      if (parts.length > 0) return parts.join(" — ");
+      if (parts.length > 0) return parts.join(" · ");
       try { return JSON.stringify(err); } catch { return String(err); }
     }
     return String(err);

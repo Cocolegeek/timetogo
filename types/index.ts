@@ -72,7 +72,7 @@ export interface TripMember {
 /**
  * Discriminator for the two kinds of entities stored in the `trips` table.
  * - "trip"  : full voyage with destination, dates, planning, menus
- * - "group" : budget-only entity (à la Tricount) — no destination, no dates
+ * - "group" : budget-only entity (à la Tricount), no destination, no dates
  *
  * Feature flags derived from this discriminator live in `lib/trip-features.ts`.
  */
@@ -247,7 +247,7 @@ export interface Ingredient {
 export interface Dish {
   id: string;
   course: DishCourse;
-  /** Nom du plat — ex: "Œufs mimosa", "Côte de bœuf". */
+  /** Nom du plat (ex: "Œufs mimosa", "Côte de bœuf"). */
   name: string;
   ingredients: Ingredient[];
 }
@@ -261,9 +261,9 @@ export interface Meal {
   /** Note optionnelle au niveau du repas (ex: "Chez Léa"). */
   title?: string | null;
   notes?: string | null;
-  /** Participants who eat this meal — empty list = "tout le monde" implicit. */
+  /** Participants who eat this meal (empty list = "tout le monde" implicit). */
   participantIds: string[];
-  /** Participants in charge of preparing the meal — optional. */
+  /** Participants in charge of preparing the meal (optional). */
   cookIds: string[];
   /** Composition du repas : 0+ plats avec leurs ingrédients. */
   dishes: Dish[];

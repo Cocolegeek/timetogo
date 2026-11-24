@@ -1,5 +1,5 @@
 -- ============================================================
--- 014 — Permet aux utilisateurs anonymes de lire l'aperçu du join
+-- 014 : Permet aux utilisateurs anonymes de lire l'aperçu du join
 -- ============================================================
 -- Avant cette migration, get_join_preview n'était accessible qu'aux
 -- utilisateurs authentifiés. Conséquence : un visiteur non connecté

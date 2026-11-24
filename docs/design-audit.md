@@ -1,4 +1,4 @@
-# Voyou — Audit design UX / UI
+# Voyou : Audit design UX / UI
 
 Périmètre : 14 000 lignes TSX, 30 composants, 14 écrans. Constats tirés du code (tokens, composants, pages).
 

@@ -287,7 +287,7 @@ function TimelineRow({ item, last, children }: { item: ItineraryItem; last: bool
       className="relative grid grid-cols-[3rem_minmax(0,1fr)] gap-3"
     >
       <span className="tabular pt-4 text-right text-sm font-semibold text-muted-foreground">
-        {item.time ? item.time.slice(0, 5) : "—"}
+        {item.time ? item.time.slice(0, 5) : "-"}
       </span>
       <div className="relative">
         {!last && <span aria-hidden="true" className="absolute top-full left-6 h-2.5 w-px bg-border" />}

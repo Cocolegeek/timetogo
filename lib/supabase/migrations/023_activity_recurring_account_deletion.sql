@@ -1,5 +1,5 @@
 -- ============================================================
--- 023 — Journal d'activité, dépenses récurrentes, suppression de compte
+-- 023 : Journal d'activité, dépenses récurrentes, suppression de compte
 -- ============================================================
 -- 1. trip_activity : qui a créé / modifié / supprimé quoi (dépenses,
 --    remboursements, étapes). Alimenté par triggers, lecture seule côté client.

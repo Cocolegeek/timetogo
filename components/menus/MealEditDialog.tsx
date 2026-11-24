@@ -345,7 +345,7 @@ export function MealEditDialog({
             <>
               {participants.length === 0 ? (
                 <div className="px-5 py-10 text-center text-sm text-muted-foreground">
-                  Aucun participant — ajoute-en depuis l&apos;édition du voyage.
+                  Aucun participant. Ajoute-en depuis l&apos;édition du voyage.
                 </div>
               ) : (
                 <>
@@ -476,7 +476,7 @@ function DishRow({
             {courseCfg.label}
           </span>
           {dish.name && (
-            <span className="text-sm text-foreground truncate">— {dish.name}</span>
+            <span className="text-sm text-foreground truncate">· {dish.name}</span>
           )}
           <span className="flex-1" />
           <ChevronDown

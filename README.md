@@ -1,6 +1,6 @@
 # Voyou
 
-Application de planification de voyage collaborative — budget partagé, planning d'itinéraire, menus. Disponible sur [voyou.app](https://voyou.app).
+Application de planification de voyage collaborative : budget partagé, planning d'itinéraire, menus. Disponible sur [voyou.app](https://voyou.app).
 
 ## Stack
 
@@ -20,7 +20,7 @@ Application de planification de voyage collaborative — budget partagé, planni
 - Calcul automatique des soldes et remboursements simplifiés
 - Planning d'itinéraire jour par jour
 - Menus (petit-déj, déjeuner, dîner) avec liste de courses
-- Partage par code 6 caractères — les contributeurs peuvent tout voir et modifier
+- Partage par code 6 caractères : les contributeurs peuvent tout voir et modifier
 - **Listes** : « À apporter » (qui ramène quoi) et « À faire », avec qui s'en charge
 - **Ta bande** : les gens avec qui tu voyages (et ceux ajoutés par lien) s'embarquent en un geste dans un nouveau voyage
 - **Notifications push** (dépenses, remboursements, listes, bande, planning), réglables par type

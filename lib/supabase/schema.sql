@@ -1,5 +1,5 @@
 -- ============================================================
--- Voyou — Supabase Schema (canonical, up to migration 022)
+-- Voyou : Supabase schema (base + migrations 021 to 023; 016, 018 and 019 only live in migrations/)
 -- Run this in the Supabase SQL editor after creating your project.
 -- Already-deployed DBs: apply individual migrations in lib/supabase/migrations/.
 -- ============================================================
@@ -99,7 +99,7 @@ CREATE TABLE IF NOT EXISTS public.trip_members (
   PRIMARY KEY (trip_id, user_id)
 );
 
--- At most one primary claim per (trip, participant) — migration 018
+-- At most one primary claim per (trip, participant), migration 018
 CREATE UNIQUE INDEX IF NOT EXISTS trip_members_primary_unique
   ON public.trip_members (trip_id, participant_id)
   WHERE is_primary = true;
@@ -504,7 +504,7 @@ CREATE POLICY "profile-avatars delete own folder"
 
 
 -- ============================================================
--- Guest accounts (migration 021) — see the migration file for the full flow.
+-- Guest accounts (migration 021): see the migration file for the full flow.
 -- Requires "Allow anonymous sign-ins" + "Allow manual linking" in Supabase Auth.
 -- ============================================================
 -- ─── Transfer tokens ─────────────────────────────────────────
@@ -642,7 +642,7 @@ GRANT EXECUTE ON FUNCTION public.claim_guest_transfer(uuid) TO authenticated;
 
 
 -- ============================================================
--- 022 — Ta bande (amis), notifications push, listes partagées
+-- 022 : Ta bande (amis), notifications push, listes partagées
 -- ============================================================
 -- 1. Ta bande : tu retrouves automatiquement les gens avec qui tu as
 --    partagé un voyage, et tu peux ajouter un pote via son lien / code.
@@ -1062,7 +1062,7 @@ GRANT EXECUTE ON FUNCTION public.prune_push_subscription(text) TO authenticated;
 
 
 -- ============================================================
--- 023 — Journal d'activité, dépenses récurrentes, suppression de compte
+-- 023 : Journal d'activité, dépenses récurrentes, suppression de compte
 -- ============================================================
 -- 1. trip_activity : qui a créé / modifié / supprimé quoi (dépenses,
 --    remboursements, étapes). Alimenté par triggers, lecture seule côté client.

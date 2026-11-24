@@ -223,7 +223,7 @@ export function ItineraryItemForm({
           </button>
         </div>
 
-        {/* Title — sticky, persistent across tabs */}
+        {/* Title: sticky, persistent across tabs */}
         <div className="px-5 pt-4 pb-3 border-b border-border shrink-0">
           <input
             value={title}
@@ -359,7 +359,7 @@ export function ItineraryItemForm({
           {activeTab === "Qui" && (
             participants.length === 0 ? (
               <div className="px-5 py-10 text-center text-sm text-muted-foreground">
-                Aucun participant — ajoute-en depuis l&apos;édition du voyage.
+                Aucun participant. Ajoute-en depuis l&apos;édition du voyage.
               </div>
             ) : (
               <Row icon={<Users size={18} />} label="Participants">

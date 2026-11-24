@@ -710,7 +710,7 @@ export function ExpenseForm({
                   onClick={handleEqualForAll}
                   className="pressable h-9 rounded-full bg-primary/10 px-3.5 text-sm font-semibold text-primary transition-colors hover:bg-primary/15"
                 >
-                  Tous — équitable
+                  Tous, équitable
                 </button>
               </div>
 
@@ -792,7 +792,7 @@ export function ExpenseForm({
 
                       {splitMode === "equal" && (
                         <span className="tabular text-[0.95rem] font-semibold">
-                          {split.excluded ? "—" : formatCurrency(share, currency)}
+                          {split.excluded ? "-" : formatCurrency(share, currency)}
                         </span>
                       )}
 
@@ -881,7 +881,7 @@ export function ExpenseForm({
           )}
         </div>
 
-        {/* Footer — toujours visible */}
+        {/* Footer: toujours visible */}
         <div className="shrink-0 border-t border-border bg-popover px-5 pt-3 pb-4">
           <div className="flex gap-2">
             <Button variant="secondary" size="lg" onClick={() => onOpenChange(false)} className="flex-1">

@@ -314,7 +314,7 @@ export function JourneyForm({
             <div className="mx-5 mb-1 px-3 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-start gap-2.5">
               <TriangleAlert size={15} className="text-amber-400 shrink-0 mt-0.5" />
               <p className="text-xs text-amber-200 leading-relaxed">
-                L&apos;avion est le mode de transport le plus émetteur de CO₂ — jusqu&apos;à 50× plus que le train. À considérer si une alternative existe.
+                L&apos;avion est le mode de transport le plus émetteur de CO₂ : jusqu&apos;à 50× plus que le train. À considérer si une alternative existe.
               </p>
             </div>
           )}
@@ -426,7 +426,7 @@ export function JourneyForm({
           {activeTab === "Qui" && (
             participants.length === 0 ? (
               <div className="px-5 py-10 text-center text-sm text-muted-foreground">
-                Aucun participant — ajoute-en depuis l&apos;édition du voyage.
+                Aucun participant. Ajoute-en depuis l&apos;édition du voyage.
               </div>
             ) : (
               <Row icon={<Users size={18} />} label="Participants">
@@ -491,7 +491,7 @@ function buildGoogleMapsUrl(
 }
 
 function buildWazeUrl(to: string, toCoord: LocationCoord | null): string {
-  // Waze routes from GPS position — only destination can be specified via URL
+  // Waze routes from GPS position: only destination can be specified via URL
   if (toCoord) return `https://waze.com/ul?ll=${toCoord.lat},${toCoord.lon}&navigate=yes`;
   return `https://waze.com/ul?q=${encodeURIComponent(to)}&navigate=yes`;
 }

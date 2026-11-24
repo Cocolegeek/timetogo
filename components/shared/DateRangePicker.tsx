@@ -21,7 +21,7 @@ function toYMD(year: number, month: number, day: number) {
 }
 
 function fmtShort(ymd: string) {
-  if (!ymd) return "—";
+  if (!ymd) return "-";
   const [y, m, d] = ymd.split("-").map(Number);
   return new Date(y, m - 1, d).toLocaleDateString("fr-FR", {
     day: "numeric",
@@ -140,7 +140,7 @@ export function DateRangePicker({ startDate, endDate, onChange }: DateRangePicke
             <div className="flex items-center justify-between px-5 py-3.5 border-b border-border">
               <p className="text-sm font-semibold text-foreground">
                 {pendingStart
-                  ? `Départ · ${fmtShort(pendingStart)} — Choisir le retour`
+                  ? `Départ · ${fmtShort(pendingStart)} · Choisir le retour`
                   : "Choisir la date de départ"}
               </p>
               <button
