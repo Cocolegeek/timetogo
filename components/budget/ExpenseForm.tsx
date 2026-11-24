@@ -15,6 +15,8 @@ import { spring } from "@/lib/motion";
 import { ParticipantAvatar } from "@/components/shared/ParticipantAvatar";
 import { CATEGORIES, CATEGORY_ORDER } from "@/lib/budget/categories";
 import { computeShares } from "@/lib/budget/splits";
+import { guessCategory } from "@/lib/budget/guess-category";
+import type { RecentTitle } from "@/lib/budget/recent-titles";
 import { parseRate, toTripAmount } from "@/lib/budget/currency";
 import { CURRENCIES } from "@/lib/currencies";
 import { currencySymbol } from "@/lib/format-currency";
@@ -101,6 +103,10 @@ interface ExpenseFormProps {
   defaultPayerId?: string | null;
   /** Propose « Répéter » (budgets de groupe). */
   allowRecurrence?: boolean;
+  /** Derniers intitulés : un toucher les réutilise (avec leur catégorie). */
+  recentTitles?: RecentTitle[];
+  /** `initialValues` sert de modèle pour une NOUVELLE dépense (date du jour), pas pour une modification. */
+  duplicate?: boolean;
   initialValues?: Expense;
   onSubmit: (data: {
     title: string;
@@ -131,10 +137,13 @@ export function ExpenseForm({
   currency,
   defaultPayerId,
   allowRecurrence = false,
+  recentTitles = [],
+  duplicate = false,
   initialValues,
   onSubmit,
 }: ExpenseFormProps) {
-  const isEdit = !!initialValues;
+  const isEdit = !!initialValues && !duplicate;
+  const categoryTouched = useRef(false);
 
   const [activeTab, setActiveTab] = useState<NavTab>("Infos");
   const [title, setTitle] = useState("");
@@ -165,7 +174,8 @@ export function ExpenseForm({
       rateTouched.current = true;
       setRecurrence("none");
       setCategory(initialValues.category);
-      setDate(initialValues.date);
+      setDate(duplicate ? new Date().toISOString().split("T")[0] : initialValues.date);
+      categoryTouched.current = true;
       setSplitMode(initialValues.splitMode);
       setPayers(initialValues.payers.map((p) => ({ ...p })));
 
@@ -202,6 +212,7 @@ export function ExpenseForm({
       rateTouched.current = false;
       setRecurrence("none");
       setCategory("other");
+      categoryTouched.current = false;
       setDate(new Date().toISOString().split("T")[0]);
       setSplitMode("equal");
       setNewMemberIds(new Set());
@@ -223,7 +234,7 @@ export function ExpenseForm({
         }))
       );
     }
-  }, [open, initialValues, participants, defaultPayerId, currency]);
+  }, [open, initialValues, duplicate, participants, defaultPayerId, currency]);
 
   // ── Taux de change (BCE) : proposé automatiquement, toujours modifiable ─────
   useEffect(() => {
@@ -291,7 +302,7 @@ export function ExpenseForm({
     (payers.length === 1 || Math.abs(payerTotal - amount) < 0.01);
 
   const formValid =
-    title.trim().length > 0 && amount > 0 && rate > 0 && payerValid && splitValid;
+    amount > 0 && rate > 0 && payerValid && splitValid;
 
   // ── Amount effect (fixed mode) ─────────────────────────────────────────────
   useEffect(() => {
@@ -423,7 +434,7 @@ export function ExpenseForm({
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const cleanSplits: ParticipantSplit[] = splits.map(({ pinned: _p, ...s }) => s);
       await onSubmit({
-        title: title.trim(),
+        title: title.trim() || (category === "other" ? "Dépense" : CATEGORIES[category].label),
         amount: rawAmount,
         currency: spendCurrency,
         exchangeRate: rate,
@@ -444,7 +455,7 @@ export function ExpenseForm({
   const spendSym = currencySymbol(spendCurrency);
 
   // ── Tab validity indicators ────────────────────────────────────────────────
-  const infoValid = title.trim().length > 0 && amount > 0;
+  const infoValid = amount > 0;
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
@@ -457,7 +468,7 @@ export function ExpenseForm({
       >
         {/* Header */}
         <div className="shrink-0 px-5 pt-7 pr-16 pb-3">
-          <SheetTitle>{isEdit ? "Modifier la dépense" : "Nouvelle dépense"}</SheetTitle>
+          <SheetTitle>{isEdit ? "Modifier la dépense" : duplicate ? "Dupliquer la dépense" : "Nouvelle dépense"}</SheetTitle>
         </div>
 
         {/* Tab navigation */}
@@ -569,13 +580,40 @@ export function ExpenseForm({
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="expense-title" className="px-1 text-sm font-semibold">Pour quoi ?</label>
+                <label htmlFor="expense-title" className="px-1 text-sm font-semibold">
+                  Pour quoi ? <span className="font-normal text-muted-foreground">(facultatif)</span>
+                </label>
                 <Input
                   id="expense-title"
                   value={title}
-                  onChange={(e) => setTitle(e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setTitle(value);
+                    if (!categoryTouched.current) {
+                      const guess = guessCategory(value);
+                      if (guess) setCategory(guess);
+                    }
+                  }}
                   placeholder="Restaurant, courses, taxi…"
                 />
+                {!isEdit && title.trim() === "" && recentTitles.length > 0 && (
+                  <div className="no-scrollbar -mx-5 flex gap-2 overflow-x-auto px-5 pt-1" role="group" aria-label="Intitulés récents">
+                    {recentTitles.map((r) => (
+                      <button
+                        key={r.title}
+                        type="button"
+                        onClick={() => {
+                          setTitle(r.title);
+                          setCategory(r.category);
+                          categoryTouched.current = true;
+                        }}
+                        className="pressable h-9 shrink-0 rounded-full bg-foreground/[0.06] px-3.5 text-sm font-semibold transition-colors hover:bg-foreground/[0.1]"
+                      >
+                        {r.title}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -589,7 +627,10 @@ export function ExpenseForm({
                       <button
                         key={cat}
                         type="button"
-                        onClick={() => setCategory(cat)}
+                        onClick={() => {
+                          categoryTouched.current = true;
+                          setCategory(cat);
+                        }}
                         aria-pressed={selected}
                         className={cn(
                           "pressable flex h-11 shrink-0 items-center gap-2 rounded-full pr-4 pl-3 transition-colors",

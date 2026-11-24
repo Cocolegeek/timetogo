@@ -185,6 +185,9 @@ lib/
   map-apps.ts           → MapAppId type + map app metadata
   meals/slots.ts        → DEFAULT_SLOTS, eachDate(), buildDefaultMealRows()
   meals/categories.ts   → home|picnic|restaurant
+  quick-add.ts          → contextKind(), leadKind(), orderActions(), ADD_LABELS (le « + » contextuel et la feuille de choix)
+  budget/guess-category.ts → guessCategory(titre) : catégorie devinée (accents et casse ignorés), null si rien d'évident
+  budget/recent-titles.ts  → recentTitles(dépenses) : derniers intitulés distincts avec leur catégorie
   planning-day.ts       → itinerary day grouping
   section-theme.ts      → getSection() → maps pathname to CSS section token (used by SectionThemeController)
   trip-share.ts         → generateShareCode(), buildShareUrl()
@@ -272,9 +275,16 @@ DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip(
 
 - **Navigation voyage** : barre d'onglets flottante (matière translucide = seule zone « verre » autorisée),
   qui se compacte au défilement ; toucher l'onglet actif ou le titre de l'en-tête remonte en haut.
-- **Ajout rapide** : le bouton « + » de la barre ouvre la feuille Ajouter (dépense, étape, trajet, repas, liste).
-  Les pages ouvrent leur formulaire via `useQuickAdd()` (événement si déjà sur la page, sinon `?new=<kind>`).
-  Pas de FAB par page.
+- **Ajout rapide** : le bouton « + » de la barre agit selon l'écran (`contextKind()` dans `lib/quick-add.ts`) : Budget = nouvelle
+  dépense, Planning = étape, Menus = repas, Listes = champ d'ajout. Un seul toucher. Sur l'accueil du voyage (et dans un budget de
+  groupe sans planning), il ouvre la feuille de choix. **Appui long** (450 ms), clic droit ou bouton lecteur d'écran = feuille de choix
+  complète (`QuickAddSheet` : l'action de l'écran, sinon la dépense, en grande ligne ; les autres en liste groupée, sans phrases d'aide).
+  Une astuce unique (« maintiens + ») s'affiche au 3e ajout direct. Les pages ouvrent leur formulaire via `useQuickAdd()`
+  (événement si déjà sur la page, sinon `?new=<kind>`). Pas de FAB par page.
+- **Saisie rapide d'une dépense** : seul le montant est obligatoire (titre facultatif, par défaut la catégorie), puces des titres récents
+  (`recentTitles()`, reprennent la catégorie), catégorie devinée d'après le titre tant qu'elle n'a pas été choisie (`guessCategory()`),
+  « Dupliquer » dans la fiche d'une dépense (date du jour), et après un ajout la pastille « Ajouter une autre » (budget et planning).
+
 - **Recherche** : `TripSearch` (loupe de l'en-tête) cherche dans dépenses, planning, repas, listes et participants
   (sans accents). Liens profonds : `budget?expense=<id>`, `budget?tab=balances`,
   `planning?date=YYYY-MM-DD&item=<id>`, `menus?date=YYYY-MM-DD`, `lists?item=<id>`.
