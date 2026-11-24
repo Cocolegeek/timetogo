@@ -431,6 +431,13 @@ Supabase › **Authentication** › **Sign In / Providers** › **Email** :
 
 ### 3 ter.4 Modèles de message (obligatoire)
 
+**Version finale, aux couleurs de l'app** : les modèles dessinés dans la charte de Voyou (carte blanche, logo jaune, code en grand, version sombre)
+sont dans le dépôt, dossier `docs/email-templates/` :
+- `code.html` : à coller dans « Confirm sign up » **et** « Magic link ».
+- `change-email.html` : à coller dans « Change email address ».
+
+Ils ont déjà été appliqués à ton projet. Les textes simples ci-dessous restent comme version de secours, sans mise en forme.
+
 Par défaut, Supabase envoie un **lien** au lieu d'un code. Il faut remplacer **trois** modèles pour y mettre `{{ .Token }}`.
 Supabase › **Authentication** › **Emails** › **Templates**. Pour chacun des trois modèles ci-dessous, remplace le **Subject** et le **Message body** (mode source / HTML) puis **Save** :
 
