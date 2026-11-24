@@ -72,7 +72,7 @@ L'envoi passe par `app/api/notify` (Web Push / VAPID). La clé publique est dans
 
 - `VAPID_PRIVATE_KEY` (obligatoire pour envoyer)
 - `VAPID_SUBJECT` (optionnel, ex. `mailto:toi@exemple.fr` ; par défaut l'URL du site)
-- Pour changer de paire : `npx web-push generate-vapid-keys`, puis `NEXT_PUBLIC_VAPID_PUBLIC_KEY`
+- Pour changer de paire : `npm run vapid` (depuis le dossier du projet), puis `NEXT_PUBLIC_VAPID_PUBLIC_KEY`
   + `VAPID_PRIVATE_KEY`. Sans clé privée, l'app marche normalement, seules les notifications sont muettes.
 
 Sur iPhone, les notifications web demandent iOS 16.4+ et l'app installée sur l'écran d'accueil.

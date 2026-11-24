@@ -534,9 +534,11 @@ La clé **publique** est écrite en dur dans `lib/notifications/vapid.ts`. La cl
 
 - **Tu as la clé privée correspondante** : ajoute-la dans `VAPID_PRIVATE_KEY`. Rien d'autre.
 - **Tu ne l'as plus, ou tu n'es pas sûr** : génère une nouvelle paire.
-  ```bash
-  npx web-push generate-vapid-keys
-  ```
+  Deux façons, au choix :
+  - **Depuis le projet** (dossier du dépôt sur ton PC, après `npm install`) : `npm run vapid`.
+  - **Sans rien installer** : dans la console d'une page `https` neutre (par exemple `https://example.com`, pas une page vide), avec
+    `crypto.subtle.generateKey` (courbe P-256) puis en exportant la clé publique brute et la valeur `d` de la clé privée, toutes deux en base64url.
+    La clé publique fait 87 caractères et la clé privée 43.
   Puis renseigne **les deux** : `NEXT_PUBLIC_VAPID_PUBLIC_KEY` (clé publique) et `VAPID_PRIVATE_KEY` (clé privée), et redéploie.
   Conséquence : les appareils déjà abonnés ne recevront plus rien tant que leur propriétaire n'a pas désactivé puis
   réactivé les notifications dans Réglages (un abonnement est lié à la clé publique d'origine).
