@@ -486,6 +486,38 @@ html, body {
   animation: voyou-shimmer 1.4s ease-in-out infinite;
 }
 
+/* Gimmicks « récompense » : CSS pur, transform/opacity uniquement (aucun JS, aucun coût au repos). */
+@keyframes voyou-pop {
+  0% { transform: scale(0.4); opacity: 0; }
+  60% { transform: scale(1.18); opacity: 1; }
+  100% { transform: scale(1); }
+}
+@keyframes voyou-burst {
+  0% { transform: translate(0, 0) scale(0.4); opacity: 1; }
+  100% { transform: translate(var(--bx), var(--by)) scale(1); opacity: 0; }
+}
+@keyframes voyou-wiggle {
+  0%, 100% { transform: rotate(0); }
+  25% { transform: rotate(-8deg); }
+  75% { transform: rotate(8deg); }
+}
+@utility animate-pop {
+  animation: voyou-pop 420ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@utility animate-wiggle {
+  animation: voyou-wiggle 520ms ease-in-out 1;
+}
+@utility burst-dot {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: 6px;
+  height: 6px;
+  margin: -3px 0 0 -3px;
+  border-radius: 99px;
+  pointer-events: none;
+  animation: voyou-burst 620ms cubic-bezier(0.2, 0.8, 0.3, 1) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;

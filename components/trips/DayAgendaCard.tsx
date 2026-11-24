@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ChevronRight, Navigation } from "lucide-react";
 import { useOpenLocation, useOpenRoute } from "@/components/shared/MapAppPicker";
-import { ITINERARY_TYPES, JOURNEY_MODES } from "@/lib/itinerary-types";
+import { ITINERARY_TYPES, JOURNEY_MODES, itemTitle } from "@/lib/itinerary-types";
 import { pickRelevantPlanningDay, relativeDayLabel } from "@/lib/planning-day";
 import { cn } from "@/lib/utils";
 import type { ItineraryItem } from "@/types";
@@ -102,7 +102,7 @@ export function DayAgendaCard({ items, today, planningHref }: { items: Itinerary
           <div className="mt-3.5 flex items-center gap-3">
             <ItemIcon item={focus} />
             <span className="min-w-0 flex-1">
-              <span className="block truncate font-semibold">{focus.title}</span>
+              <span className="block truncate font-semibold">{itemTitle(focus)}</span>
               {focus.location && (
                 <span className="block truncate text-sm text-muted-foreground">
                   {canRoute ? `${focus.location.split(",")[0]} → ${focus.destination!.split(",")[0]}` : focus.location}
@@ -133,7 +133,7 @@ export function DayAgendaCard({ items, today, planningHref }: { items: Itinerary
             <li key={item.id} className={cn("relative flex items-center gap-3.5 transition-opacity", isPast(item) && "opacity-45")}>
               <ItemIcon item={item} ring />
               <span className="min-w-0 flex-1">
-                <span className="block truncate font-medium">{item.title}</span>
+                <span className="block truncate font-medium">{itemTitle(item)}</span>
                 {item.location && <span className="block truncate text-sm text-muted-foreground">{item.location}</span>}
               </span>
               {item.time && <span className="tabular shrink-0 text-sm font-semibold text-muted-foreground">{item.time.slice(0, 5)}</span>}

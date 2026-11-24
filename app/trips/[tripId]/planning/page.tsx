@@ -27,7 +27,7 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/compone
 import { useTrip } from "@/hooks/useTrip";
 import { useItinerary } from "@/hooks/useItinerary";
 import { isVoyage } from "@/lib/trip-features";
-import { ITINERARY_TYPES, JOURNEY_MODES } from "@/lib/itinerary-types";
+import { ITINERARY_TYPES, JOURNEY_MODES, itemTitle } from "@/lib/itinerary-types";
 import { eachDate } from "@/lib/meals/slots";
 import { formatDuration } from "@/lib/format-date";
 import { EASE_OUT, fadeUp, stagger } from "@/lib/motion";
@@ -386,12 +386,8 @@ function ItineraryCard({
           }}
           className="min-w-0 flex-1 pt-0.5 text-left outline-none"
         >
-          <span className="block text-[1rem] leading-snug font-semibold">{item.title}</span>
-          {isJourney && item.location && item.destination ? (
-            <span className="mt-0.5 block truncate text-sm text-muted-foreground">
-              {item.location.split(",")[0]} → {item.destination.split(",")[0]}
-            </span>
-          ) : item.location ? (
+          <span className="block text-[1rem] leading-snug font-semibold [overflow-wrap:anywhere]">{itemTitle(item)}</span>
+          {!isJourney && item.location ? (
             <span className="mt-0.5 block truncate text-sm text-muted-foreground">{item.location}</span>
           ) : null}
           {item.description && <span className="mt-1 block text-sm text-muted-foreground">{item.description}</span>}

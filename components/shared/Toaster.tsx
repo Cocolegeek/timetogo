@@ -75,6 +75,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                 <span
                   className={cn(
                     "flex size-6 shrink-0 items-center justify-center rounded-full",
+                    t.tone === "success" && "animate-pop",
                     t.tone === "success" ? "bg-emerald-500 text-white" : t.tone === "error" ? "bg-red-500 text-white" : "bg-background/15"
                   )}
                 >

@@ -21,6 +21,7 @@ import { Dialog, DialogContent, DialogTitle, FULLSCREEN_DIALOG } from "@/compone
 import { LocationPickerSheet } from "@/components/shared/LocationPickerSheet";
 import type { LocationCoord } from "@/components/shared/LocationPickerSheet";
 import { GoogleMapsIcon, WazeIcon, CityMapperIcon, GoogleFlightsIcon } from "@/components/shared/MapAppIcons";
+import { shortPlace } from "@/lib/itinerary-types";
 import { cn } from "@/lib/utils";
 import { ParticipantPicker } from "@/components/shared/ParticipantPicker";
 import { DateField, TimeField } from "@/components/shared/DateTimeFields";
@@ -168,7 +169,7 @@ export function JourneyForm({
     setErrorMsg(null);
     try {
       await onSubmit({
-        title: `${from.trim()} → ${to.trim()}`,
+        title: `${shortPlace(from)} → ${shortPlace(to)}`,
         date,
         time: time || undefined,
         location: from.trim(),
