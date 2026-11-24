@@ -11,7 +11,7 @@ export function createClient(): SupabaseClient {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
   }
-  // Client: singleton — reuse across all hook calls
+  // Client: singleton, reuse across all hook calls
   if (!_client) {
     _client = createBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,

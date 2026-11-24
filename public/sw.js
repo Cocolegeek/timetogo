@@ -1,4 +1,4 @@
-// Voyou service worker — bump CACHE when cached assets change (old caches are purged on activate).
+// Voyou service worker: bump CACHE when cached assets change (old caches are purged on activate).
 const CACHE = 'voyou-v5';
 // App screens (HTML shells). Cleared on sign-out by the page (caches.delete(PAGES)).
 const PAGES = 'voyou-pages-v1';

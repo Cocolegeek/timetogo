@@ -1,5 +1,6 @@
 "use client";
 
+import { TRIP_CURRENCIES } from "@/lib/currencies";
 import { useEffect, useState } from "react";
 import { useProfile } from "@/hooks/useProfile";
 import { useForm } from "react-hook-form";
@@ -21,7 +22,6 @@ import { addFriendsToTrip, useFriends } from "@/hooks/useFriends";
 
 
 const EMOJIS = ["💰", "🎂", "🎉", "🍻", "🏠", "🎁", "🤝", "📚"];
-const CURRENCIES = ["EUR", "USD", "GBP", "JPY", "CHF", "CAD"];
 
 type ParticipantInput = { name: string; color: string };
 type NavTab = "Infos" | "Participants";
@@ -124,7 +124,7 @@ export function GroupWizard() {
     if (typeof err === "object") {
       const e = err as { message?: string; details?: string; hint?: string; code?: string };
       const parts = [e.message, e.details, e.hint, e.code ? `[${e.code}]` : null].filter(Boolean);
-      if (parts.length > 0) return parts.join(" — ");
+      if (parts.length > 0) return parts.join(" · ");
       try { return JSON.stringify(err); } catch { return String(err); }
     }
     return String(err);
@@ -215,7 +215,7 @@ export function GroupWizard() {
           <div className="space-y-2">
             <Label className="px-1 text-sm font-semibold text-foreground">Devise</Label>
             <div className="flex gap-2 flex-wrap">
-              {CURRENCIES.map((c) => (
+              {TRIP_CURRENCIES.map((c) => (
                 <button
                   key={c}
                   type="button"

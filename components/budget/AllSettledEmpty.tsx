@@ -1,12 +1,14 @@
 "use client";
 
 import { Check } from "lucide-react";
+import { Burst } from "@/components/motion/Burst";
 
 export function AllSettledEmpty() {
   return (
     <div className="animate-fade-up flex flex-col items-center gap-4 px-6 py-12 text-center">
-      <span className="flex size-16 items-center justify-center rounded-[1.25rem] bg-emerald-500 text-white shadow-raised">
+      <span className="animate-pop relative flex size-16 items-center justify-center rounded-[1.25rem] bg-emerald-500 text-white shadow-raised">
         <Check size={30} strokeWidth={2.6} />
+        <Burst />
       </span>
       <div className="space-y-1.5">
         <p className="font-display text-xl font-bold tracking-tight">Tout le monde est quitte</p>

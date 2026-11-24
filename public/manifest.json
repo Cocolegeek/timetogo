@@ -1,7 +1,7 @@
 {
   "name": "Voyou",
   "short_name": "Voyou",
-  "description": "Les voyages entre potes, sans embrouilles — budget, planning, menus.",
+  "description": "Les voyages entre potes, sans embrouilles : budget, planning, menus.",
   "id": "/trips",
   "start_url": "/trips",
   "scope": "/",

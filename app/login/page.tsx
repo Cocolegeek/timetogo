@@ -1,17 +1,24 @@
 "use client";
 
 import { useState, Suspense } from "react";
-import { Loader2 } from "lucide-react";
+import dynamic from "next/dynamic";
+import Link from "next/link";
+import { Loader2, Mail } from "lucide-react";
 import { m as motion } from "framer-motion";
 import { useSearchParams } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 import { VoyouLogo } from "@/components/layout/VoyouLogo";
 import { Button } from "@/components/ui/button";
 import { EASE_OUT } from "@/lib/motion";
-import { GoogleIcon } from "@/components/auth/GoogleIcon";
-import { continueAsGuest } from "@/lib/auth/guest";
+import { cn } from "@/lib/utils";
+import { ProviderIcon } from "@/components/auth/ProviderIcon";
+import { continueAsGuest, signInWithProvider } from "@/lib/auth/guest";
+import { EMAIL_ENABLED, enabledProviders, loginChoicesLabel, PROVIDER_LABELS, type AuthProvider } from "@/lib/auth/providers";
+import { safeRedirectPath } from "@/lib/auth/redirect";
+import { useMountOnce } from "@/hooks/useMountOnce";
 import { clearDataCache } from "@/lib/data/swr";
 import { bootInitial } from "@/lib/boot";
+
+const EmailAuthDialog = dynamic(() => import("@/components/auth/EmailAuthDialog").then((m) => ({ default: m.EmailAuthDialog })), { ssr: false });
 
 const BUILDINGS = [
   { x: 26, y: 214, w: 54, h: 150, fill: "#1A1D24" },
@@ -21,9 +28,9 @@ const BUILDINGS = [
   { x: 294, y: 222, w: 52, h: 142, fill: "#C5D3BF" },
 ];
 
-function LoginIllustration() {
+function LoginIllustration({ compact }: { compact: boolean }) {
   return (
-    <div className="relative h-[46dvh] min-h-72 overflow-hidden bg-[#CFDDE8]">
+    <div className={cn("relative overflow-hidden bg-[#CFDDE8]", compact ? "h-[34dvh] min-h-52" : "h-[46dvh] min-h-72")}>
       <svg viewBox="0 0 390 420" preserveAspectRatio="xMidYMax slice" className="absolute inset-0 h-full w-full" aria-hidden="true">
         <motion.circle
           cx="292"
@@ -61,7 +68,9 @@ function LoginIllustration() {
 function LoginForm() {
   const [loading, setLoading] = useState(false);
   const searchParams = useSearchParams();
-  const redirectTo = searchParams.get("redirect_to") ?? "/trips";
+  const redirectTo = safeRedirectPath(searchParams.get("redirect_to"));
+  const [emailOpen, setEmailOpen] = useState(false);
+  const emailMounted = useMountOnce(emailOpen);
 
   const [guestLoading, setGuestLoading] = useState(false);
   const [guestError, setGuestError] = useState<string | null>(null);
@@ -80,21 +89,18 @@ function LoginForm() {
     window.location.href = redirectTo;
   };
 
-  const handleGoogleLogin = async () => {
+  const [pending, setPending] = useState<AuthProvider | null>(null);
+
+  const handleOAuthLogin = async (provider: AuthProvider) => {
     clearDataCache();
     setLoading(true);
-    const supabase = createClient();
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback?redirect_to=${encodeURIComponent(redirectTo)}`,
-      },
-    });
+    setPending(provider);
+    await signInWithProvider(provider, redirectTo);
   };
 
   return (
     <div className="flex min-h-dvh flex-col bg-background">
-      <LoginIllustration />
+      <LoginIllustration compact={enabledProviders().length + (EMAIL_ENABLED ? 1 : 0) > 1} />
 
       <motion.div
         initial={bootInitial({ opacity: 0, y: 16 })}
@@ -111,16 +117,25 @@ function LoginForm() {
         </p>
 
         <div className="mt-auto pt-8">
-          <Button
-            onClick={handleGoogleLogin}
-            disabled={loading}
-            variant="ink"
-            size="lg"
-            className="w-full shadow-raised"
-          >
-            {loading ? <Loader2 size={18} className="animate-spin" /> : <GoogleIcon />}
-            Continuer avec Google
-          </Button>
+          {enabledProviders().map((provider, i) => (
+            <Button
+              key={provider}
+              onClick={() => handleOAuthLogin(provider)}
+              disabled={loading}
+              variant={i === 0 ? "ink" : "secondary"}
+              size="lg"
+              className={i === 0 ? "w-full shadow-raised" : "mt-2 w-full"}
+            >
+              {pending === provider ? <Loader2 size={18} className="animate-spin" /> : <ProviderIcon provider={provider} />}
+              Continuer avec {PROVIDER_LABELS[provider]}
+            </Button>
+          ))}
+          {EMAIL_ENABLED && (
+            <Button onClick={() => setEmailOpen(true)} disabled={loading} variant="secondary" size="lg" className="mt-2 w-full">
+              <Mail size={18} aria-hidden="true" />
+              Continuer avec un e-mail
+            </Button>
+          )}
           <Button
             onClick={handleGuest}
             disabled={loading || guestLoading}
@@ -132,10 +147,17 @@ function LoginForm() {
           </Button>
           {guestError && <p className="mt-2 text-center text-sm text-red-400">{guestError}</p>}
           <p className="mt-3 text-center text-[0.8125rem] leading-relaxed text-muted-foreground">
-            Sans compte, tes voyages restent sur cet appareil. Tu pourras les sauvegarder avec Google à tout moment, sans rien perdre.
+            Sans compte, tes voyages restent sur cet appareil. Tu pourras les sauvegarder avec {loginChoicesLabel()} à tout moment, sans rien perdre.
+          </p>
+          <p className="mt-3 text-center text-[0.8125rem]">
+            <Link href="/privacy" className="inline-flex min-h-11 items-center font-semibold text-muted-foreground underline underline-offset-4">
+              Confidentialité
+            </Link>
           </p>
         </div>
       </motion.div>
+
+      {emailMounted && <EmailAuthDialog open={emailOpen} onOpenChange={setEmailOpen} mode="login" redirectTo={redirectTo} />}
     </div>
   );
 }

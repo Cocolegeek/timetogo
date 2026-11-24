@@ -37,3 +37,16 @@ export const JOURNEY_MODES: Record<JourneyMode, { label: string; icon: LucideIco
   transit: { label: "Transports", icon: Bus },
   plane: { label: "Avion", icon: Plane },
 };
+
+/** « Paris, Île-de-France, France » → « Paris » */
+export function shortPlace(place: string): string {
+  return place.split(",")[0].trim();
+}
+
+/** Titre d'affichage : un trajet est toujours « Ville → Ville », même si son titre stocké est l'adresse complète. */
+export function itemTitle(item: { type: ItineraryType; title: string; location?: string; destination?: string }): string {
+  if (item.type === "journey" && item.location && item.destination) {
+    return `${shortPlace(item.location)} → ${shortPlace(item.destination)}`;
+  }
+  return item.title;
+}

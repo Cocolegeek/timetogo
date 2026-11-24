@@ -72,6 +72,11 @@ export function ExpenseDetailSheet({
             <p className="tabular mt-4 font-display text-[3rem] leading-none font-extrabold tracking-[-0.04em]">
               {formatCurrency(expense.amountInTripCurrency, currency)}
             </p>
+            {expense.currency !== currency && (
+              <p className="tabular mt-2 text-sm text-muted-foreground">
+                {formatCurrency(expense.amount, expense.currency)} · 1 {expense.currency} = {expense.exchangeRate.toLocaleString("fr-FR", { maximumFractionDigits: 6 })} {currency}
+              </p>
+            )}
             <p className="mt-2 text-lg font-semibold">{expense.title}</p>
             <p className="mt-1 text-sm text-muted-foreground first-letter:uppercase">
               {cfg.label} ·{" "}

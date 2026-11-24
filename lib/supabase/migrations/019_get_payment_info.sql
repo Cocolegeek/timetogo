@@ -1,5 +1,5 @@
 -- ============================================================
--- 019 — RPC get_payment_info
+-- 019 : RPC get_payment_info
 -- ============================================================
 -- Exposes the IBAN + phone of the user who is currently linked as
 -- `is_primary` for a given participant, but ONLY to other members
@@ -10,7 +10,7 @@
 --   - no user has primary status (shouldn't happen post-migration 018)
 --   - the caller is not a member of the trip
 --
--- The caller is implicitly limited by `is_trip_member` — anonymous
+-- The caller is implicitly limited by `is_trip_member`: anonymous
 -- callers and outsiders get an empty result set.
 
 CREATE OR REPLACE FUNCTION public.get_payment_info(p_participant_id uuid)

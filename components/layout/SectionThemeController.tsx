@@ -6,7 +6,7 @@ import { getSection } from "@/lib/section-theme";
 
 /**
  * Mirrors the current section (derived from the URL) into a `data-section`
- * attribute on <html>. CSS does the rest — see globals.css.
+ * attribute on <html>. CSS does the rest (see globals.css).
  *
  * No render. Mount once at the root of the tree.
  */

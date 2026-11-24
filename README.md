@@ -1,6 +1,6 @@
 # Voyou
 
-Application de planification de voyage collaborative — budget partagé, planning d'itinéraire, menus. Disponible sur [voyou.app](https://voyou.app).
+Application de planification de voyage collaborative : budget partagé, planning d'itinéraire, menus. Disponible sur [voyou.app](https://voyou.app).
 
 ## Stack
 
@@ -20,7 +20,7 @@ Application de planification de voyage collaborative — budget partagé, planni
 - Calcul automatique des soldes et remboursements simplifiés
 - Planning d'itinéraire jour par jour
 - Menus (petit-déj, déjeuner, dîner) avec liste de courses
-- Partage par code 6 caractères — les contributeurs peuvent tout voir et modifier
+- Partage par code 6 caractères : les contributeurs peuvent tout voir et modifier
 - **Listes** : « À apporter » (qui ramène quoi) et « À faire », avec qui s'en charge
 - **Ta bande** : les gens avec qui tu voyages (et ceux ajoutés par lien) s'embarquent en un geste dans un nouveau voyage
 - **Notifications push** (dépenses, remboursements, listes, bande, planning), réglables par type
@@ -43,10 +43,27 @@ npm run dev
 
 ### Supabase : migrations récentes
 
+> Guide complet de mise en ligne (Supabase, Google Cloud, Vercel, recette, retour arrière) : [`docs/GUIDE-SUPABASE-VERCEL.md`](docs/GUIDE-SUPABASE-VERCEL.md).
+
 1. `lib/supabase/migrations/021_guest_accounts.sql` (mode invité), puis dans le dashboard Supabase
    (Authentication) activer **Allow anonymous sign-ins** et **Allow manual linking**.
    Un CAPTCHA (Attack Protection) est recommandé pour limiter la création de comptes invités.
 2. `lib/supabase/migrations/022_friends_notifications_lists.sql` (Ta bande, notifications push, Listes).
+3. `lib/supabase/migrations/023_activity_recurring_account_deletion.sql` (journal d'activité, dépenses répétées,
+   suppression de compte). À jouer **avant** de déployer le code qui l'utilise ; à exécuter dans le SQL Editor
+   (rôle `postgres`, nécessaire pour supprimer un utilisateur `auth.users`).
+
+### Variables d'environnement (Vercel : Production + Preview)
+
+| Variable | Rôle |
+| --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` | obligatoires |
+| `CONSENT_HMAC_SECRET` | obligatoire : sans lui, l'enregistrement du consentement RGPD répond 500 |
+| `VAPID_PRIVATE_KEY` (+ `VAPID_SUBJECT`) | notifications push (voir ci-dessous) |
+| `NEXT_PUBLIC_SITE_URL` | recommandé (liens de partage, image de partage) |
+| `NEXT_PUBLIC_FACEBOOK_LOGIN` | `true` pour afficher « Continuer avec Facebook » (après configuration, voir le guide) |
+| `NEXT_PUBLIC_EMAIL_LOGIN` | `true` pour afficher « Continuer avec un e-mail » (après SMTP + modèles, voir le guide) |
+| `NEXT_PUBLIC_CONTACT_EMAIL` | facultatif : adresse de contact affichée sur `/privacy` |
 
 ### Notifications push
 
@@ -55,7 +72,7 @@ L'envoi passe par `app/api/notify` (Web Push / VAPID). La clé publique est dans
 
 - `VAPID_PRIVATE_KEY` (obligatoire pour envoyer)
 - `VAPID_SUBJECT` (optionnel, ex. `mailto:toi@exemple.fr` ; par défaut l'URL du site)
-- Pour changer de paire : `npx web-push generate-vapid-keys`, puis `NEXT_PUBLIC_VAPID_PUBLIC_KEY`
+- Pour changer de paire : `npm run vapid` (depuis le dossier du projet), puis `NEXT_PUBLIC_VAPID_PUBLIC_KEY`
   + `VAPID_PRIVATE_KEY`. Sans clé privée, l'app marche normalement, seules les notifications sont muettes.
 
 Sur iPhone, les notifications web demandent iOS 16.4+ et l'app installée sur l'écran d'accueil.

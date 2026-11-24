@@ -1,5 +1,5 @@
 -- ============================================================
--- 021 — Guest accounts (Supabase anonymous sign-in) + lossless
+-- 021 : Guest accounts (Supabase anonymous sign-in) + lossless
 --       upgrade to Google
 -- ============================================================
 -- Prerequisites in the Supabase dashboard (Authentication):

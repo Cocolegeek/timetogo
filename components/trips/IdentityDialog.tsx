@@ -6,7 +6,7 @@ import { useTrip } from "@/hooks/useTrip";
 import { useUserId } from "@/hooks/useUserId";
 import { PARTICIPANT_COLORS } from "@/lib/participant-colors";
 
-/** « Qui es-tu ? » — loaded on first open, not with the dashboard. */
+/** « Qui es-tu ? » : loaded on first open, not with the dashboard. */
 export default function IdentityDialog({
   tripId,
   open,

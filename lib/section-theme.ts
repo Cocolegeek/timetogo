@@ -11,7 +11,7 @@
  *   3. Map the route(s) to it in `getSection()`
  *
  * Semantic colors (meal slots, expense categories, planning types,
- * participant colors, trip status badges) are NOT driven by this — they stay
+ * participant colors, trip status badges) are NOT driven by this, they stay
  * fixed to keep their meaning across sections.
  */
 

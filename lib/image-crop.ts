@@ -1,11 +1,11 @@
 /**
  * Crop an image from a source URL and return a 512×512 WebP Blob.
  *
- * @param imageSrc — data URL or http(s) URL of the source image
- * @param cropPixels — { x, y, width, height } in source pixels
+ * @param imageSrc - data URL or http(s) URL of the source image
+ * @param cropPixels - { x, y, width, height } in source pixels
  *                    (provided by react-easy-crop's `croppedAreaPixels`)
- * @param outputSize — final square size in pixels (default 512)
- * @param quality — webp quality 0..1 (default 0.85)
+ * @param outputSize - final square size in pixels (default 512)
+ * @param quality - webp quality 0..1 (default 0.85)
  */
 export async function cropToWebpBlob(
   imageSrc: string,

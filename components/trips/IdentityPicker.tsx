@@ -32,7 +32,7 @@ interface IdentityPickerProps {
   /** Liste des liens user→participant. Quand fournie, le picker affiche
    *  "déjà lié à X" et demande confirmation pour reprendre l'identité. */
   claims?: IdentityClaim[];
-  /** UID de l'utilisateur connecté — sert à savoir si une revendication
+  /** UID de l'utilisateur connecté, sert à savoir si une revendication
    *  primary est la sienne ou celle d'un autre. */
   currentUserId?: string | null;
 }
@@ -249,7 +249,7 @@ export function IdentityPicker({
         )}
       </AnimatePresence>
 
-      {/* Confirmation modal — claimed by another user */}
+      {/* Confirmation modal: claimed by another user */}
       <AnimatePresence>
         {confirmTarget && (
           <motion.div

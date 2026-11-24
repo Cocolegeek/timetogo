@@ -1,5 +1,5 @@
 -- ============================================================
--- 012 — RPC atomique pour rejoindre un voyage
+-- 012 : RPC atomique pour rejoindre un voyage
 -- ============================================================
 -- Permet à un utilisateur authentifié de rejoindre un voyage en
 -- une seule transaction, soit en sélectionnant un participant

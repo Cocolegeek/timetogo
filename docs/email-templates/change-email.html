@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="supported-color-schemes" content="light dark">
+<title>Sauvegarde ton compte Voyou</title>
+<style>
+  @media (prefers-color-scheme: dark) {
+    .bg { background-color: #0C0C0E !important; }
+    .card { background-color: #171719 !important; }
+    .ink { color: #F3F3F7 !important; }
+    .muted { color: #A4A4A8 !important; }
+    .tile { background-color: #222325 !important; }
+  }
+  @media only screen and (max-width: 480px) {
+    .px { padding-left: 22px !important; padding-right: 22px !important; }
+    .code { font-size: 34px !important; }
+  }
+</style>
+</head>
+<body class="bg" style="margin:0;padding:0;background-color:#F5F5F9;-webkit-text-size-adjust:100%;">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">Ton code pour sauvegarder ton compte : {{ .Token }}. Il est valable 10 minutes.</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="bg" style="background-color:#F5F5F9;">
+  <tr>
+    <td align="center" style="padding:32px 16px;">
+      <table role="presentation" width="480" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:480px;">
+        <tr>
+          <td class="card px" style="background-color:#FFFFFF;border-radius:24px;padding:32px 32px 28px 32px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td style="padding-right:12px;vertical-align:middle;">
+                  <img src="https://voyou.app/icons/icon-192.png" width="44" height="44" alt="Voyou" style="display:block;width:44px;height:44px;border-radius:12px;border:0;">
+                </td>
+                <td class="ink" style="vertical-align:middle;font-family:'Bricolage Grotesque','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:22px;font-weight:800;letter-spacing:-0.03em;color:#151618;">Voyou</td>
+              </tr>
+            </table>
+
+            <h1 class="ink" style="margin:28px 0 8px 0;font-family:'Bricolage Grotesque','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:30px;line-height:1.1;font-weight:800;letter-spacing:-0.035em;color:#151618;">Sauvegarde ton compte</h1>
+            <p class="muted" style="margin:0 0 24px 0;font-size:16px;line-height:1.55;color:#5F6065;">Entre ce code dans l'app pour relier cette adresse à ton compte invité. Tes voyages restent tels quels et tu les retrouves partout.</p>
+
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td class="tile" align="center" style="background-color:#ECECF1;border-radius:20px;padding:22px 12px;">
+                  <div class="code ink" style="font-family:'Bricolage Grotesque','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:40px;line-height:1;font-weight:800;letter-spacing:0.32em;padding-left:0.32em;color:#151618;">{{ .Token }}</div>
+                </td>
+              </tr>
+            </table>
+
+            <p class="muted" style="margin:20px 0 0 0;font-size:14px;line-height:1.55;color:#5F6065;">Ce code est valable 10 minutes. Si tu n'es pas à l'origine de cette demande, ignore simplement ce message : il ne se passera rien.</p>
+
+          </td>
+        </tr>
+        <tr>
+          <td align="center" class="muted" style="padding:20px 16px 0 16px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.5;color:#5F6065;">
+            Voyou · Les voyages entre potes, sans embrouilles.
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>

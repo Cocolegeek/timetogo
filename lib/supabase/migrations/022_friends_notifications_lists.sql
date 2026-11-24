@@ -1,5 +1,5 @@
 -- ============================================================
--- 022 — Ta bande (amis), notifications push, listes partagées
+-- 022 : Ta bande (amis), notifications push, listes partagées
 -- ============================================================
 -- 1. Ta bande : tu retrouves automatiquement les gens avec qui tu as
 --    partagé un voyage, et tu peux ajouter un pote via son lien / code.

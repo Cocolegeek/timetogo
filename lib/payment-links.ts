@@ -35,7 +35,7 @@ export function buildShareText({
   const lines: string[] = [];
   if (amount != null && Number.isFinite(amount)) {
     lines.push(
-      `Rembourser ${recipientName} — ${amount
+      `Rembourser ${recipientName} : ${amount
         .toFixed(2)
         .replace(".", ",")}${currencyLabel ? ` ${currencyLabel}` : ""}`
     );

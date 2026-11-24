@@ -4,6 +4,7 @@ import { use, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { AnimatePresence, m as motion } from "framer-motion";
 import { ArrowUp, Check, ChevronDown, Trash2, UserRound } from "lucide-react";
+import { Burst } from "@/components/motion/Burst";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { SegmentedControl } from "@/components/shared/SegmentedControl";
 import { ParticipantPicker } from "@/components/shared/ParticipantPicker";
@@ -270,6 +271,7 @@ function Row({
 }) {
   const who = participants.filter((p) => item.assigneeIds.includes(p.id));
   const mine = !!myId && item.assigneeIds.includes(myId);
+  const [celebrate, setCelebrate] = useState(false);
   return (
     <motion.li
       layout="position"
@@ -282,7 +284,10 @@ function Row({
       <div className="flex min-h-14 items-center gap-1 pr-3">
         <button
           type="button"
-          onClick={onToggle}
+          onClick={() => {
+            if (!item.done) setCelebrate(true);
+            onToggle();
+          }}
           role="checkbox"
           aria-checked={item.done}
           aria-label={item.done ? `Décocher ${item.title}` : `Cocher ${item.title}`}
@@ -292,11 +297,12 @@ function Row({
             animate={{ scale: item.done ? [1, 1.18, 1] : 1 }}
             transition={{ duration: 0.3 }}
             className={cn(
-              "flex size-[26px] items-center justify-center rounded-full border-2 transition-colors",
+              "relative flex size-[26px] items-center justify-center rounded-full border-2 transition-colors",
               item.done ? "border-emerald-500 bg-emerald-500 text-white" : "border-foreground/25"
             )}
           >
-            {item.done && <Check size={15} strokeWidth={3} />}
+            {item.done && <Check size={15} strokeWidth={3} className={cn(celebrate && "animate-pop")} />}
+            {item.done && celebrate && <Burst />}
           </motion.span>
         </button>
         <button type="button" onClick={onOpen} className="flex min-w-0 flex-1 items-center gap-3 py-3 text-left outline-none">

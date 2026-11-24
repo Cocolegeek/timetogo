@@ -31,7 +31,7 @@ function readWelcomed(): boolean {
 
 /**
  * First-run flow: a welcome screen (once per device), then "Ta tête dans la
- * bande" — name + avatar, shown until the user has picked an avatar. The
+ * bande" : name + avatar, shown until the user has picked an avatar. The
  * Google photo is pre-selected when available, otherwise a preset.
  */
 export function OnboardingModal() {

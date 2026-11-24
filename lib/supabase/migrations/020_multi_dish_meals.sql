@@ -1,5 +1,5 @@
 -- ============================================================
--- 020 — Multi-dish meals + cleanup of pre-filled empty meals
+-- 020 : Multi-dish meals + cleanup of pre-filled empty meals
 -- ============================================================
 -- Previously a meal had a single `title` + a flat `ingredients`
 -- list. We now model the meal as a list of `dishes`, each with
@@ -8,7 +8,7 @@
 --
 -- We also drop the auto-prefilled empty meals: existing trips
 -- often have 3 rows per day (breakfast/lunch/dinner) with empty
--- title and no ingredients — they pollute the UI. After the
+-- title and no ingredients: they pollute the UI. After the
 -- refactor meals are created on demand, so we wipe the empties.
 
 -- 1. Add new dishes column
@@ -30,7 +30,7 @@ WHERE
   OR jsonb_array_length(COALESCE(ingredients, '[]'::jsonb)) > 0;
 
 -- 3. Drop empty pre-filled meals (no title, no ingredients, no notes,
---    no cooks/eaters — they were just empty slots)
+--    no cooks/eaters: they were just empty slots)
 DELETE FROM public.meals
 WHERE
   (title IS NULL OR title = '')

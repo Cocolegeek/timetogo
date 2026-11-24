@@ -11,7 +11,7 @@ import { useItinerary } from "@/hooks/useItinerary";
 import { useMeals } from "@/hooks/useMeals";
 import { useChecklist } from "@/hooks/useChecklist";
 import { CATEGORIES } from "@/lib/budget/categories";
-import { ITINERARY_TYPES } from "@/lib/itinerary-types";
+import { ITINERARY_TYPES, itemTitle } from "@/lib/itinerary-types";
 import { SLOT_CONFIG } from "@/lib/meals/slots";
 import { formatCurrency } from "@/lib/format-currency";
 import { EASE_OUT } from "@/lib/motion";
@@ -90,7 +90,7 @@ function SearchBody({ trip, onClose }: { trip: Trip; onClose: () => void }) {
         const Icon = cfg.icon;
         return {
           id: i.id,
-          title: i.title,
+          title: itemTitle(i),
           subtitle: [shortDate(i.date), i.time?.slice(0, 5), i.location?.split(",")[0]].filter(Boolean).join(" · "),
           href: `${base}/planning?date=${i.date}&item=${i.id}`,
           icon: (

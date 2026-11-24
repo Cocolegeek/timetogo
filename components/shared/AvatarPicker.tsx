@@ -17,7 +17,7 @@ interface AvatarPickerProps {
 /** Grid: Google photo (if any) + the preset library. */
 export function AvatarPicker({ value, onChange, googleUrl }: AvatarPickerProps) {
   const options = [
-    ...(googleUrl ? [{ url: googleUrl, label: "Ma photo Google" }] : []),
+    ...(googleUrl ? [{ url: googleUrl, label: "Ma photo" }] : []),
     ...AVATAR_PRESETS.map((p) => ({ url: presetUrl(p.id), label: p.label })),
   ];
   return (

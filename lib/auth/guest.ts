@@ -1,9 +1,10 @@
 import { createClient } from "@/lib/supabase/client";
+import type { AuthProvider } from "@/lib/auth/providers";
 
 /**
- * Guest mode = Supabase anonymous sign-in. Upgrading = linking Google to the
- * same user (no copy). If the Google account already exists, a one-time
- * transfer token lets that account claim the guest's trips (see migration 021).
+ * Guest mode = Supabase anonymous sign-in. Upgrading = linking Google or Facebook
+ * to the same user (no copy). If that account already exists, a one-time
+ * transfer token lets it claim the guest's trips (see migration 021).
  */
 
 const TOKEN_KEY = "voyou-guest-transfer";
@@ -17,28 +18,41 @@ export async function continueAsGuest(): Promise<{ error?: string }> {
   return error ? { error: error.message } : {};
 }
 
-/** Step 1 of the upgrade: remember a transfer token, then link Google to this account. */
-export async function startGoogleUpgrade(): Promise<{ error?: string }> {
-  const supabase = createClient();
-  const { data: token, error: tokenError } = await supabase.rpc("create_guest_transfer");
-  if (tokenError || !token) return { error: tokenError?.message ?? "Transfert impossible" };
+/** Asks the server for a one-time transfer token and keeps it for the "account already exists" merge. */
+export async function rememberGuestTransfer(): Promise<{ error?: string }> {
+  const { data: token, error } = await createClient().rpc("create_guest_transfer");
+  if (error || !token) return { error: error?.message ?? "Transfert impossible" };
   try {
     localStorage.setItem(TOKEN_KEY, token as string);
   } catch {
     // Without storage we can still link; only the "account already exists" merge needs it.
   }
-  const { error } = await supabase.auth.linkIdentity({
-    provider: "google",
-    options: { redirectTo: callbackUrl("/auth/link") },
+  return {};
+}
+
+/** Step 1 of the upgrade: remember a transfer token, then link the provider to this account. */
+export async function startUpgrade(provider: AuthProvider): Promise<{ error?: string }> {
+  const remembered = await rememberGuestTransfer();
+  if (remembered.error) return remembered;
+  const { error } = await createClient().auth.linkIdentity({
+    provider,
+    options: { redirectTo: callbackUrl(`/auth/link?provider=${provider}`) },
   });
   return error ? { error: error.message } : {};
 }
 
-/** The Google account already exists: sign in to it, then claim the guest data. */
-export async function signInToExistingGoogle(): Promise<void> {
+/** The account already exists: sign in to it, then claim the guest data. */
+export async function signInToExisting(provider: AuthProvider): Promise<void> {
   await createClient().auth.signInWithOAuth({
-    provider: "google",
-    options: { redirectTo: callbackUrl("/auth/link?step=claim") },
+    provider,
+    options: { redirectTo: callbackUrl(`/auth/link?provider=${provider}&step=claim`) },
+  });
+}
+
+export async function signInWithProvider(provider: AuthProvider, redirectTo: string): Promise<void> {
+  await createClient().auth.signInWithOAuth({
+    provider,
+    options: { redirectTo: callbackUrl(redirectTo) },
   });
 }
 
@@ -50,7 +64,7 @@ export function hasPendingTransfer(): boolean {
   }
 }
 
-/** Moves the guest's trips into the signed-in Google account. Idempotent per token. */
+/** Moves the guest's trips into the signed-in account. Idempotent per token. */
 export async function claimGuestTransfer(): Promise<{ trips: number; merged: boolean }> {
   let token: string | null = null;
   try {
@@ -69,17 +83,18 @@ export async function claimGuestTransfer(): Promise<{ trips: number; merged: boo
   return data as { trips: number; merged: boolean };
 }
 
-/** After linking, fill the profile with the Google name / photo / email when missing. */
-export async function syncProfileFromGoogle(): Promise<void> {
+/** After linking, fill the profile with the provider's name / photo / email when missing. */
+export async function syncProfileFromProvider(provider: AuthProvider): Promise<void> {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return;
-  const google = user.identities?.find((i) => i.provider === "google")?.identity_data ?? user.user_metadata ?? {};
+  const identity = user.identities?.find((i) => i.provider === provider)?.identity_data ?? user.user_metadata ?? {};
   const { data: profile } = await supabase.from("profiles").select("name, avatar_url, email").eq("id", user.id).single();
   const updates: Record<string, string> = {};
-  const fullName = (google.full_name ?? google.name) as string | undefined;
+  const fullName = (identity.full_name ?? identity.name) as string | undefined;
+  const photo = [identity.avatar_url, identity.picture].find((v): v is string => typeof v === "string" && v.length > 0);
   if (!profile?.name && fullName) updates.name = fullName;
-  if (!profile?.avatar_url && google.avatar_url) updates.avatar_url = google.avatar_url as string;
-  if (!profile?.email && (user.email || google.email)) updates.email = (user.email ?? google.email) as string;
+  if (!profile?.avatar_url && photo) updates.avatar_url = photo;
+  if (!profile?.email && (user.email || identity.email)) updates.email = (user.email ?? identity.email) as string;
   if (Object.keys(updates).length) await supabase.from("profiles").update(updates).eq("id", user.id);
 }

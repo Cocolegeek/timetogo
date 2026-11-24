@@ -54,7 +54,7 @@ export function ShareModal({ open, onOpenChange, trip }: ShareModalProps) {
     if (!navigator.share) return;
     try {
       await navigator.share({
-        title: "Voyou — Rejoins la bande",
+        title: "Voyou · Rejoins la bande",
         text: `Rejoins la bande sur Voyou pour "${trip.name}" 🎒`,
         url: shareUrl,
       });
@@ -74,7 +74,7 @@ export function ShareModal({ open, onOpenChange, trip }: ShareModalProps) {
           <div>
             <DialogTitle className="text-2xl">Invite tes potes</DialogTitle>
             <p className="mt-1 text-[0.95rem] text-muted-foreground">
-              Ils rejoignent <span className="font-semibold text-foreground">{trip.name}</span> en deux clics, avec leur compte Google.
+              Ils rejoignent <span className="font-semibold text-foreground">{trip.name}</span> en deux clics.
             </p>
           </div>
 

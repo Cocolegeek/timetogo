@@ -1,5 +1,5 @@
 -- ============================================================
--- 011 — Verrouille les SELECT publics sur trips et participants
+-- 011 : Verrouille les SELECT publics sur trips et participants
 -- ============================================================
 -- Avant cette migration, deux policies laissaient fuiter toutes
 -- les données :

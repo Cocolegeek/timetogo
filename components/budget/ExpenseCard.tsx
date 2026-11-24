@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 import { m as motion, useMotionValue, useTransform, animate } from "framer-motion";
-import { Trash2 } from "lucide-react";
+import { CloudOff, Trash2 } from "lucide-react";
 import { CATEGORIES } from "@/lib/budget/categories";
 import { formatCurrency } from "@/lib/format-currency";
 import { cn } from "@/lib/utils";
@@ -107,10 +107,21 @@ export function ExpenseCard({ expense, participants, currency, onDelete, onEdit,
                 </span>
               )}
               <span className="truncate">{payerLabel}</span>
+              {expense.pending && (
+                <span className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold">
+                  <CloudOff size={12} aria-hidden="true" />
+                  En attente
+                </span>
+              )}
             </span>
           </span>
-          <span className="tabular shrink-0 font-display text-[1.0625rem] font-bold tracking-tight">
-            {formatCurrency(expense.amountInTripCurrency, currency)}
+          <span className="shrink-0 text-right">
+            <span className="tabular block font-display text-[1.0625rem] font-bold tracking-tight">
+              {formatCurrency(expense.amountInTripCurrency, currency)}
+            </span>
+            {expense.currency !== currency && (
+              <span className="tabular block text-xs text-muted-foreground">{formatCurrency(expense.amount, expense.currency)}</span>
+            )}
           </span>
         </span>
       </motion.button>
