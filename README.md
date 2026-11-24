@@ -43,6 +43,8 @@ npm run dev
 
 ### Supabase : migrations récentes
 
+> Guide complet de mise en ligne (Supabase, Google Cloud, Vercel, recette, retour arrière) : [`docs/GUIDE-SUPABASE-VERCEL.md`](docs/GUIDE-SUPABASE-VERCEL.md).
+
 1. `lib/supabase/migrations/021_guest_accounts.sql` (mode invité), puis dans le dashboard Supabase
    (Authentication) activer **Allow anonymous sign-ins** et **Allow manual linking**.
    Un CAPTCHA (Attack Protection) est recommandé pour limiter la création de comptes invités.

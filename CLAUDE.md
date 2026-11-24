@@ -137,7 +137,9 @@ useRecurring(id, on)    → { items, create, remove, applyDue }            // ap
 lib/
   supabase/client.ts    → createBrowserClient() — use in hooks/client components
   supabase/server.ts    → createServerClient() with cookies — use in server components/API routes
-  supabase/schema.sql   → canonical schema with RLS (up to migration 023)
+  supabase/schema.sql   → schéma de base + RLS, intégrant 021–023. ⚠️ Il NE contient PAS 016, 018, 019 et ses `join_trip` /
+                          `create_trip_with_owner` sont antérieurs aux migrations 018 / 021 : projet neuf = schema.sql puis
+                          016, 018, 019, 021 (voir docs/GUIDE-SUPABASE-VERCEL.md). Ne jamais le rejouer sur une base existante.
   supabase/migrations/  → 001..021_*.sql (008: RGPD, 009: multi-payer, 010: trip type,
                           011: lock join lookups, 012: join_trip RPC, 013: custom avatars,
                           014: anon join preview, 015: create_trip_with_owner RPC, 016: journeys,
