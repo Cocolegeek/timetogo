@@ -1,5 +1,6 @@
 "use client";
 
+import { TRIP_CURRENCIES } from "@/lib/currencies";
 import { useState, useEffect } from "react";
 import { Loader2, Plus, X, Pencil, Check, Infinity, CalendarDays, CalendarRange } from "lucide-react";
 import { m as motion, AnimatePresence } from "framer-motion";
@@ -28,7 +29,6 @@ import { addFriendsToTrip } from "@/hooks/useFriends";
 
 
 const EMOJIS = ["✈️", "🏖️", "🏔️", "🗺️", "🌍", "🎒", "🏕️", "🚢"];
-const CURRENCIES = ["EUR", "USD", "GBP", "JPY", "CHF", "CAD"];
 
 type NavTab = "Général" | "Participants";
 
@@ -404,7 +404,7 @@ export function TripEditDialog({
                   Devise principale
                 </Label>
                 <div className="flex gap-2 flex-wrap">
-                  {CURRENCIES.map((c) => (
+                  {TRIP_CURRENCIES.map((c) => (
                     <button
                       key={c}
                       type="button"

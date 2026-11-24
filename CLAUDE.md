@@ -29,6 +29,7 @@ app/
   consent/page.tsx       → GDPR consent (shown once after first login)
   api/consent/route.ts   → POST: saves consent to DB, redirects to /trips
   api/geocode/route.ts   → GET ?q= → { lat, lon } via Nominatim (server-side)
+  api/rates/route.ts     → GET ?from=&to= → { rate } (BCE via frankfurter, cache 12 h) ; proposé dans ExpenseForm, toujours modifiable
   api/routing/route.ts   → GET ?from=&to=&mode= → { durationMinutes, distanceKm } via OSRM
   join/page.tsx          → join trip by share code
   settings/page.tsx      → menu Réglages (carte profil + lignes vers les sous-pages)
@@ -41,7 +42,7 @@ app/
     [tripId]/
       layout.tsx         → trip nav + context (wraps TripClientProviders)
       page.tsx           → trip dashboard
-      budget/page.tsx    → 2-tab expense tracker (Dépenses / Soldes+Régler)
+      budget/page.tsx    → 3 onglets : Dépenses · Soldes (Régler, récap partageable, export CSV) · Historique (journal d'activité)
       menus/page.tsx     → meal planning
       lists/page.tsx     → Listes « À apporter » / « À faire » (?item=<id>, ?list=todo)
       planning/page.tsx  → itinerary builder (étapes + trajets)
@@ -68,10 +69,11 @@ components/
               TripNav, TripClientProviders, UserMenu (avatar = lien direct vers /settings), VoyouLogo (LogoMark = visage « oyo » en SVG inline + mot-symbole)
   motion/     MotionProvider (LazyMotion strict + MotionConfig ; features domMax chargées après le 1er rendu),
               PageTransition (templates), Stagger/StaggerItem, NumberTicker (montants animés, rAF, sans framer)
+  budget/ (+) ActivityList (journal : qui a ajouté / modifié / supprimé), RecurringSheet (dépenses répétées, chargé à la demande)
   menus/      MealEditDialog
   planning/   ItineraryItemForm,  — full-screen dialog: title/date/type/location/participants
               JourneyForm          — full-screen dialog: from→to, mode, routing/duration, participants
-  shared/     AvatarPicker (photo Google + 16 avatars), AvatarUpload, ClientOnly (rendu client après hydratation),
+  shared/     OfflineSync (monté à la racine : rejoue la file hors-ligne, pastille « Hors ligne · n en attente »), AvatarPicker (photo Google + 16 avatars), AvatarUpload, ClientOnly (rendu client après hydratation),
               ConfirmDeleteDialog, DateRangePicker, DateField / TimeField (DateTimeFields : libellé FR + sélecteur natif),
               DayHeader, DayTabs, EmptyState, SegmentedControl, Skeleton (Spinner = squelette de page),
               VoyouLoader (visage « oyo » qui saute + phrases de voyage, CSS pur, dans PageSkeleton après 1,5 s),
@@ -89,7 +91,7 @@ components/
               TripActionsSheet (« … » d'une carte voyage), IdentityDialog (« Qui es-tu ? »), LazyOnboarding,
               TripCard (variants featured | row, tripStatus()), TripCover (illustrations en aplats),
               TripEditDialog, TripEditWrapper, TripWizard
-  settings/   SettingsShell (retour + grand titre), SettingsList (SettingsGroup, SettingsRow, SettingsToggle)
+  settings/   DeleteAccountDialog (confirmation par saisie « SUPPRIMER »), SettingsShell (retour + grand titre), SettingsList (SettingsGroup, SettingsRow, SettingsToggle)
   trips/      FriendPicker (rangée « Ta bande » : un pote choisi = membre lié, le voyage apparaît chez lui),
               MyListCard (tableau de bord : « On compte sur toi » / « n choses sans personne »)
   ui/         switch (interrupteur iOS) +
@@ -126,6 +128,8 @@ useMountOnce(open)      → true dès la 1re ouverture : monte une feuille/un di
 useIdlePrefetch(hrefs)  → précharge les écrans suivants une fois l'écran affiché et le thread libre
 useFriends()            → { friends, code, addByCode, remove, refetch }  // + addFriendsToTrip(), previewFriend()
 useChecklist(id)        → { items, addItem, updateItem, deleteItem }     // notifie les nouveaux assignés
+useActivity(id, on)     → { entries }                                    // journal trip_activity (lecture seule, 100 dernières)
+useRecurring(id, on)    → { items, create, remove, applyDue }            // applyDue = RPC apply_recurring_expenses (sans doublon)
 ```
 
 ## Lib / Utils
@@ -133,13 +137,14 @@ useChecklist(id)        → { items, addItem, updateItem, deleteItem }     // no
 lib/
   supabase/client.ts    → createBrowserClient() — use in hooks/client components
   supabase/server.ts    → createServerClient() with cookies — use in server components/API routes
-  supabase/schema.sql   → canonical schema with RLS (up to migration 022)
+  supabase/schema.sql   → canonical schema with RLS (up to migration 023)
   supabase/migrations/  → 001..021_*.sql (008: RGPD, 009: multi-payer, 010: trip type,
                           011: lock join lookups, 012: join_trip RPC, 013: custom avatars,
                           014: anon join preview, 015: create_trip_with_owner RPC, 016: journeys,
                           017: payment info, 018: identity claim, 019: get_payment_info,
                           020: multi-dish meals, 021: guest accounts + transfer,
-                          022: friendships + push_subscriptions + checklist_items)
+                          022: friendships + push_subscriptions + checklist_items,
+                          023: trip_activity (journal) + recurring_expenses + delete_my_account)
   auth/guest.ts         → continueAsGuest(), startGoogleUpgrade(), signInToExistingGoogle(),
                           claimGuestTransfer(), syncProfileFromGoogle()
   avatars.ts            → AVATAR_PRESETS, presetUrl(), isImageAvatar(), defaultPreset(), profileAvatar()
@@ -158,7 +163,15 @@ lib/
   budget/debts.ts       → computeBalances(), simplifyDebts() (greedy O(n log n))
   budget/categories.ts  → courses|restaurant|activities|transport|accommodation|other
                           (reimbursement exists in CATEGORIES but NOT in CATEGORY_ORDER — hidden from UI)
+  budget/currency.ts    → toTripAmount(), convertPayers() (somme des payeurs = total au centime), parseRate()
+  budget/recurrence.ts  → nextRecurrence() (jumeau TS de next_recurrence() en SQL), anchorDayOf()
   budget/schemas.ts     → Zod schemas for expenses
+  currencies.ts         → CURRENCIES (dépenses), TRIP_CURRENCIES (devise d'un voyage), roundMoney()
+  export/               → expenses-csv.ts (Excel FR : « ; », virgule, BOM), recap.ts (texte à partager),
+                          download.ts (downloadFile, shareText), my-data.ts (export RGPD + suppression des fichiers)
+  offline/outbox.ts     → file de modifications sans réseau (localStorage `voyou-outbox-v1`) : enqueue(), flushOutbox(),
+                          isOfflineError(). Insert = upsert sur id client (idempotent) ; update/delete d'une ligne encore en
+                          attente fusionnés. Vidée par clearDataCache() (déconnexion).
   budget/budget-color.ts → getBudgetColor(pct), getBudgetTextColor(pct)
   format-currency.ts    → formatCurrency(amount, currency), currencySymbol(currency)
   format-date.ts        → date formatting
@@ -198,12 +211,16 @@ profiles (+022)   friend_code (UNIQUE, généré par get_my_friend_code), notifi
 friendships       user_id, friend_id, source 'trip'|'invite' — une ligne par sens ; remplie par le trigger
                   trip_members_link_friends (voyager ensemble = être dans la bande) + ajout par code
 push_subscriptions endpoint (PK), user_id, p256dh, auth — un appareil = une ligne (save_push_subscription)
+trip_activity     trip_id, actor_id, actor_name, entity 'expense'|'settlement'|'step', action created|updated|deleted,
+                  title, amount, details jsonb — écrite par triggers (expenses, itinerary_items), lecture seule côté client
+recurring_expenses trip_id, title, amount, currency, exchange_rate, category, payers, split_mode, splits,
+                  frequency weekly|monthly, anchor_day, next_date — appliquées par apply_recurring_expenses()
 checklist_items   id, trip_id, list 'bring'|'todo', title, note, assignee_ids uuid[] (participants), done, position
 ```
 RPCs: `create_trip_with_owner`, `join_trip`, `get_join_preview`, `claim_participant`,
 `create_guest_transfer`, `claim_guest_transfer`, `get_my_friend_code`, `get_friend_preview`, `add_friend_by_code`,
 `remove_friend`, `get_my_friends`, `add_friends_to_trip`, `save_push_subscription`, `get_push_targets`,
-`prune_push_subscription` (all SECURITY DEFINER — see schema.sql).
+`prune_push_subscription`, `apply_recurring_expenses`, `delete_my_account` (all SECURITY DEFINER — see schema.sql).
 DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip()` / `rowToExpense()` etc. for conversion.
 
 ## Design system (enforced — do not regress)
@@ -304,6 +321,21 @@ DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip(
   l'app marche, seules les notifications sont muettes. Sur iPhone : PWA installée requise.
 - **Réglages** : menu + sous-pages via `SettingsShell` / `SettingsGroup`. Confort par appareil (animations,
   vibrations) dans `device-prefs.ts`, préférences de compte dans `profiles`.
+
+## Fiabilité des données (enforced — do not regress)
+
+- **Hors-ligne** : ajouter / modifier / supprimer une dépense et cocher une liste marchent sans réseau
+  (`lib/offline/outbox.ts`). Toute nouvelle mutation « de voyage » doit suivre le même schéma : id généré côté client,
+  `isOfflineError(error)` → `enqueue(...)` au lieu de revert/throw, et la lecture SWR fusionne la file
+  (`withPendingChanges` dans `useBudget`). Une dépense en attente porte `pending: true` (badge « En attente »).
+- **Multi-devises** : le formulaire travaille en devise du voyage pour « Payé par » / « Pour qui » ; seul le champ
+  montant est dans la devise choisie. On stocke montant d'origine + `exchange_rate` + `amount_in_trip_currency`.
+  Toujours passer par `lib/budget/currency.ts` (arrondi au centime, aucun centime perdu).
+- **Journal** : jamais écrit par le client (triggers). Ne pas dupliquer cette logique côté app.
+- **Suppression de compte** : `delete_my_account()` transfère les voyages à un autre membre (ou les supprime si seul).
+  Les participants restent (sans compte) pour que les soldes des autres tombent juste.
+- **Tests** : `npm test` (node:test, sans dépendance) couvre répartitions, dettes, devises, récurrence, exports, file
+  hors-ligne. Toute modification de `lib/budget/*`, `lib/export/*` ou `lib/offline/*` s'accompagne d'un test.
 
 ## Comptes invités (enforced — do not regress)
 

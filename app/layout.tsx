@@ -4,6 +4,7 @@ import { PwaRegister } from "./pwa-register";
 import { LazyInstallBanner } from "@/components/shared/LazyInstallBanner";
 import { SectionThemeController } from "@/components/layout/SectionThemeController";
 import { MotionProvider } from "@/components/motion/MotionProvider";
+import { OfflineSync } from "@/components/shared/OfflineSync";
 import { ToastProvider } from "@/components/shared/Toaster";
 import { DataProvider } from "@/lib/data/swr";
 import "./globals.css";
@@ -111,7 +112,10 @@ export default function RootLayout({
         <LazyInstallBanner />
         <MotionProvider>
           <DataProvider>
-            <ToastProvider>{children}</ToastProvider>
+            <ToastProvider>
+              {children}
+              <OfflineSync />
+            </ToastProvider>
           </DataProvider>
         </MotionProvider>
       </body>

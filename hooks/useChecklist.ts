@@ -3,6 +3,7 @@
 import { useCachedQuery } from "@/hooks/useCachedQuery";
 import { createClient } from "@/lib/supabase/client";
 import { notify } from "@/lib/notifications/notify";
+import { enqueue, isOfflineError } from "@/lib/offline/outbox";
 import type { ChecklistItem, ChecklistList } from "@/types";
 
 function rowToItem(row: Record<string, unknown>): ChecklistItem {
@@ -62,17 +63,19 @@ export function useChecklist(tripId: string) {
   const updateItem = async (id: string, patch: Partial<Pick<ChecklistItem, "title" | "note" | "assigneeIds" | "done" | "list">>) => {
     const before = items.find((i) => i.id === id);
     set((prev) => prev.map((i) => (i.id === id ? { ...i, ...patch } : i)));
-    const { error } = await createClient()
-      .from("checklist_items")
-      .update({
-        ...(patch.title !== undefined && { title: patch.title.trim() }),
-        ...(patch.note !== undefined && { note: patch.note }),
-        ...(patch.assigneeIds !== undefined && { assignee_ids: patch.assigneeIds }),
-        ...(patch.done !== undefined && { done: patch.done }),
-        ...(patch.list !== undefined && { list: patch.list }),
-      })
-      .eq("id", id);
+    const dbPatch = {
+      ...(patch.title !== undefined && { title: patch.title.trim() }),
+      ...(patch.note !== undefined && { note: patch.note }),
+      ...(patch.assigneeIds !== undefined && { assignee_ids: patch.assigneeIds }),
+      ...(patch.done !== undefined && { done: patch.done }),
+      ...(patch.list !== undefined && { list: patch.list }),
+    };
+    const { error } = await createClient().from("checklist_items").update(dbPatch).eq("id", id);
     if (error) {
+      if (isOfflineError(error)) {
+        enqueue({ kind: "update", table: "checklist_items", rowId: id, patch: dbPatch, cacheKey: `checklist:${tripId}` });
+        return;
+      }
       await refetch();
       throw error;
     }

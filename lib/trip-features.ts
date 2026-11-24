@@ -12,6 +12,8 @@ export interface TripFeatures {
   hasTotalBudget: boolean;
   /** Shared « À apporter » / « À faire » lists (migration 022). */
   hasLists: boolean;
+  /** Dépenses répétées (loyer, abonnements) : surtout pour les budgets de groupe. */
+  hasRecurring: boolean;
 }
 
 const FEATURES_BY_TYPE: Record<TripType, TripFeatures> = {
@@ -22,6 +24,7 @@ const FEATURES_BY_TYPE: Record<TripType, TripFeatures> = {
     hasDestination: true,
     hasTotalBudget: true,
     hasLists: true,
+    hasRecurring: false,
   },
   group: {
     hasPlanning: false,
@@ -30,6 +33,7 @@ const FEATURES_BY_TYPE: Record<TripType, TripFeatures> = {
     hasDestination: false,
     hasTotalBudget: true,
     hasLists: true,
+    hasRecurring: true,
   },
 };
 

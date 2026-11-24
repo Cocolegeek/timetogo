@@ -168,6 +168,49 @@ export interface Expense {
   notes?: string;
   createdAt: string;
   updatedAt: string;
+  /** Enregistrée hors ligne, pas encore envoyée au serveur. */
+  pending?: boolean;
+}
+
+export type RecurrenceFrequency = "weekly" | "monthly";
+
+/** Modèle de dépense répétée ; les montants des payeurs sont dans la devise du voyage. */
+export interface RecurringExpense {
+  id: string;
+  tripId: string;
+  title: string;
+  amount: number;
+  currency: string;
+  exchangeRate: number;
+  category: ExpenseCategory;
+  payers: Payer[];
+  splitMode: SplitMode;
+  splits: ParticipantSplit[];
+  frequency: RecurrenceFrequency;
+  anchorDay: number;
+  nextDate: string;
+}
+
+export type ActivityEntity = "expense" | "settlement" | "step";
+export type ActivityAction = "created" | "updated" | "deleted";
+
+export interface ActivityEntry {
+  id: string;
+  tripId: string;
+  actorName: string | null;
+  entity: ActivityEntity;
+  action: ActivityAction;
+  title: string | null;
+  amount: number | null;
+  details: {
+    title?: { from: string; to: string };
+    amount?: { from: number; to: number };
+    date?: { from: string; to: string };
+    category?: { from: string; to: string };
+    payers?: boolean;
+    splits?: boolean;
+  };
+  createdAt: string;
 }
 
 // ─── Calculs dérivés (non stockés) ───────────────────────────────────────────

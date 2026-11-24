@@ -1,5 +1,6 @@
 "use client";
 
+import { TRIP_CURRENCIES } from "@/lib/currencies";
 import { useEffect, useState } from "react";
 import { useProfile } from "@/hooks/useProfile";
 import { useForm } from "react-hook-form";
@@ -22,7 +23,6 @@ import { addFriendsToTrip, useFriends } from "@/hooks/useFriends";
 
 
 const EMOJIS = ["✈️", "🏖️", "🏔️", "🗺️", "🌍", "🎒", "🏕️", "🚢"];
-const CURRENCIES = ["EUR", "USD", "GBP", "JPY", "CHF", "CAD"];
 
 type ParticipantInput = { name: string; color: string };
 type NavTab = "Infos" | "Participants";
@@ -248,7 +248,7 @@ export function TripWizard() {
           <div className="space-y-2">
             <Label className="px-1 text-sm font-semibold text-foreground">Devise principale</Label>
             <div className="flex gap-2 flex-wrap">
-              {CURRENCIES.map((c) => (
+              {TRIP_CURRENCIES.map((c) => (
                 <button
                   key={c}
                   type="button"

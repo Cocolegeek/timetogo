@@ -1,6 +1,7 @@
 "use client";
 
 import { SWRConfig, type Cache } from "swr";
+import { clearOutbox } from "@/lib/offline/outbox";
 
 const STORAGE_KEY = "voyou-cache-v1";
 let persistedCache: Map<string, unknown> | null = null;
@@ -47,6 +48,7 @@ const PAGES_CACHE = "voyou-pages-v1";
 
 export function clearDataCache() {
   persistedCache?.clear();
+  clearOutbox();
   try {
     localStorage.removeItem(STORAGE_KEY);
   } catch {

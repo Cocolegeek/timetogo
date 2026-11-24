@@ -1,5 +1,8 @@
 # Audit Voyou vs critiques des apps de partage de frais
 
+> **Mise à jour** : les manques #4, #5, #9, #11 et les points hors-ligne, suppression de compte et tests ont été traités
+> (migration 023 + code). Restent : temps réel (#1), photo de ticket (#10), test sur très gros groupes en conditions réelles (#7).
+
 Sources : avis Trustpilot / App Store / Google Play de Tricount et Splitwise, comparatifs 2026.
 Fiabilité : agrégateurs et sites de comparaison, souvent affiliés. À lire comme des tendances, pas des chiffres.
 État de Voyou vérifié dans le code (branche de travail).

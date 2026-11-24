@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import {
   Sheet,
   SheetContent,
@@ -9,12 +9,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Lock, Loader2, UserPlus } from "lucide-react";
+import { ChevronDown, Lock, Loader2, Repeat, UserPlus } from "lucide-react";
 import { m as motion } from "framer-motion";
 import { spring } from "@/lib/motion";
 import { ParticipantAvatar } from "@/components/shared/ParticipantAvatar";
 import { CATEGORIES, CATEGORY_ORDER } from "@/lib/budget/categories";
 import { computeShares } from "@/lib/budget/splits";
+import { parseRate, toTripAmount } from "@/lib/budget/currency";
+import { CURRENCIES } from "@/lib/currencies";
 import { currencySymbol } from "@/lib/format-currency";
 import { cn } from "@/lib/utils";
 import { ParticipantPicker } from "@/components/shared/ParticipantPicker";
@@ -25,6 +27,7 @@ import type {
   Participant,
   ParticipantSplit,
   Payer,
+  RecurrenceFrequency,
   SplitMode,
 } from "@/types";
 
@@ -96,6 +99,8 @@ interface ExpenseFormProps {
   currency: string;
   /** Participant ID pre-selected as payer in create mode (typically the current user). */
   defaultPayerId?: string | null;
+  /** Propose « Répéter » (budgets de groupe). */
+  allowRecurrence?: boolean;
   initialValues?: Expense;
   onSubmit: (data: {
     title: string;
@@ -107,8 +112,17 @@ interface ExpenseFormProps {
     date: string;
     splitMode: SplitMode;
     splits: ParticipantSplit[];
+    recurrence?: RecurrenceFrequency;
   }) => Promise<void>;
 }
+
+const RATE_FORMAT = (r: number) => Number(r.toPrecision(6)).toString().replace(".", ",");
+
+const RECURRENCE_OPTIONS: { value: "none" | RecurrenceFrequency; label: string }[] = [
+  { value: "none", label: "Une fois" },
+  { value: "weekly", label: "Chaque semaine" },
+  { value: "monthly", label: "Chaque mois" },
+];
 
 export function ExpenseForm({
   open,
@@ -116,6 +130,7 @@ export function ExpenseForm({
   participants,
   currency,
   defaultPayerId,
+  allowRecurrence = false,
   initialValues,
   onSubmit,
 }: ExpenseFormProps) {
@@ -131,6 +146,11 @@ export function ExpenseForm({
   const [splits, setSplits] = useState<SplitState[]>([]);
   const [newMemberIds, setNewMemberIds] = useState<Set<string>>(new Set());
   const [submitting, setSubmitting] = useState(false);
+  const [spendCurrency, setSpendCurrency] = useState(currency);
+  const [rateStr, setRateStr] = useState("");
+  const [rateLoading, setRateLoading] = useState(false);
+  const rateTouched = useRef(false);
+  const [recurrence, setRecurrence] = useState<"none" | RecurrenceFrequency>("none");
 
   // ── Hydration ──────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -140,15 +160,14 @@ export function ExpenseForm({
     if (initialValues) {
       setTitle(initialValues.title);
       setAmountStr(initialValues.amount.toString().replace(".", ","));
+      setSpendCurrency(initialValues.currency);
+      setRateStr(initialValues.currency === currency ? "" : RATE_FORMAT(initialValues.exchangeRate));
+      rateTouched.current = true;
+      setRecurrence("none");
       setCategory(initialValues.category);
       setDate(initialValues.date);
       setSplitMode(initialValues.splitMode);
-      setPayers(
-        initialValues.payers.map((p) => ({
-          ...p,
-          amount: p.amount / (initialValues.exchangeRate || 1),
-        }))
-      );
+      setPayers(initialValues.payers.map((p) => ({ ...p })));
 
       const existingByParticipant = new Map(
         initialValues.splits
@@ -178,6 +197,10 @@ export function ExpenseForm({
     } else {
       setTitle("");
       setAmountStr("");
+      setSpendCurrency(currency);
+      setRateStr("");
+      rateTouched.current = false;
+      setRecurrence("none");
       setCategory("other");
       setDate(new Date().toISOString().split("T")[0]);
       setSplitMode("equal");
@@ -200,15 +223,37 @@ export function ExpenseForm({
         }))
       );
     }
-  }, [open, initialValues, participants, defaultPayerId]);
+  }, [open, initialValues, participants, defaultPayerId, currency]);
+
+  // ── Taux de change (BCE) : proposé automatiquement, toujours modifiable ─────
+  useEffect(() => {
+    if (!open || spendCurrency === currency || rateTouched.current) return;
+    const ctrl = new AbortController();
+    setRateLoading(true);
+    fetch(`/api/rates?from=${spendCurrency}&to=${currency}`, { signal: ctrl.signal })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { rate?: number } | null) => {
+        if (d?.rate && !rateTouched.current) setRateStr(RATE_FORMAT(d.rate));
+      })
+      .catch(() => null)
+      .finally(() => {
+        if (!ctrl.signal.aborted) setRateLoading(false);
+      });
+    return () => ctrl.abort();
+  }, [open, spendCurrency, currency]);
 
   // ── Derived ────────────────────────────────────────────────────────────────
 
-  const amount = useMemo(() => {
+  const rawAmount = useMemo(() => {
     const cleaned = amountStr.replace(",", ".").trim();
     const n = Number(cleaned);
     return Number.isFinite(n) && n > 0 ? n : 0;
   }, [amountStr]);
+
+  const foreign = spendCurrency !== currency;
+  const rate = foreign ? parseRate(rateStr) : 1;
+  /** Montant dans la devise du voyage : c'est lui que répartissent « Payé par » et « Pour qui ». */
+  const amount = rate > 0 ? toTripAmount(rawAmount, rate) : 0;
 
   const computedSplits = useMemo(
     () =>
@@ -246,7 +291,7 @@ export function ExpenseForm({
     (payers.length === 1 || Math.abs(payerTotal - amount) < 0.01);
 
   const formValid =
-    title.trim().length > 0 && amount > 0 && payerValid && splitValid;
+    title.trim().length > 0 && amount > 0 && rate > 0 && payerValid && splitValid;
 
   // ── Amount effect (fixed mode) ─────────────────────────────────────────────
   useEffect(() => {
@@ -373,20 +418,21 @@ export function ExpenseForm({
     try {
       const finalPayers =
         payers.length === 1
-          ? [{ participantId: payers[0].participantId, amount }]
-          : payers;
+          ? [{ participantId: payers[0].participantId, amount: rawAmount }]
+          : payers.map((p) => ({ ...p, amount: p.amount / rate }));
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const cleanSplits: ParticipantSplit[] = splits.map(({ pinned: _p, ...s }) => s);
       await onSubmit({
         title: title.trim(),
-        amount,
-        currency,
-        exchangeRate: 1,
+        amount: rawAmount,
+        currency: spendCurrency,
+        exchangeRate: rate,
         category,
         payers: finalPayers,
         date,
         splitMode,
         splits: cleanSplits,
+        ...(allowRecurrence && !isEdit && recurrence !== "none" && { recurrence }),
       });
       onOpenChange(false);
     } finally {
@@ -395,6 +441,7 @@ export function ExpenseForm({
   };
 
   const sym = currencySymbol(currency);
+  const spendSym = currencySymbol(spendCurrency);
 
   // ── Tab validity indicators ────────────────────────────────────────────────
   const infoValid = title.trim().length > 0 && amount > 0;
@@ -463,11 +510,62 @@ export function ExpenseForm({
                   onChange={(e) =>
                     setAmountStr(e.target.value.replace(/[^0-9.,]/g, ""))
                   }
-                  placeholder={`0,00 ${sym}`}
+                  placeholder={`0,00 ${spendSym}`}
                   className="tabular mt-1 w-full bg-transparent text-center font-display text-[3.75rem] leading-none font-extrabold tracking-[-0.04em] text-foreground placeholder:text-foreground/20 focus:outline-none"
                   autoFocus={!isEdit}
                   onFocus={(e) => e.target.select()}
                 />
+              </div>
+
+              <div className="-mt-3 space-y-3">
+                <div className="flex justify-center">
+                  <label className="relative inline-flex h-9 items-center gap-1 rounded-full bg-foreground/[0.06] pr-2.5 pl-3.5 text-sm font-semibold">
+                    <span className="sr-only">Devise de la dépense</span>
+                    {spendCurrency}
+                    <ChevronDown size={14} aria-hidden="true" />
+                    <select
+                      value={spendCurrency}
+                      onChange={(e) => {
+                        rateTouched.current = false;
+                        setRateStr("");
+                        setSpendCurrency(e.target.value);
+                      }}
+                      className="absolute inset-0 cursor-pointer opacity-0"
+                    >
+                      {[currency, ...CURRENCIES.filter((c) => c !== currency)].map((c) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+                {foreign && (
+                  <div className="rounded-[1.25rem] bg-secondary px-4 py-3">
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="tabular shrink-0 font-medium">1 {spendCurrency} =</span>
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        aria-label={`Taux de change ${spendCurrency} vers ${currency}`}
+                        value={rateStr}
+                        onChange={(e) => {
+                          rateTouched.current = true;
+                          setRateStr(e.target.value.replace(/[^0-9.,]/g, ""));
+                        }}
+                        onFocus={(e) => e.target.select()}
+                        placeholder={rateLoading ? "…" : "Taux"}
+                        className="tabular h-10 min-w-0 flex-1 rounded-xl border border-input bg-card px-3 text-right text-base outline-none focus:border-primary/60 focus:ring-4 focus:ring-primary/12"
+                      />
+                      <span className="shrink-0 font-medium">{currency}</span>
+                    </div>
+                    <p className="tabular mt-2 text-sm text-muted-foreground">
+                      {rate > 0 && rawAmount > 0
+                        ? `${formatCurrency(rawAmount, spendCurrency)} = ${formatCurrency(amount, currency)}`
+                        : rateLoading
+                          ? "Taux du jour en cours de chargement…"
+                          : "Saisis le taux pour convertir."}
+                    </p>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -514,6 +612,31 @@ export function ExpenseForm({
                 <label htmlFor="expense-date" className="px-1 text-sm font-semibold">Date</label>
                 <DateField id="expense-date" value={date} onChange={setDate} />
               </div>
+
+              {allowRecurrence && !isEdit && (
+                <div className="space-y-2">
+                  <p className="flex items-center gap-1.5 px-1 text-sm font-semibold">
+                    <Repeat size={14} aria-hidden="true" />
+                    Répéter
+                  </p>
+                  <div className="flex gap-2">
+                    {RECURRENCE_OPTIONS.map((o) => (
+                      <button
+                        key={o.value}
+                        type="button"
+                        aria-pressed={recurrence === o.value}
+                        onClick={() => setRecurrence(o.value)}
+                        className={cn(
+                          "pressable h-11 flex-1 rounded-full px-3 text-sm font-semibold transition-colors",
+                          recurrence === o.value ? "bg-foreground text-background" : "bg-foreground/[0.06] text-foreground hover:bg-foreground/[0.08]"
+                        )}
+                      >
+                        {o.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </>
           )}
 
