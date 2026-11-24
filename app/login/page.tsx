@@ -2,6 +2,7 @@
 
 import { useState, Suspense } from "react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { Loader2, Mail } from "lucide-react";
 import { m as motion } from "framer-motion";
 import { useSearchParams } from "next/navigation";
@@ -147,6 +148,11 @@ function LoginForm() {
           {guestError && <p className="mt-2 text-center text-sm text-red-400">{guestError}</p>}
           <p className="mt-3 text-center text-[0.8125rem] leading-relaxed text-muted-foreground">
             Sans compte, tes voyages restent sur cet appareil. Tu pourras les sauvegarder avec {loginChoicesLabel()} à tout moment, sans rien perdre.
+          </p>
+          <p className="mt-3 text-center text-[0.8125rem]">
+            <Link href="/privacy" className="inline-flex min-h-11 items-center font-semibold text-muted-foreground underline underline-offset-4">
+              Confidentialité
+            </Link>
           </p>
         </div>
       </motion.div>
