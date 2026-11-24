@@ -47,6 +47,18 @@ npm run dev
    (Authentication) activer **Allow anonymous sign-ins** et **Allow manual linking**.
    Un CAPTCHA (Attack Protection) est recommandé pour limiter la création de comptes invités.
 2. `lib/supabase/migrations/022_friends_notifications_lists.sql` (Ta bande, notifications push, Listes).
+3. `lib/supabase/migrations/023_activity_recurring_account_deletion.sql` (journal d'activité, dépenses répétées,
+   suppression de compte). À jouer **avant** de déployer le code qui l'utilise ; à exécuter dans le SQL Editor
+   (rôle `postgres`, nécessaire pour supprimer un utilisateur `auth.users`).
+
+### Variables d'environnement (Vercel : Production + Preview)
+
+| Variable | Rôle |
+| --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` | obligatoires |
+| `CONSENT_HMAC_SECRET` | obligatoire : sans lui, l'enregistrement du consentement RGPD répond 500 |
+| `VAPID_PRIVATE_KEY` (+ `VAPID_SUBJECT`) | notifications push (voir ci-dessous) |
+| `NEXT_PUBLIC_SITE_URL` | recommandé (liens de partage, image de partage) |
 
 ### Notifications push
 
