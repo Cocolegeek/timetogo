@@ -39,7 +39,7 @@ app/
   api/notify/route.ts    → POST NotifyEvent → compose (RLS de l'appelant) + Web Push (VAPID) ; GET → { configured }
   trips/
     page.tsx             → list all trips
-    new/page.tsx         → trip creation wizard (TripWizard | GroupWizard)
+    new/page.tsx         → assistant de création (CreateWizard, type=trip | group)
     [tripId]/
       layout.tsx         → trip nav + context (wraps TripClientProviders)
       page.tsx           → trip dashboard
@@ -86,12 +86,12 @@ components/
               MapAppPicker:        MapAppPickerProvider + useOpenLocation() context hook
               ParticipantAvatar, ParticipantPicker (LA sélection multiple de participants : puces avatar,
               « Tout le monde » optionnel, payeurs, étapes, trajets, repas), ParticipantStack, SectionLabel, Spinner
-  trips/      BudgetEditDialog, GettingStarted, GroupWizard, IdentityPicker,
+  trips/      BudgetEditDialog, GettingStarted, CreateWizard (assistant unique voyage + groupe), IdentityPicker,
               OnboardingModal (bienvenue + « Ta tête dans la bande » : prénom + avatar), ShareModal,
               TripSearch, DayAgendaCard (journée utile du tableau de bord : étape en cours / à suivre + reste du jour),
               TripActionsSheet (« … » d'une carte voyage), IdentityDialog (« Qui es-tu ? »), LazyOnboarding,
               TripCard (variants featured | row, tripStatus()), TripCover (illustrations en aplats),
-              TripEditDialog, TripEditWrapper, TripWizard
+              TripEditDialog, TripEditWrapper
   settings/   DeleteAccountDialog (confirmation par saisie « SUPPRIMER »), SettingsShell (retour + grand titre), SettingsList (SettingsGroup, SettingsRow, SettingsToggle)
   trips/      FriendPicker (rangée « Ta bande » : un pote choisi = membre lié, le voyage apparaît chez lui),
               MyListCard (tableau de bord : « On compte sur toi » / « n choses sans personne »)
@@ -164,6 +164,8 @@ lib/
   itinerary-types.ts    → icône / libellé / teinte par type d'étape et mode de trajet
   meals/courses.ts      → COURSES (icônes Lucide), COURSE_ORDER
   motion.ts, haptics.ts → courbes/springs Framer, haptic()
+  trips/create-wizard.ts → logique pure de l'assistant de création : stepsFor(), validateStep(), firstIssue(), buildPayload(),
+                          participantsOf() (créateur toujours 1er), addPerson() (doublons), datePresets(), suggestName()
   trip-features.ts      → tripFeatures(trip), isVoyage(t), isGroup(t), TRIP_TYPE_LABELS
   budget/splits.ts      → computeShares(equal|percentage|fixed), buildDefaultSplits()
   budget/debts.ts       → computeBalances(), simplifyDebts() (greedy O(n log n))
@@ -290,6 +292,11 @@ DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip(
   `planning?date=YYYY-MM-DD&item=<id>`, `menus?date=YYYY-MM-DD`, `lists?item=<id>`.
 - **Retours** : `useToast()` (`ToastProvider` à la racine) après chaque création / modification / suppression,
   `haptic()` sur les gestes. Feuilles du bas fermables en glissant la poignée.
+- **Création** : un seul assistant (`CreateWizard`), 3 étapes (voyage : Où · Quand · Avec qui ; groupe : Nom · Quand · Avec qui),
+  aperçu en direct de la carte, barre d'action fixe. Le bouton n'est JAMAIS grisé sans explication : un toucher sur un champ
+  incomplet affiche le message (`role="alert"`, secousse, haptique). Une seule source de vérité pour les participants : le créateur
+  (prénom du profil) est dérivé, jamais recopié dans un état de formulaire. À la validation finale `firstIssue()` renvoie à l'étape
+  fautive au lieu d'échouer en silence. Toute évolution passe par `lib/trips/create-wizard.ts` + son test.
 - **Tableau de bord** : `GettingStarted` (n'affiche que les étapes restantes) puis budget, solde, `DayAgendaCard`
   (aujourd'hui, ou demain une fois la journée finie), repas du jour. Une carte vide n'est pas affichée si
   « Premiers pas » invite déjà à la remplir. Solde : une seule tuile large si un seul sens est non nul.
@@ -329,7 +336,7 @@ DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip(
 - **Listes** : un seul espace, deux listes (« À apporter », « À faire »), assignation à des participants,
   coche directe, suggestions dans l'état vide. `tripFeatures().hasLists` (voyages et groupes).
 - **Ta bande** : jamais saisie à la main. Elle se remplit en voyageant (trigger) ou par lien `/friends/add?code=`.
-  À la création (TripWizard/GroupWizard, `?with=<id>`) ou dans l'édition du voyage, `FriendPicker` +
+  À la création (CreateWizard, `?with=<id>`) ou dans l'édition du voyage, `FriendPicker` +
   `addFriendsToTrip()` (RPC `add_friends_to_trip`) : participant + membre lié, sans code de partage.
 - **Notifications** : le client n'envoie qu'un `NotifyEvent` via `notify()` (jamais de texte) ; le serveur lit les
   données avec la RLS de l'appelant, rédige et cible (`get_push_targets` filtre bande/voyage + préférences).
@@ -379,7 +386,7 @@ DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip(
 **Always use `LocationPickerSheet`**, never raw text input or the old `LocationAutocomplete`.
 - Tap → 88dvh bottom Sheet with large search field + Nominatim results split into main name / subtitle
 - `onChangeCoord` returns `LocationCoord` directly from the Nominatim result, no extra `/api/geocode` call needed
-- Used in: `ItineraryItemForm`, `JourneyForm`, `TripWizard`, `TripEditDialog`
+- Used in: `ItineraryItemForm`, `JourneyForm`, `TripEditDialog`
 
 ### Full-screen forms
 All creation/edit forms are full-screen or near-full-screen on mobile:
@@ -405,7 +412,7 @@ All `<input type="number">` and amount text inputs must have `onFocus={(e) => e.
 - **Client/Server split**: hooks and interactive components → `"use client"`. Pages/layouts default to RSC.
 - **No bare SQL**: always use Supabase query builder (`supabase.from().select().eq()...`)
 - **Mutations**: call hook method → hook auto-refetches. Never mutate local state directly.
-- **Forms**: react-hook-form + Zod in dialogs/modals. Multi-step → TripWizard pattern.
+- **Forms**: react-hook-form + Zod in dialogs/modals. Multi-step → pattern CreateWizard (logique pure dans `lib/trips/`, testée).
 - **Styling**: Tailwind utility classes + CSS custom properties for theme. `cn()` for conditional classes.
 - **Icons**: Lucide only (never emoji as icon in code, except TripWizard emoji picker).
 - **No comments** unless WHY is non-obvious.

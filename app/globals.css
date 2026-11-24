@@ -669,3 +669,14 @@ html.reduce-motion .vl-hop, html.reduce-motion .vl-shadow, html.reduce-motion .v
 html.reduce-motion .vl svg .vl-look-x, html.reduce-motion .vl svg .vl-look-y { animation: none !important; }
 html.reduce-motion .vl-msgs > span { animation: none !important; opacity: 0; }
 html.reduce-motion .vl-msgs > span:first-child { opacity: 1; }
+
+@keyframes voyou-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(5px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(2px); }
+}
+@utility animate-shake {
+  animation: voyou-shake 360ms ease-in-out 1;
+}
