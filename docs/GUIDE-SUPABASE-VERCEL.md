@@ -22,10 +22,11 @@ Il est écrit pour être suivi de haut en bas, case par case. Compte 45 à 60 mi
 | 4 | Supabase › Authentication | Invités + liaison manuelle + URL de redirection (§2.5) | Connexion Google ou mode invité en échec |
 | 5 | Supabase › Storage | Deux buckets publics (§2.6) | Photos de profil et icônes de voyage impossibles à envoyer |
 | 6 | Google Cloud | Adresse de retour + application publiée (§3) | Connexion Google en échec |
-| 7 | Vercel › Environment Variables | `CONSENT_HMAC_SECRET` + clés Supabase + VAPID (§4.1) | **Erreur 500 au consentement RGPD** : personne ne peut finir sa première connexion |
-| 8 | Vercel + GitHub | Redéployer (§4.5), recette sur l'aperçu (§6), puis fusionner la PR #6 | Rien n'arrive en production |
-| 9 | Meta + Supabase | Créer l'app Facebook et la brancher (§3 bis), **après** la fusion | Pas de connexion Facebook (le bouton reste caché, rien ne casse) |
-| 10 | Vercel | `NEXT_PUBLIC_FACEBOOK_LOGIN=true` puis redéployer (§3 bis.6) | Le bouton Facebook n'apparaît pas |
+| 7 | Supabase + prestataire d'e-mails | Envoi d'e-mails (SMTP), modèles de messages, code à 6 chiffres (§3 ter) | Pas de connexion par e-mail (le bouton reste caché, rien ne casse) |
+| 8 | Vercel › Environment Variables | `CONSENT_HMAC_SECRET` + clés Supabase + VAPID (§4.1) | **Erreur 500 au consentement RGPD** : personne ne peut finir sa première connexion |
+| 9 | Vercel + GitHub | Redéployer (§4.5), recette sur l'aperçu (§6), puis fusionner la PR #6 | Rien n'arrive en production |
+| 10 | Meta + Supabase | Créer l'app Facebook et la brancher (§3 bis), **après** la fusion | Pas de connexion Facebook (le bouton reste caché, rien ne casse) |
+| 11 | Vercel | `NEXT_PUBLIC_FACEBOOK_LOGIN=true` et/ou `NEXT_PUBLIC_EMAIL_LOGIN=true`, puis redéployer (§3 bis.6 et §3 ter.6) | Les boutons Facebook / e-mail n'apparaissent pas |
 
 **À ne surtout pas faire : activer un CAPTCHA dans Supabase.** L'app n'envoie pas de jeton CAPTCHA, donc le bouton
 « Continuer en tant qu'invité » cesserait de marcher (détail §2.5).
@@ -367,6 +368,7 @@ Aucune autre adresse à ajouter dans Supabase : les Redirect URLs du §2.5 s'app
 | Variable | Valeur | Environnements |
 |----------|--------|----------------|
 | `NEXT_PUBLIC_FACEBOOK_LOGIN` | `true` | Production (+ Preview si tu veux tester dessus) |
+| `NEXT_PUBLIC_EMAIL_LOGIN` | non (e-mail uniquement) | `true` : affiche « Continuer avec un e-mail » (§3 ter.6) | Production (+ Preview) |
 | `NEXT_PUBLIC_CONTACT_EMAIL` | une adresse de contact (facultatif, s'affiche sur la page de confidentialité) | Production |
 
 2. **Redeploy** (§4.5) : ce sont des `NEXT_PUBLIC_*`, intégrées au build.
@@ -378,6 +380,112 @@ Aucune autre adresse à ajouter dans Supabase : les Redirect URLs du §2.5 s'app
 - **Deux comptes pour une même personne** : si quelqu'un se connecte une fois avec Google puis une fois avec Facebook, il peut se retrouver avec deux comptes Voyou distincts (ou voir Supabase les relier d'après l'e-mail). L'app ne propose pas encore « Ajouter Facebook à mon compte » pour un compte déjà créé : le lien Facebook ne se fait qu'au moment de sauvegarder un invité. **À tester** avec deux comptes de test.
 - **Photo Facebook** : l'adresse de la photo fournie par Facebook peut expirer avec le temps. Chaque personne choisit de toute façon un avatar à son arrivée, qui passe avant la photo du compte.
 - **Page de confidentialité** : c'est un texte de départ écrit d'après ce que fait l'app. Relis-le, et complète-le si besoin (identité de l'éditeur, mentions légales). Ce n'est pas un avis juridique.
+
+---
+
+## 3 ter. E-mail (code à 6 chiffres, sans mot de passe)
+
+L'app propose « Continuer avec un e-mail » (écran de connexion) et « Sauvegarder avec un e-mail » (mode invité).
+Principe : la personne saisit son adresse, reçoit un **code à 6 chiffres**, le tape dans l'app. Pas de mot de passe, pas de lien à ouvrir
+(un lien s'ouvrirait dans le navigateur et non dans l'app installée). Si l'adresse a déjà un compte, un invité qui se sauvegarde y est
+connecté et ses voyages y sont rapatriés.
+
+Comme pour Facebook, le bouton est **caché par défaut** (variable `NEXT_PUBLIC_EMAIL_LOGIN`) : tu l'allumes à la fin, une fois l'envoi d'e-mails testé.
+
+### 3 ter.1 Pourquoi un service d'envoi est obligatoire
+
+Avec son envoi par défaut, Supabase n'envoie des e-mails qu'à quelques adresses autorisées (les membres de ton organisation) et en très petit
+nombre. **Pour le public, il faut brancher ton propre service d'envoi (SMTP)** sur ton domaine `voyou.app`. Sans cela, personne d'autre que toi ne recevra de code.
+
+### 3 ter.2 Brancher un service d'envoi (exemple : Resend)
+
+Resend a une offre gratuite suffisante pour démarrer. D'autres services (Brevo, Postmark, Mailgun…) font la même chose : seuls les champs changent.
+
+1. Crée un compte sur **resend.com**.
+2. **Domains** › **Add Domain** › `voyou.app`.
+3. Resend affiche des enregistrements DNS à créer (SPF, DKIM, parfois DMARC). Ajoute-les là où tu gères le DNS de `voyou.app`
+   (ton registrar, ou Vercel › Domains si le DNS est chez Vercel). Puis clique sur **Verify** (la propagation peut prendre de quelques minutes à quelques heures).
+4. **API Keys** › **Create API Key** (accès « Sending »). Copie la clé, elle ne s'affiche qu'une fois.
+5. Supabase › **Authentication** › **Emails** › **SMTP Settings** (ou Project Settings › Authentication › SMTP) › active **Enable custom SMTP** :
+
+| Champ | Valeur (Resend) |
+|-------|-----------------|
+| Sender email | `no-reply@voyou.app` (une adresse de ton domaine vérifié) |
+| Sender name | `Voyou` |
+| Host | `smtp.resend.com` |
+| Port | `465` |
+| Username | `resend` |
+| Password | la clé API créée à l'étape 4 |
+
+6. **Save**. Dans **Authentication** › **Rate Limits**, vérifie la limite d'envoi d'e-mails par heure et augmente-la si tu attends beaucoup d'inscriptions.
+
+### 3 ter.3 Réglages du code
+
+Supabase › **Authentication** › **Sign In / Providers** › **Email** :
+
+- [ ] **Enable Email provider** : activé.
+- [ ] **Email OTP Length** : **6** (l'app attend 6 chiffres ; si tu changes cette valeur, il faut changer `OTP_LENGTH` dans le code).
+- [ ] **Email OTP Expiration** : par exemple **600** secondes (10 minutes) au lieu de la valeur par défaut, plus longue.
+- [ ] **Confirm email** : peut rester activé.
+- Les réglages de mot de passe ne servent pas : l'app n'en propose pas.
+
+### 3 ter.4 Modèles de message (obligatoire)
+
+Par défaut, Supabase envoie un **lien** au lieu d'un code. Il faut remplacer **trois** modèles pour y mettre `{{ .Token }}`.
+Supabase › **Authentication** › **Emails** › **Templates**. Pour chacun des trois modèles ci-dessous, remplace le **Subject** et le **Message body** (mode source / HTML) puis **Save** :
+
+**1. « Confirm signup »** (première connexion d'une nouvelle adresse) et **2. « Magic Link »** (connexion d'une adresse existante) : même contenu.
+
+Subject :
+```text
+Ton code Voyou : {{ .Token }}
+```
+Message body :
+```html
+<h2>Ton code Voyou</h2>
+<p>Entre ce code dans l'app pour continuer :</p>
+<p style="font-size:32px;font-weight:700;letter-spacing:6px;">{{ .Token }}</p>
+<p>Il est valable quelques minutes. Si tu n'es pas à l'origine de cette demande, ignore simplement ce message.</p>
+```
+
+**3. « Change Email Address »** (sauvegarde d'un compte invité avec un e-mail) :
+
+Subject :
+```text
+Confirme ton e-mail Voyou : {{ .Token }}
+```
+Message body :
+```html
+<h2>Sauvegarde ton compte Voyou</h2>
+<p>Entre ce code dans l'app pour relier cette adresse à ton compte :</p>
+<p style="font-size:32px;font-weight:700;letter-spacing:6px;">{{ .Token }}</p>
+<p>Il est valable quelques minutes. Si tu n'es pas à l'origine de cette demande, ignore simplement ce message.</p>
+```
+
+Laisse `{{ .Token }}` tel quel : Supabase le remplace par le code.
+
+### 3 ter.5 Tester l'envoi avant d'allumer le bouton
+
+1. Allume le bouton sur l'**aperçu** seulement (variable `NEXT_PUBLIC_EMAIL_LOGIN=true` dans l'environnement **Preview**, puis redéploie l'aperçu), et fais la recette §6 point R avec ta propre adresse.
+2. Vérifie dans la boîte de réception **et les courriers indésirables** que le code arrive en moins d'une minute, avec l'expéditeur `Voyou`.
+3. Si le code n'arrive jamais : Supabase › **Logs** › **Auth** pour voir l'erreur SMTP ; Resend › **Logs** pour voir si le message est parti.
+
+### 3 ter.6 Afficher le bouton dans l'app
+
+Vercel › Settings › Environment Variables :
+
+| Variable | Valeur | Environnements |
+|----------|--------|----------------|
+| `NEXT_PUBLIC_EMAIL_LOGIN` | `true` | Production (+ Preview pour tester) |
+
+Puis **Redeploy** (§4.5). Sur `https://voyou.app/login`, le bouton **Continuer avec un e-mail** apparaît.
+
+### 3 ter.7 À savoir
+
+- **Un code toutes les 60 secondes** : Supabase refuse un second envoi à la même adresse avant une minute. L'app affiche un compte à rebours.
+- **Courriers indésirables** : les premiers envois depuis un nouveau domaine finissent souvent en spam. L'écran de saisie du code le rappelle ; DKIM et SPF correctement configurés (étape 3 ter.2) limitent le problème.
+- **Une adresse, plusieurs moyens** : si la même adresse e-mail sert pour Google et pour un code, Supabase peut relier les deux comptes ou en créer deux selon le cas. À tester avec deux comptes de test, comme pour Facebook.
+- **Pas de mot de passe** : une personne qui perd l'accès à sa boîte e-mail perd l'accès à son compte. Google et Facebook restent là pour ceux qui préfèrent ne dépendre que de leur compte habituel.
 
 ---
 
@@ -476,13 +584,14 @@ La fusion de la PR #6 (branche `ccr-d72dab82-6s6pcz`) fait aussi un nouveau buil
 4. [ ] Buckets Storage (§2.6), puis rejouer la 013 si ses policies manquaient.
 5. [ ] Supabase Authentication : providers, URL, **pas de CAPTCHA** (§2.5).
 6. [ ] Google Cloud (§3).
-7. [ ] Vercel : variables (§4.1), clés VAPID (§4.2).
-8. [ ] Recette sur l'**aperçu** de la PR #6 (§6), avec un compte jetable. Facebook est encore caché : c'est normal.
-9. [ ] Passer la PR #6 de brouillon à « Ready for review », puis fusionner dans `main`.
-10. [ ] Vercel : vérifier que le déploiement de production est « Ready », et que `https://voyou.app/privacy` s'ouvre.
-11. [ ] Facebook : app Meta (§3 bis.1 à 3 bis.4), puis Supabase (§3 bis.5).
-12. [ ] Allumer le bouton (§3 bis.6), redéployer, tester la connexion Facebook (§6, points O et P).
-13. [ ] Recette courte en production (§6, points A, B, E, H).
+7. [ ] E-mail : service d'envoi (SMTP), réglages du code, trois modèles de message (§3 ter.1 à 3 ter.4).
+8. [ ] Vercel : variables (§4.1), clés VAPID (§4.2).
+9. [ ] Recette sur l'**aperçu** de la PR #6 (§6), avec un compte jetable. Facebook et e-mail sont encore cachés : c'est normal.
+10. [ ] Passer la PR #6 de brouillon à « Ready for review », puis fusionner dans `main`.
+11. [ ] Vercel : vérifier que le déploiement de production est « Ready », et que `https://voyou.app/privacy` s'ouvre.
+12. [ ] Facebook : app Meta (§3 bis.1 à 3 bis.4), puis Supabase (§3 bis.5).
+13. [ ] Allumer les boutons (§3 bis.6 et §3 ter.6) en une seule fois, redéployer, tester (§6, points O à T).
+14. [ ] Recette courte en production (§6, points A, B, E, H).
 
 Pourquoi la migration avant le code : si le nouveau code arrive avant la 023, rien ne plante, mais le journal reste vide,
 les dépenses répétées ne se créent pas, et « Supprimer mon compte » affiche une erreur.
@@ -526,6 +635,10 @@ Utilise un compte jetable. Coche chaque ligne.
 - [ ] **O. Connexion Facebook** (après §3 bis.6) : sur l'écran de connexion, « Continuer avec Facebook » ouvre Facebook, puis tu arrives sur le consentement RGPD et la liste des voyages. Réglages › Compte et données affiche « Facebook · Connecté ».
 - [ ] **P. Invité vers Facebook** : en mode invité, « Sauvegarder avec Facebook » garde tes voyages. Refais le test avec un compte Facebook qui a **déjà** servi : l'écran « Ce compte Facebook existe déjà » doit proposer de rapatrier les voyages invités.
 - [ ] **Q. Page de confidentialité** : `https://voyou.app/privacy` s'ouvre sans être connecté, et le lien « Lire la politique de confidentialité » de l'écran de consentement aussi.
+
+- [ ] **R. Connexion par e-mail** (après §3 ter.6) : « Continuer avec un e-mail » › saisis une adresse › le code arrive (regarde les indésirables) › tu le tapes : l'app valide toute seule au sixième chiffre et t'envoie sur le consentement RGPD puis tes voyages. Colle le code avec un espace (« 123 456 ») : il doit marcher aussi. Réglages › Compte et données affiche « E-mail · Connecté ».
+- [ ] **S. Code refusé** : tape un faux code : le message « Code incorrect ou expiré » s'affiche ; « Renvoyer le code » est grisé pendant 60 secondes.
+- [ ] **T. Invité vers e-mail** : en mode invité, « Sauvegarder avec un e-mail » › code › « Compte sauvegardé », tes voyages sont toujours là. Refais avec une adresse qui a **déjà** un compte : l'app l'annonce, envoie un code de connexion, puis rapatrie les voyages invités (« Tout est rapatrié »).
 
 ---
 
@@ -576,6 +689,12 @@ Utilise un compte jetable. Coche chaque ligne.
 | Facebook : « Error getting user email from external provider » | Permission `email` non ajoutée, ou compte Facebook sans e-mail | §3 bis.3 (point 4) et §3 bis.7 |
 | Pas de bouton Facebook | `NEXT_PUBLIC_FACEBOOK_LOGIN` ≠ `true`, ou pas de redéploiement | §3 bis.6 |
 | Meta refuse le passage en Live | Privacy policy, instructions de suppression, icône ou catégorie manquantes | §3 bis.2 |
+| E-mail : le code n'arrive jamais | SMTP non configuré (envoi par défaut limité), domaine non vérifié, ou message en indésirables | §3 ter.2, puis Supabase › Logs › Auth et Resend › Logs |
+| E-mail : l'e-mail contient un lien et pas de code | Modèles « Confirm signup », « Magic Link » ou « Change Email Address » non modifiés | §3 ter.4 |
+| E-mail : « Trop d'essais » | Un seul envoi par minute et par adresse, ou limite horaire atteinte | Attendre 60 s ; §3 ter.2 (Rate Limits) |
+| E-mail : code toujours refusé | Code expiré, ou longueur de code ≠ 6 dans Supabase | §3 ter.3 |
+| E-mail : « n'est pas disponible pour le moment » | Fournisseur Email désactivé dans Supabase | §3 ter.3 |
+| Pas de bouton e-mail | `NEXT_PUBLIC_EMAIL_LOGIN` ≠ `true`, ou pas de redéploiement | §3 ter.6 |
 
 Où chercher les erreurs : Vercel › projet › **Logs** (routes `/api/*`) ; Supabase › **Logs** (Auth, Postgres, API) ; console du navigateur.
 

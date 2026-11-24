@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { errorRedirectUrl, safeRedirectPath } from "../lib/auth/redirect.ts";
-import { linkedProviders, parseProvider, providersLabel } from "../lib/auth/providers.ts";
+import { linkedMethods, methodsLabel, parseProvider } from "../lib/auth/providers.ts";
 
 const ORIGIN = "https://voyou.app";
 
@@ -41,12 +41,12 @@ test("parseProvider: seule la valeur « facebook » est reconnue, le reste retom
   assert.equal(parseProvider(null), "google");
 });
 
-test("linkedProviders: identités connues, sans doublon, repli sur app_metadata", () => {
-  assert.deepEqual(linkedProviders({ identities: [{ provider: "google" }, { provider: "facebook" }, { provider: "google" }] }), ["google", "facebook"]);
-  assert.deepEqual(linkedProviders({ identities: [], app_metadata: { provider: "facebook" } }), ["facebook"]);
-  assert.deepEqual(linkedProviders({ identities: [{ provider: "email" }] }), []);
-  assert.deepEqual(linkedProviders(null), []);
-  assert.equal(providersLabel(["google", "facebook"]), "Google et Facebook");
+test("linkedMethods: identités connues, sans doublon, repli sur app_metadata", () => {
+  assert.deepEqual(linkedMethods({ identities: [{ provider: "google" }, { provider: "facebook" }, { provider: "google" }] }), ["google", "facebook"]);
+  assert.deepEqual(linkedMethods({ identities: [], app_metadata: { provider: "facebook" } }), ["facebook"]);
+  assert.deepEqual(linkedMethods({ identities: [{ provider: "email" }, { provider: "github" }] }), ["email"]);
+  assert.deepEqual(linkedMethods(null), []);
+  assert.equal(methodsLabel(["google", "facebook"]), "Google et Facebook");
 });
 
 test("Facebook est masqué par défaut, affiché seulement avec NEXT_PUBLIC_FACEBOOK_LOGIN=true", async () => {
@@ -59,5 +59,29 @@ test("Facebook est masqué par défaut, affiché seulement avec NEXT_PUBLIC_FACE
   const on: typeof off = await import(/* @vite-ignore */ variant);
   assert.deepEqual(on.enabledProviders(), ["google", "facebook"]);
   assert.equal(on.loginChoicesLabel(), "Google ou Facebook");
+  assert.equal(on.oauthChoicesLabel(), "Google ou Facebook");
   delete process.env.NEXT_PUBLIC_FACEBOOK_LOGIN;
+});
+
+test("e-mail : masqué par défaut, listé dans les choix seulement avec NEXT_PUBLIC_EMAIL_LOGIN=true", async () => {
+  const off = await import("../lib/auth/providers.ts");
+  assert.equal(off.EMAIL_ENABLED, false);
+
+  process.env.NEXT_PUBLIC_EMAIL_LOGIN = "true";
+  process.env.NEXT_PUBLIC_FACEBOOK_LOGIN = "true";
+  const variant = "../lib/auth/providers.ts?email-on";
+  const on: typeof off = await import(/* @vite-ignore */ variant);
+  assert.equal(on.EMAIL_ENABLED, true);
+  assert.equal(on.loginChoicesLabel(), "Google, Facebook ou e-mail");
+  assert.equal(on.oauthChoicesLabel(), "Google ou Facebook");
+  delete process.env.NEXT_PUBLIC_EMAIL_LOGIN;
+  delete process.env.NEXT_PUBLIC_FACEBOOK_LOGIN;
+});
+
+test("joinOr et libellés d'un compte avec e-mail", async () => {
+  const { joinOr, methodsLabel, linkedMethods } = await import("../lib/auth/providers.ts");
+  assert.equal(joinOr(["a"]), "a");
+  assert.equal(joinOr(["a", "b"]), "a ou b");
+  assert.equal(joinOr(["a", "b", "c"]), "a, b ou c");
+  assert.equal(methodsLabel(linkedMethods({ identities: [{ provider: "email" }, { provider: "google" }] })), "E-mail et Google");
 });

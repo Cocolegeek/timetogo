@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/compone
 import { Button } from "@/components/ui/button";
 import { ProviderIcon } from "@/components/auth/ProviderIcon";
 import { startUpgrade } from "@/lib/auth/guest";
-import { enabledProviders, loginChoicesLabel, PROVIDER_LABELS } from "@/lib/auth/providers";
+import { enabledProviders, oauthChoicesLabel, PROVIDER_LABELS } from "@/lib/auth/providers";
 
 /** A guest who signs out loses access to their data: offer to save it first. */
 export function GuestSignOutDialog({
@@ -26,7 +26,7 @@ export function GuestSignOutDialog({
         <div className="space-y-1.5">
           <DialogTitle>Tes voyages invité seront perdus</DialogTitle>
           <DialogDescription className="text-[0.95rem] leading-relaxed">
-            Un compte invité ne peut pas être retrouvé après déconnexion. Sauvegarde-le avec {loginChoicesLabel()}, c&apos;est instantané.
+            Un compte invité ne peut pas être retrouvé après déconnexion. Sauvegarde-le avec {oauthChoicesLabel()}, c&apos;est instantané.
           </DialogDescription>
         </div>
         <div className="space-y-2">

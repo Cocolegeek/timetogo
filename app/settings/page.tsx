@@ -10,7 +10,7 @@ import { UserAvatar } from "@/components/shared/UserAvatar";
 import { GuestUpgradeCard } from "@/components/auth/GuestUpgradeCard";
 import { GuestSignOutDialog } from "@/components/auth/GuestSignOutDialog";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { linkedProviders, providersLabel } from "@/lib/auth/providers";
+import { linkedMethods, methodsLabel } from "@/lib/auth/providers";
 import { useFriends } from "@/hooks/useFriends";
 import { useProfile } from "@/hooks/useProfile";
 import { useTheme } from "@/hooks/useTheme";
@@ -81,7 +81,7 @@ export default function SettingsPage() {
         <SettingsGroup>
           <SettingsRow href="/settings/notifications" icon={Bell} label="Notifications" value={push ? PUSH_LABEL[push] : ""} />
           <SettingsRow href="/settings/appearance" icon={Palette} label="Apparence et confort" value={THEME_LABEL[preference]} />
-          <SettingsRow href="/settings/account" icon={ShieldCheck} label="Compte et données" value={isAnonymous ? "Invité" : providersLabel(linkedProviders(user)) || "Connecté"} />
+          <SettingsRow href="/settings/account" icon={ShieldCheck} label="Compte et données" value={isAnonymous ? "Invité" : methodsLabel(linkedMethods(user)) || "Connecté"} />
         </SettingsGroup>
       </StaggerItem>
 

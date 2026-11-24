@@ -5,12 +5,12 @@ import { Download, Eraser, LogOut, Mail, Trash2 } from "lucide-react";
 import { SettingsShell } from "@/components/settings/SettingsShell";
 import { SettingsGroup, SettingsRow } from "@/components/settings/SettingsList";
 import { StaggerItem } from "@/components/motion/Stagger";
-import { PROVIDER_ICONS } from "@/components/auth/ProviderIcon";
+import { METHOD_ICONS } from "@/components/auth/ProviderIcon";
 import { GuestUpgradeCard } from "@/components/auth/GuestUpgradeCard";
 import { GuestSignOutDialog } from "@/components/auth/GuestSignOutDialog";
 import { useToast } from "@/components/shared/Toaster";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { linkedProviders, PROVIDER_LABELS } from "@/lib/auth/providers";
+import { linkedMethods, METHOD_LABELS } from "@/lib/auth/providers";
 import { useProfile } from "@/hooks/useProfile";
 import { DeleteAccountDialog } from "@/components/settings/DeleteAccountDialog";
 import { clearDataCache } from "@/lib/data/swr";
@@ -45,11 +45,11 @@ export default function AccountSettingsPage() {
           <GuestUpgradeCard />
         ) : (
           <SettingsGroup title="Connexion">
-            {linkedProviders(user).map((provider) => (
+            {linkedMethods(user).map((method) => (
               <SettingsRow
-                key={provider}
-                icon={PROVIDER_ICONS[provider]}
-                label={PROVIDER_LABELS[provider]}
+                key={method}
+                icon={METHOD_ICONS[method]}
+                label={METHOD_LABELS[method]}
                 value="Connecté"
                 chevron={false}
               />

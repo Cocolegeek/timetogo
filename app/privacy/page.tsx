@@ -42,7 +42,7 @@ export default function PrivacyPage() {
         <ul className="list-disc space-y-1.5 pl-5">
           <li>
             <strong className="text-foreground">Ton compte</strong> : si tu te connectes avec Google ou Facebook, ton nom, ton adresse e-mail (quand le
-            service la fournit) et ta photo de profil. En mode invité, seulement un identifiant anonyme.
+            service la fournit) et ta photo de profil. Avec un e-mail, seulement cette adresse. En mode invité, seulement un identifiant anonyme.
           </li>
           <li>
             <strong className="text-foreground">Ton profil</strong> : le prénom et l&apos;avatar que tu choisis. Ton IBAN et ton téléphone sont
@@ -86,7 +86,7 @@ export default function PrivacyPage() {
           </li>
           <li>
             <strong className="text-foreground">Google</strong> et <strong className="text-foreground">Meta (Facebook)</strong> interviennent seulement
-            au moment de la connexion.
+            au moment de la connexion. Pour la connexion par e-mail, un prestataire d&apos;envoi d&apos;e-mails transmet le code à ton adresse.
           </li>
           <li>
             Les lieux que tu saisis sont envoyés à <strong className="text-foreground">OpenStreetMap (Nominatim)</strong> pour les retrouver, et les

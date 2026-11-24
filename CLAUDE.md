@@ -150,7 +150,8 @@ lib/
                           023: trip_activity (journal) + recurring_expenses + delete_my_account)
   auth/guest.ts         → continueAsGuest(), startUpgrade(provider), signInToExisting(provider), signInWithProvider(),
                           claimGuestTransfer(), syncProfileFromProvider(provider)
-  auth/providers.ts     → AuthProvider (google|facebook), enabledProviders(), FACEBOOK_ENABLED, linkedProviders(), parseProvider()
+  auth/providers.ts     → AuthProvider (google|facebook), AccountMethod (+ email), enabledProviders(), FACEBOOK_ENABLED, EMAIL_ENABLED, linkedMethods(), loginChoicesLabel()
+  auth/email.ts         → sendLoginCode / verifyLoginCode / startEmailUpgrade / verifyUpgradeCode / sendExistingAccountCode / verifyExistingAccountCode, mapAuthError()
   auth/redirect.ts      → safeRedirectPath(), errorRedirectUrl() (garde ?provider= au retour d'erreur vers /auth/link)
   avatars.ts            → AVATAR_PRESETS, presetUrl(), isImageAvatar(), defaultPreset(), profileAvatar()
   avatar-sync.ts        → syncMyParticipantAvatars() (avatar du profil → participants liés)
@@ -347,6 +348,10 @@ DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip(
 - **Fournisseurs** : Google toujours ; Facebook seulement si `NEXT_PUBLIC_FACEBOOK_LOGIN=true` (à n'activer qu'une fois
   Facebook configuré dans Supabase + app Meta en mode Live). Jamais de `"google"` en dur : passer par `AuthProvider`
   et `enabledProviders()`. Libellés génériques (« ton compte », `loginChoicesLabel()`), pas « Google » seul.
+- **E-mail** : code à 6 chiffres sans mot de passe (`lib/auth/email.ts`, `components/auth/EmailAuthDialog.tsx`), visible seulement si
+  `NEXT_PUBLIC_EMAIL_LOGIN=true` (exige SMTP + modèles `{{ .Token }}` dans Supabase). Connexion = `signInWithOtp` + `verifyOtp(type:"email")` ;
+  sauvegarde d'un invité = `updateUser({email})` + `verifyOtp(type:"email_change")` ; adresse déjà inscrite → `exists` → code de connexion
+  (`shouldCreateUser:false`) puis `claimGuestTransfer()`. Ne pas mettre `maxLength` sur le champ du code (les codes collés contiennent des espaces).
 - Pas de CAPTCHA Supabase : l'app n'envoie pas de `captchaToken`, l'activer casserait le mode invité.
 - « Continuer en tant qu'invité » = `supabase.auth.signInAnonymously()` : vrai utilisateur
   (`is_anonymous`), toutes les RLS/RPC fonctionnent sans changement.

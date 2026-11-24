@@ -1,18 +1,24 @@
 "use client";
 
 import { useState } from "react";
-import { CloudUpload, Loader2 } from "lucide-react";
+import dynamic from "next/dynamic";
+import { CloudUpload, Loader2, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProviderIcon } from "@/components/auth/ProviderIcon";
 import { useToast } from "@/components/shared/Toaster";
 import { startUpgrade } from "@/lib/auth/guest";
-import { enabledProviders, loginChoicesLabel, PROVIDER_LABELS, type AuthProvider } from "@/lib/auth/providers";
+import { EMAIL_ENABLED, enabledProviders, loginChoicesLabel, PROVIDER_LABELS, type AuthProvider } from "@/lib/auth/providers";
+import { useMountOnce } from "@/hooks/useMountOnce";
 import { cn } from "@/lib/utils";
+
+const EmailAuthDialog = dynamic(() => import("@/components/auth/EmailAuthDialog").then((m) => ({ default: m.EmailAuthDialog })), { ssr: false });
 
 /** Nudge shown to guests: save everything to a Google account, nothing is lost. */
 export function GuestUpgradeCard({ className, compact = false }: { className?: string; compact?: boolean }) {
   const toast = useToast();
   const [loading, setLoading] = useState<AuthProvider | null>(null);
+  const [emailOpen, setEmailOpen] = useState(false);
+  const emailMounted = useMountOnce(emailOpen);
 
   const upgrade = async (provider: AuthProvider) => {
     setLoading(provider);
@@ -34,7 +40,7 @@ export function GuestUpgradeCard({ className, compact = false }: { className?: s
           <p className="mt-0.5 text-sm text-muted-foreground">
             {compact
               ? "Sauvegarde tes voyages pour les retrouver partout."
-              : `Tes voyages ne sont que sur cet appareil. Relie ton compte ${loginChoicesLabel()} pour les garder et les retrouver partout, sans rien perdre.`}
+              : `Tes voyages ne sont que sur cet appareil. Sauvegarde-les avec ${loginChoicesLabel()} pour les garder et les retrouver partout, sans rien perdre.`}
           </p>
         </div>
       </div>
@@ -52,7 +58,14 @@ export function GuestUpgradeCard({ className, compact = false }: { className?: s
             Sauvegarder avec {PROVIDER_LABELS[provider]}
           </Button>
         ))}
+        {EMAIL_ENABLED && (
+          <Button variant="secondary" size="lg" onClick={() => setEmailOpen(true)} disabled={loading !== null} className="w-full">
+            <Mail size={18} aria-hidden="true" />
+            Sauvegarder avec un e-mail
+          </Button>
+        )}
       </div>
+      {emailMounted && <EmailAuthDialog open={emailOpen} onOpenChange={setEmailOpen} mode="upgrade" />}
     </section>
   );
 }

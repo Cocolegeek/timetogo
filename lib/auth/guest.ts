@@ -18,17 +18,23 @@ export async function continueAsGuest(): Promise<{ error?: string }> {
   return error ? { error: error.message } : {};
 }
 
-/** Step 1 of the upgrade: remember a transfer token, then link the provider to this account. */
-export async function startUpgrade(provider: AuthProvider): Promise<{ error?: string }> {
-  const supabase = createClient();
-  const { data: token, error: tokenError } = await supabase.rpc("create_guest_transfer");
-  if (tokenError || !token) return { error: tokenError?.message ?? "Transfert impossible" };
+/** Asks the server for a one-time transfer token and keeps it for the "account already exists" merge. */
+export async function rememberGuestTransfer(): Promise<{ error?: string }> {
+  const { data: token, error } = await createClient().rpc("create_guest_transfer");
+  if (error || !token) return { error: error?.message ?? "Transfert impossible" };
   try {
     localStorage.setItem(TOKEN_KEY, token as string);
   } catch {
     // Without storage we can still link; only the "account already exists" merge needs it.
   }
-  const { error } = await supabase.auth.linkIdentity({
+  return {};
+}
+
+/** Step 1 of the upgrade: remember a transfer token, then link the provider to this account. */
+export async function startUpgrade(provider: AuthProvider): Promise<{ error?: string }> {
+  const remembered = await rememberGuestTransfer();
+  if (remembered.error) return remembered;
+  const { error } = await createClient().auth.linkIdentity({
     provider,
     options: { redirectTo: callbackUrl(`/auth/link?provider=${provider}`) },
   });
