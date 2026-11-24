@@ -23,7 +23,8 @@ Le projet gère deux types d'entités via la même table `trips`, distinguées p
 ```
 app/
   page.tsx               → redirects to /trips
-  login/page.tsx         → Google OAuth + "Continuer en tant qu'invité" (anonymous sign-in)
+  login/page.tsx         → Google OAuth (+ Facebook si NEXT_PUBLIC_FACEBOOK_LOGIN=true) + "Continuer en tant qu'invité" (anonymous sign-in)
+  privacy/page.tsx       → politique de confidentialité PUBLIQUE (exigée par Meta ; #suppression = instructions de suppression)
   auth/callback/route.ts → exchanges OAuth code for session; forwards OAuth errors (?error_code=)
   auth/link/page.tsx     → fin de sauvegarde invité → Google (liaison OK, ou compte existant → fusion)
   consent/page.tsx       → GDPR consent (shown once after first login)
@@ -47,7 +48,7 @@ app/
       lists/page.tsx     → Listes « À apporter » / « À faire » (?item=<id>, ?list=todo)
       planning/page.tsx  → itinerary builder (étapes + trajets)
   trips/template.tsx + [tripId]/template.tsx → page transitions (PageTransition)
-proxy.ts                 → middleware (getClaims): enforces auth on all routes except /login /auth/callback /join /consent
+proxy.ts                 → middleware (getClaims): enforces auth on all routes except /login /auth/callback /join /consent /privacy
                            (a guest = anonymous Supabase user, so it passes like any signed-in user)
 ```
 
@@ -147,8 +148,10 @@ lib/
                           020: multi-dish meals, 021: guest accounts + transfer,
                           022: friendships + push_subscriptions + checklist_items,
                           023: trip_activity (journal) + recurring_expenses + delete_my_account)
-  auth/guest.ts         → continueAsGuest(), startGoogleUpgrade(), signInToExistingGoogle(),
-                          claimGuestTransfer(), syncProfileFromGoogle()
+  auth/guest.ts         → continueAsGuest(), startUpgrade(provider), signInToExisting(provider), signInWithProvider(),
+                          claimGuestTransfer(), syncProfileFromProvider(provider)
+  auth/providers.ts     → AuthProvider (google|facebook), enabledProviders(), FACEBOOK_ENABLED, linkedProviders(), parseProvider()
+  auth/redirect.ts      → safeRedirectPath(), errorRedirectUrl() (garde ?provider= au retour d'erreur vers /auth/link)
   avatars.ts            → AVATAR_PRESETS, presetUrl(), isImageAvatar(), defaultPreset(), profileAvatar()
   avatar-sync.ts        → syncMyParticipantAvatars() (avatar du profil → participants liés)
   data/swr.tsx          → DataProvider (SWRConfig + cache localStorage persistant), clearDataCache()
@@ -341,6 +344,10 @@ DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip(
 
 ## Comptes invités (enforced — do not regress)
 
+- **Fournisseurs** : Google toujours ; Facebook seulement si `NEXT_PUBLIC_FACEBOOK_LOGIN=true` (à n'activer qu'une fois
+  Facebook configuré dans Supabase + app Meta en mode Live). Jamais de `"google"` en dur : passer par `AuthProvider`
+  et `enabledProviders()`. Libellés génériques (« ton compte », `loginChoicesLabel()`), pas « Google » seul.
+- Pas de CAPTCHA Supabase : l'app n'envoie pas de `captchaToken`, l'activer casserait le mode invité.
 - « Continuer en tant qu'invité » = `supabase.auth.signInAnonymously()` : vrai utilisateur
   (`is_anonymous`), toutes les RLS/RPC fonctionnent sans changement.
 - Sauvegarde = `linkIdentity({ provider: "google" })` → même uid, aucune copie. Avant, on crée un jeton

@@ -6,10 +6,11 @@ import { useSearchParams } from "next/navigation";
 import { m as motion } from "framer-motion";
 import { Check, Loader2, TriangleAlert, UsersRound } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { GoogleIcon } from "@/components/auth/GoogleIcon";
+import { ProviderIcon } from "@/components/auth/ProviderIcon";
 import { PageSkeleton } from "@/components/shared/Skeleton";
 import { VoyouLoader } from "@/components/shared/VoyouLoader";
-import { claimGuestTransfer, signInToExistingGoogle, startGoogleUpgrade, syncProfileFromGoogle } from "@/lib/auth/guest";
+import { claimGuestTransfer, signInToExisting, startUpgrade, syncProfileFromProvider } from "@/lib/auth/guest";
+import { parseProvider, PROVIDER_LABELS } from "@/lib/auth/providers";
 import { syncMyParticipantAvatars } from "@/lib/avatar-sync";
 import { clearDataCache } from "@/lib/data/swr";
 import { EASE_OUT } from "@/lib/motion";
@@ -51,11 +52,13 @@ function LinkFlow() {
   const params = useSearchParams();
   const errorCode = params.get("error_code");
   const step = params.get("step");
+  const provider = parseProvider(params.get("provider"));
+  const label = PROVIDER_LABELS[provider];
   const initial: Outcome =
     errorCode === "identity_already_exists"
       ? { kind: "exists" }
       : errorCode
-        ? { kind: "error", message: "La connexion à Google n'a pas abouti." }
+        ? { kind: "error", message: `La connexion à ${label} n'a pas abouti.` }
         : { kind: "working" };
   const [outcome, setOutcome] = useState<Outcome>(initial);
   const [busy, setBusy] = useState(false);
@@ -67,16 +70,16 @@ function LinkFlow() {
     const run = async () => {
       try {
         if (step === "claim") {
-          // Signed in to the existing Google account: pull the guest's trips in.
+          // Signed in to the existing account: pull the guest's trips in.
           const result = await claimGuestTransfer();
           clearDataCache();
-          await syncProfileFromGoogle();
+          await syncProfileFromProvider(provider);
           await syncMyParticipantAvatars();
           setOutcome({ kind: "merged", trips: result.trips });
         } else {
-          // Google was linked to the guest account itself: same user, nothing to move.
+          // The provider was linked to the guest account itself: same user, nothing to move.
           await claimGuestTransfer().catch(() => null);
-          await syncProfileFromGoogle();
+          await syncProfileFromProvider(provider);
           await syncMyParticipantAvatars();
           setOutcome({ kind: "linked" });
         }
@@ -85,7 +88,7 @@ function LinkFlow() {
       }
     };
     void run();
-  }, [initial.kind, step]);
+  }, [initial.kind, step, provider]);
 
   if (outcome.kind === "working") {
     return (
@@ -97,7 +100,7 @@ function LinkFlow() {
 
   if (outcome.kind === "exists") {
     return (
-      <Screen icon={<UsersRound size={28} />} tone="info" title="Ce compte Google existe déjà">
+      <Screen icon={<UsersRound size={28} />} tone="info" title={`Ce compte ${label} existe déjà`}>
         <p>
           Pas de souci : connecte-toi avec, et on y ajoute tous les voyages et dépenses créés en invité. Rien n&apos;est perdu, rien n&apos;est
           dupliqué.
@@ -109,11 +112,11 @@ function LinkFlow() {
             disabled={busy}
             onClick={async () => {
               setBusy(true);
-              await signInToExistingGoogle();
+              await signInToExisting(provider);
             }}
           >
-            {busy ? <Loader2 size={18} className="animate-spin" /> : <GoogleIcon />}
-            Continuer avec ce compte Google
+            {busy ? <Loader2 size={18} className="animate-spin" /> : <ProviderIcon provider={provider} />}
+            Continuer avec ce compte {label}
           </Button>
           <Link href="/trips" className={buttonVariants({ variant: "ghost", size: "lg", className: "w-full" })}>
             Plus tard
@@ -128,8 +131,8 @@ function LinkFlow() {
       <Screen icon={<TriangleAlert size={28} />} tone="warn" title="Ça n'a pas marché">
         <p>{outcome.message}</p>
         <div className="mt-auto space-y-2 pt-8">
-          <Button size="lg" className="w-full" onClick={() => void startGoogleUpgrade()}>
-            <GoogleIcon />
+          <Button size="lg" className="w-full" onClick={() => void startUpgrade(provider)}>
+            <ProviderIcon provider={provider} />
             Réessayer
           </Button>
           <Link href="/trips" className={buttonVariants({ variant: "ghost", size: "lg", className: "w-full" })}>
@@ -145,9 +148,9 @@ function LinkFlow() {
       <p>
         {outcome.kind === "merged"
           ? outcome.trips > 0
-            ? `${outcome.trips} voyage${outcome.trips > 1 ? "s" : ""} et leurs dépenses ont rejoint ton compte Google.`
-            : "Ton compte Google est prêt."
-          : "Tes voyages sont maintenant liés à ton compte Google. Tu les retrouveras sur tous tes appareils."}
+            ? `${outcome.trips} voyage${outcome.trips > 1 ? "s" : ""} et leurs dépenses ont rejoint ton compte ${label}.`
+            : `Ton compte ${label} est prêt.`
+          : `Tes voyages sont maintenant liés à ton compte ${label}. Tu les retrouveras sur tous tes appareils.`}
       </p>
       <div className="mt-auto pt-8">
         <Link href="/trips" className={buttonVariants({ size: "lg", className: "w-full" })}>

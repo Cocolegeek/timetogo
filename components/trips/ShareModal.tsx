@@ -1,5 +1,6 @@
 "use client";
 
+import { loginChoicesLabel } from "@/lib/auth/providers";
 import { useState } from "react";
 import { Copy, Check, Share, Link2 } from "lucide-react";
 import { m as motion } from "framer-motion";
@@ -74,7 +75,7 @@ export function ShareModal({ open, onOpenChange, trip }: ShareModalProps) {
           <div>
             <DialogTitle className="text-2xl">Invite tes potes</DialogTitle>
             <p className="mt-1 text-[0.95rem] text-muted-foreground">
-              Ils rejoignent <span className="font-semibold text-foreground">{trip.name}</span> en deux clics, avec leur compte Google.
+              Ils rejoignent <span className="font-semibold text-foreground">{trip.name}</span> en deux clics, avec leur compte {loginChoicesLabel()}.
             </p>
           </div>
 

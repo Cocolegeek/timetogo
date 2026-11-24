@@ -3,21 +3,22 @@
 import { useState } from "react";
 import { CloudUpload, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { GoogleIcon } from "@/components/auth/GoogleIcon";
+import { ProviderIcon } from "@/components/auth/ProviderIcon";
 import { useToast } from "@/components/shared/Toaster";
-import { startGoogleUpgrade } from "@/lib/auth/guest";
+import { startUpgrade } from "@/lib/auth/guest";
+import { enabledProviders, loginChoicesLabel, PROVIDER_LABELS, type AuthProvider } from "@/lib/auth/providers";
 import { cn } from "@/lib/utils";
 
 /** Nudge shown to guests: save everything to a Google account, nothing is lost. */
 export function GuestUpgradeCard({ className, compact = false }: { className?: string; compact?: boolean }) {
   const toast = useToast();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState<AuthProvider | null>(null);
 
-  const upgrade = async () => {
-    setLoading(true);
-    const { error } = await startGoogleUpgrade();
+  const upgrade = async (provider: AuthProvider) => {
+    setLoading(provider);
+    const { error } = await startUpgrade(provider);
     if (error) {
-      setLoading(false);
+      setLoading(null);
       toast({ message: "Impossible de lancer la sauvegarde. Réessaie.", tone: "error" });
     }
   };
@@ -33,14 +34,25 @@ export function GuestUpgradeCard({ className, compact = false }: { className?: s
           <p className="mt-0.5 text-sm text-muted-foreground">
             {compact
               ? "Sauvegarde tes voyages pour les retrouver partout."
-              : "Tes voyages ne sont que sur cet appareil. Relie ton compte Google pour les garder et les retrouver partout, sans rien perdre."}
+              : `Tes voyages ne sont que sur cet appareil. Relie ton compte ${loginChoicesLabel()} pour les garder et les retrouver partout, sans rien perdre.`}
           </p>
         </div>
       </div>
-      <Button variant="secondary" size="lg" onClick={upgrade} disabled={loading} className="mt-4 w-full">
-        {loading ? <Loader2 size={18} className="animate-spin" /> : <GoogleIcon />}
-        Sauvegarder avec Google
-      </Button>
+      <div className="mt-4 space-y-2">
+        {enabledProviders().map((provider) => (
+          <Button
+            key={provider}
+            variant="secondary"
+            size="lg"
+            onClick={() => upgrade(provider)}
+            disabled={loading !== null}
+            className="w-full"
+          >
+            {loading === provider ? <Loader2 size={18} className="animate-spin" /> : <ProviderIcon provider={provider} />}
+            Sauvegarder avec {PROVIDER_LABELS[provider]}
+          </Button>
+        ))}
+      </div>
     </section>
   );
 }

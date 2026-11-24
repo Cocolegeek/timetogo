@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
-const PUBLIC_ROUTES = ["/login", "/auth/callback", "/join", "/consent", "/opengraph-image", "/twitter-image"];
+const PUBLIC_ROUTES = ["/login", "/auth/callback", "/join", "/consent", "/privacy", "/opengraph-image", "/twitter-image"];
 const CONSENT_COOKIE = "gdpr_ok";
 const ASSET = /\.(?:ico|png|jpe?g|svg|webp|json|txt|xml|js|css|woff2?|map)$/;
 /** Refresh the session through Supabase only when the access token is about to expire. */
@@ -106,8 +106,9 @@ export default async function proxy(req: NextRequest) {
   }
 
   // RGPD: redirect authenticated users without consent to /consent
-  // Skip /join so the share-link preview stays accessible (it doesn't read user data)
-  if (userId && pathname !== "/consent" && pathname !== "/join") {
+  // Skip /join so the share-link preview stays accessible (it doesn't read user data),
+  // and /privacy so the policy can be read before accepting it.
+  if (userId && pathname !== "/consent" && pathname !== "/join" && pathname !== "/privacy") {
     const hasConsent = req.cookies.get(CONSENT_COOKIE)?.value === "1";
     if (!hasConsent) {
       const consentUrl = new URL("/consent", req.nextUrl);

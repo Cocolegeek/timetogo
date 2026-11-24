@@ -5,11 +5,12 @@ import { Download, Eraser, LogOut, Mail, Trash2 } from "lucide-react";
 import { SettingsShell } from "@/components/settings/SettingsShell";
 import { SettingsGroup, SettingsRow } from "@/components/settings/SettingsList";
 import { StaggerItem } from "@/components/motion/Stagger";
-import { GoogleIcon } from "@/components/auth/GoogleIcon";
+import { PROVIDER_ICONS } from "@/components/auth/ProviderIcon";
 import { GuestUpgradeCard } from "@/components/auth/GuestUpgradeCard";
 import { GuestSignOutDialog } from "@/components/auth/GuestSignOutDialog";
 import { useToast } from "@/components/shared/Toaster";
 import { useAuthUser } from "@/hooks/useAuthUser";
+import { linkedProviders, PROVIDER_LABELS } from "@/lib/auth/providers";
 import { useProfile } from "@/hooks/useProfile";
 import { DeleteAccountDialog } from "@/components/settings/DeleteAccountDialog";
 import { clearDataCache } from "@/lib/data/swr";
@@ -18,7 +19,7 @@ import { downloadFile } from "@/lib/export/download";
 
 export default function AccountSettingsPage() {
   const { profile, signOut } = useProfile();
-  const { isAnonymous } = useAuthUser();
+  const { user, isAnonymous } = useAuthUser();
   const toast = useToast();
   const [confirmSignOut, setConfirmSignOut] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -44,7 +45,15 @@ export default function AccountSettingsPage() {
           <GuestUpgradeCard />
         ) : (
           <SettingsGroup title="Connexion">
-            <SettingsRow icon={GoogleIcon} label="Google" value="Connecté" chevron={false} />
+            {linkedProviders(user).map((provider) => (
+              <SettingsRow
+                key={provider}
+                icon={PROVIDER_ICONS[provider]}
+                label={PROVIDER_LABELS[provider]}
+                value="Connecté"
+                chevron={false}
+              />
+            ))}
             {profile?.email && <SettingsRow icon={Mail} label={profile.email} chevron={false} />}
           </SettingsGroup>
         )}

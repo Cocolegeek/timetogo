@@ -45,6 +45,8 @@ await render(logoSvg(), 512, "icons/icon.png");
 await render(logoSvg(), 192, "icons/icon-192.png");
 await render(logoSvg({ radius: 0, scale: 0.78 }), 512, "icons/icon-maskable-512.png");
 await render(logoSvg({ radius: 0, scale: 0.78 }), 192, "icons/icon-maskable-192.png");
+// 1024 px, plein cadre : exigé par Meta (Facebook Login) et les stores.
+await render(logoSvg({ radius: 0, scale: 0.78 }), 1024, "icons/icon-1024.png");
 await render(logoSvg({ radius: 0, scale: 0.86 }), 180, "icons/apple-touch-icon.png");
 await render(logoSvg(), 32, "icons/favicon-32.png");
 // Android status-bar badge: white silhouette on transparent, face slightly enlarged.

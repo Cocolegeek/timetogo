@@ -90,6 +90,12 @@ function ConsentContent() {
             </span>
           </button>
 
+          <p className="text-center text-sm">
+            <a href="/privacy" target="_blank" rel="noopener noreferrer" className="font-semibold underline underline-offset-4">
+              Lire la politique de confidentialité
+            </a>
+          </p>
+
           {error && <p className="text-center text-sm text-red-400">Une erreur est survenue, réessaie.</p>}
 
           <Button size="lg" onClick={handleAccept} disabled={!checked || loading} className="w-full shadow-section disabled:shadow-none">

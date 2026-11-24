@@ -355,11 +355,11 @@ function WelcomeFlow({
             <div>
               <h2 className="font-display text-lg font-bold tracking-tight">Connecte-toi pour rejoindre</h2>
               <p className="mt-1 text-[0.95rem] text-muted-foreground">
-                Avec ton compte Google, en quelques secondes. Tu retrouveras ensuite {entityLabel} dans tes voyages.
+                Avec ton compte, en quelques secondes. Tu retrouveras ensuite {entityLabel} dans tes voyages.
               </p>
             </div>
             <Button size="lg" onClick={onJoin} className="w-full shadow-section">
-              Continuer avec Google
+              Continuer
               <ArrowRight size={18} />
             </Button>
           </div>

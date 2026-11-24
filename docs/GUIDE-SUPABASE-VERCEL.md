@@ -21,10 +21,11 @@ Il est écrit pour être suivi de haut en bas, case par case. Compte 45 à 60 mi
 | 3 | Supabase › SQL Editor | Jouer les migrations manquantes **dont la 023** (§2.3 et annexe A) | Historique vide, dépenses répétées inertes, « Supprimer mon compte » en erreur |
 | 4 | Supabase › Authentication | Invités + liaison manuelle + URL de redirection (§2.5) | Connexion Google ou mode invité en échec |
 | 5 | Supabase › Storage | Deux buckets publics (§2.6) | Photos de profil et icônes de voyage impossibles à envoyer |
-| 6 | Vercel › Environment Variables | `CONSENT_HMAC_SECRET` + clés Supabase + VAPID (§4.1) | **Erreur 500 au consentement RGPD** : personne ne peut finir sa première connexion |
-| 7 | Vercel | Redéployer après avoir ajouté les variables (§4.5) | Les variables ne sont pas prises en compte |
-| 8 | GitHub | Passer la PR #6 de brouillon à prête, puis fusionner | Rien n'arrive en production |
-| 9 | Toi | Recette (§6) avec un compte jetable | Tu découvres les bugs en production |
+| 6 | Google Cloud | Adresse de retour + application publiée (§3) | Connexion Google en échec |
+| 7 | Vercel › Environment Variables | `CONSENT_HMAC_SECRET` + clés Supabase + VAPID (§4.1) | **Erreur 500 au consentement RGPD** : personne ne peut finir sa première connexion |
+| 8 | Vercel + GitHub | Redéployer (§4.5), recette sur l'aperçu (§6), puis fusionner la PR #6 | Rien n'arrive en production |
+| 9 | Meta + Supabase | Créer l'app Facebook et la brancher (§3 bis), **après** la fusion | Pas de connexion Facebook (le bouton reste caché, rien ne casse) |
+| 10 | Vercel | `NEXT_PUBLIC_FACEBOOK_LOGIN=true` puis redéployer (§3 bis.6) | Le bouton Facebook n'apparaît pas |
 
 **À ne surtout pas faire : activer un CAPTCHA dans Supabase.** L'app n'envoie pas de jeton CAPTCHA, donc le bouton
 « Continuer en tant qu'invité » cesserait de marcher (détail §2.5).
@@ -291,6 +292,95 @@ Console Google Cloud › **APIs & Services** › **Credentials**.
 
 ---
 
+## 3 bis. Facebook (connexion avec Facebook)
+
+L'app sait désormais proposer « Continuer avec Facebook » (écran de connexion) et « Sauvegarder avec Facebook » (mode invité).
+Le bouton est **caché par défaut** : il n'apparaît que quand la variable `NEXT_PUBLIC_FACEBOOK_LOGIN` vaut `true` (§3 bis.6).
+On peut donc déployer le code sans risque, et allumer Facebook quand tout est prêt.
+
+**À faire après la fusion de la PR #6** : Meta exige l'adresse d'une page de confidentialité en ligne
+(`https://voyou.app/privacy`, créée par cette PR) et d'une page d'explication pour la suppression des données
+(`https://voyou.app/privacy#suppression`).
+
+### 3 bis.1 Créer l'application Meta
+
+1. Va sur **developers.facebook.com**, connecte-toi avec ton compte Facebook, et accepte les conditions développeur si on te le demande.
+2. **My Apps** › **Create App**.
+3. Nom : `Voyou`. E-mail de contact : une adresse à toi (de préférence dédiée au projet, c'est elle que Meta utilise pour te joindre).
+4. Cas d'usage (« Use case ») : choisis **Authenticate and request data from users with Facebook Login** (ou « Se connecter avec Facebook »).
+   Type d'application, si on te le demande : **Consumer**.
+5. Valide la création (Meta peut te redemander ton mot de passe).
+
+### 3 bis.2 Réglages de base
+
+**App settings** › **Basic** (Paramètres › Général) :
+
+- [ ] Note **App ID** (identifiant de l'app). Clique sur **Show** à côté de **App Secret** pour le voir : tu en as besoin en §3 bis.5. Ne le publie nulle part.
+- [ ] **Privacy Policy URL** :
+  ```text
+  https://voyou.app/privacy
+  ```
+- [ ] **User data deletion** › choisis **Data deletion instructions URL** (instructions) et colle :
+  ```text
+  https://voyou.app/privacy#suppression
+  ```
+- [ ] **App Domains** :
+  ```text
+  voyou.app
+  ```
+- [ ] **App icon (1024 x 1024)** : envoie `public/icons/icon-1024.png` (fichier du dépôt, ajouté par cette PR). Après déploiement, tu peux aussi le télécharger sur `https://voyou.app/icons/icon-1024.png`.
+- [ ] **Category** : par exemple « Voyages » / « Travel » (ou « Lifestyle »).
+- [ ] **Save changes**.
+
+### 3 bis.3 Facebook Login : adresse de retour et permissions
+
+1. Copie l'adresse de retour de Supabase : Supabase › Authentication › Sign In / Providers › **Facebook** › **Callback URL (for OAuth)**. Elle ressemble à :
+   ```text
+   https://<PROJECT_REF>.supabase.co/auth/v1/callback
+   ```
+2. Dans Meta : **Use cases** › **Authenticate and request data from users with Facebook Login** › **Customize**
+   (ou le produit **Facebook Login** › **Settings**).
+3. **Valid OAuth Redirect URIs** : colle l'adresse copiée. Laisse **Client OAuth login** et **Web OAuth login** activés. **Save**.
+4. **Permissions** : ajoute **`email`** (en plus de `public_profile`). Ces deux permissions sont en « accès standard » :
+   en principe **aucune revue d'application** n'est nécessaire.
+
+### 3 bis.4 Passer l'application en « Live »
+
+Tant que l'app est en mode **Development**, seuls toi, les administrateurs et les testeurs déclarés peuvent se connecter.
+
+1. En haut de la page Meta, bascule **App mode** de *Development* à **Live**.
+2. Si Meta refuse, il liste ce qui manque : privacy policy, instructions de suppression, icône, catégorie. Complète-le (§3 bis.2) puis réessaie.
+
+### 3 bis.5 Brancher Facebook dans Supabase
+
+1. Supabase › **Authentication** › **Sign In / Providers** › **Facebook**.
+2. Active **Enable Sign in with Facebook**.
+3. **Facebook client ID** = l'**App ID** ; **Facebook secret** = l'**App Secret** (§3 bis.2).
+4. **Save**.
+
+Aucune autre adresse à ajouter dans Supabase : les Redirect URLs du §2.5 s'appliquent aussi à Facebook.
+
+### 3 bis.6 Afficher le bouton dans l'app
+
+1. Vercel › Settings › Environment Variables › ajoute :
+
+| Variable | Valeur | Environnements |
+|----------|--------|----------------|
+| `NEXT_PUBLIC_FACEBOOK_LOGIN` | `true` | Production (+ Preview si tu veux tester dessus) |
+| `NEXT_PUBLIC_CONTACT_EMAIL` | une adresse de contact (facultatif, s'affiche sur la page de confidentialité) | Production |
+
+2. **Redeploy** (§4.5) : ce sont des `NEXT_PUBLIC_*`, intégrées au build.
+3. Ouvre `https://voyou.app/login` : le bouton **Continuer avec Facebook** doit apparaître sous celui de Google.
+
+### 3 bis.7 À savoir
+
+- **Compte Facebook sans e-mail** (inscrit avec un numéro de téléphone) : Facebook ne renvoie pas d'adresse e-mail et la connexion peut échouer. La personne peut utiliser Google ou le mode invité.
+- **Deux comptes pour une même personne** : si quelqu'un se connecte une fois avec Google puis une fois avec Facebook, il peut se retrouver avec deux comptes Voyou distincts (ou voir Supabase les relier d'après l'e-mail). L'app ne propose pas encore « Ajouter Facebook à mon compte » pour un compte déjà créé : le lien Facebook ne se fait qu'au moment de sauvegarder un invité. **À tester** avec deux comptes de test.
+- **Photo Facebook** : l'adresse de la photo fournie par Facebook peut expirer avec le temps. Chaque personne choisit de toute façon un avatar à son arrivée, qui passe avant la photo du compte.
+- **Page de confidentialité** : c'est un texte de départ écrit d'après ce que fait l'app. Relis-le, et complète-le si besoin (identité de l'éditeur, mentions légales). Ce n'est pas un avis juridique.
+
+---
+
 ## 4. Vercel
 
 ### 4.1 Variables d'environnement
@@ -308,6 +398,8 @@ Pour les valeurs secrètes, active **Sensitive** si Vercel le propose.
 | `VAPID_SUBJECT` | non | `mailto:toi@exemple.fr` | idem |
 | `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | seulement si tu changes de paire de clés | clé publique VAPID (§4.2) | idem |
 | `NEXT_PUBLIC_SITE_URL` | recommandé | `https://voyou.app` | Production |
+| `NEXT_PUBLIC_FACEBOOK_LOGIN` | non (Facebook uniquement) | `true` : affiche le bouton Facebook (§3 bis.6) | Production (+ Preview) |
+| `NEXT_PUBLIC_CONTACT_EMAIL` | non | adresse affichée sur `/privacy` | Production |
 
 Détails :
 
@@ -382,13 +474,15 @@ La fusion de la PR #6 (branche `ccr-d72dab82-6s6pcz`) fait aussi un nouveau buil
 2. [ ] Diagnostic SQL (§2.2).
 3. [ ] Migrations manquantes dans l'ordre, **023 comprise** (§2.3). Vérification (§2.4).
 4. [ ] Buckets Storage (§2.6), puis rejouer la 013 si ses policies manquaient.
-5. [ ] Google Cloud (§3).
-6. [ ] Supabase Authentication : providers, URL, **pas de CAPTCHA** (§2.5).
+5. [ ] Supabase Authentication : providers, URL, **pas de CAPTCHA** (§2.5).
+6. [ ] Google Cloud (§3).
 7. [ ] Vercel : variables (§4.1), clés VAPID (§4.2).
-8. [ ] Recette sur l'**aperçu** de la PR #6 (§6), avec un compte jetable.
+8. [ ] Recette sur l'**aperçu** de la PR #6 (§6), avec un compte jetable. Facebook est encore caché : c'est normal.
 9. [ ] Passer la PR #6 de brouillon à « Ready for review », puis fusionner dans `main`.
-10. [ ] Vercel : vérifier que le déploiement de production est « Ready ».
-11. [ ] Recette courte en production (§6, points A, B, E, H).
+10. [ ] Vercel : vérifier que le déploiement de production est « Ready », et que `https://voyou.app/privacy` s'ouvre.
+11. [ ] Facebook : app Meta (§3 bis.1 à 3 bis.4), puis Supabase (§3 bis.5).
+12. [ ] Allumer le bouton (§3 bis.6), redéployer, tester la connexion Facebook (§6, points O et P).
+13. [ ] Recette courte en production (§6, points A, B, E, H).
 
 Pourquoi la migration avant le code : si le nouveau code arrive avant la 023, rien ne plante, mais le journal reste vide,
 les dépenses répétées ne se créent pas, et « Supprimer mon compte » affiche une erreur.
@@ -428,6 +522,10 @@ Utilise un compte jetable. Coche chaque ligne.
   ```sql
   select count(*) as comptes_restants from auth.users where email = 'compte-jetable@exemple.fr';  -- attendu : 0
   ```
+
+- [ ] **O. Connexion Facebook** (après §3 bis.6) : sur l'écran de connexion, « Continuer avec Facebook » ouvre Facebook, puis tu arrives sur le consentement RGPD et la liste des voyages. Réglages › Compte et données affiche « Facebook · Connecté ».
+- [ ] **P. Invité vers Facebook** : en mode invité, « Sauvegarder avec Facebook » garde tes voyages. Refais le test avec un compte Facebook qui a **déjà** servi : l'écran « Ce compte Facebook existe déjà » doit proposer de rapatrier les voyages invités.
+- [ ] **Q. Page de confidentialité** : `https://voyou.app/privacy` s'ouvre sans être connecté, et le lien « Lire la politique de confidentialité » de l'écran de consentement aussi.
 
 ---
 
@@ -472,6 +570,12 @@ Utilise un compte jetable. Coche chaque ligne.
 | Connexion impossible sur un aperçu Vercel | Joker d'aperçu absent des Redirect URLs, ou protection Vercel | §2.5 b et §4.3 |
 | Une variable modifiée n'a aucun effet | Pas de redéploiement | §4.5 |
 | Données de test dans la production après un essai sur un aperçu | Aperçu relié à la base de production | §4.4 |
+| Facebook : « Application non disponible » ou connexion réservée à toi | App Meta encore en mode Development | §3 bis.4 : passer en Live |
+| Facebook : erreur d'adresse de redirection | Adresse de retour absente des Valid OAuth Redirect URIs | §3 bis.3 |
+| Facebook : « Unsupported provider » / « provider is not enabled » | Facebook non activé dans Supabase | §3 bis.5 |
+| Facebook : « Error getting user email from external provider » | Permission `email` non ajoutée, ou compte Facebook sans e-mail | §3 bis.3 (point 4) et §3 bis.7 |
+| Pas de bouton Facebook | `NEXT_PUBLIC_FACEBOOK_LOGIN` ≠ `true`, ou pas de redéploiement | §3 bis.6 |
+| Meta refuse le passage en Live | Privacy policy, instructions de suppression, icône ou catégorie manquantes | §3 bis.2 |
 
 Où chercher les erreurs : Vercel › projet › **Logs** (routes `/api/*`) ; Supabase › **Logs** (Auth, Postgres, API) ; console du navigateur.
 

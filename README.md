@@ -61,6 +61,8 @@ npm run dev
 | `CONSENT_HMAC_SECRET` | obligatoire : sans lui, l'enregistrement du consentement RGPD répond 500 |
 | `VAPID_PRIVATE_KEY` (+ `VAPID_SUBJECT`) | notifications push (voir ci-dessous) |
 | `NEXT_PUBLIC_SITE_URL` | recommandé (liens de partage, image de partage) |
+| `NEXT_PUBLIC_FACEBOOK_LOGIN` | `true` pour afficher « Continuer avec Facebook » (après configuration, voir le guide) |
+| `NEXT_PUBLIC_CONTACT_EMAIL` | facultatif : adresse de contact affichée sur `/privacy` |
 
 ### Notifications push
 

@@ -98,7 +98,7 @@ export default function ProfileSettingsPage() {
           </label>
           {!isAnonymous && profile?.email && (
             <div className="px-5 py-3">
-              <span className="text-xs font-medium text-muted-foreground">Email Google</span>
+              <span className="text-xs font-medium text-muted-foreground">E-mail</span>
               <p className="mt-0.5 truncate text-base text-muted-foreground">{profile.email}</p>
             </div>
           )}
