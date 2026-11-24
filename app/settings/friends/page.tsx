@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Copy, Loader2, Plane, Share2, UserMinus, UsersRound } from "lucide-react";
+import { Copy, Loader2, TrainFront, Share2, UserMinus, UsersRound } from "lucide-react";
 import { SettingsShell } from "@/components/settings/SettingsShell";
 import { SettingsGroup } from "@/components/settings/SettingsList";
 import { StaggerItem } from "@/components/motion/Stagger";
@@ -149,7 +149,7 @@ export default function FriendsSettingsPage() {
               <p className="mt-1 text-sm text-muted-foreground">{together(open)}</p>
               <div className="mt-6 w-full space-y-2">
                 <Link href={`/trips/new?with=${open.id}`} className={buttonVariants({ size: "lg", className: "w-full" })}>
-                  <Plane size={18} />
+                  <TrainFront size={18} />
                   Créer un voyage ensemble
                 </Link>
                 <button

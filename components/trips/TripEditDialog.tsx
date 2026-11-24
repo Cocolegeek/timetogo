@@ -28,7 +28,7 @@ import { useTrip } from "@/hooks/useTrip";
 import { addFriendsToTrip } from "@/hooks/useFriends";
 
 
-const EMOJIS = ["✈️", "🏖️", "🏔️", "🗺️", "🌍", "🎒", "🏕️", "🚢"];
+const EMOJIS = ["🚆", "🏖️", "🏔️", "🗺️", "🌍", "🎒", "🏕️", "🚢"];
 
 type NavTab = "Général" | "Participants";
 

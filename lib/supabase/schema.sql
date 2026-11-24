@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS public.trips (
   name         text NOT NULL,
   type         text NOT NULL DEFAULT 'trip',     -- 'trip' | 'group' (migration 010)
   destination  text,                             -- nullable for type='group'
-  emoji        text NOT NULL DEFAULT '✈️',
+  emoji        text NOT NULL DEFAULT '🚆',
   icon_url     text,                             -- custom trip icon (migration 013)
   currency     text NOT NULL DEFAULT 'EUR',
   start_date   date,                             -- nullable for type='group'

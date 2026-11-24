@@ -42,7 +42,7 @@ import {
 } from "@/lib/trips/create-wizard";
 import { cn } from "@/lib/utils";
 
-const TRIP_EMOJIS = ["✈️", "🏖️", "🏔️", "🗺️", "🌍", "🎒", "🏕️", "🚢"];
+const TRIP_EMOJIS = ["🚆", "🏖️", "🏔️", "🗺️", "🌍", "🎒", "🏕️", "🚢"];
 const GROUP_EMOJIS = ["💰", "🏠", "🎂", "🎉", "🍕", "🏖️", "🚗", "🎁"];
 const GROUP_IDEAS = ["Coloc", "Anniversaire", "Week-end", "Soirée", "Vacances"];
 

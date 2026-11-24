@@ -195,7 +195,7 @@ export function initialState(type: WizardType, today: Date, creator: string | nu
     type,
     name: "",
     nameTouched: false,
-    emoji: type === "trip" ? "✈️" : "💰",
+    emoji: type === "trip" ? "🚆" : "💰",
     destination: "",
     dateMode: "permanent",
     startDate: type === "trip" ? ymd(t) : "",

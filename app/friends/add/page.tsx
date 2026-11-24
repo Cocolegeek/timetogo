@@ -4,7 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { m as motion } from "framer-motion";
-import { Check, Loader2, Plane, TriangleAlert } from "lucide-react";
+import { Check, Loader2, TrainFront, TriangleAlert } from "lucide-react";
 import { UserAvatar } from "@/components/shared/UserAvatar";
 import { PageSkeleton } from "@/components/shared/Skeleton";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -82,7 +82,7 @@ function AddFriend() {
             {done ? (
               <>
                 <Link href={`/trips/new?with=${preview.id}`} className={buttonVariants({ size: "lg", className: "w-full" })}>
-                  <Plane size={18} />
+                  <TrainFront size={18} />
                   Créer un voyage ensemble
                 </Link>
                 <Link href="/settings/friends" className={buttonVariants({ variant: "ghost", size: "lg", className: "w-full" })}>
