@@ -287,7 +287,7 @@ export function JourneyForm({
           {/* Mode de transport */}
           <Row icon={<currentMode.Icon size={18} />} label="Mode de transport">
             <div className="flex gap-1.5 flex-wrap">
-              {MODES.filter((m) => m.id !== "plane" || initialValues?.journeyMode === "plane").map(({ id, label, Icon, color, bg }) => {
+              {MODES.map(({ id, label, Icon, color, bg }) => {
                 const selected = mode === id;
                 return (
                   <button
