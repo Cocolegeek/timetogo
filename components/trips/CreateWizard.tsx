@@ -40,9 +40,9 @@ import {
   type WizardStep,
   type WizardType,
 } from "@/lib/trips/create-wizard";
+import { flagEmoji, tripEmojiChoices } from "@/lib/trip-emojis";
 import { cn } from "@/lib/utils";
 
-const TRIP_EMOJIS = ["🚆", "🏖️", "🏔️", "🗺️", "🌍", "🎒", "🏕️", "🚢"];
 const GROUP_EMOJIS = ["💰", "🏠", "🎂", "🎉", "🍕", "🏖️", "🚗", "🎁"];
 const GROUP_IDEAS = ["Coloc", "Anniversaire", "Week-end", "Soirée", "Vacances"];
 
@@ -82,6 +82,8 @@ export function CreateWizard({ type }: { type: WizardType }) {
   const [dir, setDir] = useState(1);
   const [issue, setIssue] = useState<string | null>(null);
   const [shake, setShake] = useState(0);
+  const [country, setCountry] = useState<string | null>(null);
+  const [emojiPicked, setEmojiPicked] = useState(false);
   const [newName, setNewName] = useState("");
   const [moreOpen, setMoreOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -92,7 +94,11 @@ export function CreateWizard({ type }: { type: WizardType }) {
   const creator = profile?.name?.split(" ")[0]?.trim() || null;
   const chosenFriends = friends.filter((f) => friendIds.includes(f.id));
   // Une seule source de vérité : le créateur et les amis sont dérivés, jamais recopiés.
-  const s: WizardState = useMemo(() => ({ ...base, creator, friendCount: friendIds.length }), [base, creator, friendIds.length]);
+  const flag = type === "trip" ? flagEmoji(country) : null;
+  const s: WizardState = useMemo(
+    () => ({ ...base, emoji: emojiPicked ? base.emoji : (flag ?? base.emoji), creator, friendCount: friendIds.length }),
+    [base, emojiPicked, flag, creator, friendIds.length]
+  );
   const step = steps[stepIndex];
   const people = participantsOf(s);
   const patch = (p: Partial<WizardState>) => {
@@ -177,7 +183,11 @@ export function CreateWizard({ type }: { type: WizardType }) {
   const presets = useMemo(() => datePresets(new Date()), []);
   const length = tripLength(s.startDate, s.endDate);
   const ctaLabel = stepIndex < steps.length - 1 ? "Continuer" : type === "trip" ? "Créer le voyage" : "Créer le budget";
-  const emojis = type === "trip" ? TRIP_EMOJIS : GROUP_EMOJIS;
+  const emojis = type === "trip" ? tripEmojiChoices(country) : GROUP_EMOJIS;
+  const pickEmoji = (e: string) => {
+    setEmojiPicked(true);
+    patch({ emoji: e });
+  };
 
   if (doneId) {
     return (
@@ -258,7 +268,12 @@ export function CreateWizard({ type }: { type: WizardType }) {
 
           {step === "where" && (
             <div className="space-y-4">
-              <LocationPickerSheet value={s.destination} onChange={(v) => patch({ destination: v })} placeholder="Rome, Italie" />
+              <LocationPickerSheet
+                value={s.destination}
+                onChange={(v) => patch({ destination: v })}
+                onChangeCoord={(c) => setCountry(c?.countryCode ?? null)}
+                placeholder="Rome, Italie"
+              />
               <AnimatePresence initial={false}>
                 {firstPlace(s.destination) && (
                   <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
@@ -273,7 +288,7 @@ export function CreateWizard({ type }: { type: WizardType }) {
                         placeholder={suggestName(s.destination)}
                         enterKeyHint="next"
                       />
-                      <EmojiRow emojis={emojis} value={s.emoji} onPick={(e) => patch({ emoji: e })} />
+                      <EmojiRow emojis={emojis} value={s.emoji} onPick={pickEmoji} />
                     </div>
                   </motion.div>
                 )}
@@ -303,7 +318,7 @@ export function CreateWizard({ type }: { type: WizardType }) {
                   </button>
                 ))}
               </div>
-              <EmojiRow emojis={emojis} value={s.emoji} onPick={(e) => patch({ emoji: e })} />
+              <EmojiRow emojis={emojis} value={s.emoji} onPick={pickEmoji} />
             </div>
           )}
 

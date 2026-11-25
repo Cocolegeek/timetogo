@@ -166,6 +166,7 @@ lib/
   motion.ts, haptics.ts → courbes/springs Framer, haptic()
   trips/create-wizard.ts → logique pure de l'assistant de création : stepsFor(), validateStep(), firstIssue(), buildPayload(),
                           participantsOf() (créateur toujours 1er), addPerson() (doublons), datePresets(), suggestName()
+  trip-emojis.ts        → THEME_EMOJIS, POPULAR_FLAGS, flagEmoji(codePays), tripEmojiChoices(paysDétecté) : emojis d'un voyage (jamais d'avion, empreinte carbone)
   trip-features.ts      → tripFeatures(trip), isVoyage(t), isGroup(t), TRIP_TYPE_LABELS
   budget/splits.ts      → computeShares(equal|percentage|fixed), buildDefaultSplits()
   budget/debts.ts       → computeBalances(), simplifyDebts() (greedy O(n log n))
@@ -297,6 +298,9 @@ DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip(
   incomplet affiche le message (`role="alert"`, secousse, haptique). Une seule source de vérité pour les participants : le créateur
   (prénom du profil) est dérivé, jamais recopié dans un état de formulaire. À la validation finale `firstIssue()` renvoie à l'étape
   fautive au lieu d'échouer en silence. Toute évolution passe par `lib/trips/create-wizard.ts` + son test.
+  Emoji du voyage : le drapeau du pays choisi (`countryCode` de `LocationPickerSheet`) est proposé en premier et présélectionné tant que
+  l'utilisateur n'a pas choisi lui-même ; puis thèmes (train, plage…) et drapeaux courants. Pas d'avion (empreinte carbone).
+- **Trajets** : pas de mode « Avion » à la création (`JourneyForm`). Un trajet déjà enregistré en avion reste affiché et modifiable.
 - **Tableau de bord** : `GettingStarted` (n'affiche que les étapes restantes) puis budget, solde, `DayAgendaCard`
   (aujourd'hui, ou demain une fois la journée finie), repas du jour. Une carte vide n'est pas affichée si
   « Premiers pas » invite déjà à la remplir. Solde : une seule tuile large si un seul sens est non nul.
@@ -385,7 +389,7 @@ DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip(
 ### Location input
 **Always use `LocationPickerSheet`**, never raw text input or the old `LocationAutocomplete`.
 - Tap → 88dvh bottom Sheet with large search field + Nominatim results split into main name / subtitle
-- `onChangeCoord` returns `LocationCoord` directly from the Nominatim result, no extra `/api/geocode` call needed
+- `onChangeCoord` returns `LocationCoord` (`lat`, `lon`, `countryCode`) directly from the Nominatim result, no extra `/api/geocode` call needed
 - Used in: `ItineraryItemForm`, `JourneyForm`, `TripEditDialog`
 
 ### Full-screen forms
@@ -414,7 +418,7 @@ All `<input type="number">` and amount text inputs must have `onFocus={(e) => e.
 - **Mutations**: call hook method → hook auto-refetches. Never mutate local state directly.
 - **Forms**: react-hook-form + Zod in dialogs/modals. Multi-step → pattern CreateWizard (logique pure dans `lib/trips/`, testée).
 - **Styling**: Tailwind utility classes + CSS custom properties for theme. `cn()` for conditional classes.
-- **Icons**: Lucide only (never emoji as icon in code, except TripWizard emoji picker).
+- **Icons**: Lucide only (never emoji as icon in code, except the emoji pickers of CreateWizard / TripEditDialog).
 - **No comments** unless WHY is non-obvious.
 - **Ponctuation** : jamais de tiret cadratin (U+2014) dans le code, les textes de l'interface, les commentaires ni la doc. Utiliser les deux-points, la virgule, le point, des parenthèses, ou le point médian `·` pour les titres et séparateurs d'interface.
 - **Env vars**: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
