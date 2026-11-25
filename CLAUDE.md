@@ -39,7 +39,7 @@ app/
   api/notify/route.ts    → POST NotifyEvent → compose (RLS de l'appelant) + Web Push (VAPID) ; GET → { configured }
   trips/
     page.tsx             → list all trips
-    new/page.tsx         → trip creation wizard (TripWizard | GroupWizard)
+    new/page.tsx         → assistant de création (CreateWizard, type=trip | group)
     [tripId]/
       layout.tsx         → trip nav + context (wraps TripClientProviders)
       page.tsx           → trip dashboard
@@ -86,12 +86,12 @@ components/
               MapAppPicker:        MapAppPickerProvider + useOpenLocation() context hook
               ParticipantAvatar, ParticipantPicker (LA sélection multiple de participants : puces avatar,
               « Tout le monde » optionnel, payeurs, étapes, trajets, repas), ParticipantStack, SectionLabel, Spinner
-  trips/      BudgetEditDialog, GettingStarted, GroupWizard, IdentityPicker,
+  trips/      BudgetEditDialog, GettingStarted, CreateWizard (assistant unique voyage + groupe), IdentityPicker,
               OnboardingModal (bienvenue + « Ta tête dans la bande » : prénom + avatar), ShareModal,
               TripSearch, DayAgendaCard (journée utile du tableau de bord : étape en cours / à suivre + reste du jour),
               TripActionsSheet (« … » d'une carte voyage), IdentityDialog (« Qui es-tu ? »), LazyOnboarding,
               TripCard (variants featured | row, tripStatus()), TripCover (illustrations en aplats),
-              TripEditDialog, TripEditWrapper, TripWizard
+              TripEditDialog, TripEditWrapper
   settings/   DeleteAccountDialog (confirmation par saisie « SUPPRIMER »), SettingsShell (retour + grand titre), SettingsList (SettingsGroup, SettingsRow, SettingsToggle)
   trips/      FriendPicker (rangée « Ta bande » : un pote choisi = membre lié, le voyage apparaît chez lui),
               MyListCard (tableau de bord : « On compte sur toi » / « n choses sans personne »)
@@ -164,6 +164,9 @@ lib/
   itinerary-types.ts    → icône / libellé / teinte par type d'étape et mode de trajet
   meals/courses.ts      → COURSES (icônes Lucide), COURSE_ORDER
   motion.ts, haptics.ts → courbes/springs Framer, haptic()
+  trips/create-wizard.ts → logique pure de l'assistant de création : stepsFor(), validateStep(), firstIssue(), buildPayload(),
+                          participantsOf() (créateur toujours 1er), addPerson() (doublons), datePresets(), suggestName()
+  trip-emojis.ts        → THEME_EMOJIS, POPULAR_FLAGS, flagEmoji(codePays), tripEmojiChoices(paysDétecté) : emojis d'un voyage (jamais d'avion, empreinte carbone)
   trip-features.ts      → tripFeatures(trip), isVoyage(t), isGroup(t), TRIP_TYPE_LABELS
   budget/splits.ts      → computeShares(equal|percentage|fixed), buildDefaultSplits()
   budget/debts.ts       → computeBalances(), simplifyDebts() (greedy O(n log n))
@@ -185,6 +188,9 @@ lib/
   map-apps.ts           → MapAppId type + map app metadata
   meals/slots.ts        → DEFAULT_SLOTS, eachDate(), buildDefaultMealRows()
   meals/categories.ts   → home|picnic|restaurant
+  quick-add.ts          → contextKind(), leadKind(), orderActions(), ADD_LABELS (le « + » contextuel et la feuille de choix)
+  budget/guess-category.ts → guessCategory(titre) : catégorie devinée (accents et casse ignorés), null si rien d'évident
+  budget/recent-titles.ts  → recentTitles(dépenses) : derniers intitulés distincts avec leur catégorie
   planning-day.ts       → itinerary day grouping
   section-theme.ts      → getSection() → maps pathname to CSS section token (used by SectionThemeController)
   trip-share.ts         → generateShareCode(), buildShareUrl()
@@ -272,14 +278,29 @@ DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip(
 
 - **Navigation voyage** : barre d'onglets flottante (matière translucide = seule zone « verre » autorisée),
   qui se compacte au défilement ; toucher l'onglet actif ou le titre de l'en-tête remonte en haut.
-- **Ajout rapide** : le bouton « + » de la barre ouvre la feuille Ajouter (dépense, étape, trajet, repas, liste).
-  Les pages ouvrent leur formulaire via `useQuickAdd()` (événement si déjà sur la page, sinon `?new=<kind>`).
-  Pas de FAB par page.
+- **Ajout rapide** : le bouton « + » de la barre agit selon l'écran (`contextKind()` dans `lib/quick-add.ts`) : Budget = nouvelle
+  dépense, Planning = étape, Menus = repas, Listes = champ d'ajout. Un seul toucher. Sur l'accueil du voyage (et dans un budget de
+  groupe sans planning), il ouvre la feuille de choix. **Appui long** (450 ms), clic droit ou bouton lecteur d'écran = feuille de choix
+  complète (`QuickAddSheet` : l'action de l'écran, sinon la dépense, en grande ligne ; les autres en liste groupée, sans phrases d'aide).
+  Une astuce unique (« maintiens + ») s'affiche au 3e ajout direct. Les pages ouvrent leur formulaire via `useQuickAdd()`
+  (événement si déjà sur la page, sinon `?new=<kind>`). Pas de FAB par page.
+- **Saisie rapide d'une dépense** : seul le montant est obligatoire (titre facultatif, par défaut la catégorie), puces des titres récents
+  (`recentTitles()`, reprennent la catégorie), catégorie devinée d'après le titre tant qu'elle n'a pas été choisie (`guessCategory()`),
+  « Dupliquer » dans la fiche d'une dépense (date du jour), et après un ajout la pastille « Ajouter une autre » (budget et planning).
+
 - **Recherche** : `TripSearch` (loupe de l'en-tête) cherche dans dépenses, planning, repas, listes et participants
   (sans accents). Liens profonds : `budget?expense=<id>`, `budget?tab=balances`,
   `planning?date=YYYY-MM-DD&item=<id>`, `menus?date=YYYY-MM-DD`, `lists?item=<id>`.
 - **Retours** : `useToast()` (`ToastProvider` à la racine) après chaque création / modification / suppression,
   `haptic()` sur les gestes. Feuilles du bas fermables en glissant la poignée.
+- **Création** : un seul assistant (`CreateWizard`), 3 étapes (voyage : Où · Quand · Avec qui ; groupe : Nom · Quand · Avec qui),
+  aperçu en direct de la carte, barre d'action fixe. Le bouton n'est JAMAIS grisé sans explication : un toucher sur un champ
+  incomplet affiche le message (`role="alert"`, secousse, haptique). Une seule source de vérité pour les participants : le créateur
+  (prénom du profil) est dérivé, jamais recopié dans un état de formulaire. À la validation finale `firstIssue()` renvoie à l'étape
+  fautive au lieu d'échouer en silence. Toute évolution passe par `lib/trips/create-wizard.ts` + son test.
+  Emoji du voyage : le drapeau du pays choisi (`countryCode` de `LocationPickerSheet`) est proposé en premier et présélectionné tant que
+  l'utilisateur n'a pas choisi lui-même ; puis thèmes (train, plage…) et drapeaux courants. Pas d'avion (empreinte carbone).
+- **Trajets** : le mode « Avion » reste disponible dans `JourneyForm` (calcul de trajet, avertissement CO₂) ; seul l'emoji d'un voyage évite l'avion.
 - **Tableau de bord** : `GettingStarted` (n'affiche que les étapes restantes) puis budget, solde, `DayAgendaCard`
   (aujourd'hui, ou demain une fois la journée finie), repas du jour. Une carte vide n'est pas affichée si
   « Premiers pas » invite déjà à la remplir. Solde : une seule tuile large si un seul sens est non nul.
@@ -319,7 +340,7 @@ DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip(
 - **Listes** : un seul espace, deux listes (« À apporter », « À faire »), assignation à des participants,
   coche directe, suggestions dans l'état vide. `tripFeatures().hasLists` (voyages et groupes).
 - **Ta bande** : jamais saisie à la main. Elle se remplit en voyageant (trigger) ou par lien `/friends/add?code=`.
-  À la création (TripWizard/GroupWizard, `?with=<id>`) ou dans l'édition du voyage, `FriendPicker` +
+  À la création (CreateWizard, `?with=<id>`) ou dans l'édition du voyage, `FriendPicker` +
   `addFriendsToTrip()` (RPC `add_friends_to_trip`) : participant + membre lié, sans code de partage.
 - **Notifications** : le client n'envoie qu'un `NotifyEvent` via `notify()` (jamais de texte) ; le serveur lit les
   données avec la RLS de l'appelant, rédige et cible (`get_push_targets` filtre bande/voyage + préférences).
@@ -368,8 +389,8 @@ DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip(
 ### Location input
 **Always use `LocationPickerSheet`**, never raw text input or the old `LocationAutocomplete`.
 - Tap → 88dvh bottom Sheet with large search field + Nominatim results split into main name / subtitle
-- `onChangeCoord` returns `LocationCoord` directly from the Nominatim result, no extra `/api/geocode` call needed
-- Used in: `ItineraryItemForm`, `JourneyForm`, `TripWizard`, `TripEditDialog`
+- `onChangeCoord` returns `LocationCoord` (`lat`, `lon`, `countryCode`) directly from the Nominatim result, no extra `/api/geocode` call needed
+- Used in: `ItineraryItemForm`, `JourneyForm`, `TripEditDialog`
 
 ### Full-screen forms
 All creation/edit forms are full-screen or near-full-screen on mobile:
@@ -395,9 +416,9 @@ All `<input type="number">` and amount text inputs must have `onFocus={(e) => e.
 - **Client/Server split**: hooks and interactive components → `"use client"`. Pages/layouts default to RSC.
 - **No bare SQL**: always use Supabase query builder (`supabase.from().select().eq()...`)
 - **Mutations**: call hook method → hook auto-refetches. Never mutate local state directly.
-- **Forms**: react-hook-form + Zod in dialogs/modals. Multi-step → TripWizard pattern.
+- **Forms**: react-hook-form + Zod in dialogs/modals. Multi-step → pattern CreateWizard (logique pure dans `lib/trips/`, testée).
 - **Styling**: Tailwind utility classes + CSS custom properties for theme. `cn()` for conditional classes.
-- **Icons**: Lucide only (never emoji as icon in code, except TripWizard emoji picker).
+- **Icons**: Lucide only (never emoji as icon in code, except the emoji pickers of CreateWizard / TripEditDialog).
 - **No comments** unless WHY is non-obvious.
 - **Ponctuation** : jamais de tiret cadratin (U+2014) dans le code, les textes de l'interface, les commentaires ni la doc. Utiliser les deux-points, la virgule, le point, des parenthèses, ou le point médian `·` pour les titres et séparateurs d'interface.
 - **Env vars**: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`

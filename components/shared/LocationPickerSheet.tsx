@@ -12,11 +12,13 @@ interface NominatimResult {
   lon: string;
   type?: string;
   class?: string;
+  address?: { country_code?: string };
 }
 
 export interface LocationCoord {
   lat: number;
   lon: number;
+  countryCode?: string;
 }
 
 interface LocationPickerSheetProps {
@@ -79,7 +81,7 @@ export function LocationPickerSheet({
 
     debounceRef.current = setTimeout(async () => {
       try {
-        const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(trimmed)}&format=json&limit=${limit}&accept-language=${lang}&addressdetails=0`;
+        const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(trimmed)}&format=json&limit=${limit}&accept-language=${lang}&addressdetails=1`;
         const res = await fetch(url, { headers: { Accept: "application/json" } });
         if (!res.ok) { setSuggestions([]); return; }
         const data: NominatimResult[] = await res.json();
@@ -103,7 +105,7 @@ export function LocationPickerSheet({
 
   const selectSuggestion = (s: NominatimResult) => {
     onChange(s.display_name);
-    onChangeCoord?.({ lat: parseFloat(s.lat), lon: parseFloat(s.lon) });
+    onChangeCoord?.({ lat: parseFloat(s.lat), lon: parseFloat(s.lon), countryCode: s.address?.country_code });
     setPickerOpen(false);
   };
 

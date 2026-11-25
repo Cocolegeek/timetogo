@@ -19,6 +19,7 @@ import { useRecurring } from "@/hooks/useRecurring";
 import { Download, Repeat, Share2 } from "lucide-react";
 import { buildExpensesCsv } from "@/lib/export/expenses-csv";
 import { buildRecap } from "@/lib/export/recap";
+import { recentTitles } from "@/lib/budget/recent-titles";
 import { downloadFile, safeFilename, shareText } from "@/lib/export/download";
 import { FREQUENCY_LABELS } from "@/lib/budget/recurrence";
 import { tripFeatures } from "@/lib/trip-features";
@@ -55,6 +56,7 @@ export default function BudgetPage({ params }: BudgetPageProps) {
   const searchParams = useSearchParams();
   const [formOpen, setFormOpen] = useState(searchParams.get("new") === "expense");
   const [editingExpense, setEditingExpense] = useState<Expense | undefined>();
+  const [duplicating, setDuplicating] = useState(false);
   const [detailId, setDetailId] = useState<string | null>(searchParams.get("expense"));
   const [activeTab, setActiveTab] = useState<BudgetTab>(
     searchParams.get("tab") === "balances" ? "balances" : "expenses"
@@ -74,6 +76,7 @@ export default function BudgetPage({ params }: BudgetPageProps) {
   }, [hasRecurring, applyDue]);
 
   const { pending, remove } = useUndoableDelete(deleteExpense);
+  const recents = useMemo(() => recentTitles(allExpenses), [allExpenses]);
   const expenses = useMemo(() => allExpenses.filter((e) => !pending.has(e.id)), [allExpenses, pending]);
   const detailExpense = detailId ? expenses.find((e) => e.id === detailId) ?? null : null;
 
@@ -97,12 +100,14 @@ export default function BudgetPage({ params }: BudgetPageProps) {
     recurrence?: RecurrenceFrequency;
   }) => {
     const { recurrence, ...expenseData } = data;
-    if (editingExpense) {
+    if (editingExpense && !duplicating) {
       await updateExpense(editingExpense.id, expenseData);
       setEditingExpense(undefined);
       toast({ message: "Dépense modifiée", tone: "success" });
     } else {
       await addExpense({ ...expenseData, tripId });
+      setEditingExpense(undefined);
+      setDuplicating(false);
       if (recurrence) {
         try {
           await createRecurring({ ...expenseData, frequency: recurrence, firstDate: expenseData.date });
@@ -111,10 +116,20 @@ export default function BudgetPage({ params }: BudgetPageProps) {
           toast({ message: "Dépense ajoutée, mais la répétition n'a pas pu être créée (réseau ?)", tone: "error", duration: 5000 });
         }
       } else {
-        toast({ message: "Dépense ajoutée", tone: "success" });
+        toast({
+          message: "Dépense ajoutée",
+          tone: "success",
+          action: { label: "Ajouter une autre", onClick: () => openNewExpense() },
+        });
       }
       setActiveTab("expenses");
     }
+  };
+
+  const openNewExpense = () => {
+    setEditingExpense(undefined);
+    setDuplicating(false);
+    setFormOpen(true);
   };
 
   const handleTap = (expense: Expense) => setDetailId(expense.id);
@@ -122,6 +137,15 @@ export default function BudgetPage({ params }: BudgetPageProps) {
   const handleEditFromDetail = () => {
     if (!detailExpense) return;
     setEditingExpense(detailExpense);
+    setDuplicating(false);
+    setDetailId(null);
+    setFormOpen(true);
+  };
+
+  const handleDuplicateFromDetail = () => {
+    if (!detailExpense) return;
+    setEditingExpense(detailExpense);
+    setDuplicating(true);
     setDetailId(null);
     setFormOpen(true);
   };
@@ -136,8 +160,7 @@ export default function BudgetPage({ params }: BudgetPageProps) {
 
   useQuickAdd((kind) => {
     if (kind !== "expense") return;
-    setEditingExpense(undefined);
-    setFormOpen(true);
+    openNewExpense();
   });
 
   const handleSettle = async (s: Settlement) => {
@@ -371,18 +394,24 @@ export default function BudgetPage({ params }: BudgetPageProps) {
         onOpenChange={(open) => { if (!open) setDetailId(null); }}
         onEdit={handleEditFromDetail}
         onDelete={handleDeleteFromDetail}
+        onDuplicate={handleDuplicateFromDetail}
       />
 
       <ExpenseForm
         open={formOpen}
         onOpenChange={(open) => {
           setFormOpen(open);
-          if (!open) setEditingExpense(undefined);
+          if (!open) {
+            setEditingExpense(undefined);
+            setDuplicating(false);
+          }
         }}
         participants={participants}
         currency={currency}
         defaultPayerId={myId}
         allowRecurrence={hasRecurring}
+        recentTitles={recents}
+        duplicate={duplicating}
         onSubmit={handleSubmit}
         initialValues={editingExpense}
       />

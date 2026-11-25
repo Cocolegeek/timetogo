@@ -17,6 +17,7 @@ import { DateRangePicker } from "@/components/shared/DateRangePicker";
 import { DateField } from "@/components/shared/DateTimeFields";
 import { AvatarUpload } from "@/components/shared/AvatarUpload";
 import { useUserId } from "@/hooks/useUserId";
+import { tripEmojiChoices } from "@/lib/trip-emojis";
 import { cn } from "@/lib/utils";
 import { ParticipantAvatar } from "@/components/shared/ParticipantAvatar";
 import { isVoyage, tripFeatures } from "@/lib/trip-features";
@@ -28,7 +29,7 @@ import { useTrip } from "@/hooks/useTrip";
 import { addFriendsToTrip } from "@/hooks/useFriends";
 
 
-const EMOJIS = ["✈️", "🏖️", "🏔️", "🗺️", "🌍", "🎒", "🏕️", "🚢"];
+const EMOJIS = tripEmojiChoices();
 
 type NavTab = "Général" | "Participants";
 
@@ -294,7 +295,7 @@ export function TripEditDialog({
                       transition={{ duration: 0.15 }}
                       className="overflow-hidden"
                     >
-                      <div className="flex gap-1 pt-2 flex-wrap">
+                      <div className="flex max-h-44 flex-wrap gap-1 overflow-y-auto pt-2">
                         {EMOJIS.map((e) => (
                           <button
                             key={e}

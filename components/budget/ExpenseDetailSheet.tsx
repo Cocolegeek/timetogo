@@ -1,6 +1,6 @@
 "use client";
 
-import { Pencil, Trash2 } from "lucide-react";
+import { Copy, Pencil, Trash2 } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { CATEGORIES } from "@/lib/budget/categories";
@@ -18,6 +18,7 @@ interface ExpenseDetailSheetProps {
   onOpenChange: (open: boolean) => void;
   onEdit: () => void;
   onDelete: () => void;
+  onDuplicate?: () => void;
 }
 
 function parseLocalDate(dateStr: string) {
@@ -33,6 +34,7 @@ export function ExpenseDetailSheet({
   onOpenChange,
   onEdit,
   onDelete,
+  onDuplicate,
 }: ExpenseDetailSheetProps) {
   if (!expense) return null;
 
@@ -143,6 +145,11 @@ export function ExpenseDetailSheet({
           >
             <Trash2 size={18} />
           </Button>
+          {onDuplicate && (
+            <Button variant="secondary" size="lg" onClick={onDuplicate} aria-label="Dupliquer la dépense">
+              <Copy size={18} />
+            </Button>
+          )}
           <Button size="lg" onClick={onEdit} className="flex-1 shadow-section">
             <Pencil size={16} />
             Modifier

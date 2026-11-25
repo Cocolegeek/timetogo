@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { m as motion } from "framer-motion";
@@ -21,6 +21,8 @@ import { useIdlePrefetch } from "@/hooks/useIdlePrefetch";
 import { useScrollDirection } from "@/hooks/useScrollDirection";
 import { useTrip } from "@/hooks/useTrip";
 import { dispatchQuickAdd, type QuickAddKind } from "@/hooks/useQuickAdd";
+import { useToast } from "@/components/shared/Toaster";
+import { ADD_LABELS, contextKind, leadKind, orderActions } from "@/lib/quick-add";
 import { haptic } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
 import { spring } from "@/lib/motion";
@@ -42,17 +44,16 @@ const NAV_ITEMS: NavItem[] = [
 const QUICK_ADD: {
   kind: QuickAddKind;
   label: string;
-  hint: string;
   icon: LucideIcon;
   tile: string;
   href: string;
   voyageOnly: boolean;
 }[] = [
-  { kind: "expense", label: "Dépense", hint: "Qui a payé quoi", icon: Wallet, tile: "bg-primary text-primary-foreground", href: "/budget", voyageOnly: false },
-  { kind: "step", label: "Étape", hint: "Activité, resto, logement", icon: CalendarPlus, tile: "bg-emerald-500 text-white", href: "/planning", voyageOnly: true },
-  { kind: "journey", label: "Trajet", hint: "D'un lieu à l'autre", icon: Route, tile: "bg-sky-500 text-white", href: "/planning", voyageOnly: true },
-  { kind: "meal", label: "Repas", hint: "Menu, courses, cuisiniers", icon: UtensilsCrossed, tile: "bg-rose-500 text-white", href: "/menus", voyageOnly: true },
-  { kind: "item", label: "Liste", hint: "À apporter, à faire", icon: ListChecks, tile: "bg-amber-500 text-white", href: "/lists", voyageOnly: false },
+  { kind: "expense", label: "Dépense", icon: Wallet, tile: "bg-primary text-primary-foreground", href: "/budget", voyageOnly: false },
+  { kind: "step", label: "Étape", icon: CalendarPlus, tile: "bg-emerald-500 text-white", href: "/planning", voyageOnly: true },
+  { kind: "journey", label: "Trajet", icon: Route, tile: "bg-sky-500 text-white", href: "/planning", voyageOnly: true },
+  { kind: "meal", label: "Repas", icon: UtensilsCrossed, tile: "bg-rose-500 text-white", href: "/menus", voyageOnly: true },
+  { kind: "item", label: "Liste", icon: ListChecks, tile: "bg-amber-500 text-white", href: "/lists", voyageOnly: false },
 ];
 
 /** Glass material for the floating navigation layer only (never on content). */
@@ -81,7 +82,13 @@ export function TripNav({ tripId }: TripNavProps) {
     if (item.href === "/lists") return features.hasLists;
     return true;
   });
-  const actions = QUICK_ADD.filter((a) => !a.voyageOnly || tripType === "trip");
+  const available = QUICK_ADD.filter((a) => !a.voyageOnly || tripType === "trip");
+  const context = contextKind(pathname, base, tripType);
+  const lead = leadKind(context, available.map((a) => a.kind));
+  const actions = orderActions(available, lead);
+  const toast = useToast();
+  const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressed = useRef(false);
   useIdlePrefetch(["/trips", ...items.map((i) => `${base}${i.href}`)]);
 
   const runAction = (kind: QuickAddKind, href: string) => {
@@ -91,10 +98,44 @@ export function TripNav({ tripId }: TripNavProps) {
     else router.push(`${target}?new=${kind}`);
   };
 
+  const startPress = () => {
+    longPressed.current = false;
+    pressTimer.current = setTimeout(() => {
+      longPressed.current = true;
+      haptic("success");
+      setAddOpen(true);
+    }, 450);
+  };
+  const endPress = () => {
+    if (pressTimer.current) clearTimeout(pressTimer.current);
+  };
+
+  /** Une seule fois, au 3e ajout direct : on apprend le geste du choix complet sans jamais l'imposer. */
+  const teachLongPress = () => {
+    try {
+      const n = Number(localStorage.getItem("voyou-plus-uses") ?? "0") + 1;
+      localStorage.setItem("voyou-plus-uses", String(n));
+      if (n === 3) toast({ message: "Astuce : maintiens + pour ajouter autre chose", duration: 4500 });
+    } catch {
+      // storage unavailable: no hint
+    }
+  };
+
   const onPlus = () => {
+    if (longPressed.current) {
+      longPressed.current = false;
+      return;
+    }
     haptic("light");
-    if (actions.length === 1) runAction(actions[0].kind, actions[0].href);
-    else setAddOpen(true);
+    if (context && actions.some((a) => a.kind === context)) {
+      const a = actions.find((x) => x.kind === context)!;
+      runAction(a.kind, a.href);
+      teachLongPress();
+    } else if (actions.length === 1) {
+      runAction(actions[0].kind, actions[0].href);
+    } else {
+      setAddOpen(true);
+    }
   };
 
   return (
@@ -164,16 +205,29 @@ export function TripNav({ tripId }: TripNavProps) {
             })}
           </ul>
 
+          {context && (
+            <button type="button" onClick={() => setAddOpen(true)} className="sr-only">
+              Plus d&apos;options d&apos;ajout
+            </button>
+          )}
           <motion.button
             type="button"
             onClick={onPlus}
+            onPointerDown={startPress}
+            onPointerUp={endPress}
+            onPointerLeave={endPress}
+            onPointerCancel={endPress}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              setAddOpen(true);
+            }}
             whileTap={{ scale: 0.9 }}
             initial={false}
             animate={{ width: compact ? 56 : 68, height: compact ? 56 : 68 }}
             transition={spring}
-            aria-label="Ajouter"
-            aria-haspopup="dialog"
-            className="pointer-events-auto flex shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-section-strong outline-none focus-visible:ring-4 focus-visible:ring-primary/30"
+            aria-label={context ? ADD_LABELS[context] : "Ajouter"}
+            aria-haspopup={context ? undefined : "dialog"}
+            className="pointer-events-auto flex shrink-0 touch-manipulation items-center justify-center rounded-full bg-primary text-primary-foreground shadow-section-strong outline-none select-none [-webkit-touch-callout:none] focus-visible:ring-4 focus-visible:ring-primary/30"
           >
             <Plus size={26} strokeWidth={2.4} />
           </motion.button>

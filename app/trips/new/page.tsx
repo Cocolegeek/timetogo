@@ -4,8 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { ChevronLeft, ArrowRight } from "lucide-react";
 import { AnimatePresence, m as motion } from "framer-motion";
-import { TripWizard } from "@/components/trips/TripWizard";
-import { GroupWizard } from "@/components/trips/GroupWizard";
+import { CreateWizard } from "@/components/trips/CreateWizard";
 import { TripCover } from "@/components/trips/TripCover";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Stagger, StaggerItem } from "@/components/motion/Stagger";
@@ -106,7 +105,7 @@ function NewTripPageContent() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.32, ease: EASE_OUT }}
             >
-              {chosen === "trip" ? <TripWizard /> : <GroupWizard />}
+              <CreateWizard key={chosen} type={chosen} />
             </motion.div>
           )}
         </AnimatePresence>

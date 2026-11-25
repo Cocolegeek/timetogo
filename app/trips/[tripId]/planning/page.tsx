@@ -133,7 +133,19 @@ export default function PlanningPage({ params }: PlanningPageProps) {
       toast({ message: "Étape modifiée", tone: "success" });
     } else {
       await addItem(values);
-      toast({ message: "Ajouté au planning", tone: "success" });
+      toast({
+        message: "Ajouté au planning",
+        tone: "success",
+        action: {
+          label: "Ajouter un autre",
+          onClick: () => {
+            setEditingItem(undefined);
+            setFormDefaultDate(values.date);
+            if (values.type === "journey") setJourneyFormOpen(true);
+            else setFormOpen(true);
+          },
+        },
+      });
     }
     setEditingItem(undefined);
   };
