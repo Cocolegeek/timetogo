@@ -11,6 +11,7 @@ import { TripCover } from "@/components/trips/TripCover";
 import { ParticipantStack } from "@/components/shared/ParticipantStack";
 import { isVoyage } from "@/lib/trip-features";
 import { shortDestination } from "@/lib/place";
+import { HoverActions } from "@/components/shared/HoverActions";
 import type { Trip } from "@/types";
 
 const TripActionsSheet = dynamic(() => import("@/components/trips/TripActionsSheet"), { ssr: false });
@@ -150,12 +151,13 @@ export function TripCard({ trip, onEdit, onDelete, onShare, variant = "row" }: T
         <div className="absolute top-3 right-3">
           <TripActions trip={trip} onEdit={onEdit} onDelete={onDelete} onShare={onShare} floating />
         </div>
+        <HoverActions label={trip.name} onEdit={() => onEdit(trip)} className="absolute top-3 right-16" />
       </article>
     );
   }
 
   return (
-    <article className="relative flex items-center">
+    <article className="group relative flex items-center">
       <Link
         href={href}
         prefetch={false}
@@ -187,6 +189,7 @@ export function TripCard({ trip, onEdit, onDelete, onShare, variant = "row" }: T
       <div className="absolute right-1.5">
         <TripActions trip={trip} onEdit={onEdit} onDelete={onDelete} onShare={onShare} />
       </div>
+      <HoverActions label={trip.name} onEdit={() => onEdit(trip)} className="absolute right-14" />
     </article>
   );
 }

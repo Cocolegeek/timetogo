@@ -296,9 +296,10 @@ DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip(
 - **Ordinateur** (une seule app responsive, pas deux versions ; point de bascule `lg` = 1024 px) : le menu latéral à gauche (`TripNav`,
   `aside`, largeur 16rem, bouton « + Dépense / Étape / Repas / Liste » selon l'écran, « Ajouter » sur le Résumé, flèche pour les autres ajouts)
   remplace la barre du bas et le « + » ; `TripMain` donne une colonne de lecture (`max-w-3xl`) aux pages, deux colonnes (CSS `columns`,
-  `max-w-5xl`) au Résumé ; la liste des voyages passe en grille. Sans souris, rien ne change (téléphone et tablette en portrait). La corbeille
-  apparaît au survol des cartes de dépense et de repas, uniquement avec un pointeur précis (`[@media(pointer:fine)]`), jamais au toucher :
-  le glissement reste le geste mobile. À faire ensuite : raccourcis clavier (N, /, Échap) et panneaux latéraux à la place des feuilles du bas.
+  `max-w-5xl`) au Résumé ; la liste des voyages passe en grille. Sans souris, rien ne change (téléphone et tablette en portrait). Le crayon et la corbeille
+  (`HoverActions`, parent en `group`) apparaissent au survol des cartes de dépense, de repas, d'étape et d'élément de liste ; sur une carte de
+  voyage le crayon seul (supprimer reste derrière la confirmation du menu « … »). Uniquement avec un pointeur précis (`[@media(pointer:fine)]`),
+  jamais au toucher : toucher = modifier, glisser = supprimer. Le crayon d'une dépense ouvre directement le formulaire (`onQuickEdit`), pas la fiche. À faire ensuite : raccourcis clavier (N, /, Échap) et panneaux latéraux à la place des feuilles du bas.
 - **Ajout rapide** : le bouton « + » de la barre agit selon l'écran (`contextKind()` dans `lib/quick-add.ts`) : Budget = nouvelle
   dépense, Planning = étape, Menus = repas, Listes = champ d'ajout. Un seul toucher. Sur l'accueil du voyage (et dans un budget de
   groupe sans planning), il ouvre la feuille de choix. **Appui long** (450 ms), clic droit ou bouton lecteur d'écran = feuille de choix
@@ -334,6 +335,7 @@ DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip(
   Emoji du voyage : le drapeau du pays choisi (`countryCode` de `LocationPickerSheet`) est proposé en premier et présélectionné tant que
   l'utilisateur n'a pas choisi lui-même ; puis thèmes (train, plage…) et drapeaux courants. Pas d'avion (empreinte carbone).
 - **Trajets** : le mode « Avion » reste disponible dans `JourneyForm` (calcul de trajet, avertissement CO₂) ; seul l'emoji d'un voyage évite l'avion.
+- **Payeur** : toujours la photo de profil du participant (`ParticipantAvatar`), jamais un point de couleur.
 - **Identité du voyage** : l'emoji ou le drapeau choisi s'affiche devant le titre (tableau de bord, cartes de la liste). Destination
   toujours abrégée (`shortDestination()`). Participants = avatars + prénoms (« Toi, Léa, Marc +2 ») ; la pastille « Qui es-tu ? »
   n'apparaît que si on n'est pas encore relié à un participant (toucher les avatars rouvre le choix). Illustration d'en-tête basse (h-28).

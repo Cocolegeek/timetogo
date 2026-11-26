@@ -6,6 +6,8 @@ import { CloudOff, Trash2 } from "lucide-react";
 import { CATEGORIES } from "@/lib/budget/categories";
 import { formatCurrency } from "@/lib/format-currency";
 import { cn } from "@/lib/utils";
+import { HoverActions } from "@/components/shared/HoverActions";
+import { ParticipantAvatar } from "@/components/shared/ParticipantAvatar";
 import type { Expense, Participant } from "@/types";
 
 interface ExpenseCardProps {
@@ -14,6 +16,8 @@ interface ExpenseCardProps {
   currency: string;
   onDelete: (id: string) => void;
   onEdit: (expense: Expense) => void;
+  /** Crayon au survol (souris) : ouvre directement le formulaire, sans passer par la fiche. */
+  onQuickEdit?: (expense: Expense) => void;
   /** Hide the top divider (first row of a group). */
   first?: boolean;
 }
@@ -21,7 +25,7 @@ interface ExpenseCardProps {
 const SWIPE_THRESHOLD = -110;
 
 /** One expense row inside a grouped list. Swipe left to delete, tap to open. */
-export function ExpenseCard({ expense, participants, currency, onDelete, onEdit, first }: ExpenseCardProps) {
+export function ExpenseCard({ expense, participants, currency, onDelete, onEdit, onQuickEdit, first }: ExpenseCardProps) {
   const payers = expense.payers
     .map((p) => participants.find((part) => part.id === p.participantId))
     .filter(Boolean) as Participant[];
@@ -100,9 +104,9 @@ export function ExpenseCard({ expense, participants, currency, onDelete, onEdit,
             <span className="block truncate text-[1rem] font-semibold text-foreground">{expense.title}</span>
             <span className="mt-0.5 flex items-center gap-1.5 text-sm text-muted-foreground">
               {payers.length > 0 && (
-                <span className="flex -space-x-1">
+                <span className="flex -space-x-1.5">
                   {payers.slice(0, 3).map((p) => (
-                    <span key={p.id} className="size-2.5 rounded-full ring-2 ring-card" style={{ backgroundColor: p.color }} />
+                    <ParticipantAvatar key={p.id} participant={p} size="xs" className="size-5 text-[0.5625rem]" />
                   ))}
                 </span>
               )}
@@ -115,7 +119,7 @@ export function ExpenseCard({ expense, participants, currency, onDelete, onEdit,
               )}
             </span>
           </span>
-          <span className="shrink-0 text-right transition-[padding] [@media(pointer:fine)]:group-focus-within:pr-11 [@media(pointer:fine)]:group-hover:pr-11">
+          <span className="shrink-0 text-right transition-[padding] [@media(pointer:fine)]:group-focus-within:pr-[5.5rem] [@media(pointer:fine)]:group-hover:pr-[5.5rem]">
             <span className="tabular block font-display text-[1.0625rem] font-bold tracking-tight">
               {formatCurrency(expense.amountInTripCurrency, currency)}
             </span>
@@ -126,14 +130,12 @@ export function ExpenseCard({ expense, participants, currency, onDelete, onEdit,
         </span>
       </motion.button>
 
-      <button
-        type="button"
-        aria-label={`Supprimer ${expense.title}`}
-        onClick={() => onDelete(expense.id)}
-        className="absolute top-1/2 right-3 z-10 hidden size-9 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground opacity-0 transition-[opacity,color,background-color] outline-none group-focus-within:opacity-100 group-hover:opacity-100 hover:bg-red-500/10 hover:text-red-400 focus-visible:ring-2 focus-visible:ring-ring [@media(pointer:fine)]:flex"
-      >
-        <Trash2 size={17} aria-hidden="true" />
-      </button>
+      <HoverActions
+        label={expense.title}
+        onEdit={onQuickEdit ? () => onQuickEdit(expense) : undefined}
+        onDelete={() => onDelete(expense.id)}
+        className="absolute top-1/2 right-3 -translate-y-1/2"
+      />
     </motion.li>
   );
 }

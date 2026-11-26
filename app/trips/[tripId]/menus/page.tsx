@@ -23,6 +23,7 @@ import { DEFAULT_SLOTS, SLOT_CONFIG, eachDate } from "@/lib/meals/slots";
 import { CATEGORY_CONFIG } from "@/lib/meals/categories";
 import { COURSE_BY_ID, COURSE_ORDER } from "@/lib/meals/courses";
 import { EASE_OUT, fadeUp, stagger } from "@/lib/motion";
+import { HoverActions } from "@/components/shared/HoverActions";
 import { cn } from "@/lib/utils";
 import { isVoyage } from "@/lib/trip-features";
 import type { Meal, MealSlot, Participant } from "@/types";
@@ -360,14 +361,7 @@ function MealCard({
         )}
       </motion.button>
 
-      <button
-        type="button"
-        aria-label={`Supprimer ${slotCfg.label}`}
-        onClick={onDelete}
-        className="absolute right-3 bottom-3 z-10 hidden size-9 items-center justify-center rounded-full text-muted-foreground opacity-0 transition-[opacity,color,background-color] outline-none group-focus-within:opacity-100 group-hover:opacity-100 hover:bg-red-500/10 hover:text-red-400 focus-visible:ring-2 focus-visible:ring-ring [@media(pointer:fine)]:flex"
-      >
-        <Trash2 size={17} aria-hidden="true" />
-      </button>
+      <HoverActions label={slotCfg.label} onEdit={onTap} onDelete={onDelete} className="absolute right-3 bottom-3" />
     </motion.li>
   );
 }
