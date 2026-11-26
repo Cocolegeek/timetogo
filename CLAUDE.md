@@ -341,7 +341,7 @@ DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip(
   `· 14:32` sur la carte (`createdAt`, heure locale), « Ajoutée le 8 juin à 10:00 » dans la fiche.
 - **Identité du voyage** : l'emoji ou le drapeau choisi s'affiche devant le titre (tableau de bord, cartes de la liste). Destination
   toujours abrégée (`shortDestination()`). Participants = avatars + prénoms (« Toi, Léa, Marc +2 ») ; la pastille « Qui es-tu ? »
-  n'apparaît que si on n'est pas encore relié à un participant (toucher les avatars rouvre le choix). Pas d'illustration par défaut : la couverture est une photo facultative (modifier le voyage › « Photo de couverture »), sans photo la liste montre l'emoji sur une tuile et le Résumé n'a pas de bandeau.
+  n'apparaît que si on n'est pas encore relié à un participant (toucher les avatars rouvre le choix). Illustration `TripCover` par défaut (liste : grande carte et vignette ; Résumé : bande basse `h-20`, `lg:h-28`, pastille de statut posée dessus) ; une photo de couverture facultative la remplace (modifier le voyage › « Photo de couverture »). Le formulaire de création garde un aperçu sobre sans illustration.
 - **Tableau de bord** : `GettingStarted` (n'affiche que les étapes restantes) puis budget, solde, `DayAgendaCard`
   (aujourd'hui, ou demain une fois la journée finie), repas du jour. Une carte vide n'est pas affichée si
   « Premiers pas » invite déjà à la remplir. Solde : une seule tuile large si un seul sens est non nul.
