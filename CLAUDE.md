@@ -159,7 +159,7 @@ lib/
   auth/providers.ts     → AuthProvider (google|facebook), AccountMethod (+ email), enabledProviders(), FACEBOOK_ENABLED, EMAIL_ENABLED, linkedMethods(), loginChoicesLabel()
   auth/email.ts         → sendLoginCode / verifyLoginCode / startEmailUpgrade / verifyUpgradeCode / sendExistingAccountCode / verifyExistingAccountCode, mapAuthError()
   auth/redirect.ts      → safeRedirectPath(), errorRedirectUrl() (garde ?provider= au retour d'erreur vers /auth/link)
-  avatars.ts            → AVATAR_PRESETS (86 avatars « Voyou », hommes et femmes, tous teints et couleurs de cheveux, générés par scripts/generate-avatars.mjs), isImageAvatar(), defaultPreset() (avatar tiré d'une graine), profileAvatar()
+  avatars.ts            → AVATAR_PRESETS (86 avatars « Voyou », hommes et femmes, tous teints et couleurs de cheveux, générés par scripts/generate-avatars.mjs), FUN_EMOJI_AVATARS (24 emojis « Fun Emoji », fichiers fixes générés une fois par scripts/generate-fun-emojis.mjs) + FUN_EMOJI_CREDIT, isImageAvatar(), defaultPreset() (avatar tiré d'une graine), profileAvatar()
   avatar-sync.ts        → syncMyParticipantAvatars() (avatar du profil → participants liés)
   data/swr.tsx          → DataProvider (SWRConfig + cache localStorage persistant), clearDataCache()
   notifications/        → events.ts (NotifyEvent, NOTIFICATION_KINDS, isKindEnabled), notify.ts (fire-and-forget),
@@ -268,7 +268,7 @@ DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip(
   d'orbes, de dégradés décoratifs (`gradient-primary` = aplat) ni d'emoji comme icône.
 - **Illustrations** : `TripCover` (aplats doux : ciel, sable, sauge, argile, nuit, or), choisie par
   `seed` = id. Même palette pour l'écran de connexion et les avatars.
-- **Avatars** : choisis dans `AvatarPicker` : photo Google en option, puis la grille des 86 avatars « Voyou » (`public/avatars/*.svg`, générés par `scripts/generate-avatars.mjs`, garder `lib/avatars.ts` en phase). Décision du propriétaire : pas de créateur d'avatar, pas de génération au hasard, pas de collection externe. Priorité d'affichage : choix (`custom_avatar_url`) > photo Google > initiale.
+- **Avatars** : choisis dans `AvatarPicker` : photo Google en option, puis la grille des 86 avatars « Voyou » (`public/avatars/*.svg`, générés par `scripts/generate-avatars.mjs`, garder `lib/avatars.ts` en phase). Décision du propriétaire : pas de créateur d'avatar, pas de génération au hasard, pas de service externe. Les 24 emojis « Fun Emoji » (Davis Uche, CC BY 4.0, via DiceBear) sont des fichiers fixes `public/avatars/emoji-N.svg` : le crédit sous la grille est obligatoire, ne pas le retirer. Priorité d'affichage : choix (`custom_avatar_url`) > photo Google > initiale.
 - **Motion** : `lib/motion.ts` (`EASE_OUT`, `EASE_SHEET`, `spring`, `fadeUp`, `stagger`). Indicateurs
   glissants via `layoutId` (TripNav, SegmentedControl, DayTabs). Respect de `prefers-reduced-motion`
   (MotionConfig + CSS). `pressable` pour le retour tactile.
