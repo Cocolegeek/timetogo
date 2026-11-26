@@ -32,6 +32,7 @@ app/
   api/consent/route.ts   → POST: saves consent to DB, redirects to /trips
   api/geocode/route.ts   → GET ?q= → { lat, lon } via Nominatim (server-side)
   api/rates/route.ts     → GET ?from=&to= → { rate } (BCE via frankfurter, cache 12 h) ; proposé dans ExpenseForm, toujours modifiable
+  api/avatar/route.ts    → GET ?style=&seed= → image SVG (DiceBear, côté serveur, cache longue durée)
   api/routing/route.ts   → GET ?from=&to=&mode= → { durationMinutes, distanceKm } via OSRM
   join/page.tsx          → join trip by share code
   settings/page.tsx      → menu Réglages (carte profil + lignes vers les sous-pages)
@@ -77,7 +78,7 @@ components/
   menus/      MealEditDialog (une page : plats saisis au clavier, puces catégorie · qui mange · qui gère)
   planning/   ItineraryItemForm:   full-screen dialog: title/date/type/location/participants
               JourneyForm:         full-screen dialog: from→to, mode, routing/duration, participants
-  shared/     OfflineSync (monté à la racine : rejoue la file hors-ligne, pastille « Hors ligne · n en attente »), AvatarPicker (photo Google + 16 avatars), AvatarUpload, ClientOnly (rendu client après hydratation),
+  shared/     OfflineSync (monté à la racine : rejoue la file hors-ligne, pastille « Hors ligne · n en attente »), AvatarPicker (photo Google + collections d'avatars), AvatarUpload, ClientOnly (rendu client après hydratation),
               ConfirmDeleteDialog, DateRangePicker, DateField / TimeField (DateTimeFields : libellé FR + sélecteur natif),
               DayHeader, DayTabs, EmptyState, SegmentedControl, Skeleton (Spinner = squelette de page),
               VoyouLoader (visage « oyo » qui saute + phrases de voyage, CSS pur, dans PageSkeleton après 1,5 s),
@@ -158,8 +159,8 @@ lib/
   auth/providers.ts     → AuthProvider (google|facebook), AccountMethod (+ email), enabledProviders(), FACEBOOK_ENABLED, EMAIL_ENABLED, linkedMethods(), loginChoicesLabel()
   auth/email.ts         → sendLoginCode / verifyLoginCode / startEmailUpgrade / verifyUpgradeCode / sendExistingAccountCode / verifyExistingAccountCode, mapAuthError()
   auth/redirect.ts      → safeRedirectPath(), errorRedirectUrl() (garde ?provider= au retour d'erreur vers /auth/link)
-  avatar-builder.ts     → créateur d'avatar : AvatarConfig (peau, coupe, couleur, yeux, bouche, barbe, lunettes, chapeau, masque, fond) → avatarSvg() / avatarDataUrl() (URL `data:image/svg+xml`, config relisible par parseAvatarConfig()), randomConfig(graine). Aucune image à héberger.
-  avatars.ts            → AVATAR_PRESETS (anciens, toujours affichés), isImageAvatar() (accepte les avatars créés), defaultPreset() (avatar tiré d'une graine), profileAvatar()
+  avatar-styles.ts      → AVATAR_STYLES (collections libres DiceBear, CC0 uniquement : lorelei, notionists, openPeeps, pixelArt, thumbs), dicebearUrl(style, graine) = `/api/avatar?style=&seed=` (même graine = même image)
+  avatars.ts            → AVATAR_PRESETS (16 avatars « Voyou »), isImageAvatar(), defaultPreset() (avatar Lorelei tiré d'une graine), profileAvatar()
   avatar-sync.ts        → syncMyParticipantAvatars() (avatar du profil → participants liés)
   data/swr.tsx          → DataProvider (SWRConfig + cache localStorage persistant), clearDataCache()
   notifications/        → events.ts (NotifyEvent, NOTIFICATION_KINDS, isKindEnabled), notify.ts (fire-and-forget),
@@ -267,7 +268,7 @@ DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip(
   d'orbes, de dégradés décoratifs (`gradient-primary` = aplat) ni d'emoji comme icône.
 - **Illustrations** : `TripCover` (aplats doux : ciel, sable, sauge, argile, nuit, or), choisie par
   `seed` = id. Même palette pour l'écran de connexion et les avatars.
-- **Avatars** : créés par l'utilisateur dans `AvatarPicker` (créateur : catégories Peau et fond · Cheveux · Visage · Accessoires, « Au hasard », photo Google en option). Les 16 anciens `public/avatars/*.svg` restent pour ceux qui les ont choisis (`scripts/generate-avatars.mjs`, `lib/avatars.ts`). Priorité d'affichage : choix (`custom_avatar_url`) > photo Google > initiale.
+- **Avatars** : choisis dans `AvatarPicker` (photo Google en option, onglets de collections : « Voyou » = les 16 de `public/avatars/*.svg` générés par `scripts/generate-avatars.mjs`, puis des collections libres DiceBear servies par `app/api/avatar/route.ts`, « Voir d'autres » = nouvelle série). Pas de créateur à options (écarté : trop long). N'ajouter que des collections CC0 (pas d'attribution à gérer). Priorité d'affichage : choix (`custom_avatar_url`) > photo Google > initiale.
 - **Motion** : `lib/motion.ts` (`EASE_OUT`, `EASE_SHEET`, `spring`, `fadeUp`, `stagger`). Indicateurs
   glissants via `layoutId` (TripNav, SegmentedControl, DayTabs). Respect de `prefers-reduced-motion`
   (MotionConfig + CSS). `pressable` pour le retour tactile.

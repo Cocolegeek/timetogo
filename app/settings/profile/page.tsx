@@ -77,9 +77,9 @@ export default function ProfileSettingsPage() {
       </StaggerItem>
 
       <StaggerItem>
-        <SettingsGroup title="Ou crée ton avatar">
+        <SettingsGroup title="Ou choisis un avatar">
           <div className="p-4">
-            <AvatarPicker value={avatar} googleUrl={profile?.avatar_url} debounceMs={600} onChange={(url) => updateProfile({ custom_avatar_url: url })} />
+            <AvatarPicker value={avatar} googleUrl={profile?.avatar_url} onChange={(url) => updateProfile({ custom_avatar_url: url })} />
           </div>
         </SettingsGroup>
       </StaggerItem>
