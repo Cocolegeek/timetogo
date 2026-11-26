@@ -3,9 +3,7 @@
 import { EmojiIcon } from "@/components/shared/EmojiIcon";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AnimatePresence, m as motion } from "framer-motion";
 import { ArrowLeft, Check, ChevronDown, Loader2, Plus, X } from "lucide-react";
-import { Burst } from "@/components/motion/Burst";
 import { DateField } from "@/components/shared/DateTimeFields";
 import { DateRangePicker } from "@/components/shared/DateRangePicker";
 import { LocationPickerSheet } from "@/components/shared/LocationPickerSheet";
@@ -13,16 +11,16 @@ import { UserAvatar } from "@/components/shared/UserAvatar";
 import { FriendPicker } from "@/components/trips/FriendPicker";
 import { ModulePicker } from "@/components/trips/ModulePicker";
 import { tripHref } from "@/lib/trip-features";
-import { TripCover } from "@/components/trips/TripCover";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { HeroInput } from "@/components/forms/HeroInput";
+import { SegmentedControl } from "@/components/shared/SegmentedControl";
 import { addFriendsToTrip, useFriends } from "@/hooks/useFriends";
 import { useProfile } from "@/hooks/useProfile";
 import { useTrips } from "@/hooks/useTrip";
 import { TRIP_CURRENCIES } from "@/lib/currencies";
 import { formatDateRange } from "@/lib/format-date";
 import { haptic } from "@/lib/haptics";
-import { EASE_OUT, spring } from "@/lib/motion";
 import { isOfflineError } from "@/lib/offline/outbox";
 import { PARTICIPANT_COLORS } from "@/lib/participant-colors";
 import {
@@ -51,8 +49,8 @@ const IDEAS = ["Coloc", "Anniversaire", "Week-end", "Soirée", "Vacances"];
 
 const GROUP_DATE_OPTIONS: { mode: GroupDateMode; title: string; hint: string }[] = [
   { mode: "permanent", title: "Sans date", hint: "Un budget qui dure, comme une coloc." },
-  { mode: "date_fixe", title: "Un jour précis", hint: "Un anniversaire, une soirée." },
-  { mode: "creneau", title: "Une période", hint: "Un week-end, des vacances." },
+  { mode: "date_fixe", title: "Un jour", hint: "Un anniversaire, une soirée." },
+  { mode: "creneau", title: "Période", hint: "Un week-end, des vacances." },
 ];
 
 const TITLES: Record<WizardStep, { title: string; hint: string }> = {
@@ -81,7 +79,6 @@ export function CreateWizard() {
     return w ? [w] : [];
   });
   const [stepIndex, setStepIndex] = useState(0);
-  const [dir, setDir] = useState(1);
   const [issue, setIssue] = useState<string | null>(null);
   const [shake, setShake] = useState(0);
   const [country, setCountry] = useState<string | null>(null);
@@ -121,7 +118,6 @@ export function CreateWizard() {
   }, [issue, shake]);
 
   const goTo = (index: number) => {
-    setDir(index > stepIndex ? 1 : -1);
     setStepIndex(index);
   };
 
@@ -199,26 +195,22 @@ export function CreateWizard() {
 
   if (doneId) {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: EASE_OUT }}
-        className="flex min-h-[60dvh] flex-col items-center justify-center gap-5 text-center"
-      >
-        <span className="animate-pop relative flex size-20 items-center justify-center rounded-[1.5rem] bg-emerald-500 text-white shadow-raised">
-          <Check size={38} strokeWidth={2.6} aria-hidden="true" />
-          <Burst />
+      <div className="flex min-h-[60dvh] flex-col items-center justify-center gap-5 text-center">
+        <span className="flex size-16 items-center justify-center rounded-full bg-primary text-primary-foreground">
+          <Check size={30} strokeWidth={2.6} aria-hidden="true" />
         </span>
-        <div className="space-y-1.5">
-          <h2 className="font-display text-[2rem] leading-tight font-extrabold tracking-[-0.03em]">C&apos;est créé</h2>
+        <div className="space-y-1">
+          <h2 className="font-display text-[1.75rem] leading-tight font-extrabold tracking-[-0.03em]">C&apos;est créé</h2>
           <p className="text-muted-foreground">{title}</p>
         </div>
-        <Button size="lg" onClick={() => router.push(donePath ?? `/trips/${doneId}`)} className="shadow-section">
+        <Button size="lg" onClick={() => router.push(donePath ?? `/trips/${doneId}`)} className="min-w-40">
           Ouvrir
         </Button>
-      </motion.div>
+      </div>
     );
   }
+
+  const meta = [firstPlace(s.destination), dates, people.length + friendIds.length > 1 ? `${people.length + friendIds.length} personnes` : ""].filter(Boolean).join(" · ");
 
   return (
     <form
@@ -229,60 +221,46 @@ export function CreateWizard() {
       }}
       className="pb-36"
     >
-      {/* Progression */}
-      <div className="mb-4 flex gap-1.5" role="progressbar" aria-valuemin={1} aria-valuemax={steps.length} aria-valuenow={stepIndex + 1} aria-label={`Étape ${stepIndex + 1} sur ${steps.length}`}>
-        {steps.map((st, i) => (
-          <span key={st} className="h-1.5 flex-1 overflow-hidden rounded-full bg-foreground/10">
-            <motion.span
-              className="block h-full rounded-full bg-primary"
-              initial={false}
-              animate={{ width: i <= stepIndex ? "100%" : "0%" }}
-              transition={spring}
-            />
-          </span>
-        ))}
+      <div className="mb-5">
+        <div className="flex gap-1.5" role="progressbar" aria-valuemin={1} aria-valuemax={steps.length} aria-valuenow={stepIndex + 1} aria-label={`Étape ${stepIndex + 1} sur ${steps.length}`}>
+          {steps.map((st, i) => (
+            <span key={st} className={cn("h-1 flex-1 rounded-full transition-colors duration-200", i <= stepIndex ? "bg-primary" : "bg-foreground/10")} />
+          ))}
+        </div>
+        <p className="mt-2 px-0.5 text-xs font-medium text-muted-foreground">
+          Étape {stepIndex + 1} sur {steps.length}
+        </p>
       </div>
 
-      {/* Aperçu en direct */}
-      <TripCover seed="new" variant={1} className="mb-6 h-32 rounded-[1.5rem]">
-        <div className="absolute inset-x-3 bottom-3 flex items-center gap-3 rounded-2xl bg-card p-3 shadow-card">
-          <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-secondary text-2xl" aria-hidden="true">
-            <EmojiIcon emoji={s.emoji} />
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block truncate font-display text-[1.05rem] font-bold tracking-tight">{title}</span>
-            <span className="block truncate text-sm text-muted-foreground">
-              {[firstPlace(s.destination), dates, people.length + friendIds.length > 1 ? `${people.length + friendIds.length} pers.` : ""]
-                .filter(Boolean)
-                .join(" · ") || "Dis-nous ce que c'est"}
-            </span>
-          </span>
-        </div>
-      </TripCover>
+      {stepIndex > 0 && (
+      <div className="mb-7 flex items-center gap-3.5 rounded-[1.5rem] bg-card p-3.5 shadow-card" aria-live="polite">
+        <span className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-secondary text-[1.9rem]" aria-hidden="true">
+          <EmojiIcon emoji={s.emoji} />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className={cn("block truncate font-display text-[1.2rem] leading-tight font-bold tracking-tight", !effectiveName(s) && "text-muted-foreground/60")}>{title}</span>
+          <span className="mt-0.5 block truncate text-sm text-muted-foreground">{meta || "Ça se remplit au fur et à mesure"}</span>
+        </span>
+      </div>
+      )}
 
-      <AnimatePresence mode="wait" initial={false}>
-        <motion.div
-          key={step}
-          initial={{ opacity: 0, x: dir * 28 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: dir * -28 }}
-          transition={{ duration: 0.22, ease: EASE_OUT }}
-          className="space-y-5"
-        >
-          <header className="space-y-1">
-            <h2 className="font-display text-[1.75rem] leading-[1.1] font-extrabold tracking-[-0.03em]">{TITLES[step].title}</h2>
-            <p className="text-[0.95rem] text-muted-foreground">{TITLES[step].hint}</p>
-          </header>
+      <div key={step} className="animate-in fade-in space-y-6 duration-150">
+        <header className="space-y-1">
+          <h2 className="font-display text-[1.75rem] leading-[1.1] font-extrabold tracking-[-0.03em]">{TITLES[step].title}</h2>
+          <p className="text-[0.95rem] text-muted-foreground">{TITLES[step].hint}</p>
+        </header>
 
-          {step === "what" && (
-            <div className="space-y-4">
-              <Input
+        {step === "what" && (
+          <div className="space-y-6">
+            <div className="space-y-3">
+              <HeroInput
                 autoFocus
                 value={shownName}
                 onChange={(e) => patch({ name: e.target.value, nameTouched: e.target.value.trim().length > 0 })}
-                placeholder={suggestName(s.destination) || "Coloc, voyage à Rome, anniversaire de Léa…"}
+                placeholder={suggestName(s.destination) || "Coloc, voyage à Rome…"}
                 aria-label="Nom"
                 enterKeyHint="next"
+                autoComplete="off"
               />
               {!firstPlace(s.destination) && (
                 <div className="flex flex-wrap gap-2">
@@ -291,78 +269,60 @@ export function CreateWizard() {
                       key={idea}
                       type="button"
                       onClick={() => patch({ name: idea, nameTouched: true })}
-                      className="pressable h-10 rounded-full bg-foreground/[0.06] px-4 text-sm font-semibold transition-colors hover:bg-foreground/[0.1]"
+                      className="pressable h-10 rounded-full bg-secondary px-4 text-sm font-semibold transition-colors hover:bg-foreground/[0.08]"
                     >
                       {idea}
                     </button>
                   ))}
                 </div>
               )}
-              <LocationPickerSheet
-                value={s.destination}
-                onChange={(v) => patch({ destination: v })}
-                onChangeCoord={(c) => setCountry(c?.countryCode ?? null)}
-                placeholder="Ajouter un lieu"
-              />
+            </div>
+            <LocationPickerSheet
+              value={s.destination}
+              onChange={(v) => patch({ destination: v })}
+              onChangeCoord={(c) => setCountry(c?.countryCode ?? null)}
+              placeholder="Ajouter un lieu"
+            />
+            <div className="space-y-2">
+              <p className="px-1 text-sm font-semibold">Emoji</p>
               <EmojiRow emojis={emojis} value={s.emoji} onPick={pickEmoji} />
             </div>
-          )}
+          </div>
+        )}
 
-          {step === "when" && (
+        {step === "when" && (
+          <div className="space-y-6">
             <div className="space-y-3">
-              <div role="radiogroup" aria-label="Type de date" className="space-y-2">
-                {GROUP_DATE_OPTIONS.map((o) => {
-                  const on = s.dateMode === o.mode;
-                  return (
-                    <button
-                      key={o.mode}
-                      type="button"
-                      role="radio"
-                      aria-checked={on}
-                      onClick={() => {
-                        const t = presets[0].start;
-                        patch({
-                          dateMode: o.mode,
-                          startDate: o.mode === "permanent" ? "" : s.startDate || t,
-                          endDate: o.mode === "creneau" ? s.endDate || presets[0].end : "",
-                        });
-                      }}
-                      className={cn(
-                        "pressable flex w-full items-center gap-3 rounded-2xl p-4 text-left transition-colors",
-                        on ? "bg-primary text-primary-foreground" : "bg-secondary hover:bg-foreground/[0.08]"
-                      )}
-                    >
-                      <span className="min-w-0 flex-1">
-                        <span className="block text-[1.02rem] font-semibold">{o.title}</span>
-                        <span className={cn("block text-sm", on ? "text-primary-foreground/70" : "text-muted-foreground")}>{o.hint}</span>
-                      </span>
-                      {on && <Check size={20} strokeWidth={2.6} aria-hidden="true" />}
-                    </button>
-                  );
-                })}
-              </div>
-              {s.dateMode === "date_fixe" && (
-                <DateField id="group-date" label="Jour" value={s.startDate} onChange={(v) => patch({ startDate: v })} />
-              )}
+              <SegmentedControl<GroupDateMode>
+                id="wizard-date"
+                value={s.dateMode}
+                onChange={(mode) => {
+                  patch({
+                    dateMode: mode,
+                    startDate: mode === "permanent" ? "" : s.startDate || presets[0].start,
+                    endDate: mode === "creneau" ? s.endDate || presets[0].end : "",
+                  });
+                }}
+                options={GROUP_DATE_OPTIONS.map((o) => ({ value: o.mode, label: o.title }))}
+              />
+              <p className="px-1 text-sm text-muted-foreground">{GROUP_DATE_OPTIONS.find((o) => o.mode === s.dateMode)?.hint}</p>
+              {s.dateMode === "date_fixe" && <DateField id="group-date" label="Jour" value={s.startDate} onChange={(v) => patch({ startDate: v })} />}
               {s.dateMode === "creneau" && (
-                <>
+                <div className="space-y-3">
                   <PresetChips presets={presets} start={s.startDate} end={s.endDate} onPick={(p) => patch({ startDate: p.start, endDate: p.end })} />
                   <DateRangePicker startDate={s.startDate} endDate={s.endDate} onChange={(start, end) => patch({ startDate: start, endDate: end })} />
                   {length && (
                     <p className="px-1 text-sm font-medium">
-                      {formatDateRange(s.startDate, s.endDate)} · {length.days} jour{length.days > 1 ? "s" : ""}
+                      {length.days} jour{length.days > 1 ? "s" : ""}
                       {length.nights > 0 ? `, ${length.nights} nuit${length.nights > 1 ? "s" : ""}` : ""}
                     </p>
                   )}
-                </>
+                </div>
               )}
-              <ModulePicker
-                value={modules}
-                canPlan={period}
-                onChange={(next) => patch({ modules: next, modulesTouched: true })}
-              />
             </div>
-          )}
+            <ModulePicker value={modules} canPlan={period} onChange={(next) => patch({ modules: next, modulesTouched: true })} />
+          </div>
+        )}
 
           {step === "who" && (
             <div className="space-y-4">
@@ -476,8 +436,7 @@ export function CreateWizard() {
               </div>
             </div>
           )}
-        </motion.div>
-      </AnimatePresence>
+      </div>
 
       {(issue || submitError) && (
         <p

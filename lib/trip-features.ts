@@ -14,9 +14,9 @@ export interface TripFeatures {
 }
 
 export const TRIP_MODULES: { id: TripModule; label: string; hint: string; needsDates: boolean }[] = [
-  { id: "planning", label: "Planning", hint: "Les étapes et les trajets, jour par jour.", needsDates: true },
-  { id: "menus", label: "Menus", hint: "Ce qu'on cuisine et ce qu'on achète.", needsDates: true },
-  { id: "lists", label: "Listes", hint: "Qui apporte quoi, qui fait quoi.", needsDates: false },
+  { id: "planning", label: "Planning", hint: "Étapes et trajets, jour par jour", needsDates: true },
+  { id: "menus", label: "Menus", hint: "Ce qu'on cuisine ou achète", needsDates: true },
+  { id: "lists", label: "Listes", hint: "Qui apporte quoi, qui fait quoi", needsDates: false },
 ];
 
 export const ALL_MODULES: TripModule[] = TRIP_MODULES.map((m) => m.id);
