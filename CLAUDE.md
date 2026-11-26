@@ -153,7 +153,7 @@ lib/
                           020: multi-dish meals, 021: guest accounts + transfer,
                           022: friendships + push_subscriptions + checklist_items,
                           023: trip_activity (journal) + recurring_expenses + delete_my_account,
-                          024: meals.link + itinerary_items.meal_id : lien d'un repas, repas dans le planning ; 025: trips.modules : espaces au choix, fin de voyage/groupe ; 026: repas resto → étapes de planning ; projets neufs = après 023)
+                          024: meals.link + itinerary_items.meal_id : lien d'un repas, repas dans le planning ; 025: trips.modules : espaces au choix, fin de voyage/groupe ; 026: repas resto → étapes de planning ; 027: trips.meals_in_planning ; projets neufs = après 023)
   auth/guest.ts         → continueAsGuest(), startUpgrade(provider), signInToExisting(provider), signInWithProvider(),
                           claimGuestTransfer(), syncProfileFromProvider(provider)
   auth/providers.ts     → AuthProvider (google|facebook), AccountMethod (+ email), enabledProviders(), FACEBOOK_ENABLED, EMAIL_ENABLED, linkedMethods(), loginChoicesLabel()
@@ -213,7 +213,7 @@ profiles          id, name, avatar_url (Google), custom_avatar_url (choix : pres
                   photo importée ou photo Google), email, iban, phone,
                   gdpr_consented_at, gdpr_consent_version, gdpr_consent_proof
 trips             id, name, type (ancien champ, plus lu), destination?, emoji, icon_url?, modules text[] ('planning'|'menus'|'lists'),
-                  currency, start_date?, end_date?, total_budget, share_code(UNIQUE), owner_id
+                  currency, start_date?, end_date?, total_budget, share_code(UNIQUE), owner_id, meals_in_planning (défaut vrai)
                   // destination/start_date/end_date facultatifs ; modules vide = budget seul
 participants      id, trip_id, name, color, avatar? (URL/chemin d'image = avatar du membre lié, sinon emoji)
 trip_members      trip_id + user_id (composite PK), participant_id, role: owner|contributor
@@ -315,6 +315,7 @@ DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip(
   Clavier : `enterKeyHint`, premier champ au focus à l'ouverture, Entrée = champ suivant puis validation (`handleEnter`, zone de texte exceptée).
   Formulaires concernés : repas, dépense, étape, trajet. Le trajet calcule seul sa durée dès que départ et arrivée sont choisis.
 - **Menus = ce qu'on cuisine ou achète** (à la maison, pique-nique). Un resto n'est pas un repas : c'est une étape du planning (type « Resto »), migration 026 pour l'existant.
+- **Réglage « Repas dans le planning »** (Modifier, visible si planning et menus sont cochés) : éteint, les étapes nées d'un repas (`meal_id`) restent en base mais sont masquées par `useItinerary()` (`visibleSteps()`), rien n'est supprimé.
 - **Repas et planning** : enregistrer un repas crée son étape dans le planning (`syncMeal()` de `useItinerary`, `mealPlanningEntry()` dans
   `lib/meals/planning.ts`) : type « food », heure par défaut (déjeuner 12:00, une heure ; petit-déjeuner 08:00 ; goûter 16:00, 30 min ; dîner 20:00),
   titre « Déjeuner · Chez Léa ». Ensuite seuls titre, description et participants suivent le repas : jour, heure et durée déplacés dans
