@@ -3,7 +3,8 @@
 import { createClient } from "@/lib/supabase/client";
 import { useCachedQuery } from "@/hooks/useCachedQuery";
 import { notify } from "@/lib/notifications/notify";
-import type { ItineraryItem, ItineraryType, JourneyMode } from "@/types";
+import { mealPlanningEntry } from "@/lib/meals/planning";
+import type { ItineraryItem, ItineraryType, JourneyMode, Meal } from "@/types";
 
 function rowToItem(row: Record<string, unknown>): ItineraryItem {
   return {
@@ -19,6 +20,7 @@ function rowToItem(row: Record<string, unknown>): ItineraryItem {
     journeyMode: (row.journey_mode as JourneyMode | null) ?? undefined,
     durationMinutes: (row.duration_minutes as number | null) ?? undefined,
     participantIds: Array.isArray(row.participant_ids) ? (row.participant_ids as string[]) : [],
+    mealId: (row.meal_id as string | null) ?? undefined,
     createdAt: row.created_at as string,
   };
 }
@@ -104,5 +106,40 @@ export function useItinerary(tripId: string) {
     if (error) { setItems(snapshot); throw new Error(error.message); }
   };
 
-  return { items, loading, refetch: fetchItems, addItem, updateItem, deleteItem };
+  /**
+   * Un repas enregistré apparaît dans le planning (12:00 à 13:00 pour le déjeuner, etc.).
+   * Première fois : l'étape est créée. Ensuite : seuls le titre, la description et les participants suivent le repas,
+   * jamais le jour, l'heure ni la durée, que l'on peut avoir déplacés dans l'onglet Planning.
+   */
+  const syncMeal = async (meal: Meal): Promise<void> => {
+    const supabase = createClient();
+    const entry = mealPlanningEntry(meal);
+    const { data: existing, error: lookupError } = await supabase
+      .from("itinerary_items")
+      .select("id")
+      .eq("meal_id", meal.id)
+      .limit(1);
+    if (lookupError) throw new Error(lookupError.message);
+    const found = (existing as { id: string }[] | null)?.[0]?.id;
+    const { error } = found
+      ? await supabase
+          .from("itinerary_items")
+          .update({ title: entry.title, description: entry.description ?? null, participant_ids: entry.participantIds })
+          .eq("id", found)
+      : await supabase.from("itinerary_items").insert({
+          trip_id: tripId,
+          meal_id: meal.id,
+          date: meal.date,
+          time: entry.time,
+          title: entry.title,
+          description: entry.description ?? null,
+          type: "food",
+          duration_minutes: entry.durationMinutes,
+          participant_ids: entry.participantIds,
+        });
+    if (error) throw new Error(error.message);
+    await fetchItems();
+  };
+
+  return { items, loading, refetch: fetchItems, addItem, updateItem, deleteItem, syncMeal };
 }

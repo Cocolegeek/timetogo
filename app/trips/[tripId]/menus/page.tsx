@@ -7,7 +7,7 @@ import { useUndoableDelete } from "@/hooks/useUndoableDelete";
 import { useQuickAdd } from "@/hooks/useQuickAdd";
 import { useToast } from "@/components/shared/Toaster";
 import { m as motion, AnimatePresence, useMotionValue, useTransform, animate } from "framer-motion";
-import { UtensilsCrossed, ChefHat, Users, Plus, Trash2 } from "lucide-react";
+import { UtensilsCrossed, ChefHat, Link2, Users, Plus, Trash2 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { DayHeader } from "@/components/shared/DayHeader";
 import { DayTabs } from "@/components/shared/DayTabs";
@@ -17,6 +17,8 @@ import { ParticipantAvatar } from "@/components/shared/ParticipantAvatar";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { useTrip } from "@/hooks/useTrip";
 import { useMeals } from "@/hooks/useMeals";
+import { useItinerary } from "@/hooks/useItinerary";
+import { linkHost } from "@/lib/meals/link";
 import { DEFAULT_SLOTS, SLOT_CONFIG, eachDate } from "@/lib/meals/slots";
 import { CATEGORY_CONFIG } from "@/lib/meals/categories";
 import { COURSE_BY_ID, COURSE_ORDER } from "@/lib/meals/courses";
@@ -41,7 +43,11 @@ export default function MenusPage({ params }: MenusPageProps) {
   const { meals: allMeals, loading, addMeal, updateMeal, deleteMeal } = useMeals(tripId);
   const searchParams = useSearchParams();
   const toast = useToast();
-  const { pending, remove } = useUndoableDelete(deleteMeal);
+  const { syncMeal, refetch: refetchItinerary } = useItinerary(tripId);
+  const { pending, remove } = useUndoableDelete(async (id) => {
+    await deleteMeal(id);
+    void refetchItinerary();
+  });
   const meals = useMemo(() => allMeals.filter((m) => !pending.has(m.id)), [allMeals, pending]);
 
   const [editingMeal, setEditingMeal] = useState<Meal | null>(null);
@@ -196,7 +202,13 @@ export default function MenusPage({ params }: MenusPageProps) {
         onSave={async (data) => {
           if (!editingMeal) return;
           await updateMeal(editingMeal.id, data);
-          toast({ message: "Repas enregistré", tone: "success" });
+          try {
+            await syncMeal({ ...editingMeal, ...data });
+            toast({ message: "Repas enregistré et ajouté au planning", tone: "success" });
+          } catch (error) {
+            console.error("[meal-planning]", error);
+            toast({ message: "Repas enregistré, mais pas ajouté au planning" });
+          }
         }}
       />
     </div>
@@ -238,6 +250,7 @@ function MealCard({
   // "Tout le monde" and "À la maison" are the defaults: only say what differs.
   const eaterLabel = eatersCount === 0 || eatersCount === participants.length ? null : `${eatersCount} pers.`;
   const showCategory = meal.category !== "home";
+  const link = meal.category !== "home" ? meal.link : null;
 
   const dishes = [...meal.dishes]
     .filter((d) => d.name.trim().length > 0)
@@ -303,8 +316,8 @@ function MealCard({
           !note && <span className="mt-3 block border-t border-border pt-3 text-sm text-muted-foreground">Touche pour composer le repas.</span>
         )}
 
-        {(cooks.length > 0 || eaterLabel) && (
-        <span className="mt-3 flex items-center gap-4 text-sm text-muted-foreground">
+        {(cooks.length > 0 || eaterLabel || link) && (
+        <span className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
           {cooks.length > 0 && (
             <span className="flex items-center gap-1.5">
               <ChefHat size={15} />
@@ -320,6 +333,27 @@ function MealCard({
             <span className="flex items-center gap-1.5">
               <Users size={15} />
               {eaterLabel}
+            </span>
+          )}
+          {link && (
+            <span
+              role="link"
+              tabIndex={0}
+              aria-label={`Ouvrir ${linkHost(link)}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                window.open(link, "_blank", "noopener,noreferrer");
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.stopPropagation();
+                  window.open(link, "_blank", "noopener,noreferrer");
+                }
+              }}
+              className="flex items-center gap-1.5 font-medium text-foreground underline-offset-2 hover:underline"
+            >
+              <Link2 size={15} />
+              {linkHost(link)}
             </span>
           )}
         </span>

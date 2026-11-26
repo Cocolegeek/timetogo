@@ -142,7 +142,7 @@ useRecurring(id, on)    → { items, create, remove, applyDue }            // ap
 lib/
   supabase/client.ts    → createBrowserClient(): use in hooks/client components
   supabase/server.ts    → createServerClient() with cookies: use in server components/API routes
-  supabase/schema.sql   → schéma de base + RLS, intégrant 021 à 023. ⚠️ Il NE contient PAS 016, 018, 019 et ses `join_trip` /
+  supabase/schema.sql   → schéma de base + RLS, intégrant 021 à 023 (pas 024). ⚠️ Il NE contient PAS 016, 018, 019 et ses `join_trip` /
                           `create_trip_with_owner` sont antérieurs aux migrations 018 / 021 : projet neuf = schema.sql puis
                           016, 018, 019, 021 (voir docs/GUIDE-SUPABASE-VERCEL.md). Ne jamais le rejouer sur une base existante.
   supabase/migrations/  → 001..021_*.sql (008: RGPD, 009: multi-payer, 010: trip type,
@@ -151,7 +151,8 @@ lib/
                           017: payment info, 018: identity claim, 019: get_payment_info,
                           020: multi-dish meals, 021: guest accounts + transfer,
                           022: friendships + push_subscriptions + checklist_items,
-                          023: trip_activity (journal) + recurring_expenses + delete_my_account)
+                          023: trip_activity (journal) + recurring_expenses + delete_my_account,
+                          024: meals.link + itinerary_items.meal_id : lien d'un repas, repas dans le planning ; projet neuf = après 023)
   auth/guest.ts         → continueAsGuest(), startUpgrade(provider), signInToExisting(provider), signInWithProvider(),
                           claimGuestTransfer(), syncProfileFromProvider(provider)
   auth/providers.ts     → AuthProvider (google|facebook), AccountMethod (+ email), enabledProviders(), FACEBOOK_ENABLED, EMAIL_ENABLED, linkedMethods(), loginChoicesLabel()
@@ -216,7 +217,7 @@ participants      id, trip_id, name, color, avatar? (URL/chemin d'image = avatar
 trip_members      trip_id + user_id (composite PK), participant_id, role: owner|contributor
 expenses          id, trip_id, title, amount, currency, exchange_rate, amount_in_trip_currency,
                   category, paid_by_id (legacy), payers: jsonb[], date, split_mode, splits: jsonb[], notes
-meals             id, trip_id, date, slot: breakfast|lunch|snack|dinner, title?, category,
+meals             id, trip_id, date, slot: breakfast|lunch|snack|dinner, title?, category, link? (resto et pique-nique seulement),
                   participant_ids: uuid[], cook_ids: uuid[],
                   dishes: [{id, course: starter|main|cheese|dessert|other, name, ingredients:[{id,name,quantity}]}],
                   position
@@ -224,6 +225,7 @@ meals             id, trip_id, date, slot: breakfast|lunch|snack|dinner, title?,
                   // Meals créés à la demande via la page menus (plus de pré-remplissage matin/midi/soir).
 itinerary_items   id, trip_id, date, time, title, location, type, duration_minutes, participant_ids: uuid[]
                   // type: 'accommodation'|'activity'|'food'|'other'|'journey'
+                  // meal_id? (024) : étape créée par un repas, supprimée avec lui (ON DELETE CASCADE)
                   // journey extras: destination (text), journey_mode ('car'|'foot'|'bike'|'transit'|'plane')
 guest_transfers   token, guest_id, expires_at, claimed_by/at: jetons à usage unique (021, pas de policy)
 profiles (+022)   friend_code (UNIQUE, généré par get_my_friend_code), notification_prefs jsonb
@@ -304,6 +306,11 @@ DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip(
   Action principale dans `FormFooter`, en bas sous le pouce, jamais grisée sans explication (message + secousse + focus du champ manquant).
   Clavier : `enterKeyHint`, premier champ au focus à l'ouverture, Entrée = champ suivant puis validation (`handleEnter`, zone de texte exceptée).
   Formulaires concernés : repas, dépense, étape, trajet. Le trajet calcule seul sa durée dès que départ et arrivée sont choisis.
+- **Repas et planning** : enregistrer un repas crée son étape dans le planning (`syncMeal()` de `useItinerary`, `mealPlanningEntry()` dans
+  `lib/meals/planning.ts`) : type « food », heure par défaut (déjeuner 12:00, une heure ; petit-déjeuner 08:00 ; goûter 16:00, 30 min ; dîner 20:00),
+  titre « Déjeuner · Chez Léa ». Ensuite seuls titre, description et participants suivent le repas : jour, heure et durée déplacés dans
+  l'onglet Planning ne sont jamais écrasés. Supprimer le repas supprime l'étape (cascade). Un lien (`normalizeLink()`) est proposé pour un
+  resto ou un pique-nique, jamais à la maison ; il s'affiche sur la carte du repas (nom du site) et dans la description de l'étape.
 - **Saisie rapide d'une dépense** : seul le montant est obligatoire (titre facultatif, par défaut la catégorie), puces des titres récents
   (`recentTitles()`, reprennent la catégorie), catégorie devinée d'après le titre tant qu'elle n'a pas été choisie (`guessCategory()`),
   « Dupliquer » dans la fiche d'une dépense (date du jour), et après un ajout la pastille « Ajouter une autre » (budget et planning).

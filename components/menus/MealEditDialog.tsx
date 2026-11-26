@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { m as motion, AnimatePresence } from "framer-motion";
-import { X, Plus, Trash2, ChefHat, Users, ChevronDown, House, NotebookPen } from "lucide-react";
+import { X, Plus, Trash2, ChefHat, Users, ChevronDown, House, Link2, NotebookPen, Sandwich, Utensils, type LucideIcon } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle, FULLSCREEN_DIALOG } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { HeroInput } from "@/components/forms/HeroInput";
@@ -13,6 +13,7 @@ import { SLOT_CONFIG } from "@/lib/meals/slots";
 import { CATEGORY_CONFIG, CATEGORY_ORDER } from "@/lib/meals/categories";
 import { cn, firstName } from "@/lib/utils";
 import { handleEnter } from "@/lib/forms/enter-next";
+import { normalizeLink } from "@/lib/meals/link";
 import { haptic } from "@/lib/haptics";
 import { ParticipantPicker } from "@/components/shared/ParticipantPicker";
 import { COURSES, COURSE_BY_ID } from "@/lib/meals/courses";
@@ -34,6 +35,8 @@ function nextCourse(dishes: Dish[]): DishCourse {
   return FOLLOWING_COURSES.find((c) => !used.has(c)) ?? "other";
 }
 
+const CATEGORY_ICONS: Record<MealCategory, LucideIcon> = { home: House, picnic: Sandwich, restaurant: Utensils };
+
 function peopleLabel(participants: Participant[], ids: string[], empty: string): string {
   const names = ids.map((id) => participants.find((p) => p.id === id)).filter((p): p is Participant => !!p).map((p) => firstName(p.name));
   if (names.length === 0) return empty;
@@ -49,6 +52,7 @@ interface MealEditDialogProps {
     title: string | null;
     category: MealCategory;
     notes?: string | null;
+    link?: string | null;
     participantIds: string[];
     cookIds: string[];
     dishes: Dish[];
@@ -59,6 +63,7 @@ export function MealEditDialog({ open, onOpenChange, meal, participants, onSave 
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState<MealCategory>("home");
   const [notes, setNotes] = useState("");
+  const [link, setLink] = useState("");
   const [noteOpen, setNoteOpen] = useState(false);
   const [eaterIds, setEaterIds] = useState<string[]>([]);
   const [cookIds, setCookIds] = useState<string[]>([]);
@@ -74,6 +79,7 @@ export function MealEditDialog({ open, onOpenChange, meal, participants, onSave 
     setTitle(meal.title ?? "");
     setCategory(meal.category);
     setNotes(meal.notes ?? "");
+    setLink(meal.link ?? "");
     setNoteOpen(!!(meal.title || meal.notes));
     setEaterIds(meal.participantIds.length === 0 ? participants.map((p) => p.id) : meal.participantIds);
     setCookIds(meal.cookIds ?? []);
@@ -122,6 +128,11 @@ export function MealEditDialog({ open, onOpenChange, meal, participants, onSave 
 
   // ── Enregistrer ─────────────────────────────────────────────────────────
   const handleSave = async () => {
+    const linkValue = category === "home" ? null : normalizeLink(link);
+    if (category !== "home" && link.trim() && !linkValue) {
+      setErrorMsg("Ce lien n'a pas l'air valide.");
+      return;
+    }
     setSaving(true);
     setErrorMsg(null);
     try {
@@ -144,6 +155,7 @@ export function MealEditDialog({ open, onOpenChange, meal, participants, onSave 
         title: title.trim() || null,
         category,
         notes: notes.trim() || null,
+        link: linkValue,
         participantIds: cleanedEaters,
         cookIds,
         dishes: cleanedDishes,
@@ -164,7 +176,7 @@ export function MealEditDialog({ open, onOpenChange, meal, participants, onSave 
   const chips: PropertyChipItem[] = [
     {
       id: "category",
-      icon: House,
+      icon: CATEGORY_ICONS[category],
       label: CATEGORY_CONFIG[category].label,
       filled: category !== "home",
       panel: (
@@ -300,6 +312,29 @@ export function MealEditDialog({ open, onOpenChange, meal, participants, onSave 
           )}
 
           <PropertyChips items={chips} />
+
+          {category !== "home" && (
+            <div className="flex items-center gap-3 rounded-2xl border border-input bg-card px-4 focus-within:border-primary/60 focus-within:ring-4 focus-within:ring-primary/12">
+              <Link2 size={17} className="shrink-0 text-muted-foreground" aria-hidden="true" />
+              <input
+                type="url"
+                inputMode="url"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                value={link}
+                onChange={(e) => {
+                  setLink(e.target.value);
+                  setErrorMsg(null);
+                }}
+                placeholder="Lien (site, Maps, réservation)"
+                aria-label="Lien"
+                enterKeyHint="next"
+                onKeyDown={(e) => handleEnter(e)}
+                className="h-12 min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground"
+              />
+            </div>
+          )}
 
           {noteOpen || isRestaurant ? (
             <div className="space-y-2">
