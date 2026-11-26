@@ -1,3 +1,5 @@
+import type { TripFeatures } from "@/lib/trip-features";
+
 export type SectionHref = "" | "/budget" | "/planning" | "/menus" | "/lists";
 
 export interface SectionCounts {
@@ -8,12 +10,18 @@ export interface SectionCounts {
 
 export const SEARCH_MIN_ITEMS = 5;
 
-/** Résumé et Budget toujours ; les autres onglets dès qu'ils contiennent quelque chose, ou quand on y est (cochés ou non). */
-export function visibleSections(counts: SectionCounts, active: SectionHref | null): SectionHref[] {
+/**
+ * Résumé et Budget toujours. Un autre onglet est là si l'espace est coché OU s'il contient déjà quelque chose
+ * (`features` vient de `featuresWithContent`), et il ne disparaît jamais quand on y est.
+ */
+export function visibleSections(
+  features: Pick<TripFeatures, "hasPlanning" | "hasMenus" | "hasLists">,
+  active: SectionHref | null
+): SectionHref[] {
   const out: SectionHref[] = ["", "/budget"];
-  if (counts.planning > 0 || active === "/planning") out.push("/planning");
-  if (counts.menus > 0 || active === "/menus") out.push("/menus");
-  if (counts.lists > 0 || active === "/lists") out.push("/lists");
+  if (features.hasPlanning || active === "/planning") out.push("/planning");
+  if (features.hasMenus || active === "/menus") out.push("/menus");
+  if (features.hasLists || active === "/lists") out.push("/lists");
   return out;
 }
 

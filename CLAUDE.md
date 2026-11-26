@@ -153,7 +153,7 @@ lib/
                           020: multi-dish meals, 021: guest accounts + transfer,
                           022: friendships + push_subscriptions + checklist_items,
                           023: trip_activity (journal) + recurring_expenses + delete_my_account,
-                          024: meals.link + itinerary_items.meal_id : lien d'un repas, repas dans le planning ; 025: trips.modules : espaces au choix, fin de voyage/groupe ; 026: repas resto → étapes de planning ; 027: trips.meals_in_planning ; projets neufs = après 023)
+                          024: meals.link + itinerary_items.meal_id : lien d'un repas, repas dans le planning ; 025: trips.modules : espaces au choix, fin de voyage/groupe ; 026: repas resto → étapes de planning ; 027: trips.meals_in_planning ; 028: modules recochés d'après le contenu des anciens voyages ; projets neufs = après 023)
   auth/guest.ts         → continueAsGuest(), startUpgrade(provider), signInToExisting(provider), signInWithProvider(),
                           claimGuestTransfer(), syncProfileFromProvider(provider)
   auth/providers.ts     → AuthProvider (google|facebook), AccountMethod (+ email), enabledProviders(), FACEBOOK_ENABLED, EMAIL_ENABLED, linkedMethods(), loginChoicesLabel()
@@ -290,8 +290,7 @@ DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip(
 
 - **Navigation voyage** : barre d'onglets flottante (matière translucide = seule zone « verre » autorisée),
   qui se compacte au défilement ; toucher l'onglet actif ou le titre de l'en-tête remonte en haut.
-  **Onglets selon les espaces et le contenu** (`visibleSections()`) : Résumé et Budget toujours ; Planning, Menus et Listes n'apparaissent que
-  s'ils contiennent quelque chose (ou quand on est dessus : l'onglet courant ne disparaît jamais). La première création passe par
+  **Onglets : une seule règle** (`visibleSections()` avec `featuresWithContent()`) : Résumé et Budget toujours ; un autre onglet est là si l'espace est coché OU s'il contient déjà quelque chose, et l'onglet courant ne disparaît jamais. Un espace coché mais vide a son onglet avec le grand bouton d'ajout de l'écran vide (« Journée libre », créneaux de repas, suggestions de listes). La première création passe par
   « Premiers pas » et le « + » (feuille de choix). Libellés plus grands quand il y a peu d'onglets. La loupe de l'en-tête
   n'apparaît qu'à partir de 5 éléments (`SEARCH_MIN_ITEMS`).
 - **Ordinateur** (une seule app responsive, pas deux versions ; point de bascule `lg` = 1024 px) : le menu latéral à gauche (`TripNav`,
@@ -306,7 +305,7 @@ DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip(
   groupe sans planning), il ouvre la feuille de choix. **Appui long** (450 ms), clic droit ou bouton lecteur d'écran = feuille de choix
   complète (`QuickAddSheet` : l'action de l'écran, sinon la dépense, en grande ligne EN BAS, sous le pouce qui vient de toucher « + » ; les autres
   en liste groupée au-dessus, la plus probable au plus près du bas, sans phrases d'aide).
-  Une astuce unique (« maintiens + ») s'affiche au 3e ajout direct. Les pages ouvrent leur formulaire via `useQuickAdd()`
+  La feuille « + » n'a qu'une ligne « Planning » pour étape et trajet (`kind: "planning"`) : la page Planning ouvre alors son choix Étape / Trajet. Une astuce unique (« maintiens + ») s'affiche dès le 1er ajout direct. Les pages ouvrent leur formulaire via `useQuickAdd()`
   (événement si déjà sur la page, sinon `?new=<kind>`). Pas de FAB par page.
 - **Formulaires** (`components/forms/`) : une seule page, jamais d'onglets pour un petit formulaire. Un champ principal (`HeroInput` :
   le plat, le titre, le montant), les réglages en puces (`PropertyChips`) qui affichent leur valeur, s'affirment quand elle diffère du défaut

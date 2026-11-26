@@ -3,7 +3,8 @@
 import { useEffect, useRef } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
-export type QuickAddKind = "expense" | "step" | "journey" | "meal" | "item";
+/** « planning » : la ligne unique du Planning dans la feuille « + », la page propose ensuite étape ou trajet. */
+export type QuickAddKind = "expense" | "step" | "journey" | "planning" | "meal" | "item";
 
 const EVENT = "voyou:quick-add";
 
