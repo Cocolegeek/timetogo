@@ -52,7 +52,7 @@ export default function PlanningPage({ params }: PlanningPageProps) {
   const items = useMemo(() => allItems.filter((i) => !pending.has(i.id)), [allItems, pending]);
   const highlightId = searchParams.get("item");
 
-  const [pickerOpen, setPickerOpen] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(searchParams.get("new") === "planning");
   const [pickerDate, setPickerDate] = useState<string | undefined>();
   const [formOpen, setFormOpen] = useState(searchParams.get("new") === "step");
   const [journeyFormOpen, setJourneyFormOpen] = useState(searchParams.get("new") === "journey");
@@ -84,6 +84,11 @@ export default function PlanningPage({ params }: PlanningPageProps) {
   };
 
   useQuickAdd((kind) => {
+    if (kind === "planning") {
+      setPickerDate(currentDate);
+      setPickerOpen(true);
+      return;
+    }
     if (kind !== "step" && kind !== "journey") return;
     setEditingItem(undefined);
     setFormDefaultDate(currentDate);
@@ -205,7 +210,7 @@ export default function PlanningPage({ params }: PlanningPageProps) {
         <DialogContent className="max-w-sm">
           <div className="space-y-1 pr-10">
             <DialogTitle>Ajouter au planning</DialogTitle>
-            <DialogDescription>Une étape sur place ou un déplacement entre deux lieux.</DialogDescription>
+            <DialogDescription className="sr-only">Une étape sur place ou un déplacement entre deux lieux.</DialogDescription>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <PickerOption icon={CalendarPlus} tile="bg-emerald-500/12 text-emerald-400" label="Étape" hint="Activité, resto, logement" onClick={openEventForm} />

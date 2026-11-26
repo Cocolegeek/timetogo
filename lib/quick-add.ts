@@ -35,6 +35,7 @@ export const ADD_LABELS: Record<QuickAddKind, string> = {
   expense: "Ajouter une dépense",
   step: "Ajouter une étape",
   journey: "Ajouter un trajet",
+  planning: "Ajouter au planning",
   meal: "Ajouter un repas",
   item: "Ajouter à la liste",
 };

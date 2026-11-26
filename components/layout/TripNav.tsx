@@ -81,16 +81,23 @@ export function TripNav({ tripId }: TripNavProps) {
   const sheetMounted = useMountOnce(addOpen);
 
   const counts = useTripCounts(tripId);
-  const shown = visibleSections(counts, sectionOf(pathname, base));
+  const active = featuresWithContent({ modules }, counts);
+  const shown = visibleSections(active, sectionOf(pathname, base));
   const items = NAV_ITEMS.filter((item) => shown.includes(item.href as (typeof shown)[number]));
   const labelSize = items.length <= 3 ? "text-[0.8125rem]" : items.length === 4 ? "text-xs" : "text-[0.6875rem]";
-  const active = featuresWithContent({ modules }, counts);
   const isOn = (m: TripModule | null) => !m || (m === "planning" ? active.hasPlanning : m === "menus" ? active.hasMenus : active.hasLists);
   // Tout reste ajoutable : les espaces non cochés passent simplement en retrait.
   const available = [...QUICK_ADD.filter((a) => isOn(a.module)), ...QUICK_ADD.filter((a) => !isOn(a.module)).map((a) => ({ ...a, muted: true }))];
   const context = contextKind(pathname, base, ALL_MODULES);
   const lead = leadKind(context, available.map((a) => a.kind));
   const actions = orderActions(available, lead);
+  // La feuille « + » regroupe étape et trajet sous une seule ligne « Planning » (la page demande lequel).
+  const planningRow = available.find((a) => a.kind === "step");
+  const sheetAvailable = available
+    .filter((a) => a.kind !== "journey")
+    .map((a) => (a.kind === "step" && planningRow ? { ...a, kind: "planning" as const, label: "Planning", icon: Map } : a));
+  const sheetLead = leadKind(context === "step" ? "planning" : context, sheetAvailable.map((a) => a.kind));
+  const sheetActions = orderActions(sheetAvailable, sheetLead);
   const toast = useToast();
   const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const longPressed = useRef(false);
@@ -115,12 +122,12 @@ export function TripNav({ tripId }: TripNavProps) {
     if (pressTimer.current) clearTimeout(pressTimer.current);
   };
 
-  /** Une seule fois, au 3e ajout direct : on apprend le geste du choix complet sans jamais l'imposer. */
+  /** Une seule fois, dès le 1er ajout direct : on apprend le geste du choix complet sans jamais l'imposer. */
   const teachLongPress = () => {
     try {
       const n = Number(localStorage.getItem("voyou-plus-uses") ?? "0") + 1;
       localStorage.setItem("voyou-plus-uses", String(n));
-      if (n === 3) toast({ message: "Astuce : maintiens + pour ajouter autre chose", duration: 4500 });
+      if (n === 1) toast({ message: "Astuce : maintiens + pour ajouter autre chose", duration: 4500 });
     } catch {
       // storage unavailable: no hint
     }
@@ -326,7 +333,7 @@ export function TripNav({ tripId }: TripNavProps) {
         </ul>
       </aside>
 
-      {sheetMounted && <QuickAddSheet open={addOpen} onOpenChange={setAddOpen} actions={actions} onPick={runAction} />}
+      {sheetMounted && <QuickAddSheet open={addOpen} onOpenChange={setAddOpen} actions={sheetActions} onPick={runAction} />}
     </>
   );
 }
