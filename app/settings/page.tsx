@@ -21,7 +21,7 @@ const THEME_LABEL = { system: "Auto", light: "Clair", dark: "Sombre" } as const;
 const PUSH_LABEL: Record<PushState, string> = {
   on: "Activées",
   off: "Désactivées",
-  denied: "Bloquées",
+  denied: "Désactivées",
   unsupported: "Indisponibles",
   "needs-install": "À installer",
 };
