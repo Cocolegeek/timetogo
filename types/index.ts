@@ -261,6 +261,8 @@ export interface Meal {
   /** Note optionnelle au niveau du repas (ex: "Chez Léa"). */
   title?: string | null;
   notes?: string | null;
+  /** Lien utile (resto, pique-nique) : site, Maps, réservation. Jamais pour un repas à la maison. */
+  link?: string | null;
   /** Participants who eat this meal (empty list = "tout le monde" implicit). */
   participantIds: string[];
   /** Participants in charge of preparing the meal (optional). */
@@ -298,5 +300,7 @@ export interface ItineraryItem {
   durationMinutes?: number;
   /** Participant IDs involved in this step. */
   participantIds: string[];
+  /** Repas qui a créé cette étape : supprimer le repas supprime l'étape. */
+  mealId?: string;
   createdAt: string;
 }

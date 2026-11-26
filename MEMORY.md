@@ -11,7 +11,8 @@ Ce fichier dit où en est le projet et comment y travailler. Les règles de code
 
 ## Où on en est
 Fusionné sur `main` : PR #6 (audit : hors-ligne, devises, journal, RGPD, tests, récurrents, exports, connexion e-mail), PR #7 (assistant de création, « + » contextuel, saisie rapide), PR #8 (tableau de bord épuré, feuille « + » sous le pouce, formulaires en une page, polices hébergées).
-En production sur voyou.app. Base Supabase migrée jusqu'à la 023. Les voyages existants en ✈️ sont passés en 🚆 (6 voyages, base de production).
+En attente de son test et de son « fusionne » : PR #9 (lien d'un repas pour resto et pique-nique, repas ajoutés automatiquement au planning, 12:00 pour le déjeuner, déplaçables ensuite).
+En production sur voyou.app. Base Supabase migrée jusqu'à la **024** (appliquée à la main sur la base de production ; les 27 repas déjà existants n'ont pas d'étape de planning, seuls les repas enregistrés ensuite en créent une). Les voyages existants en ✈️ sont passés en 🚆 (6 voyages, base de production).
 
 ## En attente (rien d'urgent)
 - **Facebook en pause** : Meta exige la vérification d'une entreprise pour sortir du mode Développement. L'app Meta existe (mode Développement), `NEXT_PUBLIC_FACEBOOK_LOGIN` reste faux, le fournisseur est désactivé dans Supabase. À reprendre quand il aura une structure : App ID et clé secrète dans Supabase (il les colle lui-même), puis variable Vercel et redéploiement.

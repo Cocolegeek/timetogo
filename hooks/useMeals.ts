@@ -14,6 +14,7 @@ function rowToMeal(row: Record<string, unknown>): Meal {
     category: ((row.category as string) ?? "home") as MealCategory,
     title: (row.title as string | null) ?? null,
     notes: (row.notes as string | null) ?? null,
+    link: (row.link as string | null) ?? null,
     participantIds: Array.isArray(row.participant_ids) ? (row.participant_ids as string[]) : [],
     cookIds: Array.isArray(row.cook_ids) ? (row.cook_ids as string[]) : [],
     dishes: Array.isArray(row.dishes) ? (row.dishes as Dish[]) : [],
@@ -43,7 +44,7 @@ export function useMeals(tripId: string) {
 
   const updateMeal = async (
     id: string,
-    data: Partial<Pick<Meal, "title" | "category" | "notes" | "participantIds" | "cookIds" | "dishes">>
+    data: Partial<Pick<Meal, "title" | "category" | "notes" | "link" | "participantIds" | "cookIds" | "dishes">>
   ): Promise<void> => {
     const snapshot = meals;
     setMeals((ms) => ms.map((m) => (m.id === id ? { ...m, ...data } : m)));
@@ -52,6 +53,7 @@ export function useMeals(tripId: string) {
       ...(data.title !== undefined && { title: data.title ?? null }),
       ...(data.category !== undefined && { category: data.category }),
       ...(data.notes !== undefined && { notes: data.notes ?? null }),
+      ...(data.link !== undefined && { link: data.link ?? null }),
       ...(data.participantIds !== undefined && { participant_ids: data.participantIds }),
       ...(data.cookIds !== undefined && { cook_ids: data.cookIds }),
       ...(data.dishes !== undefined && { dishes: data.dishes }),
