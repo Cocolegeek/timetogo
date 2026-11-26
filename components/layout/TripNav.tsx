@@ -1,5 +1,6 @@
 "use client";
 
+import { EmojiIcon } from "@/components/shared/EmojiIcon";
 import { useState, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -271,7 +272,7 @@ export function TripNav({ tripId }: TripNavProps) {
         <div className="mt-3 flex items-center gap-2.5 px-2">
           {trip?.emoji && (
             <span aria-hidden="true" className="text-2xl">
-              {trip.emoji}
+              <EmojiIcon emoji={trip.emoji} />
             </span>
           )}
           <span className="min-w-0 truncate font-display text-[1.15rem] font-bold tracking-tight">{trip?.name}</span>

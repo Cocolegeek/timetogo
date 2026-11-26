@@ -1,5 +1,6 @@
 "use client";
 
+import { EmojiIcon } from "@/components/shared/EmojiIcon";
 import Link from "next/link";
 import { useState } from "react";
 import dynamic from "next/dynamic";
@@ -94,7 +95,7 @@ function TripActions({
 function TripEmoji({ emoji }: { emoji?: string | null }) {
   return emoji ? (
     <span aria-hidden="true" className="mr-1.5">
-      {emoji}
+      <EmojiIcon emoji={emoji} />
     </span>
   ) : null;
 }
