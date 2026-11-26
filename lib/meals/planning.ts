@@ -29,9 +29,8 @@ function dishSummary(dishes: Meal["dishes"]): string {
 export function mealPlanningEntry(meal: MealLike): MealPlanningEntry {
   const label = SLOT_CONFIG[meal.slot].label;
   const note = meal.title?.trim() ?? "";
-  const detail =
-    meal.category === "restaurant" ? note || "Resto" : meal.category === "picnic" ? "Pique-nique" : dishSummary(meal.dishes) || note;
-  const lines = [meal.category !== "home" ? meal.link?.trim() : "", meal.notes?.trim()].filter(Boolean);
+  const detail = meal.category === "picnic" ? "Pique-nique" : dishSummary(meal.dishes) || note;
+  const lines = [meal.category === "picnic" ? meal.link?.trim() : "", meal.notes?.trim()].filter(Boolean);
   const defaults = SLOT_DEFAULTS[meal.slot];
   return {
     title: detail ? `${label} · ${detail}` : label,

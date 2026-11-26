@@ -26,11 +26,14 @@ test("à la maison : le titre reprend les plats, deux au plus", () => {
   assert.equal(mealPlanningEntry({ ...base, title: "Chez Léa" }).title, "Déjeuner · Chez Léa");
 });
 
-test("resto : le nom du resto, sinon « Resto » ; le lien et les notes vont dans la description", () => {
-  const e = mealPlanningEntry({ ...base, slot: "dinner", category: "restaurant", title: "Le bistrot", link: "https://bistrot.fr/", notes: "Table à 20 h 30" });
-  assert.equal(e.title, "Dîner · Le bistrot");
-  assert.equal(e.description, "https://bistrot.fr/\nTable à 20 h 30");
-  assert.equal(mealPlanningEntry({ ...base, category: "restaurant" }).title, "Déjeuner · Resto");
+test("pique-nique : le lien et les notes vont dans la description", () => {
+  const e = mealPlanningEntry({ ...base, slot: "dinner", category: "picnic", link: "https://boulangerie.fr/", notes: "Prendre un plaid" });
+  assert.equal(e.title, "Dîner · Pique-nique");
+  assert.equal(e.description, "https://boulangerie.fr/\nPrendre un plaid");
+});
+
+test("un ancien repas « restaurant » encore en cache ne casse rien : titre d'après la note", () => {
+  assert.equal(mealPlanningEntry({ ...base, category: "restaurant", title: "Le bistrot" }).title, "Déjeuner · Le bistrot");
 });
 
 test("pique-nique : titre fixe ; à la maison, le lien est ignoré", () => {

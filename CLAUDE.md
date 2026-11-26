@@ -153,7 +153,7 @@ lib/
                           020: multi-dish meals, 021: guest accounts + transfer,
                           022: friendships + push_subscriptions + checklist_items,
                           023: trip_activity (journal) + recurring_expenses + delete_my_account,
-                          024: meals.link + itinerary_items.meal_id : lien d'un repas, repas dans le planning ; 025: trips.modules : espaces au choix, fin de voyage/groupe ; projets neufs = après 023)
+                          024: meals.link + itinerary_items.meal_id : lien d'un repas, repas dans le planning ; 025: trips.modules : espaces au choix, fin de voyage/groupe ; 026: repas resto → étapes de planning ; projets neufs = après 023)
   auth/guest.ts         → continueAsGuest(), startUpgrade(provider), signInToExisting(provider), signInWithProvider(),
                           claimGuestTransfer(), syncProfileFromProvider(provider)
   auth/providers.ts     → AuthProvider (google|facebook), AccountMethod (+ email), enabledProviders(), FACEBOOK_ENABLED, EMAIL_ENABLED, linkedMethods(), loginChoicesLabel()
@@ -197,7 +197,7 @@ lib/
   image-crop.ts         → getCroppedImg() for AvatarUpload / ImageCropDialog
   map-apps.ts           → MapAppId type + map app metadata
   meals/slots.ts        → DEFAULT_SLOTS, eachDate(), buildDefaultMealRows()
-  meals/categories.ts   → home|picnic|restaurant
+  meals/categories.ts   → home|picnic (CATEGORY_ORDER) ; « restaurant » reste connu pour d'anciens repas en cache, jamais proposé
   quick-add.ts          → contextKind(), leadKind(), orderActions(), ADD_LABELS (le « + » contextuel et la feuille de choix)
   budget/guess-category.ts → guessCategory(titre) : catégorie devinée (accents et casse ignorés), null si rien d'évident
   budget/recent-titles.ts  → recentTitles(dépenses) : derniers intitulés distincts avec leur catégorie
@@ -219,7 +219,7 @@ participants      id, trip_id, name, color, avatar? (URL/chemin d'image = avatar
 trip_members      trip_id + user_id (composite PK), participant_id, role: owner|contributor
 expenses          id, trip_id, title, amount, currency, exchange_rate, amount_in_trip_currency,
                   category, paid_by_id (legacy), payers: jsonb[], date, split_mode, splits: jsonb[], notes
-meals             id, trip_id, date, slot: breakfast|lunch|snack|dinner, title?, category, link? (resto et pique-nique seulement),
+meals             id, trip_id, date, slot: breakfast|lunch|snack|dinner, title?, category (home|picnic), link? (pique-nique seulement),
                   participant_ids: uuid[], cook_ids: uuid[],
                   dishes: [{id, course: starter|main|cheese|dessert|other, name, ingredients:[{id,name,quantity}]}],
                   position
@@ -314,11 +314,12 @@ DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip(
   Action principale dans `FormFooter`, en bas sous le pouce, jamais grisée sans explication (message + secousse + focus du champ manquant).
   Clavier : `enterKeyHint`, premier champ au focus à l'ouverture, Entrée = champ suivant puis validation (`handleEnter`, zone de texte exceptée).
   Formulaires concernés : repas, dépense, étape, trajet. Le trajet calcule seul sa durée dès que départ et arrivée sont choisis.
+- **Menus = ce qu'on cuisine ou achète** (à la maison, pique-nique). Un resto n'est pas un repas : c'est une étape du planning (type « Resto »), migration 026 pour l'existant.
 - **Repas et planning** : enregistrer un repas crée son étape dans le planning (`syncMeal()` de `useItinerary`, `mealPlanningEntry()` dans
   `lib/meals/planning.ts`) : type « food », heure par défaut (déjeuner 12:00, une heure ; petit-déjeuner 08:00 ; goûter 16:00, 30 min ; dîner 20:00),
   titre « Déjeuner · Chez Léa ». Ensuite seuls titre, description et participants suivent le repas : jour, heure et durée déplacés dans
   l'onglet Planning ne sont jamais écrasés. Supprimer le repas supprime l'étape (cascade). Un lien (`normalizeLink()`) est proposé pour un
-  resto ou un pique-nique, jamais à la maison ; il s'affiche sur la carte du repas (nom du site) et dans la description de l'étape.
+  pique-nique, jamais à la maison ; il s'affiche sur la carte du repas (nom du site) et dans la description de l'étape.
 - **Saisie rapide d'une dépense** : seul le montant est obligatoire (titre facultatif, par défaut la catégorie), puces des titres récents
   (`recentTitles()`, reprennent la catégorie), catégorie devinée d'après le titre tant qu'elle n'a pas été choisie (`guessCategory()`),
   « Dupliquer » dans la fiche d'une dépense (date du jour), et après un ajout la pastille « Ajouter une autre » (budget et planning).

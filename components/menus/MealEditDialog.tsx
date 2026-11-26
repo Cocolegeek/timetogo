@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { m as motion, AnimatePresence } from "framer-motion";
-import { X, Plus, Trash2, ChefHat, Users, ChevronDown, House, Link2, NotebookPen, Sandwich, Utensils, type LucideIcon } from "lucide-react";
+import { X, Plus, Trash2, ChefHat, Users, ChevronDown, House, Link2, NotebookPen, Sandwich, type LucideIcon } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle, FULLSCREEN_DIALOG } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { HeroInput } from "@/components/forms/HeroInput";
@@ -35,7 +35,7 @@ function nextCourse(dishes: Dish[]): DishCourse {
   return FOLLOWING_COURSES.find((c) => !used.has(c)) ?? "other";
 }
 
-const CATEGORY_ICONS: Record<MealCategory, LucideIcon> = { home: House, picnic: Sandwich, restaurant: Utensils };
+const CATEGORY_ICONS: Record<MealCategory, LucideIcon> = { home: House, picnic: Sandwich, restaurant: House };
 
 function peopleLabel(participants: Participant[], ids: string[], empty: string): string {
   const names = ids.map((id) => participants.find((p) => p.id === id)).filter((p): p is Participant => !!p).map((p) => firstName(p.name));
@@ -77,7 +77,7 @@ export function MealEditDialog({ open, onOpenChange, meal, participants, onSave 
   useEffect(() => {
     if (!open || !meal) return;
     setTitle(meal.title ?? "");
-    setCategory(meal.category);
+    setCategory(meal.category === "restaurant" ? "home" : meal.category);
     setNotes(meal.notes ?? "");
     setLink(meal.link ?? "");
     setNoteOpen(!!(meal.title || meal.notes));
@@ -90,7 +90,6 @@ export function MealEditDialog({ open, onOpenChange, meal, participants, onSave 
   }, [open, meal, participants]);
 
   const slotCfg = meal ? SLOT_CONFIG[meal.slot] : null;
-  const isRestaurant = category === "restaurant";
 
   const toggleEater = (id: string) => setEaterIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   const toggleCook = (id: string) => setCookIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
@@ -128,8 +127,8 @@ export function MealEditDialog({ open, onOpenChange, meal, participants, onSave 
 
   // ── Enregistrer ─────────────────────────────────────────────────────────
   const handleSave = async () => {
-    const linkValue = category === "home" ? null : normalizeLink(link);
-    if (category !== "home" && link.trim() && !linkValue) {
+    const linkValue = category === "picnic" ? normalizeLink(link) : null;
+    if (category === "picnic" && link.trim() && !linkValue) {
       setErrorMsg("Ce lien n'a pas l'air valide.");
       return;
     }
@@ -137,19 +136,17 @@ export function MealEditDialog({ open, onOpenChange, meal, participants, onSave 
     setErrorMsg(null);
     try {
       const pending = draft.trim();
-      const withDraft = !isRestaurant && pending ? [...dishes, newDish(nextCourse(dishes), pending)] : dishes;
+      const withDraft = pending ? [...dishes, newDish(nextCourse(dishes), pending)] : dishes;
       const cleanedEaters = eaterIds.length === participants.length ? [] : eaterIds;
-      const cleanedDishes: Dish[] = isRestaurant
-        ? []
-        : withDraft
-            .filter((d) => d.name.trim().length > 0 || d.ingredients.some((ing) => ing.name.trim().length > 0))
-            .map((d) => ({
-              ...d,
-              name: d.name.trim(),
-              ingredients: d.ingredients
-                .filter((ing) => ing.name.trim().length > 0)
-                .map((ing) => ({ ...ing, name: ing.name.trim(), quantity: ing.quantity.trim() })),
-            }));
+      const cleanedDishes: Dish[] = withDraft
+        .filter((d) => d.name.trim().length > 0 || d.ingredients.some((ing) => ing.name.trim().length > 0))
+        .map((d) => ({
+          ...d,
+          name: d.name.trim(),
+          ingredients: d.ingredients
+            .filter((ing) => ing.name.trim().length > 0)
+            .map((ing) => ({ ...ing, name: ing.name.trim(), quantity: ing.quantity.trim() })),
+        }));
 
       await onSave({
         title: title.trim() || null,
@@ -211,17 +208,13 @@ export function MealEditDialog({ open, onOpenChange, meal, participants, onSave 
             issue: eaterIds.length === 0,
             panel: <ParticipantPicker participants={participants} selected={eaterIds} onToggle={toggleEater} onToggleAll={toggleAllEaters} />,
           },
-          ...(!isRestaurant
-            ? [
-                {
-                  id: "cooks",
-                  icon: ChefHat,
-                  label: cookIds.length > 0 ? `${peopleLabel(participants, cookIds, "")} cuisine` : "Qui gère ?",
-                  filled: cookIds.length > 0,
-                  panel: <ParticipantPicker participants={participants} selected={cookIds} onToggle={toggleCook} />,
-                } satisfies PropertyChipItem,
-              ]
-            : []),
+          {
+            id: "cooks",
+            icon: ChefHat,
+            label: cookIds.length > 0 ? `${peopleLabel(participants, cookIds, "")} cuisine` : "Qui gère ?",
+            filled: cookIds.length > 0,
+            panel: <ParticipantPicker participants={participants} selected={cookIds} onToggle={toggleCook} />,
+          },
         ] satisfies PropertyChipItem[])
       : []),
   ];
@@ -250,70 +243,59 @@ export function MealEditDialog({ open, onOpenChange, meal, participants, onSave 
 
         {/* Body */}
         <div data-enter-chain className="flex-1 space-y-6 overflow-y-auto px-5 pt-3 pb-6">
-          {isRestaurant ? (
-            <HeroInput
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Nom du resto"
-              enterKeyHint="next"
-              onKeyDown={(e) => handleEnter(e)}
-              aria-label="Nom du resto"
-            />
-          ) : (
-            <div>
-              <div className="flex items-end gap-2">
-                <HeroInput
-                  ref={draftRef}
-                  value={draft}
-                  onChange={(e) => setDraft(e.target.value)}
-                  placeholder={dishes.length === 0 ? "Qu'est-ce qu'on mange ?" : "Un autre plat ?"}
-                  enterKeyHint="enter"
-                  autoFocus={open && dishes.length === 0}
-                  aria-label="Ajouter un plat"
-                  onKeyDown={(e) => {
-                    if (e.key !== "Enter" || e.nativeEvent.isComposing) return;
-                    e.preventDefault();
-                    if (!addDishFromDraft() && dishes.length > 0) void handleSave();
-                  }}
-                />
-                {draft.trim() && (
-                  <motion.button
-                    type="button"
-                    initial={{ scale: 0.6, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    onClick={addDishFromDraft}
-                    aria-label="Ajouter ce plat"
-                    className="pressable mb-1.5 flex size-11 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground"
-                  >
-                    <Plus size={20} />
-                  </motion.button>
-                )}
-              </div>
-              {dishes.length > 0 && (
-                <div className="mt-4 space-y-2">
-                  <AnimatePresence initial={false}>
-                    {dishes.map((dish) => (
-                      <DishRow
-                        key={dish.id}
-                        dish={dish}
-                        expanded={expandedDish === dish.id}
-                        onToggle={() => setExpandedDish((prev) => (prev === dish.id ? null : dish.id))}
-                        onUpdate={(patch) => updateDish(dish.id, patch)}
-                        onRemove={() => removeDish(dish.id)}
-                        onAddIngredient={() => addIngredient(dish.id)}
-                        onUpdateIngredient={(ingId, field, value) => updateIngredient(dish.id, ingId, field, value)}
-                        onRemoveIngredient={(ingId) => removeIngredient(dish.id, ingId)}
-                      />
-                    ))}
-                  </AnimatePresence>
-                </div>
+          <div>
+            <div className="flex items-end gap-2">
+              <HeroInput
+                ref={draftRef}
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                placeholder={dishes.length === 0 ? "Qu'est-ce qu'on mange ?" : "Un autre plat ?"}
+                enterKeyHint="enter"
+                autoFocus={open && dishes.length === 0}
+                aria-label="Ajouter un plat"
+                onKeyDown={(e) => {
+                  if (e.key !== "Enter" || e.nativeEvent.isComposing) return;
+                  e.preventDefault();
+                  if (!addDishFromDraft() && dishes.length > 0) void handleSave();
+                }}
+              />
+              {draft.trim() && (
+                <motion.button
+                  type="button"
+                  initial={{ scale: 0.6, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  onClick={addDishFromDraft}
+                  aria-label="Ajouter ce plat"
+                  className="pressable mb-1.5 flex size-11 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground"
+                >
+                  <Plus size={20} />
+                </motion.button>
               )}
             </div>
-          )}
+            {dishes.length > 0 && (
+              <div className="mt-4 space-y-2">
+                <AnimatePresence initial={false}>
+                  {dishes.map((dish) => (
+                    <DishRow
+                      key={dish.id}
+                      dish={dish}
+                      expanded={expandedDish === dish.id}
+                      onToggle={() => setExpandedDish((prev) => (prev === dish.id ? null : dish.id))}
+                      onUpdate={(patch) => updateDish(dish.id, patch)}
+                      onRemove={() => removeDish(dish.id)}
+                      onAddIngredient={() => addIngredient(dish.id)}
+                      onUpdateIngredient={(ingId, field, value) => updateIngredient(dish.id, ingId, field, value)}
+                      onRemoveIngredient={(ingId) => removeIngredient(dish.id, ingId)}
+                    />
+                  ))}
+                </AnimatePresence>
+              </div>
+            )}
+          </div>
 
           <PropertyChips items={chips} />
 
-          {category !== "home" && (
+          {category === "picnic" && (
             <div className="flex items-center gap-3 rounded-2xl border border-input bg-card px-4 focus-within:border-primary/60 focus-within:ring-4 focus-within:ring-primary/12">
               <Link2 size={17} className="shrink-0 text-muted-foreground" aria-hidden="true" />
               <input
@@ -336,23 +318,21 @@ export function MealEditDialog({ open, onOpenChange, meal, participants, onSave 
             </div>
           )}
 
-          {noteOpen || isRestaurant ? (
+          {noteOpen ? (
             <div className="space-y-2">
-              {!isRestaurant && (
-                <Input
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Une précision…"
-                  aria-label="Précision"
-                  enterKeyHint="next"
-                  onKeyDown={(e) => handleEnter(e)}
-                />
-              )}
+              <Input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Une précision…"
+                aria-label="Précision"
+                enterKeyHint="next"
+                onKeyDown={(e) => handleEnter(e)}
+              />
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder={isRestaurant ? "Horaire, n° de réservation…" : "Allergies, idées de courses…"}
-                aria-label={isRestaurant ? "Réservation et notes" : "Allergies et courses"}
+                placeholder="Allergies, idées de courses…"
+                aria-label="Allergies et courses"
                 rows={3}
                 className="w-full resize-none rounded-2xl border border-input bg-card px-4 py-3 text-base outline-none placeholder:text-muted-foreground focus:border-primary/60 focus:ring-4 focus:ring-primary/12"
               />
