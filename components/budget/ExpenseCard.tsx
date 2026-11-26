@@ -5,8 +5,7 @@ import { m as motion, useMotionValue, useTransform, animate } from "framer-motio
 import { CloudOff, Trash2 } from "lucide-react";
 import { CATEGORIES } from "@/lib/budget/categories";
 import { formatCurrency } from "@/lib/format-currency";
-import { formatClock } from "@/lib/format-date";
-import { cn } from "@/lib/utils";
+import { cn, firstName } from "@/lib/utils";
 import { HoverActions } from "@/components/shared/HoverActions";
 import { ParticipantAvatar } from "@/components/shared/ParticipantAvatar";
 import type { Expense, Participant } from "@/types";
@@ -50,8 +49,6 @@ export function ExpenseCard({ expense, participants, currency, onDelete, onEdit,
     }
     setTimeout(() => (dragged.current = false), 0);
   };
-
-  const addedTime = formatClock(expense.createdAt);
 
   const payerLabel =
     expense.category === "reimbursement"
@@ -113,8 +110,13 @@ export function ExpenseCard({ expense, participants, currency, onDelete, onEdit,
                   ))}
                 </span>
               )}
-              <span className="truncate">{payerLabel}</span>
-              {addedTime && <span className="tabular shrink-0">· {addedTime}</span>}
+              <span className="truncate">
+                {expense.category === "reimbursement"
+                  ? "Remboursement"
+                  : payers.length > 0
+                    ? payers.map((p) => firstName(p.name)).join(" & ")
+                    : "Payeur inconnu"}
+              </span>
               {expense.pending && (
                 <span className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold">
                   <CloudOff size={12} aria-hidden="true" />

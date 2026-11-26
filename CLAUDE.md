@@ -339,14 +339,13 @@ DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip(
   « Premiers pas » ne propose que les espaces cochés ; le « + » propose tout. Emoji du voyage : le drapeau du pays choisi (`countryCode` de `LocationPickerSheet`) est proposé en premier et présélectionné tant que
   l'utilisateur n'a pas choisi lui-même ; puis thèmes (train, plage…) et drapeaux courants. Pas d'avion (empreinte carbone).
 - **Trajets** : le mode « Avion » reste disponible dans `JourneyForm` (calcul de trajet, avertissement CO₂) ; seul l'emoji d'un voyage évite l'avion.
-- **Payeur** : toujours la photo de profil du participant (`ParticipantAvatar`), jamais un point de couleur. **Heure d'ajout** d'une dépense :
-  `· 14:32` sur la carte (`createdAt`, heure locale), « Ajoutée le 8 juin à 10:00 » dans la fiche.
+- **Payeur** : toujours la photo de profil du participant (`ParticipantAvatar`), jamais un point de couleur. Sur la carte d'une dépense : avatar + prénom du payeur, ni « Payé par » ni heure ; **heure d'ajout** seulement dans la fiche
+  (`createdAt`, « Ajoutée le 8 juin à 10:00 »).
 - **Identité du voyage** : l'emoji ou le drapeau choisi s'affiche devant le titre (tableau de bord, cartes de la liste). Destination
   toujours abrégée (`shortDestination()`). Participants = avatars + prénoms (« Toi, Léa, Marc +2 ») ; la pastille « Qui es-tu ? »
   n'apparaît que si on n'est pas encore relié à un participant (toucher les avatars rouvre le choix). Illustration `TripCover` par défaut (liste : grande carte et vignette ; Résumé : bande basse `h-20`, `lg:h-28`, pastille de statut posée dessus) ; une photo de couverture facultative la remplace (modifier le voyage › « Photo de couverture »). Le formulaire de création garde un aperçu sobre sans illustration.
 - **Tableau de bord** : `GettingStarted` (n'affiche que les étapes restantes) puis budget, solde, `DayAgendaCard`
-  (aujourd'hui, ou demain une fois la journée finie), repas du jour. Une carte vide n'est pas affichée si
-  « Premiers pas » invite déjà à la remplir. Solde : une seule tuile large si un seul sens est non nul.
+  (aujourd'hui, ou demain une fois la journée finie), repas du jour. Les widgets sont toujours là, même au début : budget à 0 €, et une carte par espace coché avec son état vide (`EmptyWidget`) ; seul le solde attend la première dépense. Solde : une seule tuile large si un seul sens est non nul.
 
 ## Performance & cache (enforced, do not regress)
 
