@@ -141,7 +141,7 @@ export function IdentityPicker({
                 {isSelected ? (
                   <p className="text-sm font-medium text-primary">C&apos;est moi</p>
                 ) : claimedByOther ? (
-                  <p className="text-sm text-amber-400 truncate">
+                  <p className="text-sm text-muted-foreground truncate">
                     Lié à {primary?.userName ?? "un autre membre"}
                   </p>
                 ) : null}
@@ -268,8 +268,8 @@ export function IdentityPicker({
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-start gap-3">
-                <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-amber-500/15">
-                  <AlertTriangle size={18} className="text-amber-400" />
+                <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-foreground/[0.06]">
+                  <AlertTriangle size={18} className="text-foreground" />
                 </div>
                 <div className="space-y-1 min-w-0">
                   <h3 className="font-display text-lg font-bold tracking-tight">

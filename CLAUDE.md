@@ -263,6 +263,7 @@ DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip(
   (`next/font/local`, sous-ensemble latin, polices variables) : jamais `next/font/google`, la compilation Vercel échouait par intermittence
   quand le téléchargement chez Google ratait.
   Montants en `tabular` + `font-display`. Pas de petites capitales en `uppercase tracking-wider`.
+- **Encadrés d'info et d'avertissement** : jamais teintés (ni ambre, ni orange, ni rouge pâle) : fond `bg-secondary`, texte `text-muted-foreground`, `rounded-[1.25rem]`. Le rouge reste pour une vraie erreur, le vert pour « OK ».
 - **Surfaces** : cartes pleines `bg-card shadow-card rounded-[1.5rem]` (ou `glass` = même rendu),
   listes groupées façon iOS (rangées séparées par `border-t border-border`). Jamais de verre dépoli,
   d'orbes, de dégradés décoratifs (`gradient-primary` = aplat) ni d'emoji comme icône.

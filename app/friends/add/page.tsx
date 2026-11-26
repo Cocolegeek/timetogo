@@ -42,7 +42,7 @@ function AddFriend() {
     >
       {!preview || preview.is_me ? (
         <>
-          <span className="flex size-16 items-center justify-center rounded-[1.25rem] bg-amber-500/15 text-amber-400">
+          <span className="flex size-16 items-center justify-center rounded-[1.25rem] bg-foreground/[0.06] text-foreground">
             <TriangleAlert size={28} />
           </span>
           <h1 className="mt-6 font-display text-[2rem] leading-[1.05] font-extrabold tracking-[-0.03em]">

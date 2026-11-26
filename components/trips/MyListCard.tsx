@@ -21,7 +21,7 @@ export function MyListCard({ tripId, myId }: { tripId: string; myId: string | nu
     if (nobody === 0) return null;
     return (
       <Link href={href} className="pressable flex items-center gap-4 rounded-[1.5rem] bg-card p-4 shadow-card">
-        <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-amber-500/12 text-amber-400">
+        <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-foreground/[0.06] text-foreground">
           <ListChecks size={20} />
         </span>
         <span className="min-w-0 flex-1">

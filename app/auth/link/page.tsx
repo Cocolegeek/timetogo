@@ -25,7 +25,7 @@ type Outcome =
 
 function Screen({ icon, tone, title, children }: { icon: React.ReactNode; tone: "ok" | "info" | "warn"; title: string; children: React.ReactNode }) {
   const toneClass =
-    tone === "ok" ? "bg-emerald-500 text-white" : tone === "warn" ? "bg-amber-500/15 text-amber-400" : "bg-foreground/[0.06] text-foreground";
+    tone === "ok" ? "bg-emerald-500 text-white" : tone === "warn" ? "bg-foreground/[0.06] text-foreground" : "bg-foreground/[0.06] text-foreground";
   return (
     <motion.div
       initial={bootInitial({ opacity: 0, y: 16 })}

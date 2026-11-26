@@ -20,7 +20,7 @@ export function GuestSignOutDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent showCloseButton={false} className="max-w-sm text-center">
-        <span className="mx-auto flex size-14 items-center justify-center rounded-[1.1rem] bg-amber-500/15 text-amber-400">
+        <span className="mx-auto flex size-14 items-center justify-center rounded-[1.1rem] bg-foreground/[0.06] text-foreground">
           <TriangleAlert size={24} />
         </span>
         <div className="space-y-1.5">

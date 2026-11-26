@@ -83,8 +83,8 @@ export default function NotificationSettingsPage() {
           )}
         </SettingsGroup>
         {!serverReady && (
-          <p className="mt-3 rounded-2xl bg-amber-500/12 px-4 py-3 text-sm text-amber-400">
-            L&apos;envoi n&apos;est pas encore branché côté serveur (clé VAPID manquante). Tes choix sont gardés en attendant.
+          <p className="mt-3 rounded-[1.25rem] bg-secondary px-4 py-3 text-sm text-muted-foreground">
+            Les notifications ne sont pas encore actives. Tes choix sont gardés.
           </p>
         )}
       </StaggerItem>

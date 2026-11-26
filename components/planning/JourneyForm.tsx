@@ -365,9 +365,9 @@ export function JourneyForm({ open, onOpenChange, participants, defaultDate, ini
           </div>
 
           {mode === "plane" && (
-            <div className="flex items-start gap-2.5 rounded-xl border border-amber-500/25 bg-amber-500/10 px-3 py-2.5">
-              <TriangleAlert size={15} className="mt-0.5 shrink-0 text-amber-400" />
-              <p className="text-xs leading-relaxed text-amber-200">
+            <div className="flex items-start gap-2.5 rounded-[1.25rem] bg-secondary px-3.5 py-3">
+              <TriangleAlert size={15} className="mt-0.5 shrink-0 text-muted-foreground" />
+              <p className="text-xs leading-relaxed text-muted-foreground">
                 L&apos;avion émet jusqu&apos;à 50 fois plus de CO₂ que le train.
               </p>
             </div>

@@ -134,7 +134,7 @@ function SearchBody({ trip, onClose }: { trip: Trip; onClose: () => void }) {
           subtitle: [i.list === "bring" ? "À apporter" : "À faire", who || "Personne pour l'instant", i.done ? "fait" : null].filter(Boolean).join(" · "),
           href: `${base}/lists?item=${i.id}`,
           icon: (
-            <span className="flex size-10 items-center justify-center rounded-2xl bg-amber-500/12 text-amber-400">
+            <span className="flex size-10 items-center justify-center rounded-2xl bg-foreground/[0.06] text-foreground">
               {i.done ? <Check size={18} strokeWidth={2.6} /> : <ListChecks size={18} />}
             </span>
           ),

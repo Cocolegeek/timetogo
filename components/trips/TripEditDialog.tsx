@@ -416,7 +416,7 @@ export function TripEditDialog({
                   ))}
                 </div>
                 {currency !== trip.currency && (
-                  <p className="rounded-2xl bg-amber-500/12 px-3.5 py-2.5 text-xs text-amber-400">
+                  <p className="rounded-[1.25rem] bg-secondary px-3.5 py-2.5 text-xs text-muted-foreground">
                     Changer la devise ne convertit pas les dépenses existantes.
                   </p>
                 )}
