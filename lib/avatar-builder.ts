@@ -145,7 +145,10 @@ export function normalizeConfig(input: Partial<AvatarConfig> | null | undefined)
   };
 }
 
-export function avatarSvg(input: Partial<AvatarConfig>): string {
+export const FULL_VIEW = "0 0 128 128";
+
+/** `view` : zone du dessin à montrer (gros plan d'une seule pièce dans le sélecteur). */
+export function avatarSvg(input: Partial<AvatarConfig>, view: string = FULL_VIEW): string {
   const c = normalizeConfig(input);
   const skin = SKINS[c.skin];
   const hair = HAIR_COLORS[c.hairColor];
@@ -154,7 +157,7 @@ export function avatarSvg(input: Partial<AvatarConfig>): string {
   const mask = maskSvg[c.mask];
   const cheeks = `<circle cx="47" cy="70" r="4.5" fill="${ROSE}" opacity=".45"/><circle cx="81" cy="70" r="4.5" fill="${ROSE}" opacity=".45"/>`;
   return (
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128"><!--cfg:${JSON.stringify(c)}-->` +
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${view}"><!--cfg:${JSON.stringify(c)}-->` +
     `<rect width="128" height="128" fill="${bg}"/>` +
     `<path d="M22 128c0-24 18-36 42-36s42 12 42 36z" fill="${shirt}"/>` +
     (hairBack[c.hair]?.(hair) ?? "") +
@@ -175,8 +178,8 @@ export function avatarSvg(input: Partial<AvatarConfig>): string {
 const DATA_PREFIX = "data:image/svg+xml;charset=utf-8,";
 
 /** URL de données prête à enregistrer comme avatar. */
-export function avatarDataUrl(config: Partial<AvatarConfig>): string {
-  return DATA_PREFIX + encodeURIComponent(avatarSvg(config));
+export function avatarDataUrl(config: Partial<AvatarConfig>, view: string = FULL_VIEW): string {
+  return DATA_PREFIX + encodeURIComponent(avatarSvg(config, view));
 }
 
 export function isBuiltAvatar(value: string | null | undefined): value is string {

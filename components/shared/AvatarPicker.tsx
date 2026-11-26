@@ -52,8 +52,18 @@ const LABELS: Record<string, string> = {
   justicier: "Justicier", diving: "Plongée",
 };
 
-function Thumb({ config, label, selected, onPick }: { config: AvatarConfig; label: string; selected: boolean; onPick: () => void }) {
-  const src = useMemo(() => avatarDataUrl(config), [config]);
+const VIEWS = {
+  hair: "16 12 96 96",
+  beard: "32 54 64 64",
+  eyes: "44 42 40 40",
+  mouth: "44 54 40 40",
+  glasses: "34 36 60 60",
+  hat: "24 0 80 80",
+  mask: "24 12 80 80",
+} as const;
+
+function Thumb({ config, label, selected, onPick, view }: { config: AvatarConfig; label: string; selected: boolean; onPick: () => void; view: keyof typeof VIEWS }) {
+  const src = useMemo(() => avatarDataUrl(config, VIEWS[view]), [config, view]);
   return (
     <button
       type="button"
@@ -214,7 +224,7 @@ export function AvatarPicker({ value, onChange, googleUrl, debounceMs = 0 }: Ava
         <div className="space-y-3">
           <Row title="Coupe">
             {HAIR_STYLES.map((h) => (
-              <Thumb key={h} config={{ ...config, hair: h }} label={LABELS[h]} selected={config.hair === h} onPick={() => set("hair", h)} />
+              <Thumb view="hair" key={h} config={{ ...config, hair: h }} label={LABELS[h]} selected={config.hair === h} onPick={() => set("hair", h)} />
             ))}
           </Row>
           <Row title="Couleur">
@@ -224,7 +234,7 @@ export function AvatarPicker({ value, onChange, googleUrl, debounceMs = 0 }: Ava
           </Row>
           <Row title="Barbe">
             {FACIAL.map((f) => (
-              <Thumb key={f} config={{ ...config, facial: f }} label={LABELS[f]} selected={config.facial === f} onPick={() => set("facial", f)} />
+              <Thumb view="beard" key={f} config={{ ...config, facial: f }} label={LABELS[f]} selected={config.facial === f} onPick={() => set("facial", f)} />
             ))}
           </Row>
         </div>
@@ -234,12 +244,12 @@ export function AvatarPicker({ value, onChange, googleUrl, debounceMs = 0 }: Ava
         <div className="space-y-3">
           <Row title="Yeux">
             {EYES.map((e) => (
-              <Thumb key={e} config={{ ...config, eyes: e }} label={LABELS[e]} selected={config.eyes === e} onPick={() => set("eyes", e)} />
+              <Thumb view="eyes" key={e} config={{ ...config, eyes: e }} label={LABELS[e]} selected={config.eyes === e} onPick={() => set("eyes", e)} />
             ))}
           </Row>
           <Row title="Bouche">
             {MOUTHS.map((m) => (
-              <Thumb key={m} config={{ ...config, mouth: m }} label={LABELS[m]} selected={config.mouth === m} onPick={() => set("mouth", m)} />
+              <Thumb view="mouth" key={m} config={{ ...config, mouth: m }} label={LABELS[m]} selected={config.mouth === m} onPick={() => set("mouth", m)} />
             ))}
           </Row>
         </div>
@@ -249,17 +259,17 @@ export function AvatarPicker({ value, onChange, googleUrl, debounceMs = 0 }: Ava
         <div className="space-y-3">
           <Row title="Lunettes">
             {GLASSES.map((g) => (
-              <Thumb key={g} config={{ ...config, glasses: g }} label={LABELS[g]} selected={config.glasses === g} onPick={() => set("glasses", g)} />
+              <Thumb view="glasses" key={g} config={{ ...config, glasses: g }} label={LABELS[g]} selected={config.glasses === g} onPick={() => set("glasses", g)} />
             ))}
           </Row>
           <Row title="Chapeau">
             {HATS.map((h) => (
-              <Thumb key={h} config={{ ...config, hat: h }} label={LABELS[h]} selected={config.hat === h} onPick={() => set("hat", h)} />
+              <Thumb view="hat" key={h} config={{ ...config, hat: h }} label={LABELS[h]} selected={config.hat === h} onPick={() => set("hat", h)} />
             ))}
           </Row>
           <Row title="Masque">
             {MASKS.map((m) => (
-              <Thumb key={m} config={{ ...config, mask: m }} label={LABELS[m]} selected={config.mask === m} onPick={() => set("mask", m)} />
+              <Thumb view="mask" key={m} config={{ ...config, mask: m }} label={LABELS[m]} selected={config.mask === m} onPick={() => set("mask", m)} />
             ))}
           </Row>
         </div>
