@@ -1,4 +1,5 @@
 @AGENTS.md
+@MEMORY.md
 
 # Voyou: Project Context
 
@@ -60,7 +61,7 @@ components/
                                      dépliable "Entre les autres" + grille balances + sheets paiement
               ExpenseCard:         swipe-to-delete card; tap opens ExpenseDetailSheet
               ExpenseDetailSheet:  bottom sheet: read-only detail with Edit/Delete actions
-              ExpenseForm:         Sheet 92dvh, 3 tabs Infos | Payé par | Pour qui
+              ExpenseForm:         Sheet 92dvh, une seule page : montant, titre, catégorie, puces (date · payé par · pour qui · répéter)
               ExpenseList:         grouped by date, sticky headers with daily total
               ParticipantPaymentSheet: bottom sheet: copy IBAN/tél, share via navigator.share
   auth/       GoogleIcon, GuestUpgradeCard (carte « mode invité » + bouton Sauvegarder avec Google),
@@ -71,7 +72,9 @@ components/
   motion/     MotionProvider (LazyMotion strict + MotionConfig ; features domMax chargées après le 1er rendu),
               PageTransition (templates), Stagger/StaggerItem, NumberTicker (montants animés, rAF, sans framer)
   budget/ (+) ActivityList (journal : qui a ajouté / modifié / supprimé), RecurringSheet (dépenses répétées, chargé à la demande)
-  menus/      MealEditDialog
+  forms/      HeroInput (champ principal grand et souligné), PropertyChips (réglages en puces qui affichent leur valeur et ouvrent leur choix en dessous),
+              FormFooter (action principale en bas, avec le message de ce qui manque)
+  menus/      MealEditDialog (une page : plats saisis au clavier, puces catégorie · qui mange · qui gère)
   planning/   ItineraryItemForm:   full-screen dialog: title/date/type/location/participants
               JourneyForm:         full-screen dialog: from→to, mode, routing/duration, participants
   shared/     OfflineSync (monté à la racine : rejoue la file hors-ligne, pastille « Hors ligne · n en attente »), AvatarPicker (photo Google + 16 avatars), AvatarUpload, ClientOnly (rendu client après hydratation),
@@ -91,7 +94,7 @@ components/
               TripSearch, DayAgendaCard (journée utile du tableau de bord : étape en cours / à suivre + reste du jour),
               TripActionsSheet (« … » d'une carte voyage), IdentityDialog (« Qui es-tu ? »), LazyOnboarding,
               TripCard (variants featured | row, tripStatus()), TripCover (illustrations en aplats),
-              TripEditDialog, TripEditWrapper
+              TripEditDialog (ancienne présentation, à refaire dans le style des formulaires), TripEditWrapper
   settings/   DeleteAccountDialog (confirmation par saisie « SUPPRIMER »), SettingsShell (retour + grand titre), SettingsList (SettingsGroup, SettingsRow, SettingsToggle)
   trips/      FriendPicker (rangée « Ta bande » : un pote choisi = membre lié, le voyage apparaît chez lui),
               MyListCard (tableau de bord : « On compte sur toi » / « n choses sans personne »)
@@ -130,6 +133,7 @@ useIdlePrefetch(hrefs)  → précharge les écrans suivants une fois l'écran af
 useFriends()            → { friends, code, addByCode, remove, refetch }  // + addFriendsToTrip(), previewFriend()
 useChecklist(id)        → { items, addItem, updateItem, deleteItem }     // notifie les nouveaux assignés
 useActivity(id, on)     → { entries }                                    // journal trip_activity (lecture seule, 100 dernières)
+useTripCounts(id)      → { expenses, planning, menus, lists }           // nombre d'éléments par espace (cache SWR partagé) : onglets et loupe
 useRecurring(id, on)    → { items, create, remove, applyDue }            // applyDue = RPC apply_recurring_expenses (sans doublon)
 ```
 
@@ -163,10 +167,13 @@ lib/
   participant-colors.ts → PARTICIPANT_COLORS (palette unique des participants)
   itinerary-types.ts    → icône / libellé / teinte par type d'étape et mode de trajet
   meals/courses.ts      → COURSES (icônes Lucide), COURSE_ORDER
+  forms/enter-next.ts   → handleEnter(e, onLast), focusNextField() : Entrée passe au champ de texte suivant (conteneur `data-enter-chain`), valide au dernier
   motion.ts, haptics.ts → courbes/springs Framer, haptic()
   trips/create-wizard.ts → logique pure de l'assistant de création : stepsFor(), validateStep(), firstIssue(), buildPayload(),
                           participantsOf() (créateur toujours 1er), addPerson() (doublons), datePresets(), suggestName()
   trip-emojis.ts        → THEME_EMOJIS, POPULAR_FLAGS, flagEmoji(codePays), tripEmojiChoices(paysDétecté) : emojis d'un voyage (jamais d'avion, empreinte carbone)
+  trip-sections.ts      → visibleSections(features, counts, active), sectionOf(pathname, base), canSearch(total) : onglets et loupe selon le contenu
+  place.ts              → shortDestination("Rome, Roma Capitale, Latium, Italie") = "Rome · Italie"
   trip-features.ts      → tripFeatures(trip), isVoyage(t), isGroup(t), TRIP_TYPE_LABELS
   budget/splits.ts      → computeShares(equal|percentage|fixed), buildDefaultSplits()
   budget/debts.ts       → computeBalances(), simplifyDebts() (greedy O(n log n))
@@ -248,7 +255,9 @@ DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip(
   `system | light | dark`, clé localStorage `voyou-theme`). Toujours utiliser les tokens
   (`bg-card`, `bg-secondary`, `text-foreground`, `text-muted-foreground`, `border-border`).
   Les échelles `slate`/`indigo`/`violet` sont remappées dans globals.css pour le code existant.
-- **Typo** : Bricolage Grotesque (`font-display`) pour titres et montants, Inter pour le texte.
+- **Typo** : Bricolage Grotesque (`font-display`) pour titres et montants, Inter pour le texte. Polices **hébergées** dans `app/fonts/`
+  (`next/font/local`, sous-ensemble latin, polices variables) : jamais `next/font/google`, la compilation Vercel échouait par intermittence
+  quand le téléchargement chez Google ratait.
   Montants en `tabular` + `font-display`. Pas de petites capitales en `uppercase tracking-wider`.
 - **Surfaces** : cartes pleines `bg-card shadow-card rounded-[1.5rem]` (ou `glass` = même rendu),
   listes groupées façon iOS (rangées séparées par `border-t border-border`). Jamais de verre dépoli,
@@ -278,12 +287,23 @@ DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip(
 
 - **Navigation voyage** : barre d'onglets flottante (matière translucide = seule zone « verre » autorisée),
   qui se compacte au défilement ; toucher l'onglet actif ou le titre de l'en-tête remonte en haut.
+  **Onglets selon le contenu** (`visibleSections()`) : Résumé et Budget toujours ; Planning, Menus et Listes n'apparaissent que
+  lorsqu'ils contiennent quelque chose (ou quand on est dessus : l'onglet courant ne disparaît jamais). La première création passe par
+  « Premiers pas » et le « + » (feuille de choix). Libellés plus grands quand il y a peu d'onglets. La loupe de l'en-tête
+  n'apparaît qu'à partir de 5 éléments (`SEARCH_MIN_ITEMS`).
 - **Ajout rapide** : le bouton « + » de la barre agit selon l'écran (`contextKind()` dans `lib/quick-add.ts`) : Budget = nouvelle
   dépense, Planning = étape, Menus = repas, Listes = champ d'ajout. Un seul toucher. Sur l'accueil du voyage (et dans un budget de
   groupe sans planning), il ouvre la feuille de choix. **Appui long** (450 ms), clic droit ou bouton lecteur d'écran = feuille de choix
-  complète (`QuickAddSheet` : l'action de l'écran, sinon la dépense, en grande ligne ; les autres en liste groupée, sans phrases d'aide).
+  complète (`QuickAddSheet` : l'action de l'écran, sinon la dépense, en grande ligne EN BAS, sous le pouce qui vient de toucher « + » ; les autres
+  en liste groupée au-dessus, la plus probable au plus près du bas, sans phrases d'aide).
   Une astuce unique (« maintiens + ») s'affiche au 3e ajout direct. Les pages ouvrent leur formulaire via `useQuickAdd()`
   (événement si déjà sur la page, sinon `?new=<kind>`). Pas de FAB par page.
+- **Formulaires** (`components/forms/`) : une seule page, jamais d'onglets pour un petit formulaire. Un champ principal (`HeroInput` :
+  le plat, le titre, le montant), les réglages en puces (`PropertyChips`) qui affichent leur valeur, s'affirment quand elle diffère du défaut
+  (aucune coche de validation) et ouvrent leur choix en dessous. Tout le facultatif est replié (« + Ajouter une note »), pas de « (optionnel) ».
+  Action principale dans `FormFooter`, en bas sous le pouce, jamais grisée sans explication (message + secousse + focus du champ manquant).
+  Clavier : `enterKeyHint`, premier champ au focus à l'ouverture, Entrée = champ suivant puis validation (`handleEnter`, zone de texte exceptée).
+  Formulaires concernés : repas, dépense, étape, trajet. Le trajet calcule seul sa durée dès que départ et arrivée sont choisis.
 - **Saisie rapide d'une dépense** : seul le montant est obligatoire (titre facultatif, par défaut la catégorie), puces des titres récents
   (`recentTitles()`, reprennent la catégorie), catégorie devinée d'après le titre tant qu'elle n'a pas été choisie (`guessCategory()`),
   « Dupliquer » dans la fiche d'une dépense (date du jour), et après un ajout la pastille « Ajouter une autre » (budget et planning).
@@ -301,6 +321,9 @@ DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip(
   Emoji du voyage : le drapeau du pays choisi (`countryCode` de `LocationPickerSheet`) est proposé en premier et présélectionné tant que
   l'utilisateur n'a pas choisi lui-même ; puis thèmes (train, plage…) et drapeaux courants. Pas d'avion (empreinte carbone).
 - **Trajets** : le mode « Avion » reste disponible dans `JourneyForm` (calcul de trajet, avertissement CO₂) ; seul l'emoji d'un voyage évite l'avion.
+- **Identité du voyage** : l'emoji ou le drapeau choisi s'affiche devant le titre (tableau de bord, cartes de la liste). Destination
+  toujours abrégée (`shortDestination()`). Participants = avatars + prénoms (« Toi, Léa, Marc +2 ») ; la pastille « Qui es-tu ? »
+  n'apparaît que si on n'est pas encore relié à un participant (toucher les avatars rouvre le choix). Illustration d'en-tête basse (h-28).
 - **Tableau de bord** : `GettingStarted` (n'affiche que les étapes restantes) puis budget, solde, `DayAgendaCard`
   (aujourd'hui, ou demain une fois la journée finie), repas du jour. Une carte vide n'est pas affichée si
   « Premiers pas » invite déjà à la remplir. Solde : une seule tuile large si un seul sens est non nul.

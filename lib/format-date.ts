@@ -66,3 +66,23 @@ export function daysUntil(startISO: string): number {
   now.setHours(0, 0, 0, 0);
   return Math.round((s.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 }
+
+function localISO(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+/** « Aujourd'hui », « Demain », « Hier », sinon « Mer. 26 nov. » : la date telle qu'on la dit. */
+export function friendlyDay(iso: string, today: Date = new Date()): string {
+  if (!iso) return "";
+  const day = new Date(`${iso}T12:00:00`);
+  if (Number.isNaN(day.getTime())) return iso;
+  const shift = (n: number) => {
+    const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() + n);
+    return localISO(d);
+  };
+  if (iso === shift(0)) return "Aujourd'hui";
+  if (iso === shift(1)) return "Demain";
+  if (iso === shift(-1)) return "Hier";
+  const label = day.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" });
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}

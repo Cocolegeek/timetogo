@@ -30,6 +30,8 @@ interface LocationPickerSheetProps {
   className?: string;
   limit?: number;
   lang?: string;
+  /** Rend le déclencheur comme une puce (formulaires en puces) : nom court du lieu, pas de loupe. */
+  compact?: boolean;
 }
 
 function splitDisplayName(displayName: string): { main: string; subtitle: string } {
@@ -48,6 +50,7 @@ export function LocationPickerSheet({
   className,
   limit = 7,
   lang = "fr",
+  compact = false,
 }: LocationPickerSheetProps) {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -129,22 +132,27 @@ export function LocationPickerSheet({
         type="button"
         onClick={openPicker}
         className={cn(
-          "flex h-12 w-full items-center gap-3 rounded-2xl border border-input bg-card px-4 text-left transition-colors",
-          "hover:border-foreground/25 active:bg-secondary",
+          compact
+            ? cn(
+                "pressable inline-flex h-11 max-w-full items-center gap-2 rounded-full px-4 text-left text-[0.95rem] outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring",
+                value ? "bg-foreground/[0.1] font-semibold" : "bg-foreground/[0.05] font-medium"
+              )
+            : "flex h-12 w-full items-center gap-3 rounded-2xl border border-input bg-card px-4 text-left transition-colors hover:border-foreground/25 active:bg-secondary",
           className
         )}
       >
         <MapPin
-          size={17}
-          className={cn("shrink-0", value ? "text-primary" : "text-muted-foreground")}
+          size={compact ? 16 : 17}
+          className={cn("shrink-0", compact ? (value ? "text-foreground" : "text-muted-foreground") : value ? "text-primary" : "text-muted-foreground")}
         />
         <span
           className={cn(
-            "flex-1 truncate text-base",
+            "truncate",
+            compact ? "text-[0.95rem]" : "flex-1 text-base",
             value ? "text-foreground" : "text-muted-foreground"
           )}
         >
-          {value || placeholder}
+          {value ? (compact ? splitDisplayName(value).main : value) : placeholder}
         </span>
         {value ? (
           <span
@@ -157,7 +165,7 @@ export function LocationPickerSheet({
             <X size={15} />
           </span>
         ) : (
-          <Search size={15} className="shrink-0 text-muted-foreground" />
+          !compact && <Search size={15} className="shrink-0 text-muted-foreground" />
         )}
       </button>
 

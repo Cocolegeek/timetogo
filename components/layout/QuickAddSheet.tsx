@@ -17,7 +17,8 @@ export interface QuickAddAction {
 
 /**
  * The « + » sheet, loaded on first tap (not part of the launch).
- * `actions` arrive ordered: the first one is the most likely (current screen, else expense) and gets the big row.
+ * `actions` arrive ordered: the first one is the most likely (current screen, else expense). It gets the big row at the BOTTOM,
+ * under the thumb that just tapped « + » ; the others stack above it, the next most likely closest.
  */
 export default function QuickAddSheet({
   open,
@@ -40,31 +41,14 @@ export default function QuickAddSheet({
           <SheetDescription className="sr-only">Choisis ce que tu veux ajouter au voyage.</SheetDescription>
         </div>
         <div className="space-y-3 px-5 pb-6">
-          {lead && (
-            <motion.button
-              type="button"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ ...spring, delay: 0.04 }}
-              onClick={() => onPick(lead.kind, lead.href)}
-              className="pressable flex min-h-[4.5rem] w-full items-center gap-4 rounded-[1.5rem] bg-primary px-5 text-left text-primary-foreground shadow-section"
-            >
-              <span className="flex size-12 items-center justify-center rounded-2xl bg-primary-foreground/15">
-                <lead.icon size={24} />
-              </span>
-              <span className="flex-1 font-display text-[1.25rem] font-bold tracking-tight">{lead.label}</span>
-              <ChevronRight size={20} aria-hidden="true" className="opacity-60" />
-            </motion.button>
-          )}
-
           {others.length > 0 && (
             <motion.ul
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ ...spring, delay: 0.09 }}
+              transition={{ ...spring, delay: 0.04 }}
               className="overflow-hidden rounded-[1.5rem] bg-secondary [&>li+li]:border-t [&>li+li]:border-border"
             >
-              {others.map((a) => (
+              {[...others].reverse().map((a) => (
                 <li key={a.kind}>
                   <button
                     type="button"
@@ -80,6 +64,23 @@ export default function QuickAddSheet({
                 </li>
               ))}
             </motion.ul>
+          )}
+
+          {lead && (
+            <motion.button
+              type="button"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ ...spring, delay: 0.09 }}
+              onClick={() => onPick(lead.kind, lead.href)}
+              className="pressable flex min-h-[4.5rem] w-full items-center gap-4 rounded-[1.5rem] bg-primary px-5 text-left text-primary-foreground shadow-section"
+            >
+              <span className="flex size-12 items-center justify-center rounded-2xl bg-primary-foreground/15">
+                <lead.icon size={24} />
+              </span>
+              <span className="flex-1 font-display text-[1.25rem] font-bold tracking-tight">{lead.label}</span>
+              <ChevronRight size={20} aria-hidden="true" className="opacity-60" />
+            </motion.button>
           )}
         </div>
       </SheetContent>

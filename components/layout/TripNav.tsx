@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { m as motion } from "framer-motion";
+import { AnimatePresence, m as motion } from "framer-motion";
 import {
   CalendarPlus,
   House,
@@ -20,6 +20,7 @@ import { useMountOnce } from "@/hooks/useMountOnce";
 import { useIdlePrefetch } from "@/hooks/useIdlePrefetch";
 import { useScrollDirection } from "@/hooks/useScrollDirection";
 import { useTrip } from "@/hooks/useTrip";
+import { useTripCounts } from "@/hooks/useTripCounts";
 import { dispatchQuickAdd, type QuickAddKind } from "@/hooks/useQuickAdd";
 import { useToast } from "@/components/shared/Toaster";
 import { ADD_LABELS, contextKind, leadKind, orderActions } from "@/lib/quick-add";
@@ -27,6 +28,7 @@ import { haptic } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
 import { spring } from "@/lib/motion";
 import { featuresForType } from "@/lib/trip-features";
+import { sectionOf, visibleSections } from "@/lib/trip-sections";
 import type { TripType } from "@/types";
 
 const QuickAddSheet = dynamic(() => import("@/components/layout/QuickAddSheet"), { ssr: false });
@@ -76,12 +78,10 @@ export function TripNav({ tripId }: TripNavProps) {
   const [addOpen, setAddOpen] = useState(false);
   const sheetMounted = useMountOnce(addOpen);
 
-  const items = NAV_ITEMS.filter((item) => {
-    if (item.href === "/planning") return features.hasPlanning;
-    if (item.href === "/menus") return features.hasMenus;
-    if (item.href === "/lists") return features.hasLists;
-    return true;
-  });
+  const counts = useTripCounts(tripId);
+  const shown = visibleSections(features, counts, sectionOf(pathname, base));
+  const items = NAV_ITEMS.filter((item) => shown.includes(item.href as (typeof shown)[number]));
+  const labelSize = items.length <= 3 ? "text-[0.8125rem]" : items.length === 4 ? "text-xs" : "text-[0.6875rem]";
   const available = QUICK_ADD.filter((a) => !a.voyageOnly || tripType === "trip");
   const context = contextKind(pathname, base, tripType);
   const lead = leadKind(context, available.map((a) => a.kind));
@@ -147,11 +147,20 @@ export function TripNav({ tripId }: TripNavProps) {
       >
         <div className="mx-auto flex max-w-md items-end gap-2.5">
           <ul className={cn("pointer-events-auto flex flex-1 items-center rounded-full p-1.5", GLASS)}>
+            <AnimatePresence initial={false}>
             {items.map(({ label, href, icon: Icon }) => {
               const fullHref = `${base}${href}`;
               const isActive = href === "" ? pathname === base : pathname.startsWith(fullHref);
               return (
-                <li key={href} className="flex-1">
+                <motion.li
+                  key={href}
+                  layout
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  transition={spring}
+                  className="flex-1"
+                >
                   <Link
                     href={fullHref}
                     prefetch={false}
@@ -192,7 +201,8 @@ export function TripNav({ tripId }: TripNavProps) {
                         animate={{ opacity: compact ? 0 : 1, height: compact ? 0 : "auto" }}
                         transition={{ duration: 0.2 }}
                         className={cn(
-                          "overflow-hidden text-[0.6875rem] leading-tight",
+                          "overflow-hidden leading-tight",
+                          labelSize,
                           isActive ? "font-semibold text-foreground" : "font-medium text-foreground/70"
                         )}
                       >
@@ -200,9 +210,10 @@ export function TripNav({ tripId }: TripNavProps) {
                       </motion.span>
                     </motion.span>
                   </Link>
-                </li>
+                </motion.li>
               );
             })}
+            </AnimatePresence>
           </ul>
 
           {context && (

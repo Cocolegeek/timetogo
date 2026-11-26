@@ -1,25 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import {
-  X,
-  Calendar,
-  Hourglass,
-  Tag,
-  MapPin,
-  Users,
-  AlignLeft,
-  Loader2,
-  Trash2,
-} from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-FULLSCREEN_DIALOG,
-} from "@/components/ui/dialog";
+import { useEffect, useRef, useState } from "react";
+import { X, Calendar, Users, Trash2, NotebookPen } from "lucide-react";
+import { Dialog, DialogContent, DialogTitle, FULLSCREEN_DIALOG } from "@/components/ui/dialog";
+import { HeroInput } from "@/components/forms/HeroInput";
+import { PropertyChips, type PropertyChipItem } from "@/components/forms/PropertyChips";
+import { FormFooter } from "@/components/forms/FormFooter";
 import { LocationPickerSheet } from "@/components/shared/LocationPickerSheet";
-import { cn } from "@/lib/utils";
+import { cn, firstName } from "@/lib/utils";
+import { handleEnter } from "@/lib/forms/enter-next";
+import { haptic } from "@/lib/haptics";
+import { friendlyDay, formatDuration } from "@/lib/format-date";
 import { ParticipantPicker } from "@/components/shared/ParticipantPicker";
 import { DateField, TimeField } from "@/components/shared/DateTimeFields";
 import { ITINERARY_TYPES } from "@/lib/itinerary-types";
@@ -66,8 +57,6 @@ interface ItineraryItemFormProps {
   onDelete?: () => void;
 }
 
-type ItineraryNavTab = "Quand" | "Quoi" | "Qui";
-
 export function ItineraryItemForm({
   open,
   onOpenChange,
@@ -79,38 +68,35 @@ export function ItineraryItemForm({
 }: ItineraryItemFormProps) {
   const isEdit = !!initialValues;
 
-  const [activeTab, setActiveTab] = useState<ItineraryNavTab>("Quand");
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [location, setLocation] = useState("");
   const [description, setDescription] = useState("");
+  const [descriptionOpen, setDescriptionOpen] = useState(false);
   const [type, setType] = useState<ItineraryType>("activity");
   const [durationH, setDurationH] = useState("");
   const [durationM, setDurationM] = useState("");
-  const [selectedParticipantIds, setSelectedParticipantIds] = useState<string[]>(
-    []
-  );
+  const [selectedParticipantIds, setSelectedParticipantIds] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [issue, setIssue] = useState<string | null>(null);
+  const [shake, setShake] = useState(0);
+  const titleRef = useRef<HTMLInputElement>(null);
 
   // Hydrate when opened
   useEffect(() => {
     if (!open) return;
-    setActiveTab("Quand");
     if (initialValues) {
       setTitle(initialValues.title);
       setDate(initialValues.date);
       setTime(initialValues.time ?? "");
       setLocation(initialValues.location ?? "");
       setDescription(initialValues.description ?? "");
+      setDescriptionOpen(!!initialValues.description);
       setType(initialValues.type);
-      const dh = initialValues.durationMinutes
-        ? Math.floor(initialValues.durationMinutes / 60)
-        : 0;
-      const dm = initialValues.durationMinutes
-        ? initialValues.durationMinutes % 60
-        : 0;
+      const dh = initialValues.durationMinutes ? Math.floor(initialValues.durationMinutes / 60) : 0;
+      const dm = initialValues.durationMinutes ? initialValues.durationMinutes % 60 : 0;
       setDurationH(dh ? String(dh) : "");
       setDurationM(dm ? String(dm) : "");
       setSelectedParticipantIds(initialValues.participantIds ?? []);
@@ -120,41 +106,45 @@ export function ItineraryItemForm({
       setTime("");
       setLocation("");
       setDescription("");
+      setDescriptionOpen(false);
       setType("activity");
       setDurationH("");
       setDurationM("");
       setSelectedParticipantIds([]);
     }
     setErrorMsg(null);
+    setIssue(null);
   }, [open, initialValues, defaultDate]);
 
-  const totalMinutes =
-    (Number(durationH) || 0) * 60 + (Number(durationM) || 0);
+  const totalMinutes = (Number(durationH) || 0) * 60 + (Number(durationM) || 0);
 
   const setQuickDuration = (mins: number) => {
     setDurationH(String(Math.floor(mins / 60)));
     setDurationM(String(mins % 60));
   };
 
-  const toggleParticipant = (id: string) => {
-    setSelectedParticipantIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
-  };
-  const allSelected =
-    participants.length > 0 &&
-    selectedParticipantIds.length === participants.length;
-  const toggleAll = () =>
-    setSelectedParticipantIds(
-      allSelected ? [] : participants.map((p) => p.id)
-    );
-
-  const formValid = title.trim().length > 0 && !!date;
+  const toggleParticipant = (id: string) =>
+    setSelectedParticipantIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  const allSelected = participants.length > 0 && selectedParticipantIds.length === participants.length;
+  const toggleAll = () => setSelectedParticipantIds(allSelected ? [] : participants.map((p) => p.id));
 
   const handleSubmit = async () => {
-    if (!formValid) return;
+    if (!title.trim()) {
+      setIssue("Donne un titre à l'étape.");
+      setShake((n) => n + 1);
+      haptic("warning");
+      titleRef.current?.focus();
+      return;
+    }
+    if (!date) {
+      setIssue("Choisis le jour de l'étape.");
+      setShake((n) => n + 1);
+      haptic("warning");
+      return;
+    }
     setSaving(true);
     setErrorMsg(null);
+    setIssue(null);
     try {
       await onSubmit({
         title: title.trim(),
@@ -170,8 +160,7 @@ export function ItineraryItemForm({
     } catch (e) {
       const raw = e instanceof Error ? e.message : "Erreur";
       const friendly =
-        /column.*does not exist/i.test(raw) ||
-        /schema cache/i.test(raw)
+        /column.*does not exist/i.test(raw) || /schema cache/i.test(raw)
           ? "Colonne manquante en base. Exécute la dernière migration SQL Supabase."
           : raw;
       setErrorMsg(friendly);
@@ -180,17 +169,118 @@ export function ItineraryItemForm({
     }
   };
 
+  const whenLabel = [friendlyDay(date) || "Quand", time ? time.slice(0, 5) : "", totalMinutes > 0 ? formatDuration(totalMinutes) : ""]
+    .filter(Boolean)
+    .join(" · ");
+  const typeCfg = TYPE_CONFIG[type] ?? ITINERARY_TYPES.activity;
+  const whoNames = selectedParticipantIds
+    .map((id) => participants.find((p) => p.id === id))
+    .filter((p): p is Participant => !!p)
+    .map((p) => firstName(p.name));
+
+  const chips: PropertyChipItem[] = [
+    {
+      id: "when",
+      icon: Calendar,
+      label: whenLabel,
+      filled: !!time || totalMinutes > 0 || date !== defaultDate,
+      panel: (
+        <div className="space-y-3">
+          <div className="grid grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] gap-2.5">
+            <DateField value={date} onChange={setDate} />
+            <TimeField value={time} onChange={setTime} />
+          </div>
+          <div>
+            <p className="mb-2 px-1 text-sm font-medium text-muted-foreground">Durée</p>
+            <div className="flex flex-wrap gap-1.5">
+              {QUICK_DURATIONS.map((d) => {
+                const selected = totalMinutes === d.minutes;
+                return (
+                  <button
+                    key={d.label}
+                    type="button"
+                    aria-pressed={selected}
+                    onClick={() => (selected ? (setDurationH(""), setDurationM("")) : setQuickDuration(d.minutes))}
+                    className={cn(
+                      "pressable h-10 rounded-full px-3.5 text-sm font-semibold transition-colors",
+                      selected ? "bg-primary text-primary-foreground" : "bg-card text-foreground hover:bg-foreground/[0.06]"
+                    )}
+                  >
+                    {d.label}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="flex items-center gap-2 pt-2">
+              <NumberPill value={durationH} onChange={setDurationH} suffix="h" max={48} />
+              <NumberPill value={durationM} onChange={setDurationM} suffix="min" max={59} />
+              {totalMinutes > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDurationH("");
+                    setDurationM("");
+                  }}
+                  className="shrink-0 rounded-lg p-2 text-muted-foreground transition-colors hover:bg-foreground/[0.06] hover:text-foreground/85"
+                  aria-label="Effacer la durée"
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "place",
+      node: <LocationPickerSheet compact value={location} onChange={setLocation} placeholder="Lieu" />,
+    },
+    {
+      id: "type",
+      icon: typeCfg.icon,
+      label: typeCfg.label,
+      filled: type !== "activity",
+      panel: (
+        <div className="flex flex-wrap gap-1.5">
+          {(Object.entries(TYPE_CONFIG) as [ItineraryType, NonNullable<(typeof TYPE_CONFIG)[keyof typeof TYPE_CONFIG]>][]).map(([t, cfg]) => {
+            const selected = type === t;
+            return (
+              <button
+                key={t}
+                type="button"
+                onClick={() => setType(t)}
+                aria-pressed={selected}
+                className={cn(
+                  "pressable flex h-11 items-center gap-2 rounded-full pr-4 pl-3 text-sm font-semibold transition-colors",
+                  selected ? "bg-primary text-primary-foreground" : "bg-card text-foreground hover:bg-foreground/[0.06]"
+                )}
+              >
+                <cfg.icon size={17} />
+                {cfg.label}
+              </button>
+            );
+          })}
+        </div>
+      ),
+    },
+    ...(participants.length > 0
+      ? ([
+          {
+            id: "who",
+            icon: Users,
+            label: selectedParticipantIds.length === 0 || allSelected ? "Tout le monde" : whoNames.length > 2 ? `${whoNames.slice(0, 2).join(", ")} +${whoNames.length - 2}` : whoNames.join(", "),
+            filled: selectedParticipantIds.length > 0 && !allSelected,
+            panel: <ParticipantPicker participants={participants} selected={selectedParticipantIds} onToggle={toggleParticipant} onToggleAll={toggleAll} />,
+          },
+        ] satisfies PropertyChipItem[])
+      : []),
+  ];
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        showCloseButton={false}
-        className={FULLSCREEN_DIALOG}
-      >
-        {/* Top app bar */}
-        <div
-          className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-2 pb-2"
-          style={{ paddingTop: "calc(env(safe-area-inset-top) + 0.625rem)" }}
-        >
+      <DialogContent showCloseButton={false} className={FULLSCREEN_DIALOG}>
+        <div className="flex shrink-0 items-center gap-3 px-2 pb-1" style={{ paddingTop: "calc(env(safe-area-inset-top) + 0.625rem)" }}>
           <button
             type="button"
             onClick={() => onOpenChange(false)}
@@ -199,233 +289,66 @@ export function ItineraryItemForm({
           >
             <X size={22} />
           </button>
-          <DialogTitle className="font-display text-[1.05rem] font-bold tracking-tight">
-            {isEdit ? "Modifier l'étape" : "Nouvelle étape"}
-          </DialogTitle>
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={!formValid || saving}
-            className={cn(
-              "h-10 rounded-full px-5 text-sm font-semibold transition-all",
-              "bg-primary text-primary-foreground shadow-section",
-              "disabled:opacity-40 disabled:pointer-events-none",
-              "active:scale-95"
-            )}
-          >
-            {saving ? (
-              <Loader2 size={16} className="animate-spin" />
-            ) : isEdit ? (
-              "OK"
-            ) : (
-              "Ajouter"
-            )}
-          </button>
+          <DialogTitle className="font-display text-[1.05rem] font-bold tracking-tight">{isEdit ? "Modifier l'étape" : "Nouvelle étape"}</DialogTitle>
         </div>
 
-        {/* Title: sticky, persistent across tabs */}
-        <div className="px-5 pt-4 pb-3 border-b border-border shrink-0">
-          <input
+        <div data-enter-chain className="flex-1 space-y-6 overflow-y-auto px-5 pt-3 pb-6">
+          <HeroInput
+            ref={titleRef}
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Titre de l'étape"
-            className="w-full bg-transparent border-0 outline-none text-xl font-bold text-foreground placeholder:text-muted-foreground placeholder:font-normal"
+            onChange={(e) => {
+              setTitle(e.target.value);
+              setIssue(null);
+            }}
+            placeholder="Quelle étape ?"
+            aria-label="Titre de l'étape"
+            enterKeyHint={descriptionOpen ? "next" : "done"}
             autoFocus={!isEdit}
+            onKeyDown={(e) => handleEnter(e, () => void handleSubmit())}
           />
-        </div>
 
-        {/* Tab navigation */}
-        <div role="tablist" className="mx-4 my-3 flex h-11 shrink-0 gap-1 rounded-full bg-foreground/[0.06] p-1">
-          {(["Quand", "Quoi", "Qui"] as ItineraryNavTab[]).map((tab) => (
+          <PropertyChips items={chips} />
+
+          {descriptionOpen ? (
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Une précision…"
+              aria-label="Description"
+              rows={3}
+              className="w-full resize-none rounded-2xl border border-input bg-card px-4 py-3 text-base outline-none placeholder:text-muted-foreground focus:border-primary/60 focus:ring-4 focus:ring-primary/12"
+            />
+          ) : (
             <button
-              key={tab}
               type="button"
-              onClick={() => setActiveTab(tab)}
-              className={cn(
-                "flex-1 rounded-full text-sm font-semibold transition-all",
-                activeTab === tab
-                  ? "bg-card text-foreground shadow-card dark:bg-foreground/[0.12]"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
+              onClick={() => setDescriptionOpen(true)}
+              className="pressable flex h-11 items-center gap-2 rounded-full px-1 text-[0.95rem] font-medium text-muted-foreground hover:text-foreground"
             >
-              {tab}
-              {tab === "Qui" && selectedParticipantIds.length > 0 && (
-                <span className="ml-1.5 text-xs opacity-70">
-                  ({selectedParticipantIds.length})
-                </span>
-              )}
+              <NotebookPen size={16} aria-hidden="true" />
+              Ajouter une description
             </button>
-          ))}
-        </div>
-
-        {/* Body */}
-        <div className="flex-1 overflow-y-auto">
-          {activeTab === "Quand" && (
-            <>
-              <Row icon={<Calendar size={18} />}>
-                <div className="grid grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] gap-2.5">
-                  <DateField value={date} onChange={setDate} />
-                  <TimeField value={time} onChange={setTime} />
-                </div>
-              </Row>
-
-              <Row icon={<Hourglass size={18} />} label="Durée (optionnelle)">
-                <div className="flex gap-1.5 flex-wrap">
-                  {QUICK_DURATIONS.map((d) => {
-                    const selected = totalMinutes === d.minutes;
-                    return (
-                      <button
-                        key={d.label}
-                        type="button"
-                        onClick={() => setQuickDuration(d.minutes)}
-                        className={cn(
-                          "px-3 py-1.5 rounded-full text-sm font-medium transition-all active:scale-95",
-                          selected
-                            ? "bg-primary/10 text-primary ring-1 ring-primary/40"
-                            : "bg-secondary text-muted-foreground hover:bg-foreground/[0.08]"
-                        )}
-                      >
-                        {d.label}
-                      </button>
-                    );
-                  })}
-                </div>
-                <div className="flex items-center gap-2 pt-2">
-                  <NumberPill value={durationH} onChange={setDurationH} suffix="h" max={48} />
-                  <NumberPill value={durationM} onChange={setDurationM} suffix="min" max={59} />
-                  {totalMinutes > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => { setDurationH(""); setDurationM(""); }}
-                      className="p-2 rounded-lg text-muted-foreground hover:text-foreground/85 hover:bg-foreground/[0.06] transition-colors shrink-0"
-                      aria-label="Effacer la durée"
-                    >
-                      <X size={14} />
-                    </button>
-                  )}
-                </div>
-              </Row>
-            </>
           )}
 
-          {activeTab === "Quoi" && (
-            <>
-              <Row icon={<Tag size={18} />} label="Type">
-                <div className="flex gap-1.5 flex-wrap">
-                  {(Object.entries(TYPE_CONFIG) as [ItineraryType, NonNullable<typeof TYPE_CONFIG[keyof typeof TYPE_CONFIG]>][]).map(([t, cfg]) => {
-                    const selected = type === t;
-                    return (
-                      <button
-                        key={t}
-                        type="button"
-                        onClick={() => setType(t)}
-                        aria-pressed={selected}
-                        className={cn(
-                          "pressable flex h-11 items-center gap-2 rounded-full pr-4 pl-3 text-sm font-semibold transition-colors",
-                          selected
-                            ? "bg-foreground text-background"
-                            : "bg-foreground/[0.06] text-foreground hover:bg-foreground/[0.08]"
-                        )}
-                      >
-                        <cfg.icon size={17} />
-                        {cfg.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </Row>
-
-              <Row icon={<MapPin size={18} />} label="Lieu">
-                <LocationPickerSheet
-                  value={location}
-                  onChange={setLocation}
-                  placeholder="Ajouter un lieu"
-                  className="bg-secondary border-border"
-                />
-              </Row>
-
-              <Row icon={<AlignLeft size={18} />} label="Description">
-                <textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Ajouter une description"
-                  rows={3}
-                  className="w-full border px-3 py-2 text-base resize-none border-input bg-card rounded-2xl h-12 outline-none placeholder:text-muted-foreground focus:border-primary/60 focus:ring-4 focus:ring-primary/12 tabular"
-                />
-              </Row>
-            </>
-          )}
-
-          {activeTab === "Qui" && (
-            participants.length === 0 ? (
-              <div className="px-5 py-10 text-center text-sm text-muted-foreground">
-                Aucun participant. Ajoute-en depuis l&apos;édition du voyage.
-              </div>
-            ) : (
-              <Row icon={<Users size={18} />} label="Participants">
-                <ParticipantPicker
-                  participants={participants}
-                  selected={selectedParticipantIds}
-                  onToggle={toggleParticipant}
-                  onToggleAll={toggleAll}
-                />
-              </Row>
-            )
-          )}
-
-          {errorMsg && (
-            <div className="px-5 py-4">
-              <p className="rounded-2xl bg-red-500/10 px-4 py-3 text-sm text-red-400">
-                {errorMsg}
-              </p>
-            </div>
-          )}
+          {errorMsg && <p className="rounded-2xl bg-red-500/10 px-4 py-3 text-sm text-red-400">{errorMsg}</p>}
 
           {isEdit && onDelete && (
-            <div className="px-5 pt-8 pb-2">
-              <button
-                type="button"
-                onClick={() => {
-                  onOpenChange(false);
-                  onDelete();
-                }}
-                className="pressable flex h-12 w-full items-center justify-center gap-2 rounded-full bg-red-500/10 text-[0.95rem] font-semibold text-red-400 transition-colors hover:bg-red-500/15"
-              >
-                <Trash2 size={17} />
-                Supprimer l&apos;étape
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => {
+                onOpenChange(false);
+                onDelete();
+              }}
+              className="pressable flex h-12 w-full items-center justify-center gap-2 rounded-full bg-red-500/10 text-[0.95rem] font-semibold text-red-400 transition-colors hover:bg-red-500/15"
+            >
+              <Trash2 size={17} />
+              Supprimer l&apos;étape
+            </button>
           )}
-
-          <div aria-hidden style={{ height: "calc(env(safe-area-inset-bottom) + 1rem)" }} />
         </div>
+
+        <FormFooter label={isEdit ? "Enregistrer" : "Ajouter l'étape"} onClick={handleSubmit} loading={saving} message={issue} shakeKey={shake} />
       </DialogContent>
     </Dialog>
-  );
-}
-
-/** A Google-Calendar-style row: leading icon + content */
-function Row({
-  icon,
-  label,
-  children,
-}: {
-  icon: React.ReactNode;
-  label?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="flex items-start gap-4 px-5 py-3.5 border-t border-border">
-      <div className="text-muted-foreground mt-2 shrink-0">{icon}</div>
-      <div className="flex-1 min-w-0 space-y-2">
-        {label && (
-          <p className="text-xs text-muted-foreground font-medium">
-            {label}
-          </p>
-        )}
-        {children}
-      </div>
-    </div>
   );
 }
 
