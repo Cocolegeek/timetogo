@@ -786,10 +786,8 @@ export function ExpenseForm({
         style={{ height: "92dvh" }}
       >
         {/* Header */}
-        <div className={cn("shrink-0 px-5 pr-16", isEdit || duplicate ? "pt-7 pb-3" : "pt-5")}>
-          <SheetTitle className={isEdit || duplicate ? undefined : "sr-only"}>
-            {isEdit ? "Modifier la dépense" : duplicate ? "Dupliquer la dépense" : "Nouvelle dépense"}
-          </SheetTitle>
+        <div className="shrink-0 px-5 pt-7 pr-16 pb-3">
+          <SheetTitle>{isEdit ? "Modifier la dépense" : duplicate ? "Dupliquer la dépense" : "Nouvelle dépense"}</SheetTitle>
         </div>
 
         {/* Corps : une seule page, les réglages en puces */}

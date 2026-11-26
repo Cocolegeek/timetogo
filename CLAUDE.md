@@ -1,4 +1,5 @@
 @AGENTS.md
+@MEMORY.md
 
 # Voyou: Project Context
 
@@ -93,7 +94,7 @@ components/
               TripSearch, DayAgendaCard (journée utile du tableau de bord : étape en cours / à suivre + reste du jour),
               TripActionsSheet (« … » d'une carte voyage), IdentityDialog (« Qui es-tu ? »), LazyOnboarding,
               TripCard (variants featured | row, tripStatus()), TripCover (illustrations en aplats),
-              TripEditDialog, TripEditWrapper
+              TripEditDialog (ancienne présentation, à refaire dans le style des formulaires), TripEditWrapper
   settings/   DeleteAccountDialog (confirmation par saisie « SUPPRIMER »), SettingsShell (retour + grand titre), SettingsList (SettingsGroup, SettingsRow, SettingsToggle)
   trips/      FriendPicker (rangée « Ta bande » : un pote choisi = membre lié, le voyage apparaît chez lui),
               MyListCard (tableau de bord : « On compte sur toi » / « n choses sans personne »)
@@ -254,7 +255,9 @@ DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip(
   `system | light | dark`, clé localStorage `voyou-theme`). Toujours utiliser les tokens
   (`bg-card`, `bg-secondary`, `text-foreground`, `text-muted-foreground`, `border-border`).
   Les échelles `slate`/`indigo`/`violet` sont remappées dans globals.css pour le code existant.
-- **Typo** : Bricolage Grotesque (`font-display`) pour titres et montants, Inter pour le texte.
+- **Typo** : Bricolage Grotesque (`font-display`) pour titres et montants, Inter pour le texte. Polices **hébergées** dans `app/fonts/`
+  (`next/font/local`, sous-ensemble latin, polices variables) : jamais `next/font/google`, la compilation Vercel échouait par intermittence
+  quand le téléchargement chez Google ratait.
   Montants en `tabular` + `font-display`. Pas de petites capitales en `uppercase tracking-wider`.
 - **Surfaces** : cartes pleines `bg-card shadow-card rounded-[1.5rem]` (ou `glass` = même rendu),
   listes groupées façon iOS (rangées séparées par `border-t border-border`). Jamais de verre dépoli,

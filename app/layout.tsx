@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Bricolage_Grotesque, Inter, Geist_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import { PwaRegister } from "./pwa-register";
 import { LazyInstallBanner } from "@/components/shared/LazyInstallBanner";
 import { SectionThemeController } from "@/components/layout/SectionThemeController";
@@ -9,21 +9,27 @@ import { ToastProvider } from "@/components/shared/Toaster";
 import { DataProvider } from "@/lib/data/swr";
 import "./globals.css";
 
-const inter = Inter({
+// Polices hébergées dans le projet (app/fonts) : la compilation ne dépend plus d'un téléchargement chez Google.
+const inter = localFont({
+  src: "./fonts/inter-latin.woff2",
   variable: "--font-inter",
-  subsets: ["latin"],
+  weight: "100 900",
+  display: "swap",
 });
 
-const bricolage = Bricolage_Grotesque({
+const bricolage = localFont({
+  src: "./fonts/bricolage-latin.woff2",
   variable: "--font-bricolage",
-  subsets: ["latin"],
-  weight: ["500", "700", "800"],
+  weight: "200 800",
+  display: "swap",
 });
 
 // Only used to display an IBAN: not worth a preload on every launch.
-const geistMono = Geist_Mono({
+const geistMono = localFont({
+  src: "./fonts/geist-mono-latin.woff2",
   variable: "--font-geist-mono",
-  subsets: ["latin"],
+  weight: "100 900",
+  display: "swap",
   preload: false,
 });
 
