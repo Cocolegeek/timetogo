@@ -191,7 +191,7 @@ lib/
                           attente fusionnés. Vidée par clearDataCache() (déconnexion).
   budget/budget-color.ts → getBudgetColor(pct), getBudgetTextColor(pct)
   format-currency.ts    → formatCurrency(amount, currency), currencySymbol(currency)
-  format-date.ts        → date formatting
+  format-date.ts        → formatDateRange, formatDuration, friendlyDay (Aujourd'hui, Demain), formatClock (14:32), formatAddedAt (8 juin à 10:00)
   image-crop.ts         → getCroppedImg() for AvatarUpload / ImageCropDialog
   map-apps.ts           → MapAppId type + map app metadata
   meals/slots.ts        → DEFAULT_SLOTS, eachDate(), buildDefaultMealRows()
@@ -335,7 +335,8 @@ DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip(
   Emoji du voyage : le drapeau du pays choisi (`countryCode` de `LocationPickerSheet`) est proposé en premier et présélectionné tant que
   l'utilisateur n'a pas choisi lui-même ; puis thèmes (train, plage…) et drapeaux courants. Pas d'avion (empreinte carbone).
 - **Trajets** : le mode « Avion » reste disponible dans `JourneyForm` (calcul de trajet, avertissement CO₂) ; seul l'emoji d'un voyage évite l'avion.
-- **Payeur** : toujours la photo de profil du participant (`ParticipantAvatar`), jamais un point de couleur.
+- **Payeur** : toujours la photo de profil du participant (`ParticipantAvatar`), jamais un point de couleur. **Heure d'ajout** d'une dépense :
+  `· 14:32` sur la carte (`createdAt`, heure locale), « Ajoutée le 8 juin à 10:00 » dans la fiche.
 - **Identité du voyage** : l'emoji ou le drapeau choisi s'affiche devant le titre (tableau de bord, cartes de la liste). Destination
   toujours abrégée (`shortDestination()`). Participants = avatars + prénoms (« Toi, Léa, Marc +2 ») ; la pastille « Qui es-tu ? »
   n'apparaît que si on n'est pas encore relié à un participant (toucher les avatars rouvre le choix). Illustration d'en-tête basse (h-28).
