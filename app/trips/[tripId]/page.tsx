@@ -115,15 +115,15 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
   const status = tripStatus(trip);
 
   return (
-    <Stagger step={0.055} className="space-y-5 pt-1">
+    <Stagger step={0.055} className="space-y-5 pt-1 lg:block lg:columns-2 lg:gap-x-6 lg:space-y-0">
       {/* ── Hero ─────────────────────────────────────────────── */}
-      <StaggerItem>
+      <StaggerItem className="lg:mb-5 lg:break-inside-avoid lg:[column-span:all]">
         <div className="relative overflow-hidden rounded-[1.75rem] shadow-raised">
           {trip.iconUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={trip.iconUrl} alt="" className="h-28 w-full object-cover" draggable={false} />
+            <img src={trip.iconUrl} alt="" className="h-28 w-full object-cover lg:h-40" draggable={false} />
           ) : (
-            <TripCover seed={trip.id} className="h-28" />
+            <TripCover seed={trip.id} className="h-28 lg:h-40" />
           )}
           {status.kind !== "permanent" && (
             <span className="absolute top-4 left-4 inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-[0.8125rem] font-semibold text-[#1A1D24] shadow-card backdrop-blur">
@@ -173,7 +173,7 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
         </div>
       </StaggerItem>
 
-      <StaggerItem>
+      <StaggerItem className="lg:mb-5 lg:break-inside-avoid lg:[column-span:all]">
         <GettingStarted
           tripId={trip.id}
           steps={[
@@ -215,7 +215,7 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
 
       {/* ── Budget (hidden while empty: « Premiers pas » asks for the first expense) ── */}
       {(expenses.length > 0 || !!trip.totalBudget) && (
-      <StaggerItem>
+      <StaggerItem className="lg:mb-5 lg:break-inside-avoid">
         <section className="rounded-[1.75rem] bg-card p-5 shadow-card">
           <div className="flex items-center justify-between">
             <Link href={`/trips/${tripId}/budget`} className="group flex items-center gap-1 text-sm font-semibold text-muted-foreground">
@@ -309,7 +309,7 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
 
       {/* ── Balances ─────────────────────────────────────────── */}
       {me && expenses.length > 0 && (
-        <StaggerItem>
+        <StaggerItem className="lg:mb-5 lg:break-inside-avoid">
           {iOweTotal < 0.01 && owedTotal < 0.01 ? (
             <Link
               href={`/trips/${tripId}/budget?tab=balances`}
@@ -356,21 +356,21 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
 
       {/* ── Planning ─────────────────────────────────────────── */}
       {features.hasPlanning && (
-        <StaggerItem>
+        <StaggerItem className="lg:mb-5 lg:break-inside-avoid">
           <DayAgendaCard items={itineraryItems} today={today} planningHref={`/trips/${tripId}/planning`} />
         </StaggerItem>
       )}
 
       {/* ── Listes : ce qu'on attend de moi ─────────────────── */}
       {features.hasLists && (
-        <StaggerItem>
+        <StaggerItem className="lg:mb-5 lg:break-inside-avoid">
           <MyListCard tripId={trip.id} myId={trip.myParticipantId ?? null} />
         </StaggerItem>
       )}
 
       {/* ── Menus du jour ────────────────────────────────────── */}
       {features.hasMenus && todayMeals.length > 0 && (
-        <StaggerItem>
+        <StaggerItem className="lg:mb-5 lg:break-inside-avoid">
           <section className="rounded-[1.75rem] bg-card p-5 shadow-card">
             <div className="flex items-center justify-between">
               <h2 className="font-display text-[1.15rem] font-bold tracking-tight">Au menu aujourd&apos;hui</h2>

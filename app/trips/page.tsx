@@ -127,7 +127,7 @@ function TripsPageContent() {
         <AppHeader />
 
         <main
-          className="mx-auto max-w-3xl px-5 pt-2"
+          className="mx-auto max-w-3xl px-5 pt-2 lg:max-w-5xl lg:px-8"
           style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 7rem)" }}
         >
           {loading ? (
@@ -265,7 +265,7 @@ function TripSection({
   return (
     <section>
       <SectionLabel>{title}</SectionLabel>
-      <div className="-mx-2.5 space-y-1">
+      <div className="-mx-2.5 space-y-1 lg:grid lg:grid-cols-2 lg:gap-x-4 lg:space-y-0">
         {trips.map((trip) => (
           <TripCard key={trip.id} trip={trip} {...cardProps} />
         ))}

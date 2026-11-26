@@ -18,7 +18,7 @@ export function AppHeader() {
       )}
       style={{ paddingTop: "env(safe-area-inset-top)" }}
     >
-      <div className="mx-auto flex h-14 max-w-3xl items-center justify-between px-5">
+      <div className="mx-auto flex h-14 max-w-3xl items-center justify-between px-5 lg:max-w-5xl lg:px-8">
         <Link href="/trips" aria-label="Accueil Voyou" className="rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring">
           <VoyouLogo size={32} wordmark />
         </Link>

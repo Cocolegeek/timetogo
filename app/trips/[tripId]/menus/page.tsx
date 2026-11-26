@@ -262,7 +262,7 @@ function MealCard({
       layout="position"
       variants={fadeUp}
       exit={{ opacity: 0, height: 0, transition: { duration: 0.25, ease: EASE_OUT } }}
-      className="relative overflow-hidden rounded-[1.5rem] shadow-card"
+      className="group relative overflow-hidden rounded-[1.5rem] shadow-card"
     >
       <motion.div
         aria-hidden="true"
@@ -359,6 +359,15 @@ function MealCard({
         </span>
         )}
       </motion.button>
+
+      <button
+        type="button"
+        aria-label={`Supprimer ${slotCfg.label}`}
+        onClick={onDelete}
+        className="absolute right-3 bottom-3 z-10 hidden size-9 items-center justify-center rounded-full text-muted-foreground opacity-0 transition-[opacity,color,background-color] outline-none group-focus-within:opacity-100 group-hover:opacity-100 hover:bg-red-500/10 hover:text-red-400 focus-visible:ring-2 focus-visible:ring-ring [@media(pointer:fine)]:flex"
+      >
+        <Trash2 size={17} aria-hidden="true" />
+      </button>
     </motion.li>
   );
 }

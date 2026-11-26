@@ -31,6 +31,11 @@ export function sectionOf(pathname: string, base: string): SectionHref | null {
   return null;
 }
 
+/** Le Résumé s'étale sur deux colonnes sur grand écran ; les autres pages restent en colonne de lecture. */
+export function contentWidth(pathname: string, base: string): "wide" | "narrow" {
+  return pathname === base ? "wide" : "narrow";
+}
+
 export function canSearch(totalItems: number): boolean {
   return totalItems >= SEARCH_MIN_ITEMS;
 }

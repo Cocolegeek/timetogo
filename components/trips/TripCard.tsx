@@ -116,7 +116,7 @@ export function TripCard({ trip, onEdit, onDelete, onShare, variant = "row" }: T
     return (
       <article className="group relative overflow-hidden rounded-[1.75rem] bg-card shadow-raised">
         <Link href={href} prefetch={false} className="block outline-none focus-visible:ring-2 focus-visible:ring-ring">
-          <div className="relative h-52 overflow-hidden">
+          <div className="relative h-52 overflow-hidden lg:h-64">
             <Cover
               trip={trip}
               className="h-full w-full transition-transform duration-700 ease-(--ease-out) group-hover:scale-[1.04]"

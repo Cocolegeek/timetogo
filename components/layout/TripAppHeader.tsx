@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { ChevronLeft, Pencil, Search, Share } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useTrip } from "@/hooks/useTrip";
 import { useTripCounts } from "@/hooks/useTripCounts";
 import { useScrolled } from "@/hooks/useScrolled";
-import { canSearch } from "@/lib/trip-sections";
+import { canSearch, contentWidth } from "@/lib/trip-sections";
 import { cn } from "@/lib/utils";
 
 const TripEditDialog = dynamic(
@@ -33,6 +34,7 @@ export function TripAppHeader({ tripId }: { tripId: string }) {
   const [shareOpen, setShareOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const scrolled = useScrolled(4);
+  const wide = contentWidth(usePathname(), `/trips/${tripId}`) === "wide";
   const counts = useTripCounts(tripId);
   const searchable = canSearch(counts.expenses + counts.planning + counts.menus + counts.lists);
 
@@ -52,8 +54,8 @@ export function TripAppHeader({ tripId }: { tripId: string }) {
       )}
       style={{ paddingTop: "env(safe-area-inset-top)" }}
     >
-      <div className="mx-auto flex h-14 max-w-3xl items-center gap-1 px-2">
-        <Link href="/trips" prefetch={false} aria-label="Tous les voyages" className={ICON_BTN}>
+      <div className={cn("mx-auto flex h-14 max-w-3xl items-center gap-1 px-2 lg:px-6", wide && "lg:max-w-5xl")}>
+        <Link href="/trips" prefetch={false} aria-label="Tous les voyages" className={cn(ICON_BTN, "lg:hidden")}>
           <ChevronLeft size={24} strokeWidth={2.2} />
         </Link>
 
