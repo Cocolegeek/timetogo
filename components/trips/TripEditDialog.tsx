@@ -3,7 +3,7 @@
 import { EmojiIcon } from "@/components/shared/EmojiIcon";
 import { TRIP_CURRENCIES } from "@/lib/currencies";
 import { useState, useEffect } from "react";
-import { Loader2, Plus, X, Pencil, Check, Infinity, CalendarDays, CalendarRange, ImagePlus, Smile } from "lucide-react";
+import { Loader2, Plus, X, Pencil, Check, Infinity, CalendarDays, CalendarRange, ImagePlus, Smile, UtensilsCrossed } from "lucide-react";
 import { m as motion, AnimatePresence } from "framer-motion";
 import {
   Sheet,
@@ -21,6 +21,7 @@ import { tripEmojiChoices } from "@/lib/trip-emojis";
 import { cn } from "@/lib/utils";
 import { ParticipantAvatar } from "@/components/shared/ParticipantAvatar";
 import { ModulePicker } from "@/components/trips/ModulePicker";
+import { SettingsToggle } from "@/components/settings/SettingsList";
 import { modulesOf } from "@/lib/trip-features";
 import type { Trip, TripModule, Participant } from "@/types";
 import { PARTICIPANT_COLORS } from "@/lib/participant-colors";
@@ -47,6 +48,7 @@ interface TripEditDialogProps {
     endDate?: string | null;
     iconUrl?: string | null;
     modules?: TripModule[];
+    mealsInPlanning?: boolean;
   }) => Promise<void>;
   onSaveIcon: (iconUrl: string | null) => Promise<void>;
   onAddParticipant: (data: { name: string; color: string }) => Promise<unknown>;
@@ -86,6 +88,7 @@ export function TripEditDialog({
   const [startDate, setStartDate] = useState(trip.startDate ?? "");
   const [endDate, setEndDate] = useState(trip.endDate ?? trip.startDate ?? "");
   const [modules, setModules] = useState<TripModule[]>([...modulesOf(trip)]);
+  const [mealsInPlanning, setMealsInPlanning] = useState(trip.mealsInPlanning !== false);
   const [groupDateMode, setGroupDateMode] = useState<GroupDateMode>(detectGroupDateMode(trip));
   const [emojiPickerOpen, setEmojiPickerOpen] = useState(true);
   const [newParticipantName, setNewParticipantName] = useState("");
@@ -104,6 +107,7 @@ export function TripEditDialog({
       setEndDate(trip.endDate ?? trip.startDate ?? "");
       setGroupDateMode(detectGroupDateMode(trip));
       setModules([...modulesOf(trip)]);
+      setMealsInPlanning(trip.mealsInPlanning !== false);
       setEmojiPickerOpen(true);
       setEditingParticipantId(null);
     }
@@ -126,6 +130,7 @@ export function TripEditDialog({
     currency !== trip.currency ||
     destination.trim() !== (trip.destination ?? "") ||
     !sameModules(savedModules, [...modulesOf(trip)]) ||
+    mealsInPlanning !== (trip.mealsInPlanning !== false) ||
     dateDirty;
 
   const groupDateValid =
@@ -158,6 +163,7 @@ export function TripEditDialog({
         startDate: saveStartDate,
         endDate: saveEndDate,
         modules: savedModules,
+        mealsInPlanning,
       });
     } finally {
       setSaving(false);
@@ -377,6 +383,16 @@ export function TripEditDialog({
 
 
               <ModulePicker value={modules} canPlan={period} onChange={setModules} />
+              {savedModules.includes("planning") && savedModules.includes("menus") && (
+                <div className="overflow-hidden rounded-[1.25rem] bg-secondary">
+                  <SettingsToggle
+                    icon={UtensilsCrossed}
+                    label="Repas dans le planning"
+                    checked={mealsInPlanning}
+                    onChange={setMealsInPlanning}
+                  />
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label className="px-1 text-sm font-semibold text-foreground">

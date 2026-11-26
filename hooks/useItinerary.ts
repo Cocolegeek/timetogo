@@ -1,10 +1,12 @@
 "use client";
 
+import { useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { fetchTripDetail } from "@/hooks/useTrip";
 import { useCachedQuery } from "@/hooks/useCachedQuery";
 import { notify } from "@/lib/notifications/notify";
-import { mealPlanningEntry } from "@/lib/meals/planning";
-import type { ItineraryItem, ItineraryType, JourneyMode, Meal } from "@/types";
+import { mealPlanningEntry, visibleSteps } from "@/lib/meals/planning";
+import type { ItineraryItem, ItineraryType, JourneyMode, Meal, Trip } from "@/types";
 
 function rowToItem(row: Record<string, unknown>): ItineraryItem {
   return {
@@ -44,11 +46,14 @@ export async function fetchItineraryRows(tripId: string): Promise<ItineraryItem[
 }
 
 export function useItinerary(tripId: string) {
-  const { data: items, loading, set: setItems, refetch: fetchItems } = useCachedQuery(
+  const { data: allItems, loading, set: setItems, refetch: fetchItems } = useCachedQuery(
     tripId ? `itinerary:${tripId}` : null,
     () => fetchItineraryRows(tripId),
     NO_ITEMS
   );
+  const { data: trip } = useCachedQuery<Trip | null>(tripId ? `trip:${tripId}` : null, () => fetchTripDetail(tripId), null);
+  // Réglage « repas dans le planning » éteint : les étapes des repas restent en base mais ne s'affichent pas.
+  const items = useMemo(() => visibleSteps(allItems, trip?.mealsInPlanning !== false), [allItems, trip?.mealsInPlanning]);
 
   const addItem = async (
     data: Omit<ItineraryItem, "id" | "createdAt" | "tripId">
@@ -80,7 +85,7 @@ export function useItinerary(tripId: string) {
     id: string,
     data: Partial<Omit<ItineraryItem, "id" | "createdAt" | "tripId">>
   ): Promise<void> => {
-    const snapshot = items;
+    const snapshot = allItems;
     setItems(is => is.map(i => i.id === id ? { ...i, ...data } : i));
 
     const { error } = await createClient().from("itinerary_items").update({
@@ -100,7 +105,7 @@ export function useItinerary(tripId: string) {
   };
 
   const deleteItem = async (id: string): Promise<void> => {
-    const snapshot = items;
+    const snapshot = allItems;
     setItems(is => is.filter(i => i.id !== id));
     const { error } = await createClient().from("itinerary_items").delete().eq("id", id);
     if (error) { setItems(snapshot); throw new Error(error.message); }

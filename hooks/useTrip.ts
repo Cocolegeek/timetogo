@@ -28,6 +28,7 @@ function rowsToTrip(
     createdAt: tripRow.created_at as string,
     updatedAt: tripRow.updated_at as string,
     modules: parseModules(tripRow.modules, tripRow.type as string | undefined),
+    mealsInPlanning: tripRow.meals_in_planning !== false,
     destination: (tripRow.destination as string | null) || undefined,
     startDate: (tripRow.start_date as string | null) || undefined,
     endDate: (tripRow.end_date as string | null) || undefined,
@@ -227,6 +228,7 @@ export function useTrip(id: string) {
       totalBudget: number | null;
       iconUrl: string | null;
       modules: TripModule[];
+      mealsInPlanning: boolean;
     }>
   ): Promise<void> => {
     const snapshot = trip;
@@ -247,6 +249,7 @@ export function useTrip(id: string) {
         ...sharedPatch,
         ...(data.destination !== undefined && { destination: data.destination || undefined }),
         ...(data.modules && { modules: data.modules }),
+        ...(data.mealsInPlanning !== undefined && { mealsInPlanning: data.mealsInPlanning }),
         ...datePatch,
       };
       setTrip(next);
@@ -262,6 +265,7 @@ export function useTrip(id: string) {
       ...(data.totalBudget !== undefined && { total_budget: data.totalBudget }),
       ...(data.iconUrl !== undefined && { icon_url: data.iconUrl }),
       ...(data.modules && { modules: data.modules }),
+      ...(data.mealsInPlanning !== undefined && { meals_in_planning: data.mealsInPlanning }),
       updated_at: new Date().toISOString(),
     }).eq("id", id);
 

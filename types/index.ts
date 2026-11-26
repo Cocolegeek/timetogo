@@ -89,6 +89,8 @@ export interface Trip {
   createdAt: string;
   updatedAt: string;
   modules: TripModule[];
+  /** Faux : les étapes créées par les repas ne s'affichent pas dans le planning (champ absent = vrai). */
+  mealsInPlanning?: boolean;
   destination?: string;
   startDate?: string;
   endDate?: string;
@@ -108,6 +110,7 @@ export interface TripRow {
   owner_id: string;
   type?: string;
   modules?: TripModule[];
+  meals_in_planning?: boolean;
   icon_url: string | null;
   created_at: string;
   updated_at: string;

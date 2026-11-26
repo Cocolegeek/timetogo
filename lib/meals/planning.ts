@@ -17,6 +17,11 @@ export interface MealPlanningEntry {
   participantIds: string[];
 }
 
+/** Réglage « repas dans le planning » éteint : on cache les étapes nées d'un repas (elles restent en base). */
+export function visibleSteps<T extends { mealId?: string }>(steps: readonly T[], mealsInPlanning: boolean): T[] {
+  return mealsInPlanning ? [...steps] : steps.filter((s) => !s.mealId);
+}
+
 type MealLike = Pick<Meal, "slot" | "category" | "title" | "notes" | "dishes" | "participantIds" | "link">;
 
 function dishSummary(dishes: Meal["dishes"]): string {

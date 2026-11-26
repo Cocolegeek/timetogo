@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mealPlanningEntry, SLOT_DEFAULTS } from "../lib/meals/planning.ts";
+import { visibleSteps, mealPlanningEntry, SLOT_DEFAULTS } from "../lib/meals/planning.ts";
 import { linkHost, normalizeLink } from "../lib/meals/link.ts";
 
 const base = { slot: "lunch" as const, category: "home" as const, title: null, notes: null, dishes: [], participantIds: [], link: null };
@@ -57,4 +57,11 @@ test("normalizeLink : ajoute https, refuse le reste", () => {
 test("linkHost : le nom du site sans www", () => {
   assert.equal(linkHost("https://www.chezlea.fr/menu?x=1"), "chezlea.fr");
   assert.equal(linkHost("n'importe quoi"), "n'importe quoi");
+});
+
+test("réglage « repas dans le planning » : éteint, seules les étapes nées d'un repas disparaissent", () => {
+  const steps = [{ id: "a" }, { id: "b", mealId: "m1" }, { id: "c" }];
+  assert.deepEqual(visibleSteps(steps, true).map((s) => s.id), ["a", "b", "c"]);
+  assert.deepEqual(visibleSteps(steps, false).map((s) => s.id), ["a", "c"]);
+  assert.equal(steps.length, 3);
 });
