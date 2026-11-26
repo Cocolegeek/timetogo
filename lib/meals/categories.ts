@@ -31,4 +31,5 @@ export const CATEGORY_CONFIG: Record<MealCategory, CategoryConfig> = {
   },
 };
 
-export const CATEGORY_ORDER: MealCategory[] = ["home", "picnic", "restaurant"];
+/** Les menus, c'est ce qu'on cuisine ou achète. Un resto est une étape du planning ; « restaurant » reste connu pour d'anciens repas en cache. */
+export const CATEGORY_ORDER: MealCategory[] = ["home", "picnic"];
