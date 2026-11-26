@@ -1,5 +1,6 @@
 "use client";
 
+import { EmojiIcon } from "@/components/shared/EmojiIcon";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, m as motion } from "framer-motion";
@@ -239,7 +240,7 @@ export function CreateWizard({ type }: { type: WizardType }) {
       <TripCover seed={type} variant={type === "trip" ? 1 : 4} className="mb-6 h-32 rounded-[1.5rem]">
         <div className="absolute inset-x-3 bottom-3 flex items-center gap-3 rounded-2xl bg-card p-3 shadow-card">
           <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-secondary text-2xl" aria-hidden="true">
-            {s.emoji}
+            <EmojiIcon emoji={s.emoji} />
           </span>
           <span className="min-w-0 flex-1">
             <span className="block truncate font-display text-[1.05rem] font-bold tracking-tight">{title}</span>
@@ -537,7 +538,7 @@ function EmojiRow({ emojis, value, onPick }: { emojis: string[]; value: string; 
             value === e ? "bg-primary/12 ring-2 ring-primary ring-inset" : "bg-foreground/[0.06] hover:bg-foreground/[0.1]"
           )}
         >
-          {e}
+          <EmojiIcon emoji={e} />
         </button>
       ))}
     </div>

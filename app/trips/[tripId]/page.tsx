@@ -1,5 +1,6 @@
 "use client";
 
+import { EmojiIcon } from "@/components/shared/EmojiIcon";
 import { use, useCallback, useMemo, useState } from "react";
 import Link from "next/link";
 import { m as motion } from "framer-motion";
@@ -136,7 +137,7 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
           <h1 className="font-display text-[2rem] leading-[1.05] font-extrabold tracking-[-0.03em]">
             {trip.emoji && (
               <span aria-hidden="true" className="mr-2">
-                {trip.emoji}
+                <EmojiIcon emoji={trip.emoji} />
               </span>
             )}
             {trip.name}

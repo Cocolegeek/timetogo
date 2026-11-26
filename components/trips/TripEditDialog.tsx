@@ -1,5 +1,6 @@
 "use client";
 
+import { EmojiIcon } from "@/components/shared/EmojiIcon";
 import { TRIP_CURRENCIES } from "@/lib/currencies";
 import { useState, useEffect } from "react";
 import { Loader2, Plus, X, Pencil, Check, Infinity, CalendarDays, CalendarRange } from "lucide-react";
@@ -255,7 +256,7 @@ export function TripEditDialog({
                     currentUrl={trip.iconUrl ?? null}
                     size={88}
                     ringClass="ring-2 ring-foreground/40"
-                    placeholder={<span className="text-4xl">{emoji}</span>}
+                    placeholder={<span className="text-4xl"><EmojiIcon emoji={emoji} /></span>}
                     dialogTitle="Recadrer l'icône du voyage"
                     onUploaded={(url) => onSaveIcon(url)}
                     onRemoved={() => onSaveIcon(null)}
@@ -277,7 +278,7 @@ export function TripEditDialog({
                     className="w-12 h-full flex items-center justify-center text-2xl hover:bg-foreground/[0.06] active:bg-foreground/10 transition-colors shrink-0"
                     aria-label="Changer l'emoji"
                   >
-                    {emoji}
+                    <EmojiIcon emoji={emoji} />
                   </button>
                   <input
                     value={name}
@@ -311,7 +312,7 @@ export function TripEditDialog({
                                 : "hover:bg-foreground/[0.06] active:bg-foreground/10"
                             )}
                           >
-                            {e}
+                            <EmojiIcon emoji={e} />
                           </button>
                         ))}
                       </div>
