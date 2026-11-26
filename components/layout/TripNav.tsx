@@ -6,6 +6,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { AnimatePresence, m as motion } from "framer-motion";
 import {
   CalendarPlus,
+  ChevronDown,
+  ChevronLeft,
   House,
   ListChecks,
   Map,
@@ -121,6 +123,14 @@ export function TripNav({ tripId }: TripNavProps) {
     }
   };
 
+  /** Sur ordinateur : un clic fait l'action de l'écran (ou ouvre le choix), sans appui long ni astuce. */
+  const onSidebarAdd = () => {
+    const a = context ? actions.find((x) => x.kind === context) : undefined;
+    if (a) runAction(a.kind, a.href);
+    else if (actions.length === 1) runAction(actions[0].kind, actions[0].href);
+    else setAddOpen(true);
+  };
+
   const onPlus = () => {
     if (longPressed.current) {
       longPressed.current = false;
@@ -142,7 +152,7 @@ export function TripNav({ tripId }: TripNavProps) {
     <>
       <nav
         aria-label="Navigation du voyage"
-        className="pointer-events-none fixed inset-x-0 z-40 px-4"
+        className="pointer-events-none fixed inset-x-0 z-40 px-4 lg:hidden"
         style={{ bottom: "calc(env(safe-area-inset-bottom) + 0.75rem)" }}
       >
         <div className="mx-auto flex max-w-md items-end gap-2.5">
@@ -244,6 +254,74 @@ export function TripNav({ tripId }: TripNavProps) {
           </motion.button>
         </div>
       </nav>
+
+      <aside
+        aria-label="Navigation du voyage"
+        className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-border bg-background px-4 pt-5 pb-6 lg:flex"
+      >
+        <Link
+          href="/trips"
+          prefetch={false}
+          className="flex h-10 items-center gap-1.5 rounded-xl px-2 text-sm font-medium text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <ChevronLeft size={18} aria-hidden="true" />
+          Tous les voyages
+        </Link>
+
+        <div className="mt-3 flex items-center gap-2.5 px-2">
+          {trip?.emoji && (
+            <span aria-hidden="true" className="text-2xl">
+              {trip.emoji}
+            </span>
+          )}
+          <span className="min-w-0 truncate font-display text-[1.15rem] font-bold tracking-tight">{trip?.name}</span>
+        </div>
+
+        <div className="mt-5 flex gap-2">
+          <button
+            type="button"
+            onClick={onSidebarAdd}
+            className="pressable flex h-12 min-w-0 flex-1 items-center justify-center gap-2 rounded-full bg-primary px-4 text-[0.95rem] font-semibold text-primary-foreground shadow-section outline-none focus-visible:ring-4 focus-visible:ring-primary/30"
+          >
+            <Plus size={18} strokeWidth={2.4} aria-hidden="true" />
+            <span className="truncate">{(context && actions.find((a) => a.kind === context)?.label) || "Ajouter"}</span>
+          </button>
+          {context && (
+            <button
+              type="button"
+              onClick={() => setAddOpen(true)}
+              aria-label="Autres ajouts"
+              aria-haspopup="dialog"
+              className="pressable flex size-12 shrink-0 items-center justify-center rounded-full bg-foreground/[0.07] text-foreground outline-none transition-colors hover:bg-foreground/[0.12] focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <ChevronDown size={18} aria-hidden="true" />
+            </button>
+          )}
+        </div>
+
+        <ul className="mt-6 space-y-1">
+          {items.map(({ label, href, icon: Icon }) => {
+            const fullHref = `${base}${href}`;
+            const isActive = href === "" ? pathname === base : pathname.startsWith(fullHref);
+            return (
+              <li key={href}>
+                <Link
+                  href={fullHref}
+                  prefetch={false}
+                  aria-current={isActive ? "page" : undefined}
+                  className={cn(
+                    "flex h-11 items-center gap-3 rounded-xl px-3 text-[0.95rem] outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring",
+                    isActive ? "bg-foreground/[0.08] font-semibold text-foreground" : "font-medium text-foreground/70 hover:bg-foreground/[0.05] hover:text-foreground"
+                  )}
+                >
+                  <Icon size={20} strokeWidth={isActive ? 2.3 : 1.9} aria-hidden="true" />
+                  {label}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </aside>
 
       {sheetMounted && <QuickAddSheet open={addOpen} onOpenChange={setAddOpen} actions={actions} onPick={runAction} />}
     </>

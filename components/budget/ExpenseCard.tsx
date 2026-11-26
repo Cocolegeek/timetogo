@@ -58,7 +58,7 @@ export function ExpenseCard({ expense, participants, currency, onDelete, onEdit,
       layout="position"
       initial={false}
       exit={{ opacity: 0, height: 0, transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] } }}
-      className="relative overflow-hidden"
+      className="group relative overflow-hidden"
     >
       <motion.div
         aria-hidden="true"
@@ -115,7 +115,7 @@ export function ExpenseCard({ expense, participants, currency, onDelete, onEdit,
               )}
             </span>
           </span>
-          <span className="shrink-0 text-right">
+          <span className="shrink-0 text-right transition-[padding] [@media(pointer:fine)]:group-focus-within:pr-11 [@media(pointer:fine)]:group-hover:pr-11">
             <span className="tabular block font-display text-[1.0625rem] font-bold tracking-tight">
               {formatCurrency(expense.amountInTripCurrency, currency)}
             </span>
@@ -125,6 +125,15 @@ export function ExpenseCard({ expense, participants, currency, onDelete, onEdit,
           </span>
         </span>
       </motion.button>
+
+      <button
+        type="button"
+        aria-label={`Supprimer ${expense.title}`}
+        onClick={() => onDelete(expense.id)}
+        className="absolute top-1/2 right-3 z-10 hidden size-9 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground opacity-0 transition-[opacity,color,background-color] outline-none group-focus-within:opacity-100 group-hover:opacity-100 hover:bg-red-500/10 hover:text-red-400 focus-visible:ring-2 focus-visible:ring-ring [@media(pointer:fine)]:flex"
+      >
+        <Trash2 size={17} aria-hidden="true" />
+      </button>
     </motion.li>
   );
 }

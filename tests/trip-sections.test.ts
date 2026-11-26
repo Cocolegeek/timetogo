@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { canSearch, sectionOf, SEARCH_MIN_ITEMS, visibleSections } from "../lib/trip-sections.ts";
+import { canSearch, contentWidth, sectionOf, SEARCH_MIN_ITEMS, visibleSections } from "../lib/trip-sections.ts";
 
 const voyage = { hasPlanning: true, hasMenus: true, hasLists: true };
 const groupe = { hasPlanning: false, hasMenus: false, hasLists: true };
@@ -39,4 +39,11 @@ test("la recherche n'apparaît qu'avec assez de contenu", () => {
   assert.equal(canSearch(0), false);
   assert.equal(canSearch(SEARCH_MIN_ITEMS - 1), false);
   assert.equal(canSearch(SEARCH_MIN_ITEMS), true);
+});
+
+test("grand écran : le Résumé est large, les autres pages en colonne de lecture", () => {
+  const base = "/trips/abc";
+  assert.equal(contentWidth(base, base), "wide");
+  assert.equal(contentWidth(`${base}/budget`, base), "narrow");
+  assert.equal(contentWidth(`${base}/menus`, base), "narrow");
 });

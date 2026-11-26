@@ -68,7 +68,7 @@ components/
               GuestSignOutDialog (un invité qui se déconnecte perd ses données : on propose de sauvegarder)
   layout/     AppHeader, GlassCard (= carte pleine, plus de verre), MeshGradientBackground (= fond uni),
               PageHeader (grand titre), SectionThemeController, TripAppHeader (retour · recherche · partage · modifier),
-              TripNav, TripClientProviders, UserMenu (avatar = lien direct vers /settings), VoyouLogo (LogoMark = visage « oyo » en SVG inline + mot-symbole)
+              TripNav (barre du bas sur téléphone, menu latéral `aside` dès `lg`), TripMain (largeur du contenu), TripClientProviders, UserMenu (avatar = lien direct vers /settings), VoyouLogo (LogoMark = visage « oyo » en SVG inline + mot-symbole)
   motion/     MotionProvider (LazyMotion strict + MotionConfig ; features domMax chargées après le 1er rendu),
               PageTransition (templates), Stagger/StaggerItem, NumberTicker (montants animés, rAF, sans framer)
   budget/ (+) ActivityList (journal : qui a ajouté / modifié / supprimé), RecurringSheet (dépenses répétées, chargé à la demande)
@@ -173,7 +173,7 @@ lib/
   trips/create-wizard.ts → logique pure de l'assistant de création : stepsFor(), validateStep(), firstIssue(), buildPayload(),
                           participantsOf() (créateur toujours 1er), addPerson() (doublons), datePresets(), suggestName()
   trip-emojis.ts        → THEME_EMOJIS, POPULAR_FLAGS, flagEmoji(codePays), tripEmojiChoices(paysDétecté) : emojis d'un voyage (jamais d'avion, empreinte carbone)
-  trip-sections.ts      → visibleSections(features, counts, active), sectionOf(pathname, base), canSearch(total) : onglets et loupe selon le contenu
+  trip-sections.ts      → visibleSections(features, counts, active), sectionOf(pathname, base), canSearch(total), contentWidth(pathname, base) : onglets, loupe et largeur selon le contenu
   place.ts              → shortDestination("Rome, Roma Capitale, Latium, Italie") = "Rome · Italie"
   trip-features.ts      → tripFeatures(trip), isVoyage(t), isGroup(t), TRIP_TYPE_LABELS
   budget/splits.ts      → computeShares(equal|percentage|fixed), buildDefaultSplits()
@@ -293,6 +293,12 @@ DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip(
   lorsqu'ils contiennent quelque chose (ou quand on est dessus : l'onglet courant ne disparaît jamais). La première création passe par
   « Premiers pas » et le « + » (feuille de choix). Libellés plus grands quand il y a peu d'onglets. La loupe de l'en-tête
   n'apparaît qu'à partir de 5 éléments (`SEARCH_MIN_ITEMS`).
+- **Ordinateur** (une seule app responsive, pas deux versions ; point de bascule `lg` = 1024 px) : le menu latéral à gauche (`TripNav`,
+  `aside`, largeur 16rem, bouton « + Dépense / Étape / Repas / Liste » selon l'écran, « Ajouter » sur le Résumé, flèche pour les autres ajouts)
+  remplace la barre du bas et le « + » ; `TripMain` donne une colonne de lecture (`max-w-3xl`) aux pages, deux colonnes (CSS `columns`,
+  `max-w-5xl`) au Résumé ; la liste des voyages passe en grille. Sans souris, rien ne change (téléphone et tablette en portrait). La corbeille
+  apparaît au survol des cartes de dépense et de repas, uniquement avec un pointeur précis (`[@media(pointer:fine)]`), jamais au toucher :
+  le glissement reste le geste mobile. À faire ensuite : raccourcis clavier (N, /, Échap) et panneaux latéraux à la place des feuilles du bas.
 - **Ajout rapide** : le bouton « + » de la barre agit selon l'écran (`contextKind()` dans `lib/quick-add.ts`) : Budget = nouvelle
   dépense, Planning = étape, Menus = repas, Listes = champ d'ajout. Un seul toucher. Sur l'accueil du voyage (et dans un budget de
   groupe sans planning), il ouvre la feuille de choix. **Appui long** (450 ms), clic droit ou bouton lecteur d'écran = feuille de choix
