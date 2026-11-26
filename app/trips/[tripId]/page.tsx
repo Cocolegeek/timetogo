@@ -33,6 +33,7 @@ import { formatDateRange } from "@/lib/format-date";
 import { EASE_OUT } from "@/lib/motion";
 import { cn, firstName } from "@/lib/utils";
 import { shortDestination } from "@/lib/place";
+import { TripCover } from "@/components/trips/TripCover";
 import { featuresWithContent, tripFeatures } from "@/lib/trip-features";
 import { useTripCounts } from "@/hooks/useTripCounts";
 import type { ExpenseCategory, Participant } from "@/types";
@@ -121,26 +122,21 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
     <Stagger step={0.055} className="space-y-5 pt-1 lg:block lg:columns-2 lg:gap-x-6 lg:space-y-0">
       {/* ── Hero ─────────────────────────────────────────────── */}
       <StaggerItem className="lg:mb-5 lg:break-inside-avoid lg:[column-span:all]">
-        {trip.iconUrl ? (
-          <div className="relative overflow-hidden rounded-[1.75rem] shadow-raised">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={trip.iconUrl} alt="" className="h-28 w-full object-cover lg:h-40" draggable={false} />
-            {status.kind !== "permanent" && (
-              <span className="absolute top-4 left-4 inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-[0.8125rem] font-semibold text-[#1A1D24] shadow-card backdrop-blur">
-                {status.kind === "ongoing" && <span className="size-2 rounded-full bg-emerald-500" />}
-                {status.label}
-              </span>
-            )}
-          </div>
-        ) : (
-          status.kind !== "permanent" && (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-[0.8125rem] font-semibold">
+        <div className="relative overflow-hidden rounded-[1.75rem] shadow-raised">
+          {trip.iconUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={trip.iconUrl} alt="" className="h-20 w-full object-cover lg:h-28" draggable={false} />
+          ) : (
+            <TripCover seed={trip.id} className="h-20 lg:h-28" />
+          )}
+          {status.kind !== "permanent" && (
+            <span className="absolute top-3 left-3 inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-[0.8125rem] font-semibold text-[#1A1D24] shadow-card backdrop-blur">
               {status.kind === "ongoing" && <span className="size-2 rounded-full bg-emerald-500" />}
               {status.label}
             </span>
-          )
-        )}
-        <div className={cn("px-1", trip.iconUrl ? "mt-5" : "mt-3")}>
+          )}
+        </div>
+        <div className="mt-4 px-1">
           <h1 className="font-display text-[2rem] leading-[1.05] font-extrabold tracking-[-0.03em]">
             {trip.emoji && (
               <span aria-hidden="true" className="mr-2">
