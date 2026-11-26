@@ -8,8 +8,12 @@ import {
   Check,
   ChevronDown,
   ChevronRight,
+  ListChecks,
+  Map,
   Pencil,
   UserRound,
+  UtensilsCrossed,
+  type LucideIcon,
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { GettingStarted } from "@/components/trips/GettingStarted";
@@ -195,8 +199,8 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
         />
       </StaggerItem>
 
-      {/* ── Budget (hidden while empty: « Premiers pas » asks for the first expense) ── */}
-      {(expenses.length > 0 || !!trip.totalBudget) && (
+      {/* ── Budget ───────────────────────────────────────────── */}
+      {(
       <StaggerItem className="lg:mb-5 lg:break-inside-avoid">
         <section className="rounded-[1.75rem] bg-card p-5 shadow-card">
           <div className="flex items-center justify-between">
@@ -252,7 +256,7 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
               </>
             ) : (
               <p className="mt-2 text-sm text-muted-foreground">
-                {expenses.length} dépense{expenses.length !== 1 ? "s" : ""} au total
+                {expenses.length === 0 ? "Aucune dépense pour l'instant" : `${expenses.length} dépense${expenses.length !== 1 ? "s" : ""} au total`}
               </p>
             )}
           </Link>
@@ -310,18 +314,31 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
       {/* ── Planning ─────────────────────────────────────────── */}
       {shown.hasPlanning && (
         <StaggerItem className="lg:mb-5 lg:break-inside-avoid">
-          <DayAgendaCard items={itineraryItems} today={today} planningHref={`/trips/${tripId}/planning`} />
+          {itineraryItems.length === 0 ? (
+            <EmptyWidget href={`/trips/${tripId}/planning`} icon={Map} title="Planning" hint="Aucune étape pour l'instant" />
+          ) : (
+            <DayAgendaCard items={itineraryItems} today={today} planningHref={`/trips/${tripId}/planning`} />
+          )}
         </StaggerItem>
       )}
 
       {/* ── Listes : ce qu'on attend de moi ─────────────────── */}
       {shown.hasLists && (
         <StaggerItem className="lg:mb-5 lg:break-inside-avoid">
-          <MyListCard tripId={trip.id} myId={trip.myParticipantId ?? null} />
+          {counts.lists === 0 ? (
+            <EmptyWidget href={`/trips/${tripId}/lists`} icon={ListChecks} title="Listes" hint="Rien à apporter ni à faire pour l'instant" />
+          ) : (
+            <MyListCard tripId={trip.id} myId={trip.myParticipantId ?? null} />
+          )}
         </StaggerItem>
       )}
 
       {/* ── Menus du jour ────────────────────────────────────── */}
+      {shown.hasMenus && todayMeals.length === 0 && (
+        <StaggerItem className="lg:mb-5 lg:break-inside-avoid">
+          <EmptyWidget href={`/trips/${tripId}/menus`} icon={UtensilsCrossed} title="Menus" hint="Rien de prévu aujourd'hui" />
+        </StaggerItem>
+      )}
       {shown.hasMenus && todayMeals.length > 0 && (
         <StaggerItem className="lg:mb-5 lg:break-inside-avoid">
           <section className="rounded-[1.75rem] bg-card p-5 shadow-card">
@@ -369,6 +386,21 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
 
       {identityMounted && <IdentityDialog tripId={trip.id} open={identityOpen} onOpenChange={setIdentityOpen} />}
     </Stagger>
+  );
+}
+
+function EmptyWidget({ href, icon: Icon, title, hint }: { href: string; icon: LucideIcon; title: string; hint: string }) {
+  return (
+    <Link href={href} className="pressable flex items-center gap-4 rounded-[1.5rem] bg-card p-4 shadow-card">
+      <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-foreground/[0.06] text-foreground">
+        <Icon size={20} />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block font-semibold">{title}</span>
+        <span className="block truncate text-sm text-muted-foreground">{hint}</span>
+      </span>
+      <ChevronRight size={18} className="text-muted-foreground" />
+    </Link>
   );
 }
 
