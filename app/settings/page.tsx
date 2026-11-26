@@ -71,8 +71,8 @@ export default function SettingsPage() {
           <SettingsRow
             href="/settings/payments"
             icon={CreditCard}
-            label="Remboursements"
-            value={paymentsSet ? "À jour" : "À compléter"}
+            label="Où te rembourser"
+            value={paymentsSet ? "Renseigné" : "À compléter"}
           />
         </SettingsGroup>
       </StaggerItem>

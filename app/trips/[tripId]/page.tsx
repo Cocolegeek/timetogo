@@ -1,11 +1,10 @@
 "use client";
 
 import { EmojiIcon } from "@/components/shared/EmojiIcon";
-import { use, useCallback, useMemo, useState } from "react";
+import { use, useCallback, useState } from "react";
 import Link from "next/link";
 import { m as motion } from "framer-motion";
 import {
-  ArrowUpRight,
   Check,
   ChevronDown,
   ChevronRight,
@@ -13,7 +12,6 @@ import {
   UserRound,
 } from "lucide-react";
 import dynamic from "next/dynamic";
-import { CATEGORIES } from "@/lib/budget/categories";
 import { GettingStarted } from "@/components/trips/GettingStarted";
 import { DayAgendaCard } from "@/components/trips/DayAgendaCard";
 import { MyListCard } from "@/components/trips/MyListCard";
@@ -36,7 +34,7 @@ import { shortDestination } from "@/lib/place";
 import { TripCover } from "@/components/trips/TripCover";
 import { featuresWithContent, tripFeatures } from "@/lib/trip-features";
 import { useTripCounts } from "@/hooks/useTripCounts";
-import type { ExpenseCategory, Participant } from "@/types";
+import type { Participant } from "@/types";
 import { useMountOnce } from "@/hooks/useMountOnce";
 
 const IdentityDialog = dynamic(() => import("@/components/trips/IdentityDialog"), { ssr: false });
@@ -44,18 +42,6 @@ const BudgetEditDialog = dynamic(
   () => import("@/components/trips/BudgetEditDialog").then((m) => ({ default: m.BudgetEditDialog })),
   { ssr: false }
 );
-
-/** Solid colour per category for the stacked breakdown bar. */
-const CATEGORY_FILL: Record<ExpenseCategory, string> = {
-  accommodation: "bg-violet-500",
-  transport: "bg-sky-500",
-  restaurant: "bg-rose-500",
-  courses: "bg-amber-400",
-  activities: "bg-emerald-500",
-  other: "bg-foreground/30",
-  reimbursement: "bg-foreground/20",
-};
-
 
 interface TripDashboardProps {
   params: Promise<{ tripId: string }>;
@@ -74,17 +60,6 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
   const [identityOpen, setIdentityOpen] = useState(false);
   const identityMounted = useMountOnce(identityOpen);
   const [budgetOpen, setBudgetOpen] = useState(false);
-
-  const categoryBreakdown = useMemo(() => {
-    const byCategory: Partial<Record<ExpenseCategory, number>> = {};
-    for (const e of expenses) {
-      if (e.category === "reimbursement") continue;
-      byCategory[e.category] = (byCategory[e.category] ?? 0) + e.amountInTripCurrency;
-    }
-    return (Object.entries(byCategory) as [ExpenseCategory, number][])
-      .filter(([, amount]) => amount > 0)
-      .sort(([, a], [, b]) => b - a);
-  }, [expenses]);
 
   const currency = trip?.currency ?? "EUR";
   const formatMoney = useCallback(
@@ -107,7 +82,7 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
 
   const budgetPct = trip.totalBudget ? (totalSpent / trip.totalBudget) * 100 : 0;
   const remaining = trip.totalBudget ? trip.totalBudget - totalSpent : 0;
-  const barTone = budgetPct >= 100 ? "bg-red-500" : budgetPct >= 85 ? "bg-amber-400" : "bg-primary";
+  const barTone = budgetPct >= 100 ? "bg-red-500" : "bg-primary";
 
   const today = new Date().toISOString().split("T")[0];
   const todayMeals = meals
@@ -225,17 +200,14 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
       <StaggerItem className="lg:mb-5 lg:break-inside-avoid">
         <section className="rounded-[1.75rem] bg-card p-5 shadow-card">
           <div className="flex items-center justify-between">
-            <Link href={`/trips/${tripId}/budget`} className="group flex items-center gap-1 text-sm font-semibold text-muted-foreground">
-              Dépensé
-              <ArrowUpRight size={15} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-            </Link>
+            <span className="text-sm font-semibold text-muted-foreground">Dépensé</span>
             <button
               type="button"
               onClick={() => setBudgetOpen(true)}
-              className="flex h-8 items-center gap-1.5 rounded-full px-3 text-sm font-semibold text-primary transition-colors hover:bg-primary/10"
+              aria-label={trip.totalBudget ? "Modifier le budget" : "Définir un budget"}
+              className="-mr-2 flex size-10 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-foreground/[0.06] hover:text-foreground"
             >
-              <Pencil size={13} />
-              {trip.totalBudget ? "Budget" : "Définir un budget"}
+              <Pencil size={16} />
             </button>
           </div>
 
@@ -271,7 +243,7 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
                 <p className="mt-2.5 text-sm text-muted-foreground">
                   {remaining >= 0 ? (
                     <>
-                      Il reste <span className="font-semibold text-foreground">{formatMoney(remaining)}</span> · {Math.round(budgetPct)} % utilisé
+                      Il reste <span className="font-semibold text-foreground">{formatMoney(remaining)}</span>
                     </>
                   ) : (
                     <span className="font-semibold text-red-400">Dépassé de {formatMoney(-remaining)}</span>
@@ -282,32 +254,6 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
               <p className="mt-2 text-sm text-muted-foreground">
                 {expenses.length} dépense{expenses.length !== 1 ? "s" : ""} au total
               </p>
-            )}
-
-            {categoryBreakdown.length > 0 && totalSpent > 0 && (
-              <div className="mt-5 border-t border-border pt-4">
-                <div className="flex h-2 gap-0.5 overflow-hidden rounded-full">
-                  {categoryBreakdown.map(([cat, amount], i) => (
-                    <motion.span
-                      key={cat}
-                      className={cn("h-full rounded-full", CATEGORY_FILL[cat])}
-                      initial={{ flexGrow: 0 }}
-                      animate={{ flexGrow: amount }}
-                      transition={{ duration: 0.9, ease: EASE_OUT, delay: 0.3 + i * 0.05 }}
-                      style={{ flexBasis: 0 }}
-                    />
-                  ))}
-                </div>
-                <ul className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2">
-                  {categoryBreakdown.slice(0, 4).map(([cat, amount]) => (
-                    <li key={cat} className="flex min-w-0 items-center gap-2 text-sm">
-                      <span className={cn("size-2 shrink-0 rounded-full", CATEGORY_FILL[cat])} />
-                      <span className="truncate text-muted-foreground">{CATEGORIES[cat].label}</span>
-                      <span className="tabular ml-auto font-medium">{Math.round((amount / totalSpent) * 100)} %</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
             )}
           </Link>
         </section>
