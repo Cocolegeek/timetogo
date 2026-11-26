@@ -10,8 +10,8 @@ Ce fichier dit où en est le projet et comment y travailler. Les règles de code
 - Il aime les audits d'interface : proposer, challenger ses idées avec des exemples d'apps qui marchent, puis attendre son « ok ».
 
 ## Où on en est
-Fusionné sur `main` : PR #6 (audit : hors-ligne, devises, journal, RGPD, tests, récurrents, exports, connexion e-mail), PR #7 (assistant de création, « + » contextuel, saisie rapide), PR #8 (tableau de bord épuré, feuille « + » sous le pouce, formulaires en une page, polices hébergées), PR #9 (lien d'un repas pour resto et pique-nique, repas ajoutés automatiquement au planning, 12:00 pour le déjeuner, déplaçables ensuite).
-En attente de son test et de son « fusionne » : la PR « ordinateur » (menu latéral, Résumé sur deux colonnes, grille des voyages, corbeille au survol).
+Fusionné sur `main` : PR #6 (audit : hors-ligne, devises, journal, RGPD, tests, récurrents, exports, connexion e-mail), PR #7 (assistant de création, « + » contextuel, saisie rapide), PR #8 (tableau de bord épuré, feuille « + » sous le pouce, formulaires en une page, polices hébergées), PR #9 (lien d'un repas pour resto et pique-nique, repas ajoutés automatiquement au planning, 12:00 pour le déjeuner, déplaçables ensuite), PR #10 (version ordinateur : menu latéral, Résumé sur deux colonnes, grille des voyages, corbeille au survol).
+Aucune PR ouverte.
 En production sur voyou.app. Base Supabase migrée jusqu'à la **024** (appliquée à la main sur la base de production ; les 27 repas déjà existants n'ont pas d'étape de planning, seuls les repas enregistrés ensuite en créent une). Les voyages existants en ✈️ sont passés en 🚆 (6 voyages, base de production).
 
 ## En attente (rien d'urgent)
@@ -19,7 +19,7 @@ En production sur voyou.app. Base Supabase migrée jusqu'à la **024** (appliqu�
 - **DMARC** (facultatif) : le jeton Vercel n'a pas le droit de créer l'enregistrement DNS ; il doit l'ajouter chez son hébergeur de domaine.
 - **Jetons à supprimer par lui** quand il n'a plus besoin de moi : les deux jetons `claude-voyou` (GitHub et Vercel) et celui de Supabase s'il en reste un.
 - **`TripEditDialog`** (modification d'un voyage) garde l'ancienne présentation : à refaire dans le style des formulaires (`components/forms/`).
-- **Ordinateur, suite** : raccourcis clavier (N, /, Échap), panneaux latéraux à la place des feuilles du bas, budget avec soldes à côté de la liste. Il a validé le menu à gauche.
+- **Ordinateur, suite** (proposé, pas encore demandé) : raccourcis clavier (N, /, Échap), panneaux latéraux à la place des feuilles du bas, budget avec soldes à côté de la liste. La version ordinateur de base est en ligne et validée par lui.
 - Idées proposées, non demandées : scan de ticket, saisie vocale, option « Planning toujours visible » pour les voyages.
 - Dette connue : erreurs ESLint `set-state-in-effect` sur plusieurs formulaires (hydratation depuis les props), avertissement d'hydratation de `LazyOnboarding` au tout premier lancement.
 

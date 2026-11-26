@@ -20,6 +20,7 @@ import { useUndoableDelete } from "@/hooks/useUndoableDelete";
 import { haptic } from "@/lib/haptics";
 import { EASE_OUT, spring } from "@/lib/motion";
 import { cn } from "@/lib/utils";
+import { HoverActions } from "@/components/shared/HoverActions";
 import type { ChecklistItem, ChecklistList, Participant } from "@/types";
 
 const LISTS: { value: ChecklistList; label: string; placeholder: string; empty: string; suggestions: string[] }[] = [
@@ -182,6 +183,7 @@ export default function ListsPage({ params }: { params: Promise<{ tripId: string
                         myId={myId}
                         onToggle={() => toggleDone(item)}
                         onOpen={() => setEditingId(item.id)}
+                        onDelete={() => remove(item.id, "Élément supprimé")}
                       />
                     ))}
                   </AnimatePresence>
@@ -222,6 +224,7 @@ export default function ListsPage({ params }: { params: Promise<{ tripId: string
                             myId={myId}
                             onToggle={() => toggleDone(item)}
                             onOpen={() => setEditingId(item.id)}
+                            onDelete={() => remove(item.id, "Élément supprimé")}
                           />
                         ))}
                       </motion.ul>
@@ -261,6 +264,7 @@ function Row({
   myId,
   onToggle,
   onOpen,
+  onDelete,
 }: {
   item: ChecklistItem;
   first: boolean;
@@ -268,6 +272,7 @@ function Row({
   myId: string | null;
   onToggle: () => void;
   onOpen: () => void;
+  onDelete: () => void;
 }) {
   const who = participants.filter((p) => item.assigneeIds.includes(p.id));
   const mine = !!myId && item.assigneeIds.includes(myId);
@@ -279,7 +284,7 @@ function Row({
       animate={{ opacity: 1, height: "auto" }}
       exit={{ opacity: 0, height: 0 }}
       transition={{ duration: 0.22, ease: EASE_OUT }}
-      className={cn(!first && "border-t border-border")}
+      className={cn("group relative", !first && "border-t border-border")}
     >
       <div className="flex min-h-14 items-center gap-1 pr-3">
         <button
@@ -330,6 +335,7 @@ function Row({
           )}
         </button>
       </div>
+      <HoverActions label={item.title} onEdit={onOpen} onDelete={onDelete} className="absolute top-1/2 right-3 -translate-y-1/2" />
     </motion.li>
   );
 }

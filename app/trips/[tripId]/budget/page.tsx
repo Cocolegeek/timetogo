@@ -134,6 +134,12 @@ export default function BudgetPage({ params }: BudgetPageProps) {
 
   const handleTap = (expense: Expense) => setDetailId(expense.id);
 
+  const handleQuickEdit = (expense: Expense) => {
+    setEditingExpense(expense);
+    setDuplicating(false);
+    setFormOpen(true);
+  };
+
   const handleEditFromDetail = () => {
     if (!detailExpense) return;
     setEditingExpense(detailExpense);
@@ -347,6 +353,7 @@ export default function BudgetPage({ params }: BudgetPageProps) {
               currency={currency}
               onDelete={handleDelete}
               onEdit={handleTap}
+              onQuickEdit={handleQuickEdit}
             />
             </>
           ) : activeTab === "history" ? (

@@ -32,6 +32,7 @@ import { eachDate } from "@/lib/meals/slots";
 import { formatDuration } from "@/lib/format-date";
 import { EASE_OUT, fadeUp, stagger } from "@/lib/motion";
 import { cn } from "@/lib/utils";
+import { HoverActions } from "@/components/shared/HoverActions";
 import type { ItineraryFormValues } from "@/components/planning/ItineraryItemForm";
 import type { ItineraryItem, Participant } from "@/types";
 
@@ -357,7 +358,7 @@ function ItineraryCard({
     <div
       ref={rootRef}
       className={cn(
-        "relative scroll-mt-40 overflow-hidden rounded-[1.25rem] transition-[outline-color] duration-500",
+        "group relative scroll-mt-40 overflow-hidden rounded-[1.25rem] transition-[outline-color] duration-500",
         !isJourney && "shadow-card",
         highlight && "outline-2 outline-offset-2 outline-primary"
       )}
@@ -437,6 +438,13 @@ function ItineraryCard({
           )}
         </div>
       </motion.div>
+
+      <HoverActions
+        label={itemTitle(item)}
+        onEdit={onEdit}
+        onDelete={onSwipeDelete}
+        className={cn("absolute top-2", (isJourney ? item.location && item.destination : item.location) ? "right-16" : "right-2")}
+      />
     </div>
   );
 }

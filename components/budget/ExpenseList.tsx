@@ -15,6 +15,7 @@ interface ExpenseListProps {
   currency: string;
   onDelete: (id: string) => void;
   onEdit: (expense: Expense) => void;
+  onQuickEdit?: (expense: Expense) => void;
 }
 
 function parseLocalDate(dateStr: string) {
@@ -33,7 +34,7 @@ function dayLabel(dateStr: string): string {
   return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
-export function ExpenseList({ expenses, participants, currency, onDelete, onEdit }: ExpenseListProps) {
+export function ExpenseList({ expenses, participants, currency, onDelete, onEdit, onQuickEdit }: ExpenseListProps) {
   const { byDate, sortedDates } = useMemo(() => {
     const grouped = expenses.reduce<Record<string, Expense[]>>((acc, e) => {
       if (!acc[e.date]) acc[e.date] = [];
@@ -78,6 +79,7 @@ export function ExpenseList({ expenses, participants, currency, onDelete, onEdit
                       currency={currency}
                       onDelete={onDelete}
                       onEdit={onEdit}
+                      onQuickEdit={onQuickEdit}
                       first={i === 0}
                     />
                   ))}
