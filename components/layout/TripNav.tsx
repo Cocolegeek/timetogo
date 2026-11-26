@@ -127,7 +127,17 @@ export function TripNav({ tripId }: TripNavProps) {
     try {
       const n = Number(localStorage.getItem("voyou-plus-uses") ?? "0") + 1;
       localStorage.setItem("voyou-plus-uses", String(n));
-      if (n === 1) toast({ message: "Astuce : maintiens + pour ajouter autre chose", duration: 4500 });
+      if (n === 1) {
+        let tries = 0;
+        const show = () => {
+          if (document.querySelector('[role="dialog"]') && tries++ < 20) {
+            window.setTimeout(show, 1500);
+            return;
+          }
+          toast({ message: "Astuce : maintiens + pour ajouter autre chose", duration: 4500 });
+        };
+        window.setTimeout(show, 1500);
+      }
     } catch {
       // storage unavailable: no hint
     }
