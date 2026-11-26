@@ -36,7 +36,6 @@ import {
   hasPeriod,
   stepsFor,
   suggestName,
-  tripLength,
   validateStep,
   type GroupDateMode,
   type WizardState,
@@ -47,16 +46,16 @@ import { cn } from "@/lib/utils";
 
 const IDEAS = ["Coloc", "Anniversaire", "Week-end", "Soirée", "Vacances"];
 
-const GROUP_DATE_OPTIONS: { mode: GroupDateMode; title: string; hint: string }[] = [
-  { mode: "permanent", title: "Sans date", hint: "Un budget qui dure, comme une coloc." },
-  { mode: "date_fixe", title: "Un jour", hint: "Un anniversaire, une soirée." },
-  { mode: "creneau", title: "Période", hint: "Un week-end, des vacances." },
+const GROUP_DATE_OPTIONS: { mode: GroupDateMode; title: string }[] = [
+  { mode: "permanent", title: "Sans date" },
+  { mode: "date_fixe", title: "Un jour" },
+  { mode: "creneau", title: "Période" },
 ];
 
-const TITLES: Record<WizardStep, { title: string; hint: string }> = {
-  what: { title: "C'est quoi ?", hint: "Le nom que verront tes potes. Un lieu, c'est facultatif." },
-  when: { title: "C'est pour quand ?", hint: "Facultatif, tu pourras le changer plus tard." },
-  who: { title: "Avec qui ?", hint: "Toi et ceux qui partagent les dépenses." },
+const TITLES: Record<WizardStep, string> = {
+  what: "On crée quoi ?",
+  when: "Quand ?",
+  who: "Avec qui ?",
 };
 
 function friendlyError(err: unknown): string {
@@ -95,10 +94,9 @@ export function CreateWizard() {
   const chosenFriends = friends.filter((f) => friendIds.includes(f.id));
   // Une seule source de vérité : le créateur et les amis sont dérivés, jamais recopiés.
   const flag = flagEmoji(country);
-  const fallbackEmoji = base.destination.trim() ? "🚆" : "💰";
   const s: WizardState = useMemo(
-    () => ({ ...base, emoji: emojiPicked ? base.emoji : (flag ?? fallbackEmoji), creator, friendCount: friendIds.length }),
-    [base, emojiPicked, flag, fallbackEmoji, creator, friendIds.length]
+    () => ({ ...base, emoji: emojiPicked ? base.emoji : (flag ?? ""), creator, friendCount: friendIds.length }),
+    [base, emojiPicked, flag, creator, friendIds.length]
   );
   const step = steps[stepIndex];
   const people = participantsOf(s);
@@ -185,12 +183,11 @@ export function CreateWizard() {
     return "";
   })();
   const presets = useMemo(() => datePresets(new Date()), []);
-  const length = tripLength(s.startDate, s.endDate);
   const ctaLabel = stepIndex < steps.length - 1 ? "Continuer" : "Créer";
   const emojis = tripEmojiChoices(country);
   const pickEmoji = (e: string) => {
     setEmojiPicked(true);
-    patch({ emoji: e });
+    patch({ emoji: s.emoji === e ? "" : e });
   };
 
   if (doneId) {
@@ -227,27 +224,23 @@ export function CreateWizard() {
             <span key={st} className={cn("h-1 flex-1 rounded-full transition-colors duration-200", i <= stepIndex ? "bg-primary" : "bg-foreground/10")} />
           ))}
         </div>
-        <p className="mt-2 px-0.5 text-xs font-medium text-muted-foreground">
-          Étape {stepIndex + 1} sur {steps.length}
-        </p>
       </div>
 
       {stepIndex > 0 && (
       <div className="mb-7 flex items-center gap-3.5 rounded-[1.5rem] bg-card p-3.5 shadow-card" aria-live="polite">
         <span className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-secondary text-[1.9rem]" aria-hidden="true">
-          <EmojiIcon emoji={s.emoji} />
+          {s.emoji ? <EmojiIcon emoji={s.emoji} /> : <span className="font-display text-[1.4rem] font-bold text-muted-foreground">{(effectiveName(s) || "?").slice(0, 1).toUpperCase()}</span>}
         </span>
         <span className="min-w-0 flex-1">
           <span className={cn("block truncate font-display text-[1.2rem] leading-tight font-bold tracking-tight", !effectiveName(s) && "text-muted-foreground/60")}>{title}</span>
-          <span className="mt-0.5 block truncate text-sm text-muted-foreground">{meta || "Ça se remplit au fur et à mesure"}</span>
+          {meta && <span className="mt-0.5 block truncate text-sm text-muted-foreground">{meta}</span>}
         </span>
       </div>
       )}
 
       <div key={step} className="animate-in fade-in space-y-6 duration-150">
         <header className="space-y-1">
-          <h2 className="font-display text-[1.75rem] leading-[1.1] font-extrabold tracking-[-0.03em]">{TITLES[step].title}</h2>
-          <p className="text-[0.95rem] text-muted-foreground">{TITLES[step].hint}</p>
+          <h2 className="font-display text-[1.75rem] leading-[1.1] font-extrabold tracking-[-0.03em]">{TITLES[step]}</h2>
         </header>
 
         {step === "what" && (
@@ -283,10 +276,7 @@ export function CreateWizard() {
               onChangeCoord={(c) => setCountry(c?.countryCode ?? null)}
               placeholder="Ajouter un lieu"
             />
-            <div className="space-y-2">
-              <p className="px-1 text-sm font-semibold">Emoji</p>
-              <EmojiRow emojis={emojis} value={s.emoji} onPick={pickEmoji} />
-            </div>
+            <EmojiRow emojis={emojis} value={s.emoji} onPick={pickEmoji} />
           </div>
         )}
 
@@ -305,18 +295,11 @@ export function CreateWizard() {
                 }}
                 options={GROUP_DATE_OPTIONS.map((o) => ({ value: o.mode, label: o.title }))}
               />
-              <p className="px-1 text-sm text-muted-foreground">{GROUP_DATE_OPTIONS.find((o) => o.mode === s.dateMode)?.hint}</p>
               {s.dateMode === "date_fixe" && <DateField id="group-date" label="Jour" value={s.startDate} onChange={(v) => patch({ startDate: v })} />}
               {s.dateMode === "creneau" && (
                 <div className="space-y-3">
                   <PresetChips presets={presets} start={s.startDate} end={s.endDate} onPick={(p) => patch({ startDate: p.start, endDate: p.end })} />
                   <DateRangePicker startDate={s.startDate} endDate={s.endDate} onChange={(start, end) => patch({ startDate: start, endDate: end })} />
-                  {length && (
-                    <p className="px-1 text-sm font-medium">
-                      {length.days} jour{length.days > 1 ? "s" : ""}
-                      {length.nights > 0 ? `, ${length.nights} nuit${length.nights > 1 ? "s" : ""}` : ""}
-                    </p>
-                  )}
                 </div>
               )}
             </div>

@@ -177,7 +177,7 @@ export function TripCard({ trip, onEdit, onDelete, onShare, variant = "row" }: T
           <Cover trip={trip} className="size-16 shrink-0 overflow-hidden rounded-2xl" />
         ) : (
           <span aria-hidden="true" className="flex size-16 shrink-0 items-center justify-center rounded-2xl bg-secondary text-[1.75rem]">
-            {trip.emoji ? <EmojiIcon emoji={trip.emoji} /> : null}
+            {trip.emoji ? <EmojiIcon emoji={trip.emoji} /> : <span className="font-display text-[1.5rem] font-bold text-muted-foreground">{trip.name.slice(0, 1).toUpperCase()}</span>}
           </span>
         )}
         <div className="min-w-0 flex-1">

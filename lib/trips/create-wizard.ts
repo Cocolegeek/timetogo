@@ -209,7 +209,7 @@ export function initialState(creator: string | null = null): WizardState {
   return {
     name: "",
     nameTouched: false,
-    emoji: "💰",
+    emoji: "",
     destination: "",
     dateMode: "permanent",
     startDate: "",

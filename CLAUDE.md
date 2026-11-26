@@ -328,7 +328,7 @@ DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip(
 - **Retours** : `useToast()` (`ToastProvider` à la racine) après chaque création / modification / suppression,
   `haptic()` sur les gestes. Feuilles du bas fermables en glissant la poignée.
 - **Création** : un seul assistant (`CreateWizard`), 3 étapes : Quoi (nom, lieu facultatif, emoji) · Quand (sans date / un jour / une période, puis « Au programme » : planning et menus cochés seulement s'il y a des jours, listes jamais cochées par défaut) · Avec qui,
-  aperçu en direct (carte sobre sans illustration, dès la 2e étape), barre d'action fixe, peu de mouvement (fondu court, pas de glissement ni de confettis). Le bouton n'est JAMAIS grisé sans explication : un toucher sur un champ
+  aperçu en direct (carte sobre sans illustration, dès la 2e étape), barre d'action fixe, peu de mouvement (fondu court, pas de glissement ni de confettis). Pas de phrases d'explication : titres courts, tuiles et icônes. Aucun emoji par défaut (le drapeau du lieu choisi seulement) ; jamais de bourse. Le bouton n'est JAMAIS grisé sans explication : un toucher sur un champ
   incomplet affiche le message (`role="alert"`, secousse, haptique). Une seule source de vérité pour les participants : le créateur
   (prénom du profil) est dérivé, jamais recopié dans un état de formulaire. À la validation finale `firstIssue()` renvoie à l'étape
   fautive au lieu d'échouer en silence. Toute évolution passe par `lib/trips/create-wizard.ts` + son test.

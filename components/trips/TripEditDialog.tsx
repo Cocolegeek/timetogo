@@ -3,7 +3,7 @@
 import { EmojiIcon } from "@/components/shared/EmojiIcon";
 import { TRIP_CURRENCIES } from "@/lib/currencies";
 import { useState, useEffect } from "react";
-import { Loader2, Plus, X, Pencil, Check, Infinity, CalendarDays, CalendarRange, ImagePlus } from "lucide-react";
+import { Loader2, Plus, X, Pencil, Check, Infinity, CalendarDays, CalendarRange, ImagePlus, Smile } from "lucide-react";
 import { m as motion, AnimatePresence } from "framer-motion";
 import {
   Sheet,
@@ -255,12 +255,7 @@ export function TripEditDialog({
                     onUploaded={(url) => onSaveIcon(url)}
                     onRemoved={() => onSaveIcon(null)}
                   />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[0.95rem] font-semibold">Photo de couverture</p>
-                    <p className="text-sm text-muted-foreground">
-                      {trip.iconUrl ? "Touche la photo pour la changer ou la retirer." : "Facultatif. Sans photo, rien ne prend de place."}
-                    </p>
-                  </div>
+                  <p className="min-w-0 flex-1 text-[0.95rem] font-semibold">Photo de couverture</p>
                 </div>
               )}
 
@@ -275,7 +270,7 @@ export function TripEditDialog({
                     className="w-12 h-full flex items-center justify-center text-2xl hover:bg-foreground/[0.06] active:bg-foreground/10 transition-colors shrink-0"
                     aria-label="Changer l'emoji"
                   >
-                    <EmojiIcon emoji={emoji} />
+                    {emoji ? <EmojiIcon emoji={emoji} /> : <Smile size={22} className="text-muted-foreground" aria-hidden="true" />}
                   </button>
                   <input
                     value={name}
@@ -299,8 +294,7 @@ export function TripEditDialog({
                             key={e}
                             type="button"
                             onClick={() => {
-                              setEmoji(e);
-                              setEmojiPickerOpen(false);
+                              setEmoji(emoji === e ? "" : e);
                             }}
                             className={cn(
                               "w-10 h-10 rounded-lg text-xl transition-all",
