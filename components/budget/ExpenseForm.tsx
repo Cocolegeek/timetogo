@@ -547,7 +547,7 @@ export function ExpenseForm({
             "text-center text-sm font-medium",
             Math.abs(payerTotal - amount) < 0.01
               ? "text-emerald-400"
-              : "text-amber-400"
+              : "text-muted-foreground"
           )}
         >
           {Math.abs(payerTotal - amount) < 0.01
@@ -570,7 +570,7 @@ export function ExpenseForm({
     )}
 
     {newMemberIds.size > 0 && (
-      <div className="flex items-start gap-2.5 rounded-2xl bg-amber-500/12 px-3.5 py-3 text-sm text-amber-200">
+      <div className="flex items-start gap-2.5 rounded-[1.25rem] bg-secondary px-3.5 py-3 text-sm text-muted-foreground">
         <UserPlus size={16} className="mt-0.5 shrink-0" />
         <span>
           {newMemberIds.size === 1
@@ -605,7 +605,7 @@ export function ExpenseForm({
               "flex min-h-14 items-center gap-3 rounded-2xl px-3 py-2 transition-[background-color,opacity]",
               split.excluded
                 ? isNew
-                  ? "bg-amber-500/10 ring-1 ring-amber-500/30 ring-inset"
+                  ? "bg-secondary ring-1 ring-foreground/20 ring-inset"
                   : "bg-card/60 opacity-55"
                 : "bg-card"
             )}
@@ -637,7 +637,7 @@ export function ExpenseForm({
             <ParticipantAvatar participant={p} size="sm" />
             <span className="truncate text-[0.95rem] font-medium">{p.name}</span>
             {isNew && (
-              <span className="shrink-0 rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-semibold text-amber-300">
+              <span className="shrink-0 rounded-full bg-foreground/[0.08] px-2 py-0.5 text-xs font-semibold text-foreground">
                 Nouveau
               </span>
             )}
@@ -980,7 +980,7 @@ function SplitTotalFeedback({
 }) {
   if (activeCount === 0) {
     return (
-      <p className="text-center text-sm font-medium text-amber-400">
+      <p className="text-center text-sm font-medium text-muted-foreground">
         Sélectionne au moins un bénéficiaire
       </p>
     );
@@ -1010,7 +1010,7 @@ function SplitTotalFeedback({
       <div
         className={cn(
           "flex items-center justify-center gap-1.5 text-center text-sm font-medium",
-          ok ? "text-emerald-400" : "text-amber-400"
+          ok ? "text-emerald-400" : "text-muted-foreground"
         )}
       >
         {ok ? (
@@ -1034,7 +1034,7 @@ function SplitTotalFeedback({
     <div
       className={cn(
         "flex items-center justify-center gap-1.5 text-center text-sm font-medium",
-        ok ? "text-emerald-400" : "text-amber-400"
+        ok ? "text-emerald-400" : "text-muted-foreground"
       )}
     >
       {ok ? (
