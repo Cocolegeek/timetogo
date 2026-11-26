@@ -233,7 +233,7 @@ export function useTrip(id: string) {
     if (trip) {
       const sharedPatch = {
         ...(data.name && { name: data.name }),
-        ...(data.emoji && { emoji: data.emoji }),
+        ...(data.emoji !== undefined && { emoji: data.emoji }),
         ...(data.currency && { currency: data.currency }),
         ...(data.iconUrl !== undefined && { iconUrl: data.iconUrl }),
         totalBudget: data.totalBudget ?? trip.totalBudget,
@@ -255,7 +255,7 @@ export function useTrip(id: string) {
     const { error } = await createClient().from("trips").update({
       ...(data.name && { name: data.name }),
       ...(data.destination !== undefined && { destination: data.destination }),
-      ...(data.emoji && { emoji: data.emoji }),
+      ...(data.emoji !== undefined && { emoji: data.emoji }),
       ...(data.currency && { currency: data.currency }),
       ...(data.startDate !== undefined && { start_date: data.startDate }),
       ...(data.endDate !== undefined && { end_date: data.endDate }),

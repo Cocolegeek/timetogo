@@ -55,12 +55,12 @@ test("ajouter des prénoms : doublons refusés sans tenir compte des accents ni 
   assert.equal(new Set(participantsOf(s2).map((p) => p.color)).size, 2);
 });
 
-test("sans date : ni départ ni retour envoyés, ni destination, juste les listes par défaut", () => {
+test("sans date : ni départ ni retour envoyés, ni destination, aucun espace en plus du budget", () => {
   const p = buildPayload(base());
   assert.equal(p.startDate, undefined);
   assert.equal(p.endDate, undefined);
   assert.equal(p.destination, undefined);
-  assert.deepEqual(p.modules, ["lists"]);
+  assert.deepEqual(p.modules, []);
   assert.equal(validateStep("when", base()), null);
 });
 
@@ -72,9 +72,9 @@ test("un jour précis envoie la même date au départ et au retour ; une périod
   assert.equal(validateStep("when", base({ dateMode: "creneau", startDate: "2026-07-14", endDate: "" }))?.message, "Choisis la date de retour.");
 });
 
-test("espaces : avec une période on propose tout, sans date seulement les listes", () => {
-  assert.deepEqual(defaultModules(trip()), ["planning", "menus", "lists"]);
-  assert.deepEqual(defaultModules(base()), ["lists"]);
+test("espaces : avec une période on propose planning et menus, sans date rien ; jamais les listes", () => {
+  assert.deepEqual(defaultModules(trip()), ["planning", "menus"]);
+  assert.deepEqual(defaultModules(base()), []);
   assert.equal(hasPeriod(base({ dateMode: "date_fixe", startDate: "2026-07-14" })), true);
   assert.equal(hasPeriod(base({ dateMode: "creneau", startDate: "2026-07-14", endDate: "" })), false);
 });

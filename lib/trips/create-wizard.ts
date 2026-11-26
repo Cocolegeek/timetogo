@@ -50,9 +50,9 @@ export function hasPeriod(s: Pick<WizardState, "dateMode" | "startDate" | "endDa
   return false;
 }
 
-/** Ce qu'on propose tant qu'on n'a pas choisi : tout pour une période, seulement les listes sans date. */
+/** Ce qu'on propose tant qu'on n'a pas choisi : planning et menus quand il y a des jours, jamais les listes. */
 export function defaultModules(s: Pick<WizardState, "dateMode" | "startDate" | "endDate">): TripModule[] {
-  return hasPeriod(s) ? ["planning", "menus", "lists"] : ["lists"];
+  return hasPeriod(s) ? ["planning", "menus"] : [];
 }
 
 /** Les espaces réellement créés : le choix de la personne, sans planning ni menus quand il n'y a pas de jours. */
@@ -209,7 +209,7 @@ export function initialState(creator: string | null = null): WizardState {
   return {
     name: "",
     nameTouched: false,
-    emoji: "💰",
+    emoji: "",
     destination: "",
     dateMode: "permanent",
     startDate: "",

@@ -1,5 +1,6 @@
 "use client";
 
+import { tripFeatures } from "@/lib/trip-features";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { m as motion } from "framer-motion";
@@ -212,9 +213,9 @@ function TripsPageContent() {
                   {deletingEntry?.name ?? ""}
                 </span>{" "}
                 et toutes ses données (dépenses
-                {deletingEntry?.modules.includes("planning") && ", planning"}
-                {deletingEntry?.modules.includes("menus") && ", menus"}
-                {deletingEntry?.modules.includes("lists") && ", listes"}) seront
+                {deletingEntry && tripFeatures(deletingEntry).hasPlanning && ", planning"}
+                {deletingEntry && tripFeatures(deletingEntry).hasMenus && ", menus"}
+                {deletingEntry && tripFeatures(deletingEntry).hasLists && ", listes"}) seront
                 définitivement supprimés.
               </>
             }

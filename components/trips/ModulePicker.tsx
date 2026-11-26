@@ -1,6 +1,6 @@
 "use client";
 
-import { ListChecks, Map, UtensilsCrossed, type LucideIcon } from "lucide-react";
+import { CalendarOff, ListChecks, Map, UtensilsCrossed, type LucideIcon } from "lucide-react";
 import { TRIP_MODULES } from "@/lib/trip-features";
 import { haptic } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
@@ -15,48 +15,39 @@ interface ModulePickerProps {
   canPlan: boolean;
 }
 
-/** « Au programme » : les espaces facultatifs en plus du budget, qui est toujours là. */
+/** Les espaces en plus du budget : trois tuiles à toucher, la tuile sombre est activée. */
 export function ModulePicker({ value, onChange, canPlan }: ModulePickerProps) {
   return (
-    <div className="space-y-2">
-      <div className="flex items-baseline justify-between px-1">
-        <p className="text-sm font-semibold">Au programme</p>
-        <p className="text-xs text-muted-foreground">Le budget est toujours là</p>
-      </div>
-      <div className="overflow-hidden rounded-[1.25rem] bg-secondary [&>*+*]:border-t [&>*+*]:border-border">
-        {TRIP_MODULES.map((m) => {
-          const Icon = ICONS[m.id];
-          const locked = m.needsDates && !canPlan;
-          const on = !locked && value.includes(m.id);
-          return (
-            <button
-              key={m.id}
-              type="button"
-              role="switch"
-              aria-checked={on}
-              aria-disabled={locked}
-              onClick={() => {
-                if (locked) return;
-                haptic("light");
-                onChange(on ? value.filter((x) => x !== m.id) : [...value, m.id]);
-              }}
-              className={cn("flex min-h-14 w-full items-center gap-3 px-4 py-2 text-left", locked && "opacity-50")}
-            >
-              <Icon size={19} className="shrink-0" aria-hidden="true" />
-              <span className="min-w-0 flex-1">
-                <span className="block text-[0.95rem] font-semibold">{m.label}</span>
-                <span className="block text-sm text-muted-foreground">{locked ? "Choisis des dates pour l'activer." : m.hint}</span>
-              </span>
-              <span
-                aria-hidden="true"
-                className={cn("flex h-7 w-12 shrink-0 items-center rounded-full p-0.5 transition-colors", on ? "bg-primary" : "bg-foreground/20")}
-              >
-                <span className={cn("size-6 rounded-full bg-background shadow transition-transform", on && "translate-x-5")} />
-              </span>
-            </button>
-          );
-        })}
-      </div>
+    <div className="grid grid-cols-3 gap-2">
+      {TRIP_MODULES.map((m) => {
+        const Icon = ICONS[m.id];
+        const locked = m.needsDates && !canPlan;
+        const on = !locked && value.includes(m.id);
+        return (
+          <button
+            key={m.id}
+            type="button"
+            role="switch"
+            aria-checked={on}
+            aria-disabled={locked}
+            aria-label={locked ? `${m.label} (il faut des dates)` : m.label}
+            onClick={() => {
+              if (locked) return;
+              haptic("light");
+              onChange(on ? value.filter((x) => x !== m.id) : [...value, m.id]);
+            }}
+            className={cn(
+              "pressable relative flex min-h-24 flex-col items-center justify-center gap-2 rounded-[1.25rem] px-2 py-4 transition-colors",
+              on ? "bg-primary text-primary-foreground" : "bg-secondary",
+              locked && "opacity-40"
+            )}
+          >
+            <Icon size={26} aria-hidden="true" />
+            <span className="text-[0.9375rem] font-semibold">{m.label}</span>
+            {locked && <CalendarOff size={14} className="absolute top-2.5 right-2.5" aria-hidden="true" />}
+          </button>
+        );
+      })}
     </div>
   );
 }

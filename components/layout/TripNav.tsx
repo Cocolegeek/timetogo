@@ -30,7 +30,7 @@ import { ADD_LABELS, contextKind, leadKind, orderActions } from "@/lib/quick-add
 import { haptic } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
 import { spring } from "@/lib/motion";
-import { featuresForModules } from "@/lib/trip-features";
+import { featuresForModules, modulesOf } from "@/lib/trip-features";
 import { sectionOf, visibleSections } from "@/lib/trip-sections";
 import type { TripModule } from "@/types";
 
@@ -72,7 +72,7 @@ interface TripNavProps {
 export function TripNav({ tripId }: TripNavProps) {
   // Read from the shared trip cache (seeded by the trips list): no server round-trip.
   const { trip } = useTrip(tripId);
-  const modules = trip?.modules ?? [];
+  const modules = trip ? modulesOf(trip) : [];
   const pathname = usePathname();
   const router = useRouter();
   const base = `/trips/${tripId}`;
