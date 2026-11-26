@@ -288,7 +288,8 @@ DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip(
 - **Ajout rapide** : le bouton « + » de la barre agit selon l'écran (`contextKind()` dans `lib/quick-add.ts`) : Budget = nouvelle
   dépense, Planning = étape, Menus = repas, Listes = champ d'ajout. Un seul toucher. Sur l'accueil du voyage (et dans un budget de
   groupe sans planning), il ouvre la feuille de choix. **Appui long** (450 ms), clic droit ou bouton lecteur d'écran = feuille de choix
-  complète (`QuickAddSheet` : l'action de l'écran, sinon la dépense, en grande ligne ; les autres en liste groupée, sans phrases d'aide).
+  complète (`QuickAddSheet` : l'action de l'écran, sinon la dépense, en grande ligne EN BAS, sous le pouce qui vient de toucher « + » ; les autres
+  en liste groupée au-dessus, la plus probable au plus près du bas, sans phrases d'aide).
   Une astuce unique (« maintiens + ») s'affiche au 3e ajout direct. Les pages ouvrent leur formulaire via `useQuickAdd()`
   (événement si déjà sur la page, sinon `?new=<kind>`). Pas de FAB par page.
 - **Saisie rapide d'une dépense** : seul le montant est obligatoire (titre facultatif, par défaut la catégorie), puces des titres récents
