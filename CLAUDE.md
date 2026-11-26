@@ -19,7 +19,7 @@ Le budget est toujours là. La colonne `type` reste en base (ancien champ, écri
 **Source de vérité** : `lib/trip-features.ts` (`tripFeatures(trip)` → `hasPlanning / hasMenus / hasLists / hasRecurring`, `TRIP_MODULES`,
 `hasPeriod(trip)`, `tripHref(trip)`, `parseModules()` qui retombe sur l'ancien `type` si la colonne manque). Tous les rendus conditionnels passent par là.
 Ne pas ré-écrire de test de type ailleurs. Règle : planning et menus ont besoin de jours (début et fin, un jour précis = même date) ; sans période,
-ils sont verrouillés (création et réglages). Un espace masqué garde ses données.
+ils sont verrouillés (création et réglages). Un espace non coché n'est jamais interdit : le « + » propose tout (les non cochés en retrait), les pages Planning/Menus/Listes restent ouvertes, et l'espace apparaît (onglet, Résumé, recherche) dès qu'il contient quelque chose (`featuresWithContent()`). Sans période, Planning et Menus montrent les jours remplis ou aujourd'hui (`tripDays()` dans `lib/trip-days.ts`).
 
 ## Route Map
 ```
@@ -176,7 +176,8 @@ lib/
   trip-emojis.ts        → THEME_EMOJIS, POPULAR_FLAGS, flagEmoji(codePays), tripEmojiChoices(paysDétecté) : emojis d'un voyage (jamais d'avion, empreinte carbone)
   trip-sections.ts      → visibleSections(features, counts, active), sectionOf(pathname, base), canSearch(total), contentWidth(pathname, base) : onglets, loupe et largeur selon le contenu
   place.ts              → shortDestination("Rome, Roma Capitale, Latium, Italie") = "Rome · Italie"
-  trip-features.ts      → tripFeatures(trip), TRIP_MODULES, ALL_MODULES, hasPeriod(), tripHref(), parseModules()
+  trip-features.ts      → tripFeatures(trip), featuresWithContent(trip, counts), TRIP_MODULES, ALL_MODULES, hasPeriod(), tripHref(), modulesOf(), parseModules()
+  trip-days.ts          → tripDays(période, jours remplis, aujourd'hui) : jours montrés dans Planning et Menus
   budget/splits.ts      → computeShares(equal|percentage|fixed), buildDefaultSplits()
   budget/debts.ts       → computeBalances(), simplifyDebts() (greedy O(n log n))
   budget/categories.ts  → courses|restaurant|activities|transport|accommodation|other
@@ -290,7 +291,7 @@ DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip(
 - **Navigation voyage** : barre d'onglets flottante (matière translucide = seule zone « verre » autorisée),
   qui se compacte au défilement ; toucher l'onglet actif ou le titre de l'en-tête remonte en haut.
   **Onglets selon les espaces et le contenu** (`visibleSections()`) : Résumé et Budget toujours ; Planning, Menus et Listes n'apparaissent que
-  si l'espace est activé (`modules`) ET qu'ils contiennent quelque chose (ou quand on est dessus : l'onglet courant ne disparaît jamais). La première création passe par
+  s'ils contiennent quelque chose (ou quand on est dessus : l'onglet courant ne disparaît jamais). La première création passe par
   « Premiers pas » et le « + » (feuille de choix). Libellés plus grands quand il y a peu d'onglets. La loupe de l'en-tête
   n'apparaît qu'à partir de 5 éléments (`SEARCH_MIN_ITEMS`).
 - **Ordinateur** (une seule app responsive, pas deux versions ; point de bascule `lg` = 1024 px) : le menu latéral à gauche (`TripNav`,
@@ -332,7 +333,7 @@ DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip(
   incomplet affiche le message (`role="alert"`, secousse, haptique). Une seule source de vérité pour les participants : le créateur
   (prénom du profil) est dérivé, jamais recopié dans un état de formulaire. À la validation finale `firstIssue()` renvoie à l'étape
   fautive au lieu d'échouer en silence. Toute évolution passe par `lib/trips/create-wizard.ts` + son test.
-  Le « + », « Premiers pas » et la recherche n'offrent que les espaces activés. Emoji du voyage : le drapeau du pays choisi (`countryCode` de `LocationPickerSheet`) est proposé en premier et présélectionné tant que
+  « Premiers pas » ne propose que les espaces cochés ; le « + » propose tout. Emoji du voyage : le drapeau du pays choisi (`countryCode` de `LocationPickerSheet`) est proposé en premier et présélectionné tant que
   l'utilisateur n'a pas choisi lui-même ; puis thèmes (train, plage…) et drapeaux courants. Pas d'avion (empreinte carbone).
 - **Trajets** : le mode « Avion » reste disponible dans `JourneyForm` (calcul de trajet, avertissement CO₂) ; seul l'emoji d'un voyage évite l'avion.
 - **Payeur** : toujours la photo de profil du participant (`ParticipantAvatar`), jamais un point de couleur. **Heure d'ajout** d'une dépense :

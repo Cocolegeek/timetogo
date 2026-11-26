@@ -12,7 +12,7 @@ import {
   Sun,
 } from "lucide-react";
 import { m as motion, AnimatePresence, useMotionValue, useTransform, animate } from "framer-motion";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import { useOpenLocation, useOpenRoute } from "@/components/shared/MapAppPicker";
 import { DayHeader } from "@/components/shared/DayHeader";
@@ -26,9 +26,8 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { useTrip } from "@/hooks/useTrip";
 import { useItinerary } from "@/hooks/useItinerary";
-import { hasPeriod, tripFeatures } from "@/lib/trip-features";
+import { tripDays } from "@/lib/trip-days";
 import { ITINERARY_TYPES, JOURNEY_MODES, itemTitle } from "@/lib/itinerary-types";
-import { eachDate } from "@/lib/meals/slots";
 import { formatDuration } from "@/lib/format-date";
 import { EASE_OUT, fadeUp, stagger } from "@/lib/motion";
 import { cn } from "@/lib/utils";
@@ -45,7 +44,6 @@ interface PlanningPageProps {
 
 export default function PlanningPage({ params }: PlanningPageProps) {
   const { tripId } = use(params);
-  const router = useRouter();
   const { trip } = useTrip(tripId);
   const { items: allItems, addItem, updateItem, deleteItem } = useItinerary(tripId);
   const searchParams = useSearchParams();
@@ -53,12 +51,6 @@ export default function PlanningPage({ params }: PlanningPageProps) {
   const { pending, remove } = useUndoableDelete(deleteItem);
   const items = useMemo(() => allItems.filter((i) => !pending.has(i.id)), [allItems, pending]);
   const highlightId = searchParams.get("item");
-
-  useEffect(() => {
-    if (trip && !tripFeatures(trip).hasPlanning) {
-      router.replace(`/trips/${tripId}/budget`);
-    }
-  }, [trip, tripId, router]);
 
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerDate, setPickerDate] = useState<string | undefined>();
@@ -74,10 +66,7 @@ export default function PlanningPage({ params }: PlanningPageProps) {
   const dir = selection.dir;
 
   const today = useMemo(() => new Date().toISOString().split("T")[0], []);
-  const dates = useMemo(
-    () => (trip && hasPeriod(trip) ? eachDate(trip.startDate as string, trip.endDate as string) : []),
-    [trip]
-  );
+  const dates = useMemo(() => tripDays(trip ?? {}, allItems.map((i) => i.date), today), [trip, allItems, today]);
   const currentDate = selectedDate ?? (dates.includes(today) ? today : dates[0]) ?? today;
 
   const byDate = useMemo(
