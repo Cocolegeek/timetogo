@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { TripCover } from "@/components/trips/TripCover";
 import { ParticipantStack } from "@/components/shared/ParticipantStack";
 import { isVoyage } from "@/lib/trip-features";
+import { shortDestination } from "@/lib/place";
 import type { Trip } from "@/types";
 
 const TripActionsSheet = dynamic(() => import("@/components/trips/TripActionsSheet"), { ssr: false });
@@ -38,7 +39,8 @@ export function tripStatus(trip: Trip): TripStatus {
 function subtitle(trip: Trip): string {
   if (isVoyage(trip)) {
     const dates = formatDateRange(trip.startDate, trip.endDate);
-    return trip.destination ? `${dates} · ${trip.destination.split(",")[0]}` : dates;
+    const place = shortDestination(trip.destination);
+    return place ? `${dates} · ${place}` : dates;
   }
   const n = trip.participants.length;
   return `Groupe · ${n} personne${n > 1 ? "s" : ""}`;
@@ -88,6 +90,14 @@ function TripActions({
   );
 }
 
+function TripEmoji({ emoji }: { emoji?: string | null }) {
+  return emoji ? (
+    <span aria-hidden="true" className="mr-1.5">
+      {emoji}
+    </span>
+  ) : null;
+}
+
 function Cover({ trip, className }: { trip: Trip; className?: string }) {
   if (trip.iconUrl) {
     return (
@@ -127,7 +137,10 @@ export function TripCard({ trip, onEdit, onDelete, onShare, variant = "row" }: T
             </span>
           </div>
           <div className="px-5 pt-4 pb-5">
-            <h3 className="truncate font-display text-[1.5rem] leading-tight font-bold tracking-tight">{trip.name}</h3>
+            <h3 className="truncate font-display text-[1.5rem] leading-tight font-bold tracking-tight">
+              <TripEmoji emoji={trip.emoji} />
+              {trip.name}
+            </h3>
             <p className="mt-1 truncate text-[0.95rem] text-muted-foreground">{subtitle(trip)}</p>
             <div className="mt-4 flex items-center justify-between">
               <ParticipantStack participants={trip.participants} size="md" max={4} />
@@ -150,7 +163,10 @@ export function TripCard({ trip, onEdit, onDelete, onShare, variant = "row" }: T
       >
         <Cover trip={trip} className="size-16 shrink-0 overflow-hidden rounded-2xl" />
         <div className="min-w-0 flex-1">
-          <h3 className="truncate font-display text-[1.1rem] leading-tight font-bold tracking-tight">{trip.name}</h3>
+          <h3 className="truncate font-display text-[1.1rem] leading-tight font-bold tracking-tight">
+            <TripEmoji emoji={trip.emoji} />
+            {trip.name}
+          </h3>
           <p className="mt-0.5 truncate text-sm text-muted-foreground">{subtitle(trip)}</p>
           {status.kind !== "permanent" && (
             <p

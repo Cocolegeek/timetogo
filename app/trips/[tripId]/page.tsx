@@ -19,7 +19,6 @@ import { MyListCard } from "@/components/trips/MyListCard";
 import { useRouter } from "next/navigation";
 import { TripCover } from "@/components/trips/TripCover";
 import { tripStatus } from "@/components/trips/TripCard";
-import { ParticipantAvatar } from "@/components/shared/ParticipantAvatar";
 import { ParticipantStack } from "@/components/shared/ParticipantStack";
 import { Spinner } from "@/components/shared/Spinner";
 import { NumberTicker } from "@/components/motion/NumberTicker";
@@ -32,7 +31,8 @@ import { useDebts } from "@/hooks/useDebts";
 import { SLOT_CONFIG } from "@/lib/meals/slots";
 import { formatDateRange } from "@/lib/format-date";
 import { EASE_OUT } from "@/lib/motion";
-import { cn } from "@/lib/utils";
+import { cn, firstName } from "@/lib/utils";
+import { shortDestination } from "@/lib/place";
 import { isVoyage, tripFeatures } from "@/lib/trip-features";
 import type { ExpenseCategory, Participant } from "@/types";
 import { useMountOnce } from "@/hooks/useMountOnce";
@@ -93,6 +93,9 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
   if (!trip) return <Spinner />;
 
   const me = trip.participants.find((p) => p.id === trip.myParticipantId);
+  const otherNames = trip.participants.filter((p) => p.id !== me?.id).map((p) => firstName(p.name));
+  const people = [...(me ? ["Toi"] : []), ...otherNames];
+  const peopleLabel = people.length > 3 ? `${people.slice(0, 3).join(", ")} +${people.length - 3}` : people.join(", ");
   const iOwe = settlements.filter((s) => s.fromId === trip.myParticipantId);
   const owedToMe = settlements.filter((s) => s.toId === trip.myParticipantId);
   const iOweTotal = iOwe.reduce((sum, s) => sum + s.amount, 0);
@@ -118,9 +121,9 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
         <div className="relative overflow-hidden rounded-[1.75rem] shadow-raised">
           {trip.iconUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={trip.iconUrl} alt="" className="h-40 w-full object-cover" draggable={false} />
+            <img src={trip.iconUrl} alt="" className="h-28 w-full object-cover" draggable={false} />
           ) : (
-            <TripCover seed={trip.id} className="h-40" />
+            <TripCover seed={trip.id} className="h-28" />
           )}
           {status.kind !== "permanent" && (
             <span className="absolute top-4 left-4 inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-[0.8125rem] font-semibold text-[#1A1D24] shadow-card backdrop-blur">
@@ -130,29 +133,42 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
           )}
         </div>
         <div className="mt-5 px-1">
-          <h1 className="font-display text-[2rem] leading-[1.05] font-extrabold tracking-[-0.03em]">{trip.name}</h1>
+          <h1 className="font-display text-[2rem] leading-[1.05] font-extrabold tracking-[-0.03em]">
+            {trip.emoji && (
+              <span aria-hidden="true" className="mr-2">
+                {trip.emoji}
+              </span>
+            )}
+            {trip.name}
+          </h1>
           <p className="mt-1.5 text-[0.95rem] text-muted-foreground">
             {isVoyage(trip)
-              ? [formatDateRange(trip.startDate, trip.endDate), trip.destination].filter(Boolean).join(" · ")
+              ? [formatDateRange(trip.startDate, trip.endDate), shortDestination(trip.destination)].filter(Boolean).join(" · ")
               : `Budget partagé · ${trip.participants.length} personnes`}
           </p>
           <div className="mt-4 flex items-center justify-between gap-3">
-            <ParticipantStack participants={trip.participants} size="md" max={5} showLabel={false} />
             <button
               type="button"
               onClick={() => setIdentityOpen(true)}
-              className="pressable flex h-10 shrink-0 items-center gap-2 rounded-full bg-card pr-3 pl-1 text-sm font-semibold shadow-card"
+              aria-label="Participants du voyage"
+              className="pressable flex min-w-0 items-center gap-2.5 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              {me ? (
-                <ParticipantAvatar participant={me} size="sm" />
-              ) : (
+              <ParticipantStack participants={trip.participants} size="md" max={4} showLabel={false} />
+              <span className="truncate text-[0.95rem] font-medium text-muted-foreground">{peopleLabel}</span>
+            </button>
+            {!me && (
+              <button
+                type="button"
+                onClick={() => setIdentityOpen(true)}
+                className="pressable flex h-10 shrink-0 items-center gap-2 rounded-full bg-card pr-3 pl-1 text-sm font-semibold shadow-card"
+              >
                 <span className="flex size-7 items-center justify-center rounded-full bg-secondary">
                   <UserRound size={15} className="text-muted-foreground" />
                 </span>
-              )}
-              {me ? `Toi : ${me.name}` : "Qui es-tu ?"}
-              <ChevronDown size={15} className="text-muted-foreground" />
-            </button>
+                Qui es-tu ?
+                <ChevronDown size={15} className="text-muted-foreground" />
+              </button>
+            )}
           </div>
         </div>
       </StaggerItem>

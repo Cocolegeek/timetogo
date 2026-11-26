@@ -130,6 +130,7 @@ useIdlePrefetch(hrefs)  → précharge les écrans suivants une fois l'écran af
 useFriends()            → { friends, code, addByCode, remove, refetch }  // + addFriendsToTrip(), previewFriend()
 useChecklist(id)        → { items, addItem, updateItem, deleteItem }     // notifie les nouveaux assignés
 useActivity(id, on)     → { entries }                                    // journal trip_activity (lecture seule, 100 dernières)
+useTripCounts(id)      → { expenses, planning, menus, lists }           // nombre d'éléments par espace (cache SWR partagé) : onglets et loupe
 useRecurring(id, on)    → { items, create, remove, applyDue }            // applyDue = RPC apply_recurring_expenses (sans doublon)
 ```
 
@@ -167,6 +168,8 @@ lib/
   trips/create-wizard.ts → logique pure de l'assistant de création : stepsFor(), validateStep(), firstIssue(), buildPayload(),
                           participantsOf() (créateur toujours 1er), addPerson() (doublons), datePresets(), suggestName()
   trip-emojis.ts        → THEME_EMOJIS, POPULAR_FLAGS, flagEmoji(codePays), tripEmojiChoices(paysDétecté) : emojis d'un voyage (jamais d'avion, empreinte carbone)
+  trip-sections.ts      → visibleSections(features, counts, active), sectionOf(pathname, base), canSearch(total) : onglets et loupe selon le contenu
+  place.ts              → shortDestination("Rome, Roma Capitale, Latium, Italie") = "Rome · Italie"
   trip-features.ts      → tripFeatures(trip), isVoyage(t), isGroup(t), TRIP_TYPE_LABELS
   budget/splits.ts      → computeShares(equal|percentage|fixed), buildDefaultSplits()
   budget/debts.ts       → computeBalances(), simplifyDebts() (greedy O(n log n))
@@ -278,6 +281,10 @@ DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip(
 
 - **Navigation voyage** : barre d'onglets flottante (matière translucide = seule zone « verre » autorisée),
   qui se compacte au défilement ; toucher l'onglet actif ou le titre de l'en-tête remonte en haut.
+  **Onglets selon le contenu** (`visibleSections()`) : Résumé et Budget toujours ; Planning, Menus et Listes n'apparaissent que
+  lorsqu'ils contiennent quelque chose (ou quand on est dessus : l'onglet courant ne disparaît jamais). La première création passe par
+  « Premiers pas » et le « + » (feuille de choix). Libellés plus grands quand il y a peu d'onglets. La loupe de l'en-tête
+  n'apparaît qu'à partir de 5 éléments (`SEARCH_MIN_ITEMS`).
 - **Ajout rapide** : le bouton « + » de la barre agit selon l'écran (`contextKind()` dans `lib/quick-add.ts`) : Budget = nouvelle
   dépense, Planning = étape, Menus = repas, Listes = champ d'ajout. Un seul toucher. Sur l'accueil du voyage (et dans un budget de
   groupe sans planning), il ouvre la feuille de choix. **Appui long** (450 ms), clic droit ou bouton lecteur d'écran = feuille de choix
@@ -301,6 +308,9 @@ DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip(
   Emoji du voyage : le drapeau du pays choisi (`countryCode` de `LocationPickerSheet`) est proposé en premier et présélectionné tant que
   l'utilisateur n'a pas choisi lui-même ; puis thèmes (train, plage…) et drapeaux courants. Pas d'avion (empreinte carbone).
 - **Trajets** : le mode « Avion » reste disponible dans `JourneyForm` (calcul de trajet, avertissement CO₂) ; seul l'emoji d'un voyage évite l'avion.
+- **Identité du voyage** : l'emoji ou le drapeau choisi s'affiche devant le titre (tableau de bord, cartes de la liste). Destination
+  toujours abrégée (`shortDestination()`). Participants = avatars + prénoms (« Toi, Léa, Marc +2 ») ; la pastille « Qui es-tu ? »
+  n'apparaît que si on n'est pas encore relié à un participant (toucher les avatars rouvre le choix). Illustration d'en-tête basse (h-28).
 - **Tableau de bord** : `GettingStarted` (n'affiche que les étapes restantes) puis budget, solde, `DayAgendaCard`
   (aujourd'hui, ou demain une fois la journée finie), repas du jour. Une carte vide n'est pas affichée si
   « Premiers pas » invite déjà à la remplir. Solde : une seule tuile large si un seul sens est non nul.

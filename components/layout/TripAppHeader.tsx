@@ -5,7 +5,9 @@ import Link from "next/link";
 import { ChevronLeft, Pencil, Search, Share } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useTrip } from "@/hooks/useTrip";
+import { useTripCounts } from "@/hooks/useTripCounts";
 import { useScrolled } from "@/hooks/useScrolled";
+import { canSearch } from "@/lib/trip-sections";
 import { cn } from "@/lib/utils";
 
 const TripEditDialog = dynamic(
@@ -31,6 +33,8 @@ export function TripAppHeader({ tripId }: { tripId: string }) {
   const [shareOpen, setShareOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const scrolled = useScrolled(4);
+  const counts = useTripCounts(tripId);
+  const searchable = canSearch(counts.expenses + counts.planning + counts.menus + counts.lists);
 
   useEffect(() => {
     const open = () => setShareOpen(true);
@@ -68,9 +72,11 @@ export function TripAppHeader({ tripId }: { tripId: string }) {
 
         {trip && (
           <div className="flex shrink-0 items-center">
-            <button type="button" onClick={() => setSearchOpen(true)} className={ICON_BTN} aria-label="Rechercher dans le voyage">
-              <Search size={20} strokeWidth={2} />
-            </button>
+            {searchable && (
+              <button type="button" onClick={() => setSearchOpen(true)} className={ICON_BTN} aria-label="Rechercher dans le voyage">
+                <Search size={20} strokeWidth={2} />
+              </button>
+            )}
             <button type="button" onClick={() => setShareOpen(true)} className={ICON_BTN} aria-label="Partager le voyage">
               <Share size={19} strokeWidth={2} />
             </button>
