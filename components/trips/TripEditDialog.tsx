@@ -3,7 +3,7 @@
 import { EmojiIcon } from "@/components/shared/EmojiIcon";
 import { TRIP_CURRENCIES } from "@/lib/currencies";
 import { useState, useEffect } from "react";
-import { Loader2, Plus, X, Pencil, Check, Infinity, CalendarDays, CalendarRange } from "lucide-react";
+import { Loader2, Plus, X, Pencil, Check, Infinity, CalendarDays, CalendarRange, ImagePlus } from "lucide-react";
 import { m as motion, AnimatePresence } from "framer-motion";
 import {
   Sheet,
@@ -86,7 +86,7 @@ export function TripEditDialog({
   const [startDate, setStartDate] = useState(isVoyage(trip) ? trip.startDate : (trip.startDate ?? ""));
   const [endDate, setEndDate] = useState(isVoyage(trip) ? trip.endDate : (trip.endDate ?? trip.startDate ?? ""));
   const [groupDateMode, setGroupDateMode] = useState<GroupDateMode>(detectGroupDateMode(trip));
-  const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
+  const [emojiPickerOpen, setEmojiPickerOpen] = useState(true);
   const [newParticipantName, setNewParticipantName] = useState("");
   const [editingParticipantId, setEditingParticipantId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
@@ -249,21 +249,24 @@ export function TripEditDialog({
           {activeTab === "Général" && (
             <>
               {userId && (
-                <div className="flex flex-col items-center gap-2">
+                <div className="flex items-center gap-4 rounded-[1.25rem] bg-secondary p-4">
                   <AvatarUpload
                     bucket="trip-icons"
                     path={`${userId}/${trip.id}.webp`}
                     currentUrl={trip.iconUrl ?? null}
-                    size={88}
-                    ringClass="ring-2 ring-foreground/40"
-                    placeholder={<span className="text-4xl"><EmojiIcon emoji={emoji} /></span>}
-                    dialogTitle="Recadrer l'icône du voyage"
+                    size={72}
+                    ringClass="ring-2 ring-foreground/25"
+                    placeholder={<ImagePlus size={26} className="text-muted-foreground" />}
+                    dialogTitle="Recadrer la photo de couverture"
                     onUploaded={(url) => onSaveIcon(url)}
                     onRemoved={() => onSaveIcon(null)}
                   />
-                  <p className="text-xs text-muted-foreground">
-                    {trip.iconUrl ? "Tap pour changer" : "Ou choisis un emoji ↓"}
-                  </p>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[0.95rem] font-semibold">Photo de couverture</p>
+                    <p className="text-sm text-muted-foreground">
+                      {trip.iconUrl ? "Touche la photo pour la changer ou la retirer." : "Facultatif. Sans photo, rien ne prend de place."}
+                    </p>
+                  </div>
                 </div>
               )}
 

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { computeShares } from "../lib/budget/splits.ts";
+import { computeShares, dropZeroShares } from "../lib/budget/splits.ts";
 import { computeBalances, simplifyDebts } from "../lib/budget/debts.ts";
 import type { Expense, Participant, ParticipantSplit } from "../types/index.ts";
 
@@ -180,4 +180,15 @@ test("récap: total, avancé, virements ; tout le monde quitte", () => {
   assert.ok(text.includes("→ Bob paie 5.62 EUR à Alice"));
   const quits = buildRecap({ tripName: "Rome", currency: "EUR", expenses: [], participants: ppl, balances: [], settlements: [], format: fmt });
   assert.ok(quits.includes("quitte"));
+});
+
+test("dropZeroShares: une part à 0 sort de la dépense (montants et pourcentages)", () => {
+  const fixed = dropZeroShares([split("a", { fixedAmount: 30 }), split("b", { fixedAmount: 0 })], "fixed");
+  assert.equal(fixed[0].excluded, false);
+  assert.equal(fixed[1].excluded, true);
+  const pct = dropZeroShares([split("a", { percentage: 100 }), split("b", { percentage: 0 })], "percentage");
+  assert.equal(pct[1].excluded, true);
+  const equal = dropZeroShares([split("a"), split("b", { excluded: true })], "equal");
+  assert.equal(equal[0].excluded, false);
+  assert.equal(equal[1].excluded, true);
 });

@@ -16,7 +16,7 @@ import { friendlyDay } from "@/lib/format-date";
 import { haptic } from "@/lib/haptics";
 import { ParticipantAvatar } from "@/components/shared/ParticipantAvatar";
 import { CATEGORIES, CATEGORY_ORDER } from "@/lib/budget/categories";
-import { computeShares } from "@/lib/budget/splits";
+import { computeShares, dropZeroShares } from "@/lib/budget/splits";
 import { guessCategory } from "@/lib/budget/guess-category";
 import type { RecentTitle } from "@/lib/budget/recent-titles";
 import { parseRate, toTripAmount } from "@/lib/budget/currency";
@@ -447,8 +447,11 @@ export function ExpenseForm({
         payers.length === 1
           ? [{ participantId: payers[0].participantId, amount: rawAmount }]
           : payers.map((p) => ({ ...p, amount: p.amount / rate }));
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const cleanSplits: ParticipantSplit[] = splits.map(({ pinned: _p, ...s }) => s);
+      const cleanSplits: ParticipantSplit[] = dropZeroShares(
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        splits.map(({ pinned: _p, ...s }) => s),
+        splitMode
+      );
       await onSubmit({
         title: title.trim() || (category === "other" ? "Dépense" : CATEGORIES[category].label),
         amount: rawAmount,
@@ -607,31 +610,29 @@ export function ExpenseForm({
                 : "bg-card"
             )}
           >
-            {splitMode === "equal" && (
-              <button
-                type="button"
-                onClick={() => toggleInclusion(p.id)}
-                role="checkbox"
-                aria-checked={!split.excluded}
-                aria-label={`Inclure ${p.name}`}
-                className={cn(
-                  "flex size-6 shrink-0 items-center justify-center rounded-lg border-2 transition-colors",
-                  split.excluded ? "border-foreground/25" : "border-primary bg-primary"
-                )}
-              >
-                {!split.excluded && (
-                  <svg width="11" height="11" viewBox="0 0 16 16" fill="none">
-                    <path
-                      d="M3 8l3 3 7-7"
-                      stroke="white"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                )}
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => toggleInclusion(p.id)}
+              role="checkbox"
+              aria-checked={!split.excluded}
+              aria-label={`Inclure ${p.name}`}
+              className={cn(
+                "flex size-6 shrink-0 items-center justify-center rounded-lg border-2 transition-colors",
+                split.excluded ? "border-foreground/25" : "border-primary bg-primary"
+              )}
+            >
+              {!split.excluded && (
+                <svg width="11" height="11" viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M3 8l3 3 7-7"
+                    stroke="white"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              )}
+            </button>
 
             <ParticipantAvatar participant={p} size="sm" />
             <span className="truncate text-[0.95rem] font-medium">{p.name}</span>
@@ -648,7 +649,11 @@ export function ExpenseForm({
               </span>
             )}
 
-            {splitMode === "percentage" && (
+            {splitMode === "percentage" && split.excluded && (
+              <span className="tabular text-[0.95rem] font-semibold">-</span>
+            )}
+
+            {splitMode === "percentage" && !split.excluded && (
               <div className="flex items-center gap-1.5">
                 {split.pinned && !split.excluded && (
                   <button
@@ -685,7 +690,11 @@ export function ExpenseForm({
               </div>
             )}
 
-            {splitMode === "fixed" && (
+            {splitMode === "fixed" && split.excluded && (
+              <span className="tabular text-[0.95rem] font-semibold">-</span>
+            )}
+
+            {splitMode === "fixed" && !split.excluded && (
               <div className="flex items-center gap-1.5">
                 {split.pinned && !split.excluded && (
                   <button

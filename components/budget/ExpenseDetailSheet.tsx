@@ -54,7 +54,7 @@ export function ExpenseDetailSheet({
     expense.splits,
     expense.splitMode
   );
-  const activeSplits = computedSplits.filter((s) => !s.excluded);
+  const activeSplits = computedSplits.filter((s) => !s.excluded && (s.share ?? 0) > 0);
 
   const multiPayer = expense.payers.length > 1;
   const addedAt = formatAddedAt(expense.createdAt);

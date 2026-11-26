@@ -1,6 +1,5 @@
 "use client";
 
-import { EmojiIcon } from "@/components/shared/EmojiIcon";
 import Link from "next/link";
 import { useState } from "react";
 import dynamic from "next/dynamic";
@@ -8,7 +7,7 @@ import { MoreHorizontal } from "lucide-react";
 import { useMountOnce } from "@/hooks/useMountOnce";
 import { formatDateRange, tripDuration, daysUntil } from "@/lib/format-date";
 import { cn } from "@/lib/utils";
-import { TripCover } from "@/components/trips/TripCover";
+import { EmojiIcon } from "@/components/shared/EmojiIcon";
 import { ParticipantStack } from "@/components/shared/ParticipantStack";
 import { isVoyage } from "@/lib/trip-features";
 import { shortDestination } from "@/lib/place";
@@ -101,13 +100,30 @@ function TripEmoji({ emoji }: { emoji?: string | null }) {
 }
 
 function Cover({ trip, className }: { trip: Trip; className?: string }) {
-  if (trip.iconUrl) {
-    return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img src={trip.iconUrl} alt="" draggable={false} className={cn("object-cover", className)} />
-    );
-  }
-  return <TripCover seed={trip.id} className={className} />;
+  if (!trip.iconUrl) return null;
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={trip.iconUrl} alt="" draggable={false} className={cn("object-cover", className)} />
+  );
+}
+
+function StatusPill({ status, onImage }: { status: TripStatus; onImage?: boolean }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[0.8125rem] font-semibold",
+        onImage ? "absolute top-4 left-4 bg-white/90 text-[#1A1D24] shadow-card backdrop-blur" : "bg-secondary text-foreground"
+      )}
+    >
+      {status.kind === "ongoing" && (
+        <span className="relative flex size-2">
+          <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-500 opacity-60" />
+          <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
+        </span>
+      )}
+      {status.label}
+    </span>
+  );
 }
 
 export function TripCard({ trip, onEdit, onDelete, onShare, variant = "row" }: TripCardProps) {
@@ -118,27 +134,21 @@ export function TripCard({ trip, onEdit, onDelete, onShare, variant = "row" }: T
     return (
       <article className="group relative overflow-hidden rounded-[1.75rem] bg-card shadow-raised">
         <Link href={href} prefetch={false} className="block outline-none focus-visible:ring-2 focus-visible:ring-ring">
-          <div className="relative h-52 overflow-hidden lg:h-64">
-            <Cover
-              trip={trip}
-              className="h-full w-full transition-transform duration-700 ease-(--ease-out) group-hover:scale-[1.04]"
-            />
-            <span
-              className={cn(
-                "absolute top-4 left-4 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[0.8125rem] font-semibold shadow-card backdrop-blur",
-                "bg-white/90 text-[#1A1D24]"
-              )}
-            >
-              {status.kind === "ongoing" && (
-                <span className="relative flex size-2">
-                  <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-500 opacity-60" />
-                  <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
-                </span>
-              )}
-              {status.label}
-            </span>
-          </div>
-          <div className="px-5 pt-4 pb-5">
+          {trip.iconUrl && (
+            <div className="relative h-52 overflow-hidden lg:h-64">
+              <Cover
+                trip={trip}
+                className="h-full w-full transition-transform duration-700 ease-(--ease-out) group-hover:scale-[1.04]"
+              />
+              {status.kind !== "permanent" && <StatusPill status={status} onImage />}
+            </div>
+          )}
+          <div className={cn("px-5 pb-5", trip.iconUrl ? "pt-4" : "pt-5 pr-24")}>
+            {!trip.iconUrl && status.kind !== "permanent" && (
+              <div className="mb-3">
+                <StatusPill status={status} />
+              </div>
+            )}
             <h3 className="truncate font-display text-[1.5rem] leading-tight font-bold tracking-tight">
               <TripEmoji emoji={trip.emoji} />
               {trip.name}
@@ -164,7 +174,13 @@ export function TripCard({ trip, onEdit, onDelete, onShare, variant = "row" }: T
         prefetch={false}
         className="pressable flex min-w-0 flex-1 items-center gap-4 rounded-[1.25rem] py-2.5 pr-12 pl-2.5 outline-none hover:bg-foreground/[0.03] focus-visible:ring-2 focus-visible:ring-ring"
       >
-        <Cover trip={trip} className="size-16 shrink-0 overflow-hidden rounded-2xl" />
+        {trip.iconUrl ? (
+          <Cover trip={trip} className="size-16 shrink-0 overflow-hidden rounded-2xl" />
+        ) : (
+          <span aria-hidden="true" className="flex size-16 shrink-0 items-center justify-center rounded-2xl bg-secondary text-[1.75rem]">
+            {trip.emoji ? <EmojiIcon emoji={trip.emoji} /> : null}
+          </span>
+        )}
         <div className="min-w-0 flex-1">
           <h3 className="truncate font-display text-[1.1rem] leading-tight font-bold tracking-tight">
             <TripEmoji emoji={trip.emoji} />

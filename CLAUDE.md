@@ -44,7 +44,7 @@ app/
     [tripId]/
       layout.tsx         → trip nav + context (wraps TripClientProviders)
       page.tsx           → trip dashboard
-      budget/page.tsx    → 3 onglets : Dépenses · Soldes (Régler, récap partageable, export CSV) · Historique (journal d'activité)
+      budget/page.tsx    → 2 onglets : Dépenses · Soldes (Régler, récap partageable, export CSV). Le journal d'activité est dans le menu « … » du voyage (TripActionsSheet)
       menus/page.tsx     → meal planning
       lists/page.tsx     → Listes « À apporter » / « À faire » (?item=<id>, ?list=todo)
       planning/page.tsx  → itinerary builder (étapes + trajets)
@@ -158,7 +158,8 @@ lib/
   auth/providers.ts     → AuthProvider (google|facebook), AccountMethod (+ email), enabledProviders(), FACEBOOK_ENABLED, EMAIL_ENABLED, linkedMethods(), loginChoicesLabel()
   auth/email.ts         → sendLoginCode / verifyLoginCode / startEmailUpgrade / verifyUpgradeCode / sendExistingAccountCode / verifyExistingAccountCode, mapAuthError()
   auth/redirect.ts      → safeRedirectPath(), errorRedirectUrl() (garde ?provider= au retour d'erreur vers /auth/link)
-  avatars.ts            → AVATAR_PRESETS, presetUrl(), isImageAvatar(), defaultPreset(), profileAvatar()
+  avatar-builder.ts     → créateur d'avatar : AvatarConfig (peau, coupe, couleur, yeux, bouche, barbe, lunettes, chapeau, masque, fond) → avatarSvg() / avatarDataUrl() (URL `data:image/svg+xml`, config relisible par parseAvatarConfig()), randomConfig(graine). Aucune image à héberger.
+  avatars.ts            → AVATAR_PRESETS (anciens, toujours affichés), isImageAvatar() (accepte les avatars créés), defaultPreset() (avatar tiré d'une graine), profileAvatar()
   avatar-sync.ts        → syncMyParticipantAvatars() (avatar du profil → participants liés)
   data/swr.tsx          → DataProvider (SWRConfig + cache localStorage persistant), clearDataCache()
   notifications/        → events.ts (NotifyEvent, NOTIFICATION_KINDS, isKindEnabled), notify.ts (fire-and-forget),
@@ -266,8 +267,7 @@ DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip(
   d'orbes, de dégradés décoratifs (`gradient-primary` = aplat) ni d'emoji comme icône.
 - **Illustrations** : `TripCover` (aplats doux : ciel, sable, sauge, argile, nuit, or), choisie par
   `seed` = id. Même palette pour l'écran de connexion et les avatars.
-- **Avatars** : `public/avatars/*.svg` générés par `scripts/generate-avatars.mjs` (garder `lib/avatars.ts`
-  en phase). Priorité d'affichage : choix (`custom_avatar_url`) > photo Google > initiale.
+- **Avatars** : créés par l'utilisateur dans `AvatarPicker` (créateur : catégories Peau et fond · Cheveux · Visage · Accessoires, « Au hasard », photo Google en option). Les 16 anciens `public/avatars/*.svg` restent pour ceux qui les ont choisis (`scripts/generate-avatars.mjs`, `lib/avatars.ts`). Priorité d'affichage : choix (`custom_avatar_url`) > photo Google > initiale.
 - **Motion** : `lib/motion.ts` (`EASE_OUT`, `EASE_SHEET`, `spring`, `fadeUp`, `stagger`). Indicateurs
   glissants via `layoutId` (TripNav, SegmentedControl, DayTabs). Respect de `prefers-reduced-motion`
   (MotionConfig + CSS). `pressable` pour le retour tactile.
@@ -339,7 +339,7 @@ DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip(
   `· 14:32` sur la carte (`createdAt`, heure locale), « Ajoutée le 8 juin à 10:00 » dans la fiche.
 - **Identité du voyage** : l'emoji ou le drapeau choisi s'affiche devant le titre (tableau de bord, cartes de la liste). Destination
   toujours abrégée (`shortDestination()`). Participants = avatars + prénoms (« Toi, Léa, Marc +2 ») ; la pastille « Qui es-tu ? »
-  n'apparaît que si on n'est pas encore relié à un participant (toucher les avatars rouvre le choix). Illustration d'en-tête basse (h-28).
+  n'apparaît que si on n'est pas encore relié à un participant (toucher les avatars rouvre le choix). Pas d'illustration par défaut : la couverture est une photo facultative (modifier le voyage › « Photo de couverture »), sans photo la liste montre l'emoji sur une tuile et le Résumé n'a pas de bandeau.
 - **Tableau de bord** : `GettingStarted` (n'affiche que les étapes restantes) puis budget, solde, `DayAgendaCard`
   (aujourd'hui, ou demain une fois la journée finie), repas du jour. Une carte vide n'est pas affichée si
   « Premiers pas » invite déjà à la remplir. Solde : une seule tuile large si un seul sens est non nul.
