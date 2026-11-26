@@ -1,13 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Download, Eraser, LogOut, Mail, Trash2 } from "lucide-react";
+import { Download, Eraser, Mail, Trash2 } from "lucide-react";
 import { SettingsShell } from "@/components/settings/SettingsShell";
 import { SettingsGroup, SettingsRow } from "@/components/settings/SettingsList";
 import { StaggerItem } from "@/components/motion/Stagger";
 import { METHOD_ICONS } from "@/components/auth/ProviderIcon";
 import { GuestUpgradeCard } from "@/components/auth/GuestUpgradeCard";
-import { GuestSignOutDialog } from "@/components/auth/GuestSignOutDialog";
 import { useToast } from "@/components/shared/Toaster";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { linkedMethods, METHOD_LABELS } from "@/lib/auth/providers";
@@ -18,10 +17,9 @@ import { collectMyData } from "@/lib/export/my-data";
 import { downloadFile } from "@/lib/export/download";
 
 export default function AccountSettingsPage() {
-  const { profile, signOut } = useProfile();
+  const { profile } = useProfile();
   const { user, isAnonymous } = useAuthUser();
   const toast = useToast();
-  const [confirmSignOut, setConfirmSignOut] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [exporting, setExporting] = useState(false);
 
@@ -85,24 +83,12 @@ export default function AccountSettingsPage() {
       </StaggerItem>
 
       <StaggerItem>
-        <button
-          type="button"
-          onClick={() => (isAnonymous ? setConfirmSignOut(true) : signOut())}
-          className="pressable flex h-14 w-full items-center justify-center gap-2 rounded-[1.5rem] bg-card text-base font-semibold text-red-400 shadow-card transition-colors hover:bg-red-500/[0.06]"
-        >
-          <LogOut size={18} />
-          Se déconnecter
-        </button>
-      </StaggerItem>
-
-      <StaggerItem>
         <SettingsGroup footer="Supprime ton compte et tes données personnelles. Action irréversible.">
           <SettingsRow icon={Trash2} label="Supprimer mon compte" tone="danger" chevron={false} onClick={() => setConfirmDelete(true)} />
         </SettingsGroup>
       </StaggerItem>
 
       <DeleteAccountDialog open={confirmDelete} onOpenChange={setConfirmDelete} />
-      <GuestSignOutDialog open={confirmSignOut} onOpenChange={setConfirmSignOut} onSignOut={signOut} />
     </SettingsShell>
   );
 }

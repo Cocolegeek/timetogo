@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { CalendarOff, ListChecks, Map, UtensilsCrossed, type LucideIcon } from "lucide-react";
 import { TRIP_MODULES } from "@/lib/trip-features";
 import { haptic } from "@/lib/haptics";
@@ -17,7 +18,9 @@ interface ModulePickerProps {
 
 /** Les espaces en plus du budget : trois tuiles à toucher, la tuile sombre est activée. */
 export function ModulePicker({ value, onChange, canPlan }: ModulePickerProps) {
+  const [hint, setHint] = useState(false);
   return (
+    <div>
     <div className="grid grid-cols-3 gap-2">
       {TRIP_MODULES.map((m) => {
         const Icon = ICONS[m.id];
@@ -32,7 +35,12 @@ export function ModulePicker({ value, onChange, canPlan }: ModulePickerProps) {
             aria-disabled={locked}
             aria-label={locked ? `${m.label} (il faut des dates)` : m.label}
             onClick={() => {
-              if (locked) return;
+              if (locked) {
+                haptic("light");
+                setHint(true);
+                return;
+              }
+              setHint(false);
               haptic("light");
               onChange(on ? value.filter((x) => x !== m.id) : [...value, m.id]);
             }}
@@ -48,6 +56,12 @@ export function ModulePicker({ value, onChange, canPlan }: ModulePickerProps) {
           </button>
         );
       })}
+    </div>
+    {hint && !canPlan && (
+      <p role="alert" className="mt-2 px-1 text-sm text-muted-foreground">
+        Planning et Menus ont besoin de dates.
+      </p>
+    )}
     </div>
   );
 }

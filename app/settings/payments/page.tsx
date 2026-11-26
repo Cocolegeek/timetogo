@@ -43,7 +43,7 @@ export default function PaymentSettingsPage() {
 
   return (
     <SettingsShell
-      title="Remboursements"
+      title="Où te rembourser"
       subtitle="Pour qu'on te rembourse en deux gestes : tes potes copient ton IBAN ou ouvrent Lydia / Wero."
       bottomSpace={dirty ? "7rem" : "2.5rem"}
     >

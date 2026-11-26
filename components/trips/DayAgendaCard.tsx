@@ -92,7 +92,7 @@ export function DayAgendaCard({ items, today, planningHref }: { items: Itinerary
                 <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-500 opacity-60" />
                 <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
               </span>
-              {focus === current ? "En ce moment" : "À suivre"}
+              {focus === current ? "En cours" : "À suivre"}
             </span>
             <span className="tabular text-muted-foreground">{focus.time!.slice(0, 5)}</span>
           </div>

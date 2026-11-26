@@ -21,7 +21,7 @@ const THEME_LABEL = { system: "Auto", light: "Clair", dark: "Sombre" } as const;
 const PUSH_LABEL: Record<PushState, string> = {
   on: "Activées",
   off: "Désactivées",
-  denied: "Bloquées",
+  denied: "Désactivées",
   unsupported: "Indisponibles",
   "needs-install": "À installer",
 };
@@ -71,8 +71,8 @@ export default function SettingsPage() {
           <SettingsRow
             href="/settings/payments"
             icon={CreditCard}
-            label="Remboursements"
-            value={paymentsSet ? "À jour" : "À compléter"}
+            label="Où te rembourser"
+            value={paymentsSet ? "Renseigné" : "À compléter"}
           />
         </SettingsGroup>
       </StaggerItem>

@@ -211,7 +211,7 @@ export function MealEditDialog({ open, onOpenChange, meal, participants, onSave 
           {
             id: "cooks",
             icon: ChefHat,
-            label: cookIds.length > 0 ? `${peopleLabel(participants, cookIds, "")} cuisine` : "Qui gère ?",
+            label: cookIds.length > 0 ? `${peopleLabel(participants, cookIds, "")} cuisine` : "Qui cuisine ?",
             filled: cookIds.length > 0,
             panel: <ParticipantPicker participants={participants} selected={cookIds} onToggle={toggleCook} />,
           },

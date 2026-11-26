@@ -98,7 +98,7 @@ export function OnboardingModal() {
                       <h2 id="onboarding-title" className="font-display text-[1.75rem] leading-tight font-extrabold tracking-tight">
                         Bienvenue sur Voyou
                       </h2>
-                      <p className="mt-1 text-[0.95rem] text-muted-foreground">Organise, partage, profite. Sans prise de tête.</p>
+                      <p className="mt-1 text-[0.95rem] text-muted-foreground">Organise, partage, profite.</p>
                     </motion.div>
                     <motion.ul variants={stagger(0.07, 0.2)} initial="hidden" animate="show" className="space-y-3">
                       {FEATURES.map(({ icon: Icon, label, tile }) => (
