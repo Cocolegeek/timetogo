@@ -11,6 +11,8 @@ import { DateRangePicker } from "@/components/shared/DateRangePicker";
 import { LocationPickerSheet } from "@/components/shared/LocationPickerSheet";
 import { UserAvatar } from "@/components/shared/UserAvatar";
 import { FriendPicker } from "@/components/trips/FriendPicker";
+import { ModulePicker } from "@/components/trips/ModulePicker";
+import { tripHref } from "@/lib/trip-features";
 import { TripCover } from "@/components/trips/TripCover";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,6 +34,8 @@ import {
   firstPlace,
   initialState,
   participantsOf,
+  effectiveModules,
+  hasPeriod,
   stepsFor,
   suggestName,
   tripLength,
@@ -39,13 +43,11 @@ import {
   type GroupDateMode,
   type WizardState,
   type WizardStep,
-  type WizardType,
 } from "@/lib/trips/create-wizard";
 import { flagEmoji, tripEmojiChoices } from "@/lib/trip-emojis";
 import { cn } from "@/lib/utils";
 
-const GROUP_EMOJIS = ["💰", "🏠", "🎂", "🎉", "🍕", "🏖️", "🚗", "🎁"];
-const GROUP_IDEAS = ["Coloc", "Anniversaire", "Week-end", "Soirée", "Vacances"];
+const IDEAS = ["Coloc", "Anniversaire", "Week-end", "Soirée", "Vacances"];
 
 const GROUP_DATE_OPTIONS: { mode: GroupDateMode; title: string; hint: string }[] = [
   { mode: "permanent", title: "Sans date", hint: "Un budget qui dure, comme une coloc." },
@@ -54,9 +56,8 @@ const GROUP_DATE_OPTIONS: { mode: GroupDateMode; title: string; hint: string }[]
 ];
 
 const TITLES: Record<WizardStep, { title: string; hint: string }> = {
-  where: { title: "Où pars-tu ?", hint: "Une ville, un pays ou une adresse. Tout se modifie plus tard." },
-  what: { title: "Comment l'appelles-tu ?", hint: "Le nom que verront tes potes." },
-  when: { title: "C'est pour quand ?", hint: "Un toucher sur un raccourci, ou choisis tes dates." },
+  what: { title: "C'est quoi ?", hint: "Le nom que verront tes potes. Un lieu, c'est facultatif." },
+  when: { title: "C'est pour quand ?", hint: "Facultatif, tu pourras le changer plus tard." },
   who: { title: "Avec qui ?", hint: "Toi et ceux qui partagent les dépenses." },
 };
 
@@ -67,14 +68,14 @@ function friendlyError(err: unknown): string {
   return parts.length ? `Impossible de créer pour le moment. ${parts.join(" · ")}` : "Impossible de créer pour le moment. Réessaie dans un instant.";
 }
 
-export function CreateWizard({ type }: { type: WizardType }) {
+export function CreateWizard() {
   const router = useRouter();
   const { createTrip } = useTrips();
   const { profile } = useProfile();
   const { friends } = useFriends();
-  const steps = stepsFor(type);
+  const steps = stepsFor();
 
-  const [base, setBase] = useState<WizardState>(() => initialState(type, new Date()));
+  const [base, setBase] = useState<WizardState>(() => initialState());
   const [friendIds, setFriendIds] = useState<string[]>(() => {
     const w = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("with") : null;
     return w ? [w] : [];
@@ -90,15 +91,17 @@ export function CreateWizard({ type }: { type: WizardType }) {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [doneId, setDoneId] = useState<string | null>(null);
+  const [donePath, setDonePath] = useState<string | null>(null);
   const issueRef = useRef<HTMLParagraphElement>(null);
 
   const creator = profile?.name?.split(" ")[0]?.trim() || null;
   const chosenFriends = friends.filter((f) => friendIds.includes(f.id));
   // Une seule source de vérité : le créateur et les amis sont dérivés, jamais recopiés.
-  const flag = type === "trip" ? flagEmoji(country) : null;
+  const flag = flagEmoji(country);
+  const fallbackEmoji = base.destination.trim() ? "🚆" : "💰";
   const s: WizardState = useMemo(
-    () => ({ ...base, emoji: emojiPicked ? base.emoji : (flag ?? base.emoji), creator, friendCount: friendIds.length }),
-    [base, emojiPicked, flag, creator, friendIds.length]
+    () => ({ ...base, emoji: emojiPicked ? base.emoji : (flag ?? fallbackEmoji), creator, friendCount: friendIds.length }),
+    [base, emojiPicked, flag, fallbackEmoji, creator, friendIds.length]
   );
   const step = steps[stepIndex];
   const people = participantsOf(s);
@@ -140,7 +143,9 @@ export function CreateWizard({ type }: { type: WizardType }) {
       ).catch(() => 0);
       haptic("success");
       setDoneId(id);
-      setTimeout(() => router.push(`/trips/${id}`), 1400);
+      const path = tripHref({ id, modules: payload.modules });
+      setDonePath(path);
+      setTimeout(() => router.push(path), 1400);
     } catch (err) {
       console.error("[create-trip]", err);
       setSubmitError(friendlyError(err));
@@ -174,17 +179,19 @@ export function CreateWizard({ type }: { type: WizardType }) {
     setNewName("");
   };
 
-  const shownName = s.nameTouched ? s.name : type === "trip" ? suggestName(s.destination) : s.name;
-  const title = effectiveName(s) || (type === "trip" ? "Ton voyage" : "Ton budget");
+  const shownName = s.nameTouched ? s.name : suggestName(s.destination) || s.name;
+  const title = effectiveName(s) || "Ton projet";
+  const period = hasPeriod(s);
+  const modules = effectiveModules(s);
   const dates = (() => {
-    if (type === "group" && s.dateMode === "permanent") return "";
+    if (s.dateMode === "permanent") return "";
     if (s.startDate && (s.endDate || s.dateMode === "date_fixe")) return formatDateRange(s.startDate, s.dateMode === "date_fixe" ? s.startDate : s.endDate);
     return "";
   })();
   const presets = useMemo(() => datePresets(new Date()), []);
   const length = tripLength(s.startDate, s.endDate);
-  const ctaLabel = stepIndex < steps.length - 1 ? "Continuer" : type === "trip" ? "Créer le voyage" : "Créer le budget";
-  const emojis = type === "trip" ? tripEmojiChoices(country) : GROUP_EMOJIS;
+  const ctaLabel = stepIndex < steps.length - 1 ? "Continuer" : "Créer";
+  const emojis = tripEmojiChoices(country);
   const pickEmoji = (e: string) => {
     setEmojiPicked(true);
     patch({ emoji: e });
@@ -203,10 +210,10 @@ export function CreateWizard({ type }: { type: WizardType }) {
           <Burst />
         </span>
         <div className="space-y-1.5">
-          <h2 className="font-display text-[2rem] leading-tight font-extrabold tracking-[-0.03em]">{type === "trip" ? "Voyage créé" : "Budget créé"}</h2>
+          <h2 className="font-display text-[2rem] leading-tight font-extrabold tracking-[-0.03em]">C&apos;est créé</h2>
           <p className="text-muted-foreground">{title}</p>
         </div>
-        <Button size="lg" onClick={() => router.push(`/trips/${doneId}`)} className="shadow-section">
+        <Button size="lg" onClick={() => router.push(donePath ?? `/trips/${doneId}`)} className="shadow-section">
           Ouvrir
         </Button>
       </motion.div>
@@ -237,7 +244,7 @@ export function CreateWizard({ type }: { type: WizardType }) {
       </div>
 
       {/* Aperçu en direct */}
-      <TripCover seed={type} variant={type === "trip" ? 1 : 4} className="mb-6 h-32 rounded-[1.5rem]">
+      <TripCover seed="new" variant={1} className="mb-6 h-32 rounded-[1.5rem]">
         <div className="absolute inset-x-3 bottom-3 flex items-center gap-3 rounded-2xl bg-card p-3 shadow-card">
           <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-secondary text-2xl" aria-hidden="true">
             <EmojiIcon emoji={s.emoji} />
@@ -245,9 +252,9 @@ export function CreateWizard({ type }: { type: WizardType }) {
           <span className="min-w-0 flex-1">
             <span className="block truncate font-display text-[1.05rem] font-bold tracking-tight">{title}</span>
             <span className="block truncate text-sm text-muted-foreground">
-              {[type === "trip" ? firstPlace(s.destination) : "", dates, people.length + friendIds.length > 1 ? `${people.length + friendIds.length} pers.` : ""]
+              {[firstPlace(s.destination), dates, people.length + friendIds.length > 1 ? `${people.length + friendIds.length} pers.` : ""]
                 .filter(Boolean)
-                .join(" · ") || (type === "trip" ? "Dis-nous où tu pars" : "Dis-nous ce que c'est")}
+                .join(" · ") || "Dis-nous ce que c'est"}
             </span>
           </span>
         </div>
@@ -264,79 +271,44 @@ export function CreateWizard({ type }: { type: WizardType }) {
         >
           <header className="space-y-1">
             <h2 className="font-display text-[1.75rem] leading-[1.1] font-extrabold tracking-[-0.03em]">{TITLES[step].title}</h2>
-            <p className="text-[0.95rem] text-muted-foreground">{step === "when" && type === "group" ? "Facultatif, tu pourras le changer plus tard." : TITLES[step].hint}</p>
+            <p className="text-[0.95rem] text-muted-foreground">{TITLES[step].hint}</p>
           </header>
-
-          {step === "where" && (
-            <div className="space-y-4">
-              <LocationPickerSheet
-                value={s.destination}
-                onChange={(v) => patch({ destination: v })}
-                onChangeCoord={(c) => setCountry(c?.countryCode ?? null)}
-                placeholder="Rome, Italie"
-              />
-              <AnimatePresence initial={false}>
-                {firstPlace(s.destination) && (
-                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
-                    <div className="space-y-3 pt-1">
-                      <label htmlFor="trip-name" className="px-1 text-sm font-semibold">
-                        Nom du voyage
-                      </label>
-                      <Input
-                        id="trip-name"
-                        value={shownName}
-                        onChange={(e) => patch({ name: e.target.value, nameTouched: e.target.value.trim().length > 0 })}
-                        placeholder={suggestName(s.destination)}
-                        enterKeyHint="next"
-                      />
-                      <EmojiRow emojis={emojis} value={s.emoji} onPick={pickEmoji} />
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          )}
 
           {step === "what" && (
             <div className="space-y-4">
               <Input
                 autoFocus
-                value={s.name}
-                onChange={(e) => patch({ name: e.target.value, nameTouched: true })}
-                placeholder="Coloc, anniversaire de Léa…"
-                aria-label="Nom du budget"
+                value={shownName}
+                onChange={(e) => patch({ name: e.target.value, nameTouched: e.target.value.trim().length > 0 })}
+                placeholder={suggestName(s.destination) || "Coloc, voyage à Rome, anniversaire de Léa…"}
+                aria-label="Nom"
                 enterKeyHint="next"
               />
-              <div className="flex flex-wrap gap-2">
-                {GROUP_IDEAS.map((idea) => (
-                  <button
-                    key={idea}
-                    type="button"
-                    onClick={() => patch({ name: idea, nameTouched: true })}
-                    className="pressable h-10 rounded-full bg-foreground/[0.06] px-4 text-sm font-semibold transition-colors hover:bg-foreground/[0.1]"
-                  >
-                    {idea}
-                  </button>
-                ))}
-              </div>
+              {!firstPlace(s.destination) && (
+                <div className="flex flex-wrap gap-2">
+                  {IDEAS.map((idea) => (
+                    <button
+                      key={idea}
+                      type="button"
+                      onClick={() => patch({ name: idea, nameTouched: true })}
+                      className="pressable h-10 rounded-full bg-foreground/[0.06] px-4 text-sm font-semibold transition-colors hover:bg-foreground/[0.1]"
+                    >
+                      {idea}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <LocationPickerSheet
+                value={s.destination}
+                onChange={(v) => patch({ destination: v })}
+                onChangeCoord={(c) => setCountry(c?.countryCode ?? null)}
+                placeholder="Ajouter un lieu"
+              />
               <EmojiRow emojis={emojis} value={s.emoji} onPick={pickEmoji} />
             </div>
           )}
 
-          {step === "when" && type === "trip" && (
-            <div className="space-y-4">
-              <PresetChips presets={presets} start={s.startDate} end={s.endDate} onPick={(p) => patch({ startDate: p.start, endDate: p.end })} />
-              <DateRangePicker startDate={s.startDate} endDate={s.endDate} onChange={(start, end) => patch({ startDate: start, endDate: end })} />
-              {length && (
-                <p className="px-1 text-sm font-medium">
-                  {formatDateRange(s.startDate, s.endDate)} · {length.days} jour{length.days > 1 ? "s" : ""}
-                  {length.nights > 0 ? `, ${length.nights} nuit${length.nights > 1 ? "s" : ""}` : ""}
-                </p>
-              )}
-            </div>
-          )}
-
-          {step === "when" && type === "group" && (
+          {step === "when" && (
             <div className="space-y-3">
               <div role="radiogroup" aria-label="Type de date" className="space-y-2">
                 {GROUP_DATE_OPTIONS.map((o) => {
@@ -373,8 +345,22 @@ export function CreateWizard({ type }: { type: WizardType }) {
                 <DateField id="group-date" label="Jour" value={s.startDate} onChange={(v) => patch({ startDate: v })} />
               )}
               {s.dateMode === "creneau" && (
-                <DateRangePicker startDate={s.startDate} endDate={s.endDate} onChange={(start, end) => patch({ startDate: start, endDate: end })} />
+                <>
+                  <PresetChips presets={presets} start={s.startDate} end={s.endDate} onPick={(p) => patch({ startDate: p.start, endDate: p.end })} />
+                  <DateRangePicker startDate={s.startDate} endDate={s.endDate} onChange={(start, end) => patch({ startDate: start, endDate: end })} />
+                  {length && (
+                    <p className="px-1 text-sm font-medium">
+                      {formatDateRange(s.startDate, s.endDate)} · {length.days} jour{length.days > 1 ? "s" : ""}
+                      {length.nights > 0 ? `, ${length.nights} nuit${length.nights > 1 ? "s" : ""}` : ""}
+                    </p>
+                  )}
+                </>
               )}
+              <ModulePicker
+                value={modules}
+                canPlan={period}
+                onChange={(next) => patch({ modules: next, modulesTouched: true })}
+              />
             </div>
           )}
 

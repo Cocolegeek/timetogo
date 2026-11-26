@@ -1,36 +1,38 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  addPerson, buildPayload, datePresets, effectiveName, firstIssue, initialState, participantsOf, stepsFor,
-  suggestName, tripLength, validateStep, type WizardState,
+  addPerson, buildPayload, datePresets, defaultModules, effectiveModules, effectiveName, firstIssue, hasPeriod, initialState,
+  participantsOf, stepsFor, suggestName, tripLength, validateStep, type WizardState,
 } from "../lib/trips/create-wizard.ts";
 
 const D = (s: string) => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
-const trip = (over: Partial<WizardState> = {}): WizardState => ({ ...initialState("trip", D("2026-06-03"), "Alice"), destination: "Rome, Latium, Italie", ...over });
-const group = (over: Partial<WizardState> = {}): WizardState => ({ ...initialState("group", D("2026-06-03"), "Alice"), name: "Coloc", nameTouched: true, ...over });
+const base = (over: Partial<WizardState> = {}): WizardState => ({ ...initialState("Alice"), name: "Coloc", nameTouched: true, ...over });
+const trip = (over: Partial<WizardState> = {}): WizardState =>
+  base({ name: "", nameTouched: false, destination: "Rome, Latium, Italie", dateMode: "creneau", startDate: "2026-06-05", endDate: "2026-06-12", ...over });
 
-test("étapes : un voyage commence par la destination, un budget par son nom", () => {
-  assert.deepEqual(stepsFor("trip"), ["where", "when", "who"]);
-  assert.deepEqual(stepsFor("group"), ["what", "when", "who"]);
+test("un seul parcours en trois étapes : quoi, quand, avec qui", () => {
+  assert.deepEqual(stepsFor(), ["what", "when", "who"]);
 });
 
-test("le nom du voyage se propose tout seul d'après la destination, sauf si on l'a écrit", () => {
+test("le nom se propose tout seul d'après le lieu, sauf si on l'a écrit", () => {
   assert.equal(suggestName("Rome, Latium, Italie"), "Voyage à Rome");
   assert.equal(suggestName(""), "");
   assert.equal(effectiveName(trip()), "Voyage à Rome");
   assert.equal(effectiveName(trip({ name: "Escapade", nameTouched: true })), "Escapade");
   assert.equal(effectiveName(trip({ name: "", nameTouched: true })), "Voyage à Rome");
-  assert.equal(effectiveName(group({ name: "", nameTouched: false })), "");
+  assert.equal(effectiveName(base({ name: "Coloc", nameTouched: true })), "Coloc");
+  assert.equal(effectiveName(base({ name: "", nameTouched: false })), "");
 });
 
 test("la création ne bloque plus en silence : chaque obstacle a un message et une étape", () => {
-  assert.equal(validateStep("where", trip({ destination: "" }))?.message, "Choisis une destination pour continuer.");
-  assert.equal(validateStep("what", group({ name: "  " }))?.message, "Donne un nom à ton budget.");
+  assert.equal(validateStep("what", base({ name: "  " }))?.message, "Donne un nom pour continuer.");
+  assert.equal(validateStep("what", base({ name: "", nameTouched: false, destination: "Lyon, France" })), null);
   assert.equal(validateStep("when", trip({ startDate: "" }))?.message, "Choisis la date de départ.");
   assert.equal(validateStep("when", trip({ startDate: "2026-06-10", endDate: "2026-06-08" }))?.message, "Le retour doit être après le départ.");
-  assert.equal(validateStep("who", trip({ creator: null, extra: [] }))?.message, "Commence par ton prénom, tu fais partie du voyage.");
+  assert.equal(validateStep("when", base({ dateMode: "date_fixe", startDate: "" }))?.message, "Choisis le jour.");
+  assert.equal(validateStep("who", trip({ creator: null, extra: [] }))?.message, "Commence par ton prénom, tu fais partie de la bande.");
   assert.equal(validateStep("who", trip({ budget: "abc" }))?.step, "who");
-  assert.equal(firstIssue(trip({ destination: "", extra: [] }))?.step, "where");
+  assert.equal(firstIssue(base({ name: "", extra: [] }))?.step, "what");
   assert.equal(firstIssue(trip()), null);
 });
 
@@ -53,25 +55,40 @@ test("ajouter des prénoms : doublons refusés sans tenir compte des accents ni 
   assert.equal(new Set(participantsOf(s2).map((p) => p.color)).size, 2);
 });
 
-test("un budget de groupe sans date : permanent, ni départ ni retour envoyés", () => {
-  const p = buildPayload(group());
+test("sans date : ni départ ni retour envoyés, ni destination, juste les listes par défaut", () => {
+  const p = buildPayload(base());
   assert.equal(p.startDate, undefined);
   assert.equal(p.endDate, undefined);
-  assert.equal(p.type, "group");
   assert.equal(p.destination, undefined);
-  assert.equal(validateStep("when", group()), null);
+  assert.deepEqual(p.modules, ["lists"]);
+  assert.equal(validateStep("when", base()), null);
 });
 
-test("budget de groupe : un jour précis envoie la même date au départ et au retour ; une période les deux", () => {
-  const one = buildPayload(group({ dateMode: "date_fixe", startDate: "2026-07-14" }));
+test("un jour précis envoie la même date au départ et au retour ; une période les deux", () => {
+  const one = buildPayload(base({ dateMode: "date_fixe", startDate: "2026-07-14" }));
   assert.deepEqual([one.startDate, one.endDate], ["2026-07-14", "2026-07-14"]);
-  assert.equal(validateStep("when", group({ dateMode: "date_fixe", startDate: "" }))?.message, "Choisis la date de départ.");
-  const range = buildPayload(group({ dateMode: "creneau", startDate: "2026-07-14", endDate: "2026-07-20" }));
+  const range = buildPayload(base({ dateMode: "creneau", startDate: "2026-07-14", endDate: "2026-07-20" }));
   assert.deepEqual([range.startDate, range.endDate], ["2026-07-14", "2026-07-20"]);
-  assert.equal(validateStep("when", group({ dateMode: "creneau", startDate: "2026-07-14", endDate: "" }))?.message, "Choisis la date de retour.");
+  assert.equal(validateStep("when", base({ dateMode: "creneau", startDate: "2026-07-14", endDate: "" }))?.message, "Choisis la date de retour.");
 });
 
-test("charge utile d'un voyage : nom proposé, destination nettoyée, budget lu avec une virgule", () => {
+test("espaces : avec une période on propose tout, sans date seulement les listes", () => {
+  assert.deepEqual(defaultModules(trip()), ["planning", "menus", "lists"]);
+  assert.deepEqual(defaultModules(base()), ["lists"]);
+  assert.equal(hasPeriod(base({ dateMode: "date_fixe", startDate: "2026-07-14" })), true);
+  assert.equal(hasPeriod(base({ dateMode: "creneau", startDate: "2026-07-14", endDate: "" })), false);
+});
+
+test("espaces choisis : respectés, mais pas de planning ni de menus sans jours", () => {
+  const chosen = trip({ modulesTouched: true, modules: ["menus"] });
+  assert.deepEqual(effectiveModules(chosen), ["menus"]);
+  assert.deepEqual(effectiveModules(trip({ modulesTouched: true, modules: [] })), []);
+  const noDate = base({ modulesTouched: true, modules: ["planning", "menus", "lists"] });
+  assert.deepEqual(effectiveModules(noDate), ["lists"]);
+  assert.deepEqual(buildPayload(trip({ modulesTouched: true, modules: [] })).modules, []);
+});
+
+test("charge utile : nom proposé, lieu nettoyé, budget lu avec une virgule", () => {
   const p = buildPayload(trip({ destination: " Rome, Italie ", budget: "1 500,5".replace(" ", ""), currency: "USD" }));
   assert.equal(p.name, "Voyage à Rome");
   assert.equal(p.destination, "Rome, Italie");

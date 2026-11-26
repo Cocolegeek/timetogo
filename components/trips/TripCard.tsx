@@ -9,7 +9,7 @@ import { formatDateRange, tripDuration, daysUntil } from "@/lib/format-date";
 import { cn } from "@/lib/utils";
 import { EmojiIcon } from "@/components/shared/EmojiIcon";
 import { ParticipantStack } from "@/components/shared/ParticipantStack";
-import { isVoyage } from "@/lib/trip-features";
+import { tripHref } from "@/lib/trip-features";
 import { shortDestination } from "@/lib/place";
 import { HoverActions } from "@/components/shared/HoverActions";
 import type { Trip } from "@/types";
@@ -24,8 +24,8 @@ export type TripStatus =
 
 export function tripStatus(trip: Trip): TripStatus {
   const start = trip.startDate;
-  const end = isVoyage(trip) ? trip.endDate : trip.endDate ?? trip.startDate;
-  if (!start || !end) return { kind: "permanent", label: "Budget partagé" };
+  const end = trip.endDate ?? trip.startDate;
+  if (!start || !end) return { kind: "permanent", label: "Sans date" };
   const startDays = daysUntil(start);
   const endDays = daysUntil(end);
   if (endDays < 0) return { kind: "past", label: "Terminé" };
@@ -38,13 +38,12 @@ export function tripStatus(trip: Trip): TripStatus {
 }
 
 function subtitle(trip: Trip): string {
-  if (isVoyage(trip)) {
-    const dates = formatDateRange(trip.startDate, trip.endDate);
-    const place = shortDestination(trip.destination);
-    return place ? `${dates} · ${place}` : dates;
-  }
+  const dates = trip.startDate ? formatDateRange(trip.startDate, trip.endDate ?? trip.startDate) : "";
+  const place = trip.destination ? shortDestination(trip.destination) : "";
+  const parts = [dates, place].filter(Boolean);
+  if (parts.length) return parts.join(" · ");
   const n = trip.participants.length;
-  return `Groupe · ${n} personne${n > 1 ? "s" : ""}`;
+  return `${n} personne${n > 1 ? "s" : ""}`;
 }
 
 interface TripCardProps {
@@ -127,7 +126,7 @@ function StatusPill({ status, onImage }: { status: TripStatus; onImage?: boolean
 }
 
 export function TripCard({ trip, onEdit, onDelete, onShare, variant = "row" }: TripCardProps) {
-  const href = trip.type === "group" ? `/trips/${trip.id}/budget` : `/trips/${trip.id}`;
+  const href = tripHref(trip);
   const status = tripStatus(trip);
 
   if (variant === "featured") {

@@ -1,7 +1,7 @@
 import { PARTICIPANT_COLORS } from "@/lib/participant-colors";
+import type { TripModule } from "@/types";
 
-export type WizardType = "trip" | "group";
-export type WizardStep = "where" | "what" | "when" | "who";
+export type WizardStep = "what" | "when" | "who";
 export type GroupDateMode = "permanent" | "date_fixe" | "creneau";
 
 export interface WizardParticipant {
@@ -10,11 +10,11 @@ export interface WizardParticipant {
 }
 
 export interface WizardState {
-  type: WizardType;
   name: string;
   /** Faux tant que le nom est celui qu'on propose d'après la destination. */
   nameTouched: boolean;
   emoji: string;
+  /** Facultatif : un lieu donne un nom, un drapeau et le choix du planning. */
   destination: string;
   dateMode: GroupDateMode;
   startDate: string;
@@ -27,6 +27,9 @@ export interface WizardState {
   extra: WizardParticipant[];
   /** Amis de « Ta bande » cochés : ils deviennent membres liés à la création. */
   friendCount: number;
+  /** Espaces choisis en plus du budget. Ignorés tant que `modulesTouched` est faux (on propose alors ceux qui vont avec la période). */
+  modules: TripModule[];
+  modulesTouched: boolean;
 }
 
 export interface StepIssue {
@@ -34,8 +37,29 @@ export interface StepIssue {
   message: string;
 }
 
-export function stepsFor(type: WizardType): WizardStep[] {
-  return type === "trip" ? ["where", "when", "who"] : ["what", "when", "who"];
+const ymdOk = (v: string) => /^\d{4}-\d{2}-\d{2}$/.test(v);
+
+export function stepsFor(): WizardStep[] {
+  return ["what", "when", "who"];
+}
+
+/** Planning et menus ont besoin de jours : un jour précis ou une période complète. */
+export function hasPeriod(s: Pick<WizardState, "dateMode" | "startDate" | "endDate">): boolean {
+  if (s.dateMode === "date_fixe") return ymdOk(s.startDate);
+  if (s.dateMode === "creneau") return ymdOk(s.startDate) && ymdOk(s.endDate) && s.endDate >= s.startDate;
+  return false;
+}
+
+/** Ce qu'on propose tant qu'on n'a pas choisi : tout pour une période, seulement les listes sans date. */
+export function defaultModules(s: Pick<WizardState, "dateMode" | "startDate" | "endDate">): TripModule[] {
+  return hasPeriod(s) ? ["planning", "menus", "lists"] : ["lists"];
+}
+
+/** Les espaces réellement créés : le choix de la personne, sans planning ni menus quand il n'y a pas de jours. */
+export function effectiveModules(s: WizardState): TripModule[] {
+  const chosen = s.modulesTouched ? s.modules : defaultModules(s);
+  const period = hasPeriod(s);
+  return chosen.filter((m) => period || m === "lists");
 }
 
 /** « Rome, Latium, Italie » devient « Rome ». */
@@ -48,10 +72,10 @@ export function suggestName(destination: string): string {
   return place ? `Voyage à ${place}` : "";
 }
 
-export function effectiveName(s: Pick<WizardState, "type" | "name" | "nameTouched" | "destination">): string {
+export function effectiveName(s: Pick<WizardState, "name" | "nameTouched" | "destination">): string {
   const typed = s.name.trim();
   if (s.nameTouched && typed) return typed;
-  return s.type === "trip" ? suggestName(s.destination) : typed;
+  return suggestName(s.destination) || typed;
 }
 
 /** Le créateur d'abord (couleur 1), puis les autres : une seule liste, pas deux sources de vérité. */
@@ -88,25 +112,19 @@ export function parseAmount(raw: string): number | null {
   return Number.isFinite(n) && n > 0 ? n : NaN;
 }
 
-const ymdOk = (v: string) => /^\d{4}-\d{2}-\d{2}$/.test(v);
-
 /** Ce qui empêche de passer à la suite, dit en clair. null = on peut continuer. */
 export function validateStep(step: WizardStep, s: WizardState): StepIssue | null {
-  if (step === "where") {
-    if (!firstPlace(s.destination)) return { step, message: "Choisis une destination pour continuer." };
-    if (!effectiveName(s)) return { step, message: "Donne un nom à ton voyage." };
-  }
-  if (step === "what" && !effectiveName(s)) return { step, message: "Donne un nom à ton budget." };
+  if (step === "what" && !effectiveName(s)) return { step, message: "Donne un nom pour continuer." };
   if (step === "when") {
-    const needsStart = s.type === "trip" || s.dateMode !== "permanent";
-    const needsEnd = s.type === "trip" || s.dateMode === "creneau";
-    if (needsStart && !ymdOk(s.startDate)) return { step, message: "Choisis la date de départ." };
+    const needsStart = s.dateMode !== "permanent";
+    const needsEnd = s.dateMode === "creneau";
+    if (needsStart && !ymdOk(s.startDate)) return { step, message: s.dateMode === "creneau" ? "Choisis la date de départ." : "Choisis le jour." };
     if (needsEnd && !ymdOk(s.endDate)) return { step, message: "Choisis la date de retour." };
     if (needsEnd && s.endDate < s.startDate) return { step, message: "Le retour doit être après le départ." };
   }
   if (step === "who") {
     if (participantsOf(s).length + s.friendCount === 0) {
-      return { step, message: s.creator ? "Ajoute au moins une personne." : "Commence par ton prénom, tu fais partie du voyage." };
+      return { step, message: s.creator ? "Ajoute au moins une personne." : "Commence par ton prénom, tu fais partie de la bande." };
     }
     if (Number.isNaN(parseAmount(s.budget))) return { step, message: "Le budget doit être un montant positif." };
   }
@@ -115,7 +133,7 @@ export function validateStep(step: WizardStep, s: WizardState): StepIssue | null
 
 /** Première étape en défaut, pour y revenir au lieu d'échouer en silence à la création. */
 export function firstIssue(s: WizardState): StepIssue | null {
-  for (const step of stepsFor(s.type)) {
+  for (const step of stepsFor()) {
     const issue = validateStep(step, s);
     if (issue) return issue;
   }
@@ -123,7 +141,6 @@ export function firstIssue(s: WizardState): StepIssue | null {
 }
 
 export interface CreatePayload {
-  type: WizardType;
   name: string;
   emoji: string;
   currency: string;
@@ -132,21 +149,20 @@ export interface CreatePayload {
   endDate?: string;
   totalBudget?: number;
   participants: WizardParticipant[];
+  modules: TripModule[];
 }
 
 export function buildPayload(s: WizardState): CreatePayload {
   const budget = parseAmount(s.budget);
-  const base = {
-    type: s.type,
+  const place = s.destination.trim();
+  return {
     name: effectiveName(s),
     emoji: s.emoji,
     currency: s.currency,
     totalBudget: budget && budget > 0 ? budget : undefined,
     participants: participantsOf(s),
-  };
-  if (s.type === "trip") return { ...base, destination: s.destination.trim(), startDate: s.startDate, endDate: s.endDate };
-  return {
-    ...base,
+    modules: effectiveModules(s),
+    destination: place || undefined,
     startDate: s.dateMode === "permanent" ? undefined : s.startDate,
     endDate: s.dateMode === "date_fixe" ? s.startDate : s.dateMode === "creneau" ? s.endDate : undefined,
   };
@@ -189,21 +205,21 @@ export function tripLength(start: string, end: string): { days: number; nights: 
   return { days: nights + 1, nights };
 }
 
-export function initialState(type: WizardType, today: Date, creator: string | null = null): WizardState {
-  const t = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+export function initialState(creator: string | null = null): WizardState {
   return {
-    type,
     name: "",
     nameTouched: false,
-    emoji: type === "trip" ? "🚆" : "💰",
+    emoji: "💰",
     destination: "",
     dateMode: "permanent",
-    startDate: type === "trip" ? ymd(t) : "",
-    endDate: type === "trip" ? ymd(addDays(t, 6)) : "",
+    startDate: "",
+    endDate: "",
     currency: "EUR",
     budget: "",
     creator,
     extra: [],
     friendCount: 0,
+    modules: [],
+    modulesTouched: false,
   };
 }

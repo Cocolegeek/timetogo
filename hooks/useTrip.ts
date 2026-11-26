@@ -5,7 +5,8 @@ import { createClient } from "@/lib/supabase/client";
 import { generateShareCode } from "@/lib/trip-share";
 import { useCachedQuery } from "@/hooks/useCachedQuery";
 import { syncMyParticipantAvatars } from "@/lib/avatar-sync";
-import type { Trip, TripType, Participant } from "@/types";
+import { parseModules } from "@/lib/trip-features";
+import type { Trip, TripModule, Participant } from "@/types";
 
 function rowsToTrip(
   tripRow: Record<string, unknown>,
@@ -13,8 +14,7 @@ function rowsToTrip(
   isOwner: boolean,
   myParticipantId: string | null
 ): Trip {
-  const type = ((tripRow.type as TripType | undefined) ?? "trip") as TripType;
-  const base = {
+  return {
     id: tripRow.id as string,
     name: tripRow.name as string,
     emoji: tripRow.emoji as string,
@@ -27,19 +27,10 @@ function rowsToTrip(
     participants,
     createdAt: tripRow.created_at as string,
     updatedAt: tripRow.updated_at as string,
-  };
-
-  if (type === "group") {
-    const startDate = (tripRow.start_date as string | null) ?? undefined;
-    const endDate = (tripRow.end_date as string | null) ?? undefined;
-    return { ...base, type: "group", startDate, endDate };
-  }
-  return {
-    ...base,
-    type: "trip",
-    destination: (tripRow.destination as string | null) ?? "",
-    startDate: (tripRow.start_date as string | null) ?? "",
-    endDate: (tripRow.end_date as string | null) ?? "",
+    modules: parseModules(tripRow.modules, tripRow.type as string | undefined),
+    destination: (tripRow.destination as string | null) || undefined,
+    startDate: (tripRow.start_date as string | null) || undefined,
+    endDate: (tripRow.end_date as string | null) || undefined,
   };
 }
 
@@ -116,8 +107,8 @@ export function useTrips() {
 
   const createTrip = async (
     data: {
-      type: TripType;
       name: string;
+      modules?: TripModule[];
       emoji: string;
       currency: string;
       destination?: string;
@@ -134,8 +125,8 @@ export function useTrips() {
 
     const { data: tripId, error: rpcError } = await supabase.rpc("create_trip_with_owner", {
       p_name: data.name,
-      p_type: data.type,
-      p_destination: data.type === "trip" ? (data.destination ?? null) : null,
+      p_type: "trip",
+      p_destination: data.destination ?? null,
       p_emoji: data.emoji,
       p_currency: data.currency,
       p_start_date: data.startDate ?? null,
@@ -150,6 +141,12 @@ export function useTrips() {
     });
 
     if (rpcError || !tripId) throw rpcError ?? new Error("Trip creation failed");
+
+    const modules = data.modules ?? [];
+    if (modules.length > 0) {
+      const { error: modulesError } = await supabase.from("trips").update({ modules }).eq("id", tripId as string);
+      if (modulesError) console.error("[create-trip] modules", modulesError);
+    }
 
     await syncMyParticipantAvatars();
     await fetchTrips();
@@ -229,6 +226,7 @@ export function useTrip(id: string) {
       endDate: string | null;
       totalBudget: number | null;
       iconUrl: string | null;
+      modules: TripModule[];
     }>
   ): Promise<void> => {
     const snapshot = trip;
@@ -244,14 +242,13 @@ export function useTrip(id: string) {
         ...(data.startDate !== undefined && { startDate: data.startDate ?? undefined }),
         ...(data.endDate !== undefined && { endDate: data.endDate ?? undefined }),
       };
-      const next: Trip = trip.type === "trip"
-        ? {
-            ...trip,
-            ...sharedPatch,
-            ...(data.destination !== undefined && { destination: data.destination }),
-            ...datePatch,
-          }
-        : { ...trip, ...sharedPatch, ...datePatch };
+      const next: Trip = {
+        ...trip,
+        ...sharedPatch,
+        ...(data.destination !== undefined && { destination: data.destination || undefined }),
+        ...(data.modules && { modules: data.modules }),
+        ...datePatch,
+      };
       setTrip(next);
     }
 
@@ -264,6 +261,7 @@ export function useTrip(id: string) {
       ...(data.endDate !== undefined && { end_date: data.endDate }),
       ...(data.totalBudget !== undefined && { total_budget: data.totalBudget }),
       ...(data.iconUrl !== undefined && { icon_url: data.iconUrl }),
+      ...(data.modules && { modules: data.modules }),
       updated_at: new Date().toISOString(),
     }).eq("id", id);
 

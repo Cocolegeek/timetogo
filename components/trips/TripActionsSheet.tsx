@@ -31,7 +31,7 @@ export default function TripActionsSheet({
     fn();
   };
   const rows = [
-    { label: trip.type === "group" ? "Modifier le groupe" : "Modifier le voyage", icon: Pencil, action: () => onEdit(trip) },
+    { label: "Modifier", icon: Pencil, action: () => onEdit(trip) },
     ...(onShare ? [{ label: "Partager", icon: Share, action: () => onShare(trip) }] : []),
     { label: "Journal d'activité", icon: History, action: () => setJournal(true), keepOpen: true },
     { label: "Supprimer", icon: Trash2, action: () => onDelete(trip.id), danger: true },

@@ -167,9 +167,9 @@ function SearchBody({ trip, onClose }: { trip: Trip; onClose: () => void }) {
 
   const shortcuts = [
     { label: "Qui doit quoi", href: `${base}/budget?tab=balances`, icon: Scale, show: true },
-    { label: "Le planning du jour", href: `${base}/planning`, icon: CalendarDays, show: trip.type === "trip" },
-    { label: "Les repas du jour", href: `${base}/menus`, icon: UtensilsCrossed, show: trip.type === "trip" },
-    { label: "Qui ramène quoi", href: `${base}/lists`, icon: ListChecks, show: true },
+    { label: "Le planning du jour", href: `${base}/planning`, icon: CalendarDays, show: trip.modules.includes("planning") },
+    { label: "Les repas du jour", href: `${base}/menus`, icon: UtensilsCrossed, show: trip.modules.includes("menus") },
+    { label: "Qui ramène quoi", href: `${base}/lists`, icon: ListChecks, show: trip.modules.includes("lists") },
   ].filter((s) => s.show);
 
   return (

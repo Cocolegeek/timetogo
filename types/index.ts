@@ -70,15 +70,12 @@ export interface TripMember {
 // ─── Voyages ─────────────────────────────────────────────────────────────────
 
 /**
- * Discriminator for the two kinds of entities stored in the `trips` table.
- * - "trip"  : full voyage with destination, dates, planning, menus
- * - "group" : budget-only entity (à la Tricount), no destination, no dates
- *
- * Feature flags derived from this discriminator live in `lib/trip-features.ts`.
+ * Espaces facultatifs d'un voyage : le budget est toujours là, le reste se choisit
+ * à la création et se change dans les réglages du voyage (voir `lib/trip-features.ts`).
  */
-export type TripType = "trip" | "group";
+export type TripModule = "planning" | "menus" | "lists";
 
-interface BaseTrip {
+export interface Trip {
   id: string;
   name: string;
   emoji: string;
@@ -91,22 +88,11 @@ interface BaseTrip {
   myParticipantId: string | null;
   createdAt: string;
   updatedAt: string;
-}
-
-export interface VoyageTrip extends BaseTrip {
-  type: "trip";
-  destination: string;
-  startDate: string;
-  endDate: string;
-}
-
-export interface GroupTrip extends BaseTrip {
-  type: "group";
+  modules: TripModule[];
+  destination?: string;
   startDate?: string;
   endDate?: string;
 }
-
-export type Trip = VoyageTrip | GroupTrip;
 
 // Raw Supabase row shapes (snake_case from DB)
 export interface TripRow {
@@ -120,7 +106,8 @@ export interface TripRow {
   total_budget: number | null;
   share_code: string;
   owner_id: string;
-  type: TripType;
+  type?: string;
+  modules?: TripModule[];
   icon_url: string | null;
   created_at: string;
   updated_at: string;

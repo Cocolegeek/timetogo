@@ -33,7 +33,7 @@ import { formatDateRange } from "@/lib/format-date";
 import { EASE_OUT } from "@/lib/motion";
 import { cn, firstName } from "@/lib/utils";
 import { shortDestination } from "@/lib/place";
-import { isVoyage, tripFeatures } from "@/lib/trip-features";
+import { tripFeatures } from "@/lib/trip-features";
 import type { ExpenseCategory, Participant } from "@/types";
 import { useMountOnce } from "@/hooks/useMountOnce";
 
@@ -147,9 +147,12 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
             {trip.name}
           </h1>
           <p className="mt-1.5 text-[0.95rem] text-muted-foreground">
-            {isVoyage(trip)
-              ? [formatDateRange(trip.startDate, trip.endDate), shortDestination(trip.destination)].filter(Boolean).join(" · ")
-              : `Budget partagé · ${trip.participants.length} personnes`}
+            {[
+              trip.startDate ? formatDateRange(trip.startDate, trip.endDate ?? trip.startDate) : "",
+              trip.destination ? shortDestination(trip.destination) : "",
+            ]
+              .filter(Boolean)
+              .join(" · ") || `${trip.participants.length} personne${trip.participants.length > 1 ? "s" : ""}`}
           </p>
           <div className="mt-4 flex items-center justify-between gap-3">
             <button

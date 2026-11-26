@@ -1,63 +1,57 @@
-import type { Trip, TripType, VoyageTrip, GroupTrip } from "@/types";
+import type { Trip, TripModule } from "@/types";
 
 /**
- * Single source of truth for which features each trip type supports.
- * Add a new type? Update this map and TypeScript will guide you everywhere it matters.
+ * Source de vérité des espaces d'un voyage. Le budget est toujours là ; Planning, Menus et Listes
+ * se choisissent à la création et dans les réglages du voyage (colonne `modules`).
  */
 export interface TripFeatures {
   hasPlanning: boolean;
   hasMenus: boolean;
-  hasDates: boolean;
-  hasDestination: boolean;
-  hasTotalBudget: boolean;
-  /** Shared « À apporter » / « À faire » lists (migration 022). */
+  /** Listes « À apporter » / « À faire » (migration 022). */
   hasLists: boolean;
-  /** Dépenses répétées (loyer, abonnements) : surtout pour les budgets de groupe. */
+  /** Dépenses répétées (loyer, abonnements) : pour les budgets sans planning. */
   hasRecurring: boolean;
 }
 
-const FEATURES_BY_TYPE: Record<TripType, TripFeatures> = {
-  trip: {
-    hasPlanning: true,
-    hasMenus: true,
-    hasDates: true,
-    hasDestination: true,
-    hasTotalBudget: true,
-    hasLists: true,
-    hasRecurring: false,
-  },
-  group: {
-    hasPlanning: false,
-    hasMenus: false,
-    hasDates: false,
-    hasDestination: false,
-    hasTotalBudget: true,
-    hasLists: true,
-    hasRecurring: true,
-  },
-};
+export const TRIP_MODULES: { id: TripModule; label: string; hint: string; needsDates: boolean }[] = [
+  { id: "planning", label: "Planning", hint: "Les étapes et les trajets, jour par jour.", needsDates: true },
+  { id: "menus", label: "Menus", hint: "Ce qu'on cuisine et ce qu'on achète.", needsDates: true },
+  { id: "lists", label: "Listes", hint: "Qui apporte quoi, qui fait quoi.", needsDates: false },
+];
 
-export function tripFeatures(trip: Pick<Trip, "type">): TripFeatures {
-  return FEATURES_BY_TYPE[trip.type];
+export const ALL_MODULES: TripModule[] = TRIP_MODULES.map((m) => m.id);
+
+export function featuresForModules(modules: readonly TripModule[]): TripFeatures {
+  const has = (m: TripModule) => modules.includes(m);
+  return {
+    hasPlanning: has("planning"),
+    hasMenus: has("menus"),
+    hasLists: has("lists"),
+    hasRecurring: !has("planning"),
+  };
 }
 
-export function featuresForType(type: TripType): TripFeatures {
-  return FEATURES_BY_TYPE[type];
+export function tripFeatures(trip: Pick<Trip, "modules">): TripFeatures {
+  return featuresForModules(trip.modules);
 }
 
-// ─── Type guards ─────────────────────────────────────────────────────────────
-
-export function isVoyage(trip: Trip): trip is VoyageTrip {
-  return trip.type === "trip";
+/** Planning et menus ont besoin de jours : il faut un début et une fin. */
+export function hasPeriod(trip: Pick<Trip, "startDate" | "endDate">): boolean {
+  return !!trip.startDate && !!trip.endDate;
 }
 
-export function isGroup(trip: Trip): trip is GroupTrip {
-  return trip.type === "group";
+/** Sans planning ni menus, le Résumé n'a rien de plus à montrer que le budget : on ouvre le budget directement. */
+export function tripHref(trip: Pick<Trip, "id" | "modules">): string {
+  const rich = trip.modules.includes("planning") || trip.modules.includes("menus");
+  return rich ? `/trips/${trip.id}` : `/trips/${trip.id}/budget`;
 }
 
-// ─── UI labels ───────────────────────────────────────────────────────────────
+/** Ancienne base (colonne `modules` absente) : on retrouve les espaces d'après l'ancien type. */
+export function modulesFromLegacyType(type: string | null | undefined): TripModule[] {
+  return type === "group" ? ["lists"] : ["planning", "menus", "lists"];
+}
 
-export const TRIP_TYPE_LABELS: Record<TripType, string> = {
-  trip: "Voyage",
-  group: "Budget",
-};
+export function parseModules(value: unknown, legacyType?: string | null): TripModule[] {
+  if (!Array.isArray(value)) return modulesFromLegacyType(legacyType);
+  return ALL_MODULES.filter((m) => value.includes(m));
+}

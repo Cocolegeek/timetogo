@@ -25,7 +25,7 @@ import { COURSE_BY_ID, COURSE_ORDER } from "@/lib/meals/courses";
 import { EASE_OUT, fadeUp, stagger } from "@/lib/motion";
 import { HoverActions } from "@/components/shared/HoverActions";
 import { cn } from "@/lib/utils";
-import { isVoyage } from "@/lib/trip-features";
+import { hasPeriod, tripFeatures } from "@/lib/trip-features";
 import type { Meal, MealSlot, Participant } from "@/types";
 
 const MealEditDialog = dynamic(
@@ -61,7 +61,7 @@ export default function MenusPage({ params }: MenusPageProps) {
   const dir = selection.dir;
 
   const today = useMemo(() => new Date().toISOString().split("T")[0], []);
-  const dates = useMemo(() => (trip && isVoyage(trip) ? eachDate(trip.startDate, trip.endDate) : []), [trip]);
+  const dates = useMemo(() => (trip && hasPeriod(trip) ? eachDate(trip.startDate as string, trip.endDate as string) : []), [trip]);
   const currentDate = selectedDate ?? (dates.includes(today) ? today : dates[0]) ?? today;
 
   const mealsByDate = useMemo(() => {
@@ -76,12 +76,12 @@ export default function MenusPage({ params }: MenusPageProps) {
   });
 
   useEffect(() => {
-    if (trip && !isVoyage(trip)) {
+    if (trip && !tripFeatures(trip).hasMenus) {
       router.replace(`/trips/${tripId}/budget`);
     }
   }, [trip, tripId, router]);
 
-  if (!trip || !isVoyage(trip)) return <Spinner />;
+  if (!trip || !tripFeatures(trip).hasMenus) return <Spinner />;
 
   const selectDate = (d: string) => {
     setSelection({ date: d, dir: d > currentDate ? 1 : -1 });
