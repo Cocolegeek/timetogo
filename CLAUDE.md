@@ -60,7 +60,7 @@ components/
                                      dépliable "Entre les autres" + grille balances + sheets paiement
               ExpenseCard:         swipe-to-delete card; tap opens ExpenseDetailSheet
               ExpenseDetailSheet:  bottom sheet: read-only detail with Edit/Delete actions
-              ExpenseForm:         Sheet 92dvh, 3 tabs Infos | Payé par | Pour qui
+              ExpenseForm:         Sheet 92dvh, une seule page : montant, titre, catégorie, puces (date · payé par · pour qui · répéter)
               ExpenseList:         grouped by date, sticky headers with daily total
               ParticipantPaymentSheet: bottom sheet: copy IBAN/tél, share via navigator.share
   auth/       GoogleIcon, GuestUpgradeCard (carte « mode invité » + bouton Sauvegarder avec Google),
@@ -71,7 +71,9 @@ components/
   motion/     MotionProvider (LazyMotion strict + MotionConfig ; features domMax chargées après le 1er rendu),
               PageTransition (templates), Stagger/StaggerItem, NumberTicker (montants animés, rAF, sans framer)
   budget/ (+) ActivityList (journal : qui a ajouté / modifié / supprimé), RecurringSheet (dépenses répétées, chargé à la demande)
-  menus/      MealEditDialog
+  forms/      HeroInput (champ principal grand et souligné), PropertyChips (réglages en puces qui affichent leur valeur et ouvrent leur choix en dessous),
+              FormFooter (action principale en bas, avec le message de ce qui manque)
+  menus/      MealEditDialog (une page : plats saisis au clavier, puces catégorie · qui mange · qui gère)
   planning/   ItineraryItemForm:   full-screen dialog: title/date/type/location/participants
               JourneyForm:         full-screen dialog: from→to, mode, routing/duration, participants
   shared/     OfflineSync (monté à la racine : rejoue la file hors-ligne, pastille « Hors ligne · n en attente »), AvatarPicker (photo Google + 16 avatars), AvatarUpload, ClientOnly (rendu client après hydratation),
@@ -164,6 +166,7 @@ lib/
   participant-colors.ts → PARTICIPANT_COLORS (palette unique des participants)
   itinerary-types.ts    → icône / libellé / teinte par type d'étape et mode de trajet
   meals/courses.ts      → COURSES (icônes Lucide), COURSE_ORDER
+  forms/enter-next.ts   → handleEnter(e, onLast), focusNextField() : Entrée passe au champ de texte suivant (conteneur `data-enter-chain`), valide au dernier
   motion.ts, haptics.ts → courbes/springs Framer, haptic()
   trips/create-wizard.ts → logique pure de l'assistant de création : stepsFor(), validateStep(), firstIssue(), buildPayload(),
                           participantsOf() (créateur toujours 1er), addPerson() (doublons), datePresets(), suggestName()
@@ -292,6 +295,12 @@ DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip(
   en liste groupée au-dessus, la plus probable au plus près du bas, sans phrases d'aide).
   Une astuce unique (« maintiens + ») s'affiche au 3e ajout direct. Les pages ouvrent leur formulaire via `useQuickAdd()`
   (événement si déjà sur la page, sinon `?new=<kind>`). Pas de FAB par page.
+- **Formulaires** (`components/forms/`) : une seule page, jamais d'onglets pour un petit formulaire. Un champ principal (`HeroInput` :
+  le plat, le titre, le montant), les réglages en puces (`PropertyChips`) qui affichent leur valeur, s'affirment quand elle diffère du défaut
+  (aucune coche de validation) et ouvrent leur choix en dessous. Tout le facultatif est replié (« + Ajouter une note »), pas de « (optionnel) ».
+  Action principale dans `FormFooter`, en bas sous le pouce, jamais grisée sans explication (message + secousse + focus du champ manquant).
+  Clavier : `enterKeyHint`, premier champ au focus à l'ouverture, Entrée = champ suivant puis validation (`handleEnter`, zone de texte exceptée).
+  Formulaires concernés : repas, dépense, étape, trajet. Le trajet calcule seul sa durée dès que départ et arrivée sont choisis.
 - **Saisie rapide d'une dépense** : seul le montant est obligatoire (titre facultatif, par défaut la catégorie), puces des titres récents
   (`recentTitles()`, reprennent la catégorie), catégorie devinée d'après le titre tant qu'elle n'a pas été choisie (`guessCategory()`),
   « Dupliquer » dans la fiche d'une dépense (date du jour), et après un ajout la pastille « Ajouter une autre » (budget et planning).
