@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { CATEGORIES } from "@/lib/budget/categories";
 import { computeShares } from "@/lib/budget/splits";
 import { formatCurrency } from "@/lib/format-currency";
+import { formatAddedAt } from "@/lib/format-date";
 import { cn } from "@/lib/utils";
 import { ParticipantAvatar } from "@/components/shared/ParticipantAvatar";
 import type { Expense, Participant } from "@/types";
@@ -56,6 +57,7 @@ export function ExpenseDetailSheet({
   const activeSplits = computedSplits.filter((s) => !s.excluded);
 
   const multiPayer = expense.payers.length > 1;
+  const addedAt = formatAddedAt(expense.createdAt);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -88,6 +90,7 @@ export function ExpenseDetailSheet({
                 month: "long",
               })}
             </p>
+            {addedAt && <p className="mt-1 text-xs text-muted-foreground">Ajoutée le {addedAt}</p>}
           </div>
 
           <div className="space-y-5 px-5 pb-6">

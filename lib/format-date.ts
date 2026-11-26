@@ -86,3 +86,24 @@ export function friendlyDay(iso: string, today: Date = new Date()): string {
   const label = day.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" });
   return label.charAt(0).toUpperCase() + label.slice(1);
 }
+
+/** « 14:32 » dans l'heure locale, vide si la date est invalide. */
+export function formatClock(iso: string | null | undefined): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+}
+
+/** « 26 nov. à 14:32 » (l'année seulement si ce n'est pas l'année en cours). */
+export function formatAddedAt(iso: string | null | undefined, now: Date = new Date()): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const day = d.toLocaleDateString("fr-FR", {
+    day: "numeric",
+    month: "short",
+    ...(d.getFullYear() !== now.getFullYear() && { year: "numeric" }),
+  });
+  return `${day} à ${formatClock(iso)}`;
+}
