@@ -1,7 +1,7 @@
 "use client";
 
-import { use, useEffect, useMemo, useRef, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { use, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { useUndoableDelete } from "@/hooks/useUndoableDelete";
 import { useQuickAdd } from "@/hooks/useQuickAdd";
@@ -19,13 +19,13 @@ import { useTrip } from "@/hooks/useTrip";
 import { useMeals } from "@/hooks/useMeals";
 import { useItinerary } from "@/hooks/useItinerary";
 import { linkHost } from "@/lib/meals/link";
-import { DEFAULT_SLOTS, SLOT_CONFIG, eachDate } from "@/lib/meals/slots";
+import { DEFAULT_SLOTS, SLOT_CONFIG } from "@/lib/meals/slots";
 import { CATEGORY_CONFIG } from "@/lib/meals/categories";
 import { COURSE_BY_ID, COURSE_ORDER } from "@/lib/meals/courses";
 import { EASE_OUT, fadeUp, stagger } from "@/lib/motion";
 import { HoverActions } from "@/components/shared/HoverActions";
 import { cn } from "@/lib/utils";
-import { hasPeriod, tripFeatures } from "@/lib/trip-features";
+import { tripDays } from "@/lib/trip-days";
 import type { Meal, MealSlot, Participant } from "@/types";
 
 const MealEditDialog = dynamic(
@@ -39,7 +39,6 @@ interface MenusPageProps {
 
 export default function MenusPage({ params }: MenusPageProps) {
   const { tripId } = use(params);
-  const router = useRouter();
   const { trip } = useTrip(tripId);
   const { meals: allMeals, loading, addMeal, updateMeal, deleteMeal } = useMeals(tripId);
   const searchParams = useSearchParams();
@@ -61,7 +60,7 @@ export default function MenusPage({ params }: MenusPageProps) {
   const dir = selection.dir;
 
   const today = useMemo(() => new Date().toISOString().split("T")[0], []);
-  const dates = useMemo(() => (trip && hasPeriod(trip) ? eachDate(trip.startDate as string, trip.endDate as string) : []), [trip]);
+  const dates = useMemo(() => tripDays(trip ?? {}, meals.map((m) => m.date), today), [trip, meals, today]);
   const currentDate = selectedDate ?? (dates.includes(today) ? today : dates[0]) ?? today;
 
   const mealsByDate = useMemo(() => {
@@ -75,13 +74,7 @@ export default function MenusPage({ params }: MenusPageProps) {
     if (kind === "meal") setSlotPickerOpen(true);
   });
 
-  useEffect(() => {
-    if (trip && !tripFeatures(trip).hasMenus) {
-      router.replace(`/trips/${tripId}/budget`);
-    }
-  }, [trip, tripId, router]);
-
-  if (!trip || !tripFeatures(trip).hasMenus) return <Spinner />;
+  if (!trip) return <Spinner />;
 
   const selectDate = (d: string) => {
     setSelection({ date: d, dir: d > currentDate ? 1 : -1 });

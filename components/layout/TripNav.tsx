@@ -30,7 +30,7 @@ import { ADD_LABELS, contextKind, leadKind, orderActions } from "@/lib/quick-add
 import { haptic } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
 import { spring } from "@/lib/motion";
-import { featuresForModules, modulesOf } from "@/lib/trip-features";
+import { ALL_MODULES, featuresWithContent, modulesOf } from "@/lib/trip-features";
 import { sectionOf, visibleSections } from "@/lib/trip-sections";
 import type { TripModule } from "@/types";
 
@@ -76,17 +76,19 @@ export function TripNav({ tripId }: TripNavProps) {
   const pathname = usePathname();
   const router = useRouter();
   const base = `/trips/${tripId}`;
-  const features = featuresForModules(modules);
   const compact = useScrollDirection() === "down";
   const [addOpen, setAddOpen] = useState(false);
   const sheetMounted = useMountOnce(addOpen);
 
   const counts = useTripCounts(tripId);
-  const shown = visibleSections(features, counts, sectionOf(pathname, base));
+  const shown = visibleSections(counts, sectionOf(pathname, base));
   const items = NAV_ITEMS.filter((item) => shown.includes(item.href as (typeof shown)[number]));
   const labelSize = items.length <= 3 ? "text-[0.8125rem]" : items.length === 4 ? "text-xs" : "text-[0.6875rem]";
-  const available = QUICK_ADD.filter((a) => !a.module || modules.includes(a.module));
-  const context = contextKind(pathname, base, modules);
+  const active = featuresWithContent({ modules }, counts);
+  const isOn = (m: TripModule | null) => !m || (m === "planning" ? active.hasPlanning : m === "menus" ? active.hasMenus : active.hasLists);
+  // Tout reste ajoutable : les espaces non cochés passent simplement en retrait.
+  const available = [...QUICK_ADD.filter((a) => isOn(a.module)), ...QUICK_ADD.filter((a) => !isOn(a.module)).map((a) => ({ ...a, muted: true }))];
+  const context = contextKind(pathname, base, ALL_MODULES);
   const lead = leadKind(context, available.map((a) => a.kind));
   const actions = orderActions(available, lead);
   const toast = useToast();

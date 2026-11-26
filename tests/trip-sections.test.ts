@@ -2,27 +2,24 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { canSearch, contentWidth, sectionOf, SEARCH_MIN_ITEMS, visibleSections } from "../lib/trip-sections.ts";
 
-const voyage = { hasPlanning: true, hasMenus: true, hasLists: true };
-const groupe = { hasPlanning: false, hasMenus: false, hasLists: true };
 const empty = { planning: 0, menus: 0, lists: 0 };
 
 test("voyage neuf : seulement Résumé et Budget", () => {
-  assert.deepEqual(visibleSections(voyage, empty, ""), ["", "/budget"]);
+  assert.deepEqual(visibleSections(empty, ""), ["", "/budget"]);
 });
 
 test("un onglet apparaît dès qu'il contient quelque chose", () => {
-  assert.deepEqual(visibleSections(voyage, { ...empty, planning: 2 }, ""), ["", "/budget", "/planning"]);
-  assert.deepEqual(visibleSections(voyage, { planning: 1, menus: 3, lists: 4 }, ""), ["", "/budget", "/planning", "/menus", "/lists"]);
+  assert.deepEqual(visibleSections({ ...empty, planning: 2 }, ""), ["", "/budget", "/planning"]);
+  assert.deepEqual(visibleSections({ planning: 1, menus: 3, lists: 4 }, ""), ["", "/budget", "/planning", "/menus", "/lists"]);
 });
 
 test("l'onglet de la page courante ne disparaît jamais, même vide", () => {
-  assert.deepEqual(visibleSections(voyage, empty, "/menus"), ["", "/budget", "/menus"]);
-  assert.deepEqual(visibleSections(voyage, empty, "/planning"), ["", "/budget", "/planning"]);
+  assert.deepEqual(visibleSections(empty, "/menus"), ["", "/budget", "/menus"]);
+  assert.deepEqual(visibleSections(empty, "/planning"), ["", "/budget", "/planning"]);
 });
 
-test("groupe : jamais de Planning ni de Menus, même avec des éléments", () => {
-  assert.deepEqual(visibleSections(groupe, { planning: 3, menus: 3, lists: 0 }, ""), ["", "/budget"]);
-  assert.deepEqual(visibleSections(groupe, { ...empty, lists: 1 }, ""), ["", "/budget", "/lists"]);
+test("un espace non coché apparaît quand même dès qu'on y a ajouté quelque chose", () => {
+  assert.deepEqual(visibleSections({ planning: 3, menus: 0, lists: 0 }, ""), ["", "/budget", "/planning"]);
 });
 
 test("sectionOf reconnaît la section d'après l'adresse", () => {

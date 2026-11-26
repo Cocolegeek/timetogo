@@ -13,6 +13,8 @@ export interface QuickAddAction {
   icon: LucideIcon;
   tile: string;
   href: string;
+  /** Espace non activé : toujours ajoutable, mais en retrait. */
+  muted?: boolean;
 }
 
 /**
@@ -55,10 +57,10 @@ export default function QuickAddSheet({
                     onClick={() => onPick(a.kind, a.href)}
                     className="pressable flex min-h-16 w-full items-center gap-4 px-4 text-left transition-colors hover:bg-foreground/[0.06]"
                   >
-                    <span className={cn("flex size-11 shrink-0 items-center justify-center rounded-2xl shadow-card", a.tile)}>
+                    <span className={cn("flex size-11 shrink-0 items-center justify-center rounded-2xl", a.muted ? "bg-card text-muted-foreground" : cn("shadow-card", a.tile))}>
                       <a.icon size={20} />
                     </span>
-                    <span className="flex-1 text-[1.05rem] font-semibold">{a.label}</span>
+                    <span className={cn("flex-1 text-[1.05rem] font-semibold", a.muted && "text-muted-foreground")}>{a.label}</span>
                     <ChevronRight size={18} aria-hidden="true" className="text-muted-foreground" />
                   </button>
                 </li>

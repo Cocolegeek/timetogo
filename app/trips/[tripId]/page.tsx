@@ -33,7 +33,8 @@ import { formatDateRange } from "@/lib/format-date";
 import { EASE_OUT } from "@/lib/motion";
 import { cn, firstName } from "@/lib/utils";
 import { shortDestination } from "@/lib/place";
-import { tripFeatures } from "@/lib/trip-features";
+import { featuresWithContent, tripFeatures } from "@/lib/trip-features";
+import { useTripCounts } from "@/hooks/useTripCounts";
 import type { ExpenseCategory, Participant } from "@/types";
 import { useMountOnce } from "@/hooks/useMountOnce";
 
@@ -65,6 +66,7 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
   const { expenses, totalSpent } = useBudget(tripId);
   const { items: itineraryItems } = useItinerary(tripId);
   const { meals } = useMeals(tripId);
+  const counts = useTripCounts(tripId);
   const { settlements } = useDebts(expenses, trip?.participants ?? []);
   const router = useRouter();
 
@@ -112,6 +114,7 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
     .sort((a, b) => SLOT_CONFIG[a.slot].position - SLOT_CONFIG[b.slot].position);
 
   const features = tripFeatures(trip);
+  const shown = featuresWithContent(trip, counts);
   const status = tripStatus(trip);
 
   return (
@@ -363,21 +366,21 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
       )}
 
       {/* ── Planning ─────────────────────────────────────────── */}
-      {features.hasPlanning && (
+      {shown.hasPlanning && (
         <StaggerItem className="lg:mb-5 lg:break-inside-avoid">
           <DayAgendaCard items={itineraryItems} today={today} planningHref={`/trips/${tripId}/planning`} />
         </StaggerItem>
       )}
 
       {/* ── Listes : ce qu'on attend de moi ─────────────────── */}
-      {features.hasLists && (
+      {shown.hasLists && (
         <StaggerItem className="lg:mb-5 lg:break-inside-avoid">
           <MyListCard tripId={trip.id} myId={trip.myParticipantId ?? null} />
         </StaggerItem>
       )}
 
       {/* ── Menus du jour ────────────────────────────────────── */}
-      {features.hasMenus && todayMeals.length > 0 && (
+      {shown.hasMenus && todayMeals.length > 0 && (
         <StaggerItem className="lg:mb-5 lg:break-inside-avoid">
           <section className="rounded-[1.75rem] bg-card p-5 shadow-card">
             <div className="flex items-center justify-between">

@@ -1,6 +1,6 @@
 "use client";
 
-import { tripFeatures } from "@/lib/trip-features";
+import { featuresWithContent } from "@/lib/trip-features";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { m as motion } from "framer-motion";
@@ -166,11 +166,12 @@ function SearchBody({ trip, onClose }: { trip: Trip; onClose: () => void }) {
     router.push(href);
   };
 
+  const shown = featuresWithContent(trip, { planning: items.length, menus: meals.length, lists: listItems.length });
   const shortcuts = [
     { label: "Qui doit quoi", href: `${base}/budget?tab=balances`, icon: Scale, show: true },
-    { label: "Le planning du jour", href: `${base}/planning`, icon: CalendarDays, show: tripFeatures(trip).hasPlanning },
-    { label: "Les repas du jour", href: `${base}/menus`, icon: UtensilsCrossed, show: tripFeatures(trip).hasMenus },
-    { label: "Qui ramène quoi", href: `${base}/lists`, icon: ListChecks, show: tripFeatures(trip).hasLists },
+    { label: "Le planning du jour", href: `${base}/planning`, icon: CalendarDays, show: shown.hasPlanning },
+    { label: "Les repas du jour", href: `${base}/menus`, icon: UtensilsCrossed, show: shown.hasMenus },
+    { label: "Qui ramène quoi", href: `${base}/lists`, icon: ListChecks, show: shown.hasLists },
   ].filter((s) => s.show);
 
   return (

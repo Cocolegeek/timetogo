@@ -40,6 +40,20 @@ export function tripFeatures(trip: { modules?: readonly TripModule[] | null }): 
   return featuresForModules(modulesOf(trip));
 }
 
+/** Un espace compte dès qu'il est activé ou qu'il contient déjà quelque chose : ajouter dans un espace non coché le fait apparaître. */
+export function featuresWithContent(
+  trip: { modules?: readonly TripModule[] | null },
+  counts: { planning: number; menus: number; lists: number }
+): TripFeatures {
+  const base = tripFeatures(trip);
+  return {
+    ...base,
+    hasPlanning: base.hasPlanning || counts.planning > 0,
+    hasMenus: base.hasMenus || counts.menus > 0,
+    hasLists: base.hasLists || counts.lists > 0,
+  };
+}
+
 /** Planning et menus ont besoin de jours : il faut un début et une fin. */
 export function hasPeriod(trip: Pick<Trip, "startDate" | "endDate">): boolean {
   return !!trip.startDate && !!trip.endDate;
