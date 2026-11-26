@@ -3,7 +3,7 @@
 import { SWRConfig, type Cache } from "swr";
 import { clearOutbox } from "@/lib/offline/outbox";
 
-const STORAGE_KEY = "voyou-cache-v1";
+const STORAGE_KEY = "voyou-cache-v2";
 let persistedCache: Map<string, unknown> | null = null;
 
 /**
@@ -16,6 +16,7 @@ function persistentProvider(): Cache {
   if (persistedCache) return persistedCache as Cache;
   let entries: [string, unknown][] = [];
   try {
+    localStorage.removeItem("voyou-cache-v1");
     entries = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "[]");
   } catch {
     entries = [];

@@ -31,8 +31,13 @@ export function featuresForModules(modules: readonly TripModule[]): TripFeatures
   };
 }
 
-export function tripFeatures(trip: Pick<Trip, "modules">): TripFeatures {
-  return featuresForModules(trip.modules);
+/** Les espaces d'un voyage. Tolère un voyage gardé en cache avant l'arrivée des espaces (champ absent). */
+export function modulesOf(trip: { modules?: readonly TripModule[] | null }): readonly TripModule[] {
+  return Array.isArray(trip.modules) ? trip.modules : modulesFromLegacyType(undefined);
+}
+
+export function tripFeatures(trip: { modules?: readonly TripModule[] | null }): TripFeatures {
+  return featuresForModules(modulesOf(trip));
 }
 
 /** Planning et menus ont besoin de jours : il faut un début et une fin. */
@@ -41,8 +46,9 @@ export function hasPeriod(trip: Pick<Trip, "startDate" | "endDate">): boolean {
 }
 
 /** Sans planning ni menus, le Résumé n'a rien de plus à montrer que le budget : on ouvre le budget directement. */
-export function tripHref(trip: Pick<Trip, "id" | "modules">): string {
-  const rich = trip.modules.includes("planning") || trip.modules.includes("menus");
+export function tripHref(trip: { id: string; modules?: readonly TripModule[] | null }): string {
+  const modules = modulesOf(trip);
+  const rich = modules.includes("planning") || modules.includes("menus");
   return rich ? `/trips/${trip.id}` : `/trips/${trip.id}/budget`;
 }
 

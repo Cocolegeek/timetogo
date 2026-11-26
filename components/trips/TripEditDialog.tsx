@@ -21,6 +21,7 @@ import { tripEmojiChoices } from "@/lib/trip-emojis";
 import { cn } from "@/lib/utils";
 import { ParticipantAvatar } from "@/components/shared/ParticipantAvatar";
 import { ModulePicker } from "@/components/trips/ModulePicker";
+import { modulesOf } from "@/lib/trip-features";
 import type { Trip, TripModule, Participant } from "@/types";
 import { PARTICIPANT_COLORS } from "@/lib/participant-colors";
 import { FriendPicker } from "@/components/trips/FriendPicker";
@@ -84,7 +85,7 @@ export function TripEditDialog({
   const [currency, setCurrency] = useState(trip.currency);
   const [startDate, setStartDate] = useState(trip.startDate ?? "");
   const [endDate, setEndDate] = useState(trip.endDate ?? trip.startDate ?? "");
-  const [modules, setModules] = useState<TripModule[]>(trip.modules);
+  const [modules, setModules] = useState<TripModule[]>([...modulesOf(trip)]);
   const [groupDateMode, setGroupDateMode] = useState<GroupDateMode>(detectGroupDateMode(trip));
   const [emojiPickerOpen, setEmojiPickerOpen] = useState(true);
   const [newParticipantName, setNewParticipantName] = useState("");
@@ -102,7 +103,7 @@ export function TripEditDialog({
       setStartDate(trip.startDate ?? "");
       setEndDate(trip.endDate ?? trip.startDate ?? "");
       setGroupDateMode(detectGroupDateMode(trip));
-      setModules(trip.modules);
+      setModules([...modulesOf(trip)]);
       setEmojiPickerOpen(true);
       setEditingParticipantId(null);
     }
@@ -124,7 +125,7 @@ export function TripEditDialog({
     emoji !== trip.emoji ||
     currency !== trip.currency ||
     destination.trim() !== (trip.destination ?? "") ||
-    !sameModules(savedModules, trip.modules) ||
+    !sameModules(savedModules, [...modulesOf(trip)]) ||
     dateDirty;
 
   const groupDateValid =
