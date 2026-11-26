@@ -46,14 +46,14 @@ export default function PrivacyPage() {
           </li>
           <li>
             <strong className="text-foreground">Ton profil</strong> : le prénom et l&apos;avatar que tu choisis. Ton IBAN et ton téléphone sont
-            facultatifs : si tu les renseignes, les membres de tes voyages peuvent les consulter pour te rembourser.
+            facultatifs : si tu les renseignes, les membres de tes groupes peuvent les consulter pour te rembourser.
           </li>
           <li>
-            <strong className="text-foreground">Ce que tu crées</strong> : voyages, participants, dépenses, étapes, trajets, repas, listes, et le
+            <strong className="text-foreground">Ce que tu crées</strong> : groupes, participants, dépenses, étapes, trajets, repas, listes, et le
             journal des modifications (qui a ajouté, modifié ou supprimé quoi).
           </li>
           <li>
-            <strong className="text-foreground">Sur ton appareil</strong> : une copie de tes voyages pour que l&apos;app s&apos;ouvre vite et marche
+            <strong className="text-foreground">Sur ton appareil</strong> : une copie de tes groupes pour que l&apos;app s&apos;ouvre vite et marche
             hors ligne, tes préférences, et un identifiant d&apos;appareil si tu actives les notifications.
           </li>
         </ul>
@@ -72,14 +72,14 @@ export default function PrivacyPage() {
 
       <Section title="Pourquoi">
         <p>
-          Pour faire fonctionner le service : calculer les soldes, afficher les voyages à ceux qui y participent, envoyer les notifications que tu as
+          Pour faire fonctionner le service : calculer les soldes, afficher les groupes à ceux qui y participent, envoyer les notifications que tu as
           activées. Le traitement repose sur ton consentement, demandé à ta première connexion et conservé avec une preuve horodatée.
         </p>
       </Section>
 
       <Section title="Qui voit tes données">
         <ul className="list-disc space-y-1.5 pl-5">
-          <li>Les autres membres d&apos;un voyage voient ce voyage : participants, dépenses, planning, listes, journal.</li>
+          <li>Les autres membres d&apos;un groupe voient ce groupe : participants, dépenses, planning, listes, journal.</li>
           <li>
             <strong className="text-foreground">Supabase</strong> (base de données et authentification) et{" "}
             <strong className="text-foreground">Vercel</strong> (hébergement) traitent les données pour notre compte.
@@ -137,7 +137,7 @@ export default function PrivacyPage() {
           <li>Touche « Supprimer mon compte » et confirme en tapant SUPPRIMER.</li>
         </ol>
         <p>
-          Ton compte, ton profil, ta bande et tes abonnements aux notifications sont effacés. Les voyages où tu étais seul disparaissent ; dans les
+          Ton compte, ton profil, ta bande et tes abonnements aux notifications sont effacés. Les groupes où tu étais seul disparaissent ; dans les
           autres, un autre membre devient propriétaire et ton prénom reste sur les dépenses passées, pour que les comptes de la bande restent justes.
           Les photos que tu as envoyées sont supprimées.
         </p>

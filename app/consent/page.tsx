@@ -60,7 +60,7 @@ function ConsentContent() {
         </h1>
         <div className="mt-4 space-y-3 text-[0.98rem] leading-relaxed text-muted-foreground">
           <p>
-            Pour fonctionner, Voyou utilise ton nom, ton adresse e-mail et les infos de voyage que tu crées.
+            Pour fonctionner, Voyou utilise ton nom, ton adresse e-mail et les infos de groupe que tu crées.
           </p>
           <p>
             Elles sont stockées de façon sécurisée et ne sont{" "}

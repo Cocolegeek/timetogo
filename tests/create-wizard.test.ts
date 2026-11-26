@@ -15,11 +15,11 @@ test("un seul parcours en trois étapes : quoi, quand, avec qui", () => {
 });
 
 test("le nom se propose tout seul d'après le lieu, sauf si on l'a écrit", () => {
-  assert.equal(suggestName("Rome, Latium, Italie"), "Voyage à Rome");
+  assert.equal(suggestName("Rome, Latium, Italie"), "Séjour à Rome");
   assert.equal(suggestName(""), "");
-  assert.equal(effectiveName(trip()), "Voyage à Rome");
+  assert.equal(effectiveName(trip()), "Séjour à Rome");
   assert.equal(effectiveName(trip({ name: "Escapade", nameTouched: true })), "Escapade");
-  assert.equal(effectiveName(trip({ name: "", nameTouched: true })), "Voyage à Rome");
+  assert.equal(effectiveName(trip({ name: "", nameTouched: true })), "Séjour à Rome");
   assert.equal(effectiveName(base({ name: "Coloc", nameTouched: true })), "Coloc");
   assert.equal(effectiveName(base({ name: "", nameTouched: false })), "");
 });
@@ -90,7 +90,7 @@ test("espaces choisis : respectés, mais pas de planning ni de menus sans jours"
 
 test("charge utile : nom proposé, lieu nettoyé, budget lu avec une virgule", () => {
   const p = buildPayload(trip({ destination: " Rome, Italie ", budget: "1 500,5".replace(" ", ""), currency: "USD" }));
-  assert.equal(p.name, "Voyage à Rome");
+  assert.equal(p.name, "Séjour à Rome");
   assert.equal(p.destination, "Rome, Italie");
   assert.equal(p.totalBudget, 1500.5);
   assert.equal(p.currency, "USD");

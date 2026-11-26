@@ -77,7 +77,7 @@ export default function ProfileSettingsPage() {
       </StaggerItem>
 
       <StaggerItem>
-        <SettingsGroup footer="C'est ce nom que tes potes voient dans les voyages et dans leur bande.">
+        <SettingsGroup footer="C'est ce nom que tes potes voient dans les groupes et dans leur bande.">
           <label className="block px-5 py-3">
             <span className="text-xs font-medium text-muted-foreground">Nom affiché</span>
             <input

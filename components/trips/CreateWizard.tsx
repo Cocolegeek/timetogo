@@ -250,7 +250,7 @@ export function CreateWizard() {
                 autoFocus
                 value={shownName}
                 onChange={(e) => patch({ name: e.target.value, nameTouched: e.target.value.trim().length > 0 })}
-                placeholder={suggestName(s.destination) || "Coloc, voyage à Rome…"}
+                placeholder={suggestName(s.destination) || "Coloc, week-end à Rome…"}
                 aria-label="Nom"
                 enterKeyHint="next"
                 autoComplete="off"

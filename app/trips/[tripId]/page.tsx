@@ -132,7 +132,7 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
             <button
               type="button"
               onClick={() => setIdentityOpen(true)}
-              aria-label="Participants du voyage"
+              aria-label="Participants du groupe"
               className="pressable flex min-w-0 items-center gap-2.5 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <ParticipantStack participants={trip.participants} size="md" max={4} showLabel={false} />
@@ -169,7 +169,7 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
             {
               id: "share",
               label: "Invite la bande",
-              hint: "Partage le lien du voyage",
+              hint: "Partage le lien du groupe",
               done: trip.participants.length > 1,
               onClick: () => window.dispatchEvent(new Event("voyou:open-share")),
             },

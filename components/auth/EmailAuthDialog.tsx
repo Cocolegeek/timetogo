@@ -168,7 +168,7 @@ export function EmailAuthDialog({ open, onOpenChange, mode, redirectTo }: EmailA
               <DialogDescription className="text-[0.95rem] leading-relaxed">
                 {mode === "login"
                   ? "On t'envoie un code à 6 chiffres. Pas de mot de passe à retenir."
-                  : "On relie ton e-mail à ce compte invité : tes voyages restent tels quels, et tu les retrouves partout."}
+                  : "On relie ton e-mail à ce compte invité : tes groupes restent tels quels, et tu les retrouves partout."}
               </DialogDescription>
             </div>
             <div className="space-y-2">
@@ -208,7 +208,7 @@ export function EmailAuthDialog({ open, onOpenChange, mode, redirectTo }: EmailA
             </div>
             {kind === "existing" && (
               <p className="rounded-2xl bg-secondary px-4 py-3 text-sm leading-relaxed">
-                Cette adresse a déjà un compte Voyou. Entre le code pour t&apos;y connecter : on y ajoutera les voyages de ton compte invité.
+                Cette adresse a déjà un compte Voyou. Entre le code pour t&apos;y connecter : on y ajoutera les groupes de ton compte invité.
               </p>
             )}
             <div className="space-y-2">
@@ -272,9 +272,9 @@ export function EmailAuthDialog({ open, onOpenChange, mode, redirectTo }: EmailA
               <DialogDescription className="text-[0.95rem] leading-relaxed">
                 {kind === "existing"
                   ? movedTrips > 0
-                    ? `${movedTrips} voyage${movedTrips > 1 ? "s" : ""} et leurs dépenses ont rejoint ton compte.`
+                    ? `${movedTrips} groupe${movedTrips > 1 ? "s" : ""} et leurs dépenses ont rejoint ton compte.`
                     : "Ton compte est prêt."
-                  : `Tes voyages sont maintenant liés à ${email.trim()}. Tu les retrouveras sur tous tes appareils.`}
+                  : `Tes groupes sont maintenant liés à ${email.trim()}. Tu les retrouveras sur tous tes appareils.`}
               </DialogDescription>
             </div>
             <Button
@@ -285,7 +285,7 @@ export function EmailAuthDialog({ open, onOpenChange, mode, redirectTo }: EmailA
                 else close();
               }}
             >
-              {kind === "existing" ? "Voir mes voyages" : "Terminer"}
+              {kind === "existing" ? "Voir mes groupes" : "Terminer"}
             </Button>
           </div>
         )}

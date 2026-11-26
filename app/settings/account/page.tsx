@@ -60,12 +60,12 @@ export default function AccountSettingsPage() {
       <StaggerItem>
         <SettingsGroup
           title="Données"
-          footer="Voyou garde une copie de tes voyages sur ce téléphone pour s'ouvrir instantanément. La vider ne supprime rien en ligne."
+          footer="Voyou garde une copie de tes groupes sur ce téléphone pour s'ouvrir instantanément. La vider ne supprime rien en ligne."
         >
           <SettingsRow
             icon={Download}
             label={exporting ? "Préparation…" : "Télécharger mes données"}
-            hint="Profil, voyages, dépenses, listes (JSON)"
+            hint="Profil, groupes, dépenses, listes (JSON)"
             chevron={false}
             onClick={exporting ? undefined : exportData}
           />

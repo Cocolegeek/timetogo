@@ -40,7 +40,7 @@ export default function QuickAddSheet({
       <SheetContent side="bottom" className="gap-0 p-0">
         <div className="px-6 pt-8 pr-16 pb-4">
           <SheetTitle>Ajouter</SheetTitle>
-          <SheetDescription className="sr-only">Choisis ce que tu veux ajouter au voyage.</SheetDescription>
+          <SheetDescription className="sr-only">Choisis ce que tu veux ajouter au groupe.</SheetDescription>
         </div>
         <div className="space-y-3 px-5 pb-6">
           {others.length > 0 && (

@@ -101,7 +101,7 @@ export default function MenusPage({ params }: MenusPageProps) {
       {loading ? (
         <Spinner />
       ) : dates.length === 0 ? (
-        <EmptyState icon={UtensilsCrossed} title="Aucun jour de voyage" description="Vérifie les dates du voyage pour ajouter des repas." />
+        <EmptyState icon={UtensilsCrossed} title="Aucun jour" description="Vérifie les dates du groupe pour ajouter des repas." />
       ) : (
         <AnimatePresence mode="wait" initial={false}>
           <motion.section

@@ -195,7 +195,7 @@ export function TripEditDialog({
   const handleDeleteParticipant = async (p: Participant) => {
     if (
       !confirm(
-        `Retirer ${p.name} du voyage ?\n\nLes dépenses où ${p.name} apparaît resteront mais ne seront plus liées.`
+        `Retirer ${p.name} du groupe ?\n\nLes dépenses où ${p.name} apparaît resteront mais ne seront plus liées.`
       )
     )
       return;

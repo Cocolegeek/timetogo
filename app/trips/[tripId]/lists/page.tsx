@@ -35,7 +35,7 @@ const LISTS: { value: ChecklistList; label: string; placeholder: string; empty: 
     value: "todo",
     label: "À faire",
     placeholder: "Une chose à faire avant le départ…",
-    empty: "Ce qu'il faut régler avant ou pendant le voyage, et qui s'en occupe.",
+    empty: "Ce qu'il faut régler à l'avance ou sur place, et qui s'en occupe.",
     suggestions: ["Réserver le logement", "Louer la voiture", "Acheter les billets", "Faire les courses", "Assurance voyage"],
   },
 ];

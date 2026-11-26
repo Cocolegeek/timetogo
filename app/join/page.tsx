@@ -60,7 +60,7 @@ function JoinContent() {
         .rpc("get_join_preview", { p_code: code });
 
       if (rpcError || !preview) {
-        setError("Aucun voyage trouvé avec ce code.");
+        setError("Aucun groupe trouvé avec ce code.");
         setAuthChecked(true);
         return;
       }
@@ -128,7 +128,7 @@ function JoinContent() {
     };
 
     load().catch(() => {
-      setError("Erreur lors du chargement du voyage.");
+      setError("Erreur lors du chargement du groupe.");
       setAuthChecked(true);
     });
   }, [code]);
@@ -355,7 +355,7 @@ function WelcomeFlow({
             <div>
               <h2 className="font-display text-lg font-bold tracking-tight">Connecte-toi pour rejoindre</h2>
               <p className="mt-1 text-[0.95rem] text-muted-foreground">
-                Avec ton compte, en quelques secondes. Tu retrouveras ensuite {entityLabel} dans tes voyages.
+                Avec ton compte, en quelques secondes. Tu retrouveras ensuite {entityLabel} dans tes groupes.
               </p>
             </div>
             <Button size="lg" onClick={onJoin} className="w-full shadow-section">

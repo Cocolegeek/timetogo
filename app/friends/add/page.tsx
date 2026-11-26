@@ -52,7 +52,7 @@ function AddFriend() {
             {preview?.is_me ? "Envoie-le à tes potes pour qu'ils t'ajoutent." : "Demande à ton pote de te renvoyer son lien depuis Réglages › Ta bande."}
           </p>
           <Link href="/trips" className={buttonVariants({ variant: "secondary", size: "lg", className: "mt-auto w-full" })}>
-            Retour à mes voyages
+            Retour à mes groupes
           </Link>
         </>
       ) : (
@@ -75,15 +75,15 @@ function AddFriend() {
           </h1>
           <p className="mt-3 text-muted-foreground">
             {done
-              ? "Au prochain voyage, ajoute-le en un geste : le voyage apparaîtra directement chez lui."
-              : "Vous vous retrouverez facilement pour vos prochains voyages et budgets partagés."}
+              ? "La prochaine fois, ajoute-le en un geste : le groupe apparaîtra directement chez lui."
+              : "Vous vous retrouverez facilement pour vos prochains budgets partagés."}
           </p>
           <div className="mt-auto w-full space-y-2 pt-10">
             {done ? (
               <>
                 <Link href={`/trips/new?with=${preview.id}`} className={buttonVariants({ size: "lg", className: "w-full" })}>
                   <TrainFront size={18} />
-                  Créer un voyage ensemble
+                  Créer un groupe ensemble
                 </Link>
                 <Link href="/settings/friends" className={buttonVariants({ variant: "ghost", size: "lg", className: "w-full" })}>
                   Voir ma bande

@@ -132,7 +132,7 @@ export function OnboardingModal() {
                       <h2 id="onboarding-title" className="font-display text-[1.6rem] leading-tight font-extrabold tracking-tight">
                         Ta tête dans la bande
                       </h2>
-                      <p className="mt-1 text-[0.95rem] text-muted-foreground">Tes potes te reconnaîtront dans les voyages.</p>
+                      <p className="mt-1 text-[0.95rem] text-muted-foreground">Tes potes te reconnaîtront dans les groupes.</p>
                     </div>
                   </div>
 

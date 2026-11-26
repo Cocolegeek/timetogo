@@ -14,7 +14,7 @@ export const NOTIFICATION_KINDS: { kind: NotificationKind; label: string; hint: 
   { kind: "expense", label: "Dépenses", hint: "Une dépense te concerne, avec ta part" },
   { kind: "settlement", label: "Remboursements", hint: "Quelqu'un t'a remboursé" },
   { kind: "lists", label: "Listes", hint: "On compte sur toi pour quelque chose" },
-  { kind: "social", label: "Bande et voyages", hint: "On t'ajoute à un voyage, un pote rejoint" },
+  { kind: "social", label: "Bande et groupes", hint: "On t'ajoute à un groupe, un pote rejoint" },
   { kind: "planning", label: "Planning", hint: "Une étape est ajoutée au programme" },
 ];
 

@@ -39,8 +39,8 @@ export function GuestUpgradeCard({ className, compact = false }: { className?: s
           <h2 className="font-display text-[1.05rem] font-bold tracking-tight">Tu es en mode invité</h2>
           <p className="mt-0.5 text-sm text-muted-foreground">
             {compact
-              ? "Sauvegarde tes voyages pour les retrouver partout."
-              : `Tes voyages ne sont que sur cet appareil. Sauvegarde-les avec ${loginChoicesLabel()} pour les garder et les retrouver partout, sans rien perdre.`}
+              ? "Sauvegarde tes groupes pour les retrouver partout."
+              : `Tes groupes ne sont que sur cet appareil. Sauvegarde-les avec ${loginChoicesLabel()} pour les garder et les retrouver partout, sans rien perdre.`}
           </p>
         </div>
       </div>

@@ -30,7 +30,7 @@ export function FriendPicker({ selected, onToggle, exclude = [], className }: Fr
     <section className={className}>
       <div className="mb-2 flex items-baseline justify-between px-1">
         <h3 className="text-sm font-semibold">Ta bande</h3>
-        <span className="text-xs text-muted-foreground">Le voyage apparaîtra chez eux</span>
+        <span className="text-xs text-muted-foreground">Le groupe apparaîtra chez eux</span>
       </div>
       <div className="no-scrollbar -mx-5 flex gap-3 overflow-x-auto px-5 pt-1 pb-1">
         {offered.map((f) => {
