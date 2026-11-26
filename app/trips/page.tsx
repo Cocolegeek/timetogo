@@ -116,7 +116,7 @@ function TripsPageContent() {
               <StaggerItem>
                 <PageHeader
                   eyebrow={`Salut ${firstName ?? "toi"}`}
-                  title="Tes voyages"
+                  title="Tes groupes"
                 />
               </StaggerItem>
 
@@ -261,7 +261,7 @@ function FirstTimeEmptyState() {
         <div className="space-y-1.5">
           <h2 className="font-display text-2xl font-bold tracking-tight">Bienvenue dans la bande</h2>
           <p className="text-[0.95rem] leading-relaxed text-muted-foreground">
-            Crée ton premier voyage pour partager le budget, caler le planning et organiser les repas avec tes potes.
+            Crée ton premier groupe pour partager le budget, caler le planning et organiser les repas avec tes potes.
           </p>
         </div>
         <Link
@@ -269,7 +269,7 @@ function FirstTimeEmptyState() {
           className="pressable inline-flex h-12 items-center justify-center gap-2 rounded-full bg-primary px-6 font-semibold text-primary-foreground shadow-section"
         >
           <Plus size={18} strokeWidth={2.4} />
-          Créer un voyage
+          Créer un groupe
         </Link>
       </div>
     </div>

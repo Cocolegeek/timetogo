@@ -171,7 +171,7 @@ export function TripNav({ tripId }: TripNavProps) {
   return (
     <>
       <nav
-        aria-label="Navigation du voyage"
+        aria-label="Navigation du groupe"
         className="pointer-events-none fixed inset-x-0 z-40 px-4 lg:hidden"
         style={{ bottom: "calc(env(safe-area-inset-bottom) + 0.75rem)" }}
       >
@@ -276,7 +276,7 @@ export function TripNav({ tripId }: TripNavProps) {
       </nav>
 
       <aside
-        aria-label="Navigation du voyage"
+        aria-label="Navigation du groupe"
         className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-border bg-background px-4 pt-5 pb-6 lg:flex"
       >
         <Link
@@ -285,7 +285,7 @@ export function TripNav({ tripId }: TripNavProps) {
           className="flex h-10 items-center gap-1.5 rounded-xl px-2 text-sm font-medium text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
         >
           <ChevronLeft size={18} aria-hidden="true" />
-          Tous les voyages
+          Tous les groupes
         </Link>
 
         <div className="mt-3 flex items-center gap-2.5 px-2">

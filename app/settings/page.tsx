@@ -41,7 +41,7 @@ export default function SettingsPage() {
   const paymentsSet = !!(profile?.iban || profile?.phone);
 
   return (
-    <SettingsShell title="Réglages" back="/trips" backLabel="Retour aux voyages">
+    <SettingsShell title="Réglages" back="/trips" backLabel="Retour aux groupes">
       <StaggerItem>
         <Link
           href="/settings/profile"

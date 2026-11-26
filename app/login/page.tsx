@@ -147,7 +147,7 @@ function LoginForm() {
           </Button>
           {guestError && <p className="mt-2 text-center text-sm text-red-400">{guestError}</p>}
           <p className="mt-3 text-center text-[0.8125rem] leading-relaxed text-muted-foreground">
-            Sans compte, tes voyages restent sur cet appareil. Tu pourras les sauvegarder avec {loginChoicesLabel()} à tout moment, sans rien perdre.
+            Sans compte, tes groupes restent sur cet appareil. Tu pourras les sauvegarder avec {loginChoicesLabel()} à tout moment, sans rien perdre.
           </p>
           <p className="mt-3 text-center text-[0.8125rem]">
             <Link href="/privacy" className="inline-flex min-h-11 items-center font-semibold text-muted-foreground underline underline-offset-4">

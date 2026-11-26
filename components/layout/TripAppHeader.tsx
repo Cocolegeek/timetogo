@@ -55,7 +55,7 @@ export function TripAppHeader({ tripId }: { tripId: string }) {
       style={{ paddingTop: "env(safe-area-inset-top)" }}
     >
       <div className={cn("mx-auto flex h-14 max-w-3xl items-center gap-1 px-2 lg:px-6", wide && "lg:max-w-5xl")}>
-        <Link href="/trips" prefetch={false} aria-label="Tous les voyages" className={cn(ICON_BTN, "lg:hidden")}>
+        <Link href="/trips" prefetch={false} aria-label="Tous les groupes" className={cn(ICON_BTN, "lg:hidden")}>
           <ChevronLeft size={24} strokeWidth={2.2} />
         </Link>
 
@@ -75,7 +75,7 @@ export function TripAppHeader({ tripId }: { tripId: string }) {
         {trip && (
           <div className="flex shrink-0 items-center">
             {searchable && (
-              <button type="button" onClick={() => setSearchOpen(true)} className={ICON_BTN} aria-label="Rechercher dans le voyage">
+              <button type="button" onClick={() => setSearchOpen(true)} className={ICON_BTN} aria-label="Rechercher dans le groupe">
                 <Search size={20} strokeWidth={2} />
               </button>
             )}

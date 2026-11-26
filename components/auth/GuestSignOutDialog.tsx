@@ -24,7 +24,7 @@ export function GuestSignOutDialog({
           <TriangleAlert size={24} />
         </span>
         <div className="space-y-1.5">
-          <DialogTitle>Tes voyages invité seront perdus</DialogTitle>
+          <DialogTitle>Tes groupes invité seront perdus</DialogTitle>
           <DialogDescription className="text-[0.95rem] leading-relaxed">
             Un compte invité ne peut pas être retrouvé après déconnexion. Sauvegarde-le avec {oauthChoicesLabel()}, c&apos;est instantané.
           </DialogDescription>

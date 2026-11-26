@@ -41,7 +41,7 @@ export function TripSearch({ trip, open, onOpenChange }: { trip: Trip; open: boo
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="gap-0 p-0" style={{ height: "92dvh" }} showCloseButton={false}>
-        <SheetTitle className="sr-only">Rechercher dans le voyage</SheetTitle>
+        <SheetTitle className="sr-only">Rechercher dans le groupe</SheetTitle>
         {open && <SearchBody trip={trip} onClose={() => onOpenChange(false)} />}
       </SheetContent>
     </Sheet>

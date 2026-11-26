@@ -158,7 +158,7 @@ export default function PlanningPage({ params }: PlanningPageProps) {
       )}
 
       {dates.length === 0 ? (
-        <EmptyState icon={Map} title="Aucun jour de voyage" description="Vérifie les dates du voyage pour afficher le planning." />
+        <EmptyState icon={Map} title="Aucun jour" description="Vérifie les dates du groupe pour afficher le planning." />
       ) : (
         <AnimatePresence mode="wait" initial={false}>
           <motion.section

@@ -43,7 +43,7 @@ export function ParticipantStack({
   if (everyone) label = "Tout le monde";
   else if (participants.length === 1) label = participants[0].name;
   else
-    label = `${participants.length} voyageur${participants.length !== 1 ? "s" : ""}`;
+    label = `${participants.length} personne${participants.length !== 1 ? "s" : ""}`;
 
   return (
     <div className={cn("flex items-center gap-2 min-w-0", className)}>

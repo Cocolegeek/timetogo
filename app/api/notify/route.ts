@@ -176,7 +176,7 @@ async function compose(supabase: Supabase, me: string, p: NotifyEvent): Promise<
           userId,
           kind: "social" as const,
           title: trip.name,
-          body: `${sender} t'a ajouté au voyage. Tout est déjà là.`,
+          body: `${sender} t'a ajouté au groupe. Tout est déjà là.`,
           url: base,
           tag: `trip-${trip.id}`,
         }));
@@ -185,7 +185,7 @@ async function compose(supabase: Supabase, me: string, p: NotifyEvent): Promise<
         userId,
         kind: "social" as const,
         title: trip.name,
-        body: `${sender} a rejoint le voyage`,
+        body: `${sender} a rejoint le groupe`,
         url: base,
         tag: `join-${trip.id}-${me}`,
       }));

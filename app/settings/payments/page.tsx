@@ -48,7 +48,7 @@ export default function PaymentSettingsPage() {
       bottomSpace={dirty ? "7rem" : "2.5rem"}
     >
       <StaggerItem>
-        <SettingsGroup footer="Visible uniquement par les membres d'un voyage qui te doivent de l'argent.">
+        <SettingsGroup footer="Visible uniquement par les membres d'un groupe qui te doivent de l'argent.">
           <label className="block px-5 py-3">
             <span className="text-xs font-medium text-muted-foreground">IBAN · virement</span>
             <input

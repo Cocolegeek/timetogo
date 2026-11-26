@@ -16,7 +16,7 @@ import type { Friend } from "@/types";
 
 function together(f: Friend): string {
   if (f.tripsInCommon === 0) return "Ajouté avec son lien";
-  const n = `${f.tripsInCommon} voyage${f.tripsInCommon > 1 ? "s" : ""} ensemble`;
+  const n = `${f.tripsInCommon} groupe${f.tripsInCommon > 1 ? "s" : ""} ensemble`;
   return f.lastTripName ? `${n} · ${f.lastTripName}` : n;
 }
 
@@ -34,7 +34,7 @@ export default function FriendsSettingsPage() {
     haptic("light");
     if (typeof navigator.share === "function") {
       try {
-        await navigator.share({ title: "Rejoins ma bande sur Voyou", text: "Ajoute-moi sur Voyou pour organiser nos prochains voyages :", url });
+        await navigator.share({ title: "Rejoins ma bande sur Voyou", text: "Ajoute-moi sur Voyou pour organiser nos prochains budgets :", url });
         return;
       } catch (err) {
         if ((err as DOMException).name === "AbortError") return;
@@ -62,7 +62,7 @@ export default function FriendsSettingsPage() {
   return (
     <SettingsShell
       title="Ta bande"
-      subtitle="Tes potes de voyage, prêts à être embarqués dans le prochain en un geste."
+      subtitle="Tes potes, prêts à être ajoutés à un groupe en un geste."
     >
       <StaggerItem>
         <section className="rounded-[1.5rem] bg-card p-5 shadow-card">
@@ -133,7 +133,7 @@ export default function FriendsSettingsPage() {
               </span>
               <p className="font-display text-lg font-bold tracking-tight">Ta bande est vide</p>
               <p className="text-sm text-muted-foreground">
-                Les gens avec qui tu partages un voyage y apparaissent tout seuls. Tu peux aussi envoyer ton lien.
+                Les gens avec qui tu partages un groupe y apparaissent tout seuls. Tu peux aussi envoyer ton lien.
               </p>
             </div>
           )
@@ -150,7 +150,7 @@ export default function FriendsSettingsPage() {
               <div className="mt-6 w-full space-y-2">
                 <Link href={`/trips/new?with=${open.id}`} className={buttonVariants({ size: "lg", className: "w-full" })}>
                   <TrainFront size={18} />
-                  Créer un voyage ensemble
+                  Créer un groupe ensemble
                 </Link>
                 <button
                   type="button"

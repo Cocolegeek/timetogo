@@ -84,7 +84,7 @@ function LinkFlow() {
           setOutcome({ kind: "linked" });
         }
       } catch {
-        setOutcome({ kind: "error", message: "Le transfert a expiré ou a déjà été fait. Tes voyages invité sont peut-être déjà là." });
+        setOutcome({ kind: "error", message: "Le transfert a expiré ou a déjà été fait. Tes groupes invité sont peut-être déjà là." });
       }
     };
     void run();
@@ -93,7 +93,7 @@ function LinkFlow() {
   if (outcome.kind === "working") {
     return (
       <div className="flex min-h-dvh items-center justify-center px-6">
-        <VoyouLoader label="On met tes voyages à l'abri…" />
+        <VoyouLoader label="On met tes groupes à l'abri…" />
       </div>
     );
   }
@@ -102,7 +102,7 @@ function LinkFlow() {
     return (
       <Screen icon={<UsersRound size={28} />} tone="info" title={`Ce compte ${label} existe déjà`}>
         <p>
-          Pas de souci : connecte-toi avec, et on y ajoute tous les voyages et dépenses créés en invité. Rien n&apos;est perdu, rien n&apos;est
+          Pas de souci : connecte-toi avec, et on y ajoute tous les groupes et dépenses créés en invité. Rien n&apos;est perdu, rien n&apos;est
           dupliqué.
         </p>
         <div className="mt-auto space-y-2 pt-8">
@@ -136,7 +136,7 @@ function LinkFlow() {
             Réessayer
           </Button>
           <Link href="/trips" className={buttonVariants({ variant: "ghost", size: "lg", className: "w-full" })}>
-            Retour à mes voyages
+            Retour à mes groupes
           </Link>
         </div>
       </Screen>
@@ -148,13 +148,13 @@ function LinkFlow() {
       <p>
         {outcome.kind === "merged"
           ? outcome.trips > 0
-            ? `${outcome.trips} voyage${outcome.trips > 1 ? "s" : ""} et leurs dépenses ont rejoint ton compte ${label}.`
+            ? `${outcome.trips} groupe${outcome.trips > 1 ? "s" : ""} et leurs dépenses ont rejoint ton compte ${label}.`
             : `Ton compte ${label} est prêt.`
-          : `Tes voyages sont maintenant liés à ton compte ${label}. Tu les retrouveras sur tous tes appareils.`}
+          : `Tes groupes sont maintenant liés à ton compte ${label}. Tu les retrouveras sur tous tes appareils.`}
       </p>
       <div className="mt-auto pt-8">
         <Link href="/trips" className={buttonVariants({ size: "lg", className: "w-full" })}>
-          Voir mes voyages
+          Voir mes groupes
         </Link>
       </div>
     </Screen>

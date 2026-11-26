@@ -171,7 +171,7 @@ export function BudgetEditDialog({
             {/* Live preview */}
             {mode === "per-person" && numericValue > 0 && (
               <p className="text-xs text-muted-foreground">
-                × {participantCount} voyageur{participantCount !== 1 ? "s" : ""} ={" "}
+                × {participantCount} personne{participantCount !== 1 ? "s" : ""} ={" "}
                 <span className="text-foreground font-medium">
                   {formatCurrency(computedTotal, currency)}
                 </span>{" "}
@@ -184,7 +184,7 @@ export function BudgetEditDialog({
                 <span className="text-foreground font-medium">
                   {formatCurrency(perPersonPreview, currency)}
                 </span>{" "}
-                par personne ({participantCount} voyageur
+                par personne ({participantCount} personne
                 {participantCount !== 1 ? "s" : ""})
               </p>
             )}

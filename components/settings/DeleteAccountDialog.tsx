@@ -42,7 +42,7 @@ export function DeleteAccountDialog({ open, onOpenChange }: { open: boolean; onO
         <div className="space-y-2 text-center">
           <DialogTitle>Supprimer mon compte</DialogTitle>
           <DialogDescription className="text-[0.95rem] leading-relaxed">
-            C&apos;est définitif. Les voyages où tu es seul disparaissent. Dans les autres, quelqu&apos;un d&apos;autre devient propriétaire et ton
+            C&apos;est définitif. Les groupes où tu es seul disparaissent. Dans les autres, quelqu&apos;un d&apos;autre devient propriétaire et ton
             prénom reste sur les dépenses passées, pour que les comptes de la bande tombent toujours juste.
           </DialogDescription>
         </div>

@@ -72,7 +72,7 @@ export const expenseSchema = z
 export type ExpenseFormValues = z.infer<typeof expenseSchema>;
 
 export const tripSchema = z.object({
-  name: z.string().min(1, "Le nom du voyage est requis"),
+  name: z.string().min(1, "Le nom du groupe est requis"),
   destination: z.string().min(1, "La destination est requise"),
   emoji: z.string().min(1),
   currency: z.string().min(1),

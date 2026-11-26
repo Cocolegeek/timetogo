@@ -69,7 +69,7 @@ export function firstPlace(destination: string): string {
 
 export function suggestName(destination: string): string {
   const place = firstPlace(destination);
-  return place ? `Voyage à ${place}` : "";
+  return place ? `Séjour à ${place}` : "";
 }
 
 export function effectiveName(s: Pick<WizardState, "name" | "nameTouched" | "destination">): string {
@@ -99,7 +99,7 @@ export function addPerson(
   const name = raw.trim().replace(/\s+/g, " ");
   if (!name) return { extra: s.extra, error: null };
   if (participantsOf(s).some((p) => norm(p.name) === norm(name))) {
-    return { extra: s.extra, error: `Il y a déjà un « ${name} » dans le voyage.` };
+    return { extra: s.extra, error: `Il y a déjà un « ${name} » dans le groupe.` };
   }
   const color = PARTICIPANT_COLORS[participantsOf(s).length % PARTICIPANT_COLORS.length];
   return { extra: [...s.extra, { name, color }], error: null };

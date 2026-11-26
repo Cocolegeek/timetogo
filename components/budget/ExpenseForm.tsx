@@ -574,8 +574,8 @@ export function ExpenseForm({
         <UserPlus size={16} className="mt-0.5 shrink-0" />
         <span>
           {newMemberIds.size === 1
-            ? "Un nouveau membre a rejoint le voyage. Coche-le si cette dépense le concerne."
-            : `${newMemberIds.size} nouveaux membres ont rejoint le voyage. Coche-les si cette dépense les concerne.`}
+            ? "Un nouveau membre a rejoint le groupe. Coche-le si cette dépense le concerne."
+            : `${newMemberIds.size} nouveaux membres ont rejoint le groupe. Coche-les si cette dépense les concerne.`}
         </span>
       </div>
     )}
