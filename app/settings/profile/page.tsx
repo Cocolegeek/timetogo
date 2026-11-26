@@ -77,14 +77,6 @@ export default function ProfileSettingsPage() {
       </StaggerItem>
 
       <StaggerItem>
-        <SettingsGroup title="Ou choisis un avatar">
-          <div className="p-4">
-            <AvatarPicker value={avatar} googleUrl={profile?.avatar_url} onChange={(url) => updateProfile({ custom_avatar_url: url })} />
-          </div>
-        </SettingsGroup>
-      </StaggerItem>
-
-      <StaggerItem>
         <SettingsGroup footer="C'est ce nom que tes potes voient dans les voyages et dans leur bande.">
           <label className="block px-5 py-3">
             <span className="text-xs font-medium text-muted-foreground">Nom affiché</span>
@@ -102,6 +94,14 @@ export default function ProfileSettingsPage() {
               <p className="mt-0.5 truncate text-base text-muted-foreground">{profile.email}</p>
             </div>
           )}
+        </SettingsGroup>
+      </StaggerItem>
+
+      <StaggerItem>
+        <SettingsGroup title="Ou choisis un avatar">
+          <div className="p-4">
+            <AvatarPicker value={avatar} googleUrl={profile?.avatar_url} onChange={(url) => updateProfile({ custom_avatar_url: url })} />
+          </div>
         </SettingsGroup>
       </StaggerItem>
 
