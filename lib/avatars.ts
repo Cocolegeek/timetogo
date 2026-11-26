@@ -88,6 +88,36 @@ export const AVATAR_PRESETS = [
   { id: "enzo", label: "Enzo" },
 ] as const;
 
+/** Emojis « Fun Emoji » de Davis Uche (CC BY 4.0, via DiceBear) : images fixes générées par scripts/generate-fun-emojis.mjs. */
+export const FUN_EMOJI_AVATARS = [
+  { id: "emoji-1", label: "Emoji 1" },
+  { id: "emoji-2", label: "Emoji 2" },
+  { id: "emoji-3", label: "Emoji 3" },
+  { id: "emoji-4", label: "Emoji 4" },
+  { id: "emoji-5", label: "Emoji 5" },
+  { id: "emoji-6", label: "Emoji 6" },
+  { id: "emoji-7", label: "Emoji 7" },
+  { id: "emoji-8", label: "Emoji 8" },
+  { id: "emoji-9", label: "Emoji 9" },
+  { id: "emoji-10", label: "Emoji 10" },
+  { id: "emoji-11", label: "Emoji 11" },
+  { id: "emoji-12", label: "Emoji 12" },
+  { id: "emoji-13", label: "Emoji 13" },
+  { id: "emoji-14", label: "Emoji 14" },
+  { id: "emoji-15", label: "Emoji 15" },
+  { id: "emoji-16", label: "Emoji 16" },
+  { id: "emoji-17", label: "Emoji 17" },
+  { id: "emoji-18", label: "Emoji 18" },
+  { id: "emoji-19", label: "Emoji 19" },
+  { id: "emoji-20", label: "Emoji 20" },
+  { id: "emoji-21", label: "Emoji 21" },
+  { id: "emoji-22", label: "Emoji 22" },
+  { id: "emoji-23", label: "Emoji 23" },
+  { id: "emoji-24", label: "Emoji 24" },
+] as const;
+
+export const FUN_EMOJI_CREDIT = "Emojis : Fun Emoji par Davis Uche (CC BY 4.0)";
+
 export const presetUrl = (id: string) => `/avatars/${id}.svg`;
 
 /** True when the value is an image (URL or app path) rather than an emoji/initials. */
