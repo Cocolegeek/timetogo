@@ -79,14 +79,14 @@ export function TripAppHeader({ tripId }: { tripId: string }) {
                 <Search size={20} strokeWidth={2} />
               </button>
             )}
-            <button type="button" onClick={() => setShareOpen(true)} className={ICON_BTN} aria-label="Partager le voyage">
+            <button type="button" onClick={() => setShareOpen(true)} className={ICON_BTN} aria-label="Partager">
               <Share size={19} strokeWidth={2} />
             </button>
             <button
               type="button"
               onClick={() => setEditOpen(true)}
               className={ICON_BTN}
-              aria-label={trip.type === "group" ? "Modifier le groupe" : "Modifier le voyage"}
+              aria-label="Modifier"
             >
               <Pencil size={19} strokeWidth={2} />
             </button>

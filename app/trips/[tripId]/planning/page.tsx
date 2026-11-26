@@ -26,7 +26,7 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { useTrip } from "@/hooks/useTrip";
 import { useItinerary } from "@/hooks/useItinerary";
-import { isVoyage } from "@/lib/trip-features";
+import { hasPeriod, tripFeatures } from "@/lib/trip-features";
 import { ITINERARY_TYPES, JOURNEY_MODES, itemTitle } from "@/lib/itinerary-types";
 import { eachDate } from "@/lib/meals/slots";
 import { formatDuration } from "@/lib/format-date";
@@ -55,7 +55,7 @@ export default function PlanningPage({ params }: PlanningPageProps) {
   const highlightId = searchParams.get("item");
 
   useEffect(() => {
-    if (trip && !isVoyage(trip)) {
+    if (trip && !tripFeatures(trip).hasPlanning) {
       router.replace(`/trips/${tripId}/budget`);
     }
   }, [trip, tripId, router]);
@@ -75,7 +75,7 @@ export default function PlanningPage({ params }: PlanningPageProps) {
 
   const today = useMemo(() => new Date().toISOString().split("T")[0], []);
   const dates = useMemo(
-    () => (trip && isVoyage(trip) ? eachDate(trip.startDate, trip.endDate) : []),
+    () => (trip && hasPeriod(trip) ? eachDate(trip.startDate as string, trip.endDate as string) : []),
     [trip]
   );
   const currentDate = selectedDate ?? (dates.includes(today) ? today : dates[0]) ?? today;

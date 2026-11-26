@@ -26,8 +26,7 @@ import { useProfile } from "@/hooks/useProfile";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { GuestUpgradeCard } from "@/components/auth/GuestUpgradeCard";
 import { daysUntil } from "@/lib/format-date";
-import { isVoyage } from "@/lib/trip-features";
-import type { VoyageTrip, GroupTrip, Trip } from "@/types";
+import type { Trip } from "@/types";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { SectionLabel } from "@/components/shared/SectionLabel";
 import { Stagger, StaggerItem } from "@/components/motion/Stagger";
@@ -45,56 +44,35 @@ function TripsPageContent() {
   const { profile } = useProfile();
   const { isAnonymous } = useAuthUser();
 
-  /** Sort voyages by status (en cours → planifié → passé), then chronological */
-  const sortedVoyages = useMemo(() => {
-    const voyages = trips.filter(isVoyage);
-    const bucket = (t: VoyageTrip): 0 | 1 | 2 => {
-      const startDays = daysUntil(t.startDate);
-      const endDays = daysUntil(t.endDate);
-      if (endDays < 0) return 2;
-      if (startDays > 0) return 1;
+  const endOf = (t: Trip) => t.endDate ?? t.startDate ?? "";
+
+  /** Les voyages datés par statut (en cours → à venir → passé), puis par date. */
+  const sortedDated = useMemo(() => {
+    const dated = trips.filter((t) => !!t.startDate);
+    const bucket = (t: Trip): 0 | 1 | 2 => {
+      if (daysUntil(endOf(t)) < 0) return 2;
+      if (daysUntil(t.startDate as string) > 0) return 1;
       return 0;
     };
-    return [...voyages].sort((a, b) => {
+    return [...dated].sort((a, b) => {
       const ba = bucket(a);
       const bb = bucket(b);
       if (ba !== bb) return ba - bb;
-      const sa = new Date(a.startDate).getTime();
-      const sb = new Date(b.startDate).getTime();
+      const sa = new Date(a.startDate as string).getTime();
+      const sb = new Date(b.startDate as string).getTime();
       if (ba === 1) return sa - sb;
       return sb - sa;
     });
   }, [trips]);
 
-  const sortedGroups = useMemo(() => {
-    const groups = trips.filter((t): t is GroupTrip => t.type === "group");
-    // 0 = permanent (no date), 1 = planifié, 2 = en cours, 3 = passé
-    const bucket = (t: GroupTrip): 0 | 1 | 2 | 3 => {
-      if (!t.startDate) return 0;
-      const startDays = daysUntil(t.startDate);
-      const endDays = daysUntil(t.endDate ?? t.startDate);
-      if (startDays > 0) return 1;
-      if (endDays >= 0) return 2;
-      return 3;
-    };
-    return [...groups].sort((a, b) => {
-      const ba = bucket(a);
-      const bb = bucket(b);
-      if (ba !== bb) return ba - bb;
-      if (ba === 0) return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      const sa = new Date(a.startDate!).getTime();
-      const sb = new Date(b.startDate!).getTime();
-      if (ba === 1) return sa - sb;
-      return sb - sa;
-    });
-  }, [trips]);
-
-  const featured = useMemo(
-    () => sortedVoyages.find((t) => daysUntil(t.endDate) >= 0) ?? null,
-    [sortedVoyages]
+  const undated = useMemo(
+    () => trips.filter((t) => !t.startDate).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+    [trips]
   );
-  const upcoming = sortedVoyages.filter((t) => t !== featured && daysUntil(t.endDate) >= 0);
-  const past = sortedVoyages.filter((t) => daysUntil(t.endDate) < 0);
+
+  const featured = useMemo(() => sortedDated.find((t) => daysUntil(endOf(t)) >= 0) ?? null, [sortedDated]);
+  const upcoming = sortedDated.filter((t) => t !== featured && daysUntil(endOf(t)) >= 0);
+  const past = sortedDated.filter((t) => daysUntil(endOf(t)) < 0);
 
   const [editingTripId, setEditingTripId] = useState<string | null>(null);
   const [sharingTripId, setSharingTripId] = useState<string | null>(null);
@@ -165,9 +143,9 @@ function TripsPageContent() {
                     </StaggerItem>
                   )}
 
-                  {sortedGroups.length > 0 && (
+                  {undated.length > 0 && (
                     <StaggerItem>
-                      <TripSection title="Groupes" trips={sortedGroups} cardProps={cardProps} />
+                      <TripSection title="Sans date" trips={undated} cardProps={cardProps} />
                     </StaggerItem>
                   )}
 
@@ -227,18 +205,16 @@ function TripsPageContent() {
 
         {confirmDelete && (
           <ConfirmDeleteDialog
-            title={
-              deletingEntry?.type === "group"
-                ? "Supprimer le budget ?"
-                : "Supprimer le voyage ?"
-            }
+            title="Supprimer ?"
             description={
               <>
                 <span className="text-foreground">
                   {deletingEntry?.name ?? ""}
                 </span>{" "}
                 et toutes ses données (dépenses
-                {deletingEntry?.type === "trip" && ", planning, menus"}) seront
+                {deletingEntry?.modules.includes("planning") && ", planning"}
+                {deletingEntry?.modules.includes("menus") && ", menus"}
+                {deletingEntry?.modules.includes("lists") && ", listes"}) seront
                 définitivement supprimés.
               </>
             }

@@ -565,7 +565,7 @@ function CopyRow({
     <div className="flex items-center gap-3 rounded-2xl bg-secondary px-4 py-2.5">
       <div className="min-w-0 flex-1">
         <p className="text-xs font-medium text-muted-foreground">{label}</p>
-        <p className={cn("truncate text-[0.95rem] text-foreground", mono && "font-mono tracking-wide")}>
+        <p className={cn("text-[0.95rem] text-foreground", mono ? "font-mono tracking-wide break-all" : "truncate")}>
           {display}
         </p>
       </div>

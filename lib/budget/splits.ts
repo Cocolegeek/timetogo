@@ -68,3 +68,13 @@ export function validatePercentageTotal(splits: ParticipantSplit[]): boolean {
   const total = active.reduce((acc, s) => acc + (s.percentage ?? 0), 0);
   return Math.abs(total - 100) < 0.01;
 }
+
+/** Une part à zéro (montants ou pourcentages) vaut « non concerné » : la personne sort de la dépense. */
+export function dropZeroShares(splits: ParticipantSplit[], mode: SplitMode): ParticipantSplit[] {
+  if (mode === "equal") return splits;
+  return splits.map((s) => {
+    if (s.excluded) return s;
+    const value = mode === "percentage" ? s.percentage ?? 0 : s.fixedAmount ?? 0;
+    return value < 0.005 ? { ...s, excluded: true, share: 0 } : s;
+  });
+}

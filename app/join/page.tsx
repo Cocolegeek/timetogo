@@ -259,7 +259,7 @@ function TripHero({ trip, badge }: { trip: TripPreview; badge: string }) {
 
 function tripMeta(trip: TripPreview): string {
   const n = trip.participants.length;
-  const people = `${n} ${trip.type === "group" ? "participant" : "voyageur"}${n !== 1 ? "s" : ""}`;
+  const people = `${n} participant${n !== 1 ? "s" : ""}`;
   if (trip.startDate && trip.endDate) return `${formatDateRange(trip.startDate, trip.endDate)} · ${people}`;
   return people;
 }
@@ -274,7 +274,7 @@ function AlreadyMemberCard({
   onAccess: () => void;
   onHome: () => void;
 }) {
-  const entityLabel = trip.type === "group" ? "ce groupe" : "ce voyage";
+  const entityLabel = `« ${trip.name} »`;
   return (
     <div className="space-y-6">
       <TripHero trip={trip} badge="Déjà dans la bande" />
@@ -324,7 +324,7 @@ function WelcomeFlow({
   onCreate: (name: string) => Promise<Participant>;
   onJoin: () => void;
 }) {
-  const entityLabel = trip.type === "group" ? "ce groupe" : "ce voyage";
+  const entityLabel = `« ${trip.name} »`;
 
   return (
     <div className="space-y-6">

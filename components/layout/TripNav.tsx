@@ -30,9 +30,9 @@ import { ADD_LABELS, contextKind, leadKind, orderActions } from "@/lib/quick-add
 import { haptic } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
 import { spring } from "@/lib/motion";
-import { featuresForType } from "@/lib/trip-features";
+import { featuresForModules } from "@/lib/trip-features";
 import { sectionOf, visibleSections } from "@/lib/trip-sections";
-import type { TripType } from "@/types";
+import type { TripModule } from "@/types";
 
 const QuickAddSheet = dynamic(() => import("@/components/layout/QuickAddSheet"), { ssr: false });
 
@@ -52,13 +52,13 @@ const QUICK_ADD: {
   icon: LucideIcon;
   tile: string;
   href: string;
-  voyageOnly: boolean;
+  module: TripModule | null;
 }[] = [
-  { kind: "expense", label: "Dépense", icon: Wallet, tile: "bg-primary text-primary-foreground", href: "/budget", voyageOnly: false },
-  { kind: "step", label: "Étape", icon: CalendarPlus, tile: "bg-emerald-500 text-white", href: "/planning", voyageOnly: true },
-  { kind: "journey", label: "Trajet", icon: Route, tile: "bg-sky-500 text-white", href: "/planning", voyageOnly: true },
-  { kind: "meal", label: "Repas", icon: UtensilsCrossed, tile: "bg-rose-500 text-white", href: "/menus", voyageOnly: true },
-  { kind: "item", label: "Liste", icon: ListChecks, tile: "bg-amber-500 text-white", href: "/lists", voyageOnly: false },
+  { kind: "expense", label: "Dépense", icon: Wallet, tile: "bg-primary text-primary-foreground", href: "/budget", module: null },
+  { kind: "step", label: "Étape", icon: CalendarPlus, tile: "bg-emerald-500 text-white", href: "/planning", module: "planning" },
+  { kind: "journey", label: "Trajet", icon: Route, tile: "bg-sky-500 text-white", href: "/planning", module: "planning" },
+  { kind: "meal", label: "Repas", icon: UtensilsCrossed, tile: "bg-rose-500 text-white", href: "/menus", module: "menus" },
+  { kind: "item", label: "Liste", icon: ListChecks, tile: "bg-amber-500 text-white", href: "/lists", module: "lists" },
 ];
 
 /** Glass material for the floating navigation layer only (never on content). */
@@ -72,11 +72,11 @@ interface TripNavProps {
 export function TripNav({ tripId }: TripNavProps) {
   // Read from the shared trip cache (seeded by the trips list): no server round-trip.
   const { trip } = useTrip(tripId);
-  const tripType: TripType = trip?.type ?? "trip";
+  const modules = trip?.modules ?? [];
   const pathname = usePathname();
   const router = useRouter();
   const base = `/trips/${tripId}`;
-  const features = featuresForType(tripType);
+  const features = featuresForModules(modules);
   const compact = useScrollDirection() === "down";
   const [addOpen, setAddOpen] = useState(false);
   const sheetMounted = useMountOnce(addOpen);
@@ -85,8 +85,8 @@ export function TripNav({ tripId }: TripNavProps) {
   const shown = visibleSections(features, counts, sectionOf(pathname, base));
   const items = NAV_ITEMS.filter((item) => shown.includes(item.href as (typeof shown)[number]));
   const labelSize = items.length <= 3 ? "text-[0.8125rem]" : items.length === 4 ? "text-xs" : "text-[0.6875rem]";
-  const available = QUICK_ADD.filter((a) => !a.voyageOnly || tripType === "trip");
-  const context = contextKind(pathname, base, tripType);
+  const available = QUICK_ADD.filter((a) => !a.module || modules.includes(a.module));
+  const context = contextKind(pathname, base, modules);
   const lead = leadKind(context, available.map((a) => a.kind));
   const actions = orderActions(available, lead);
   const toast = useToast();

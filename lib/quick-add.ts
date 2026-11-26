@@ -1,19 +1,19 @@
 import type { QuickAddKind } from "@/hooks/useQuickAdd";
-import type { TripType } from "@/types";
+import type { TripModule } from "@/types";
 
-const SECTIONS: { path: string; kind: QuickAddKind; voyageOnly: boolean }[] = [
-  { path: "budget", kind: "expense", voyageOnly: false },
-  { path: "planning", kind: "step", voyageOnly: true },
-  { path: "menus", kind: "meal", voyageOnly: true },
-  { path: "lists", kind: "item", voyageOnly: false },
+const SECTIONS: { path: string; kind: QuickAddKind; module: TripModule | null }[] = [
+  { path: "budget", kind: "expense", module: null },
+  { path: "planning", kind: "step", module: "planning" },
+  { path: "menus", kind: "meal", module: "menus" },
+  { path: "lists", kind: "item", module: "lists" },
 ];
 
 /** L'ajout évident de l'écran où l'on se trouve (Budget : une dépense, Planning : une étape...). null = accueil. */
-export function contextKind(pathname: string, base: string, tripType: TripType): QuickAddKind | null {
+export function contextKind(pathname: string, base: string, modules: readonly TripModule[]): QuickAddKind | null {
   for (const s of SECTIONS) {
     const root = `${base}/${s.path}`;
     if (pathname === root || pathname.startsWith(`${root}/`)) {
-      return s.voyageOnly && tripType !== "trip" ? null : s.kind;
+      return s.module && !modules.includes(s.module) ? null : s.kind;
     }
   }
   return null;

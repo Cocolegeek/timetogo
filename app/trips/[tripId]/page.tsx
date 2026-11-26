@@ -18,7 +18,6 @@ import { GettingStarted } from "@/components/trips/GettingStarted";
 import { DayAgendaCard } from "@/components/trips/DayAgendaCard";
 import { MyListCard } from "@/components/trips/MyListCard";
 import { useRouter } from "next/navigation";
-import { TripCover } from "@/components/trips/TripCover";
 import { tripStatus } from "@/components/trips/TripCard";
 import { ParticipantStack } from "@/components/shared/ParticipantStack";
 import { Spinner } from "@/components/shared/Spinner";
@@ -34,7 +33,7 @@ import { formatDateRange } from "@/lib/format-date";
 import { EASE_OUT } from "@/lib/motion";
 import { cn, firstName } from "@/lib/utils";
 import { shortDestination } from "@/lib/place";
-import { isVoyage, tripFeatures } from "@/lib/trip-features";
+import { tripFeatures } from "@/lib/trip-features";
 import type { ExpenseCategory, Participant } from "@/types";
 import { useMountOnce } from "@/hooks/useMountOnce";
 
@@ -119,21 +118,26 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
     <Stagger step={0.055} className="space-y-5 pt-1 lg:block lg:columns-2 lg:gap-x-6 lg:space-y-0">
       {/* ── Hero ─────────────────────────────────────────────── */}
       <StaggerItem className="lg:mb-5 lg:break-inside-avoid lg:[column-span:all]">
-        <div className="relative overflow-hidden rounded-[1.75rem] shadow-raised">
-          {trip.iconUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
+        {trip.iconUrl ? (
+          <div className="relative overflow-hidden rounded-[1.75rem] shadow-raised">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={trip.iconUrl} alt="" className="h-28 w-full object-cover lg:h-40" draggable={false} />
-          ) : (
-            <TripCover seed={trip.id} className="h-28 lg:h-40" />
-          )}
-          {status.kind !== "permanent" && (
-            <span className="absolute top-4 left-4 inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-[0.8125rem] font-semibold text-[#1A1D24] shadow-card backdrop-blur">
+            {status.kind !== "permanent" && (
+              <span className="absolute top-4 left-4 inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-[0.8125rem] font-semibold text-[#1A1D24] shadow-card backdrop-blur">
+                {status.kind === "ongoing" && <span className="size-2 rounded-full bg-emerald-500" />}
+                {status.label}
+              </span>
+            )}
+          </div>
+        ) : (
+          status.kind !== "permanent" && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-[0.8125rem] font-semibold">
               {status.kind === "ongoing" && <span className="size-2 rounded-full bg-emerald-500" />}
               {status.label}
             </span>
-          )}
-        </div>
-        <div className="mt-5 px-1">
+          )
+        )}
+        <div className={cn("px-1", trip.iconUrl ? "mt-5" : "mt-3")}>
           <h1 className="font-display text-[2rem] leading-[1.05] font-extrabold tracking-[-0.03em]">
             {trip.emoji && (
               <span aria-hidden="true" className="mr-2">
@@ -143,9 +147,12 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
             {trip.name}
           </h1>
           <p className="mt-1.5 text-[0.95rem] text-muted-foreground">
-            {isVoyage(trip)
-              ? [formatDateRange(trip.startDate, trip.endDate), shortDestination(trip.destination)].filter(Boolean).join(" · ")
-              : `Budget partagé · ${trip.participants.length} personnes`}
+            {[
+              trip.startDate ? formatDateRange(trip.startDate, trip.endDate ?? trip.startDate) : "",
+              trip.destination ? shortDestination(trip.destination) : "",
+            ]
+              .filter(Boolean)
+              .join(" · ") || `${trip.participants.length} personne${trip.participants.length > 1 ? "s" : ""}`}
           </p>
           <div className="mt-4 flex items-center justify-between gap-3">
             <button

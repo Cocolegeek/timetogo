@@ -10,15 +10,16 @@
 - **Forms**: react-hook-form + Zod v4
 - **State**: Custom hooks + local useState (no Redux/Zustand)
 
-## Trip vs Group (discriminated union)
+## Un seul type d'espace : le budget, plus des espaces au choix
 
-Le projet gère deux types d'entités via la même table `trips`, distinguées par la colonne `type`:
-- **`type: "trip"`**: voyage complet (destination, dates, planning, menus, budget)
-- **`type: "group"`**: budget partagé style Tricount (nom + participants + budget seulement)
+Plus de distinction voyage / groupe côté app. Tout est un `Trip` (table `trips`) : un budget partagé qui peut avoir un lieu (`destination`),
+des dates (`startDate` / `endDate`, facultatifs) et des **espaces facultatifs** (`modules`, migration 025) : `planning`, `menus`, `lists`.
+Le budget est toujours là. La colonne `type` reste en base (ancien champ, écrite à « trip ») mais l'app ne la lit plus.
 
-`types/index.ts` exporte une discriminated union `Trip = VoyageTrip | GroupTrip`. TypeScript force le narrowing avant d'accéder à `destination` / `startDate` / `endDate`.
-
-**Source de vérité des features** : `lib/trip-features.ts` (`tripFeatures(trip)`, `isVoyage(trip)`, `isGroup(trip)`, `TRIP_TYPE_LABELS`). Tous les rendus conditionnels passent par là. Ne pas ré-écrire de `trip.type === "..."` ailleurs.
+**Source de vérité** : `lib/trip-features.ts` (`tripFeatures(trip)` → `hasPlanning / hasMenus / hasLists / hasRecurring`, `TRIP_MODULES`,
+`hasPeriod(trip)`, `tripHref(trip)`, `parseModules()` qui retombe sur l'ancien `type` si la colonne manque). Tous les rendus conditionnels passent par là.
+Ne pas ré-écrire de test de type ailleurs. Règle : planning et menus ont besoin de jours (début et fin, un jour précis = même date) ; sans période,
+ils sont verrouillés (création et réglages). Un espace masqué garde ses données.
 
 ## Route Map
 ```
@@ -40,11 +41,11 @@ app/
   api/notify/route.ts    → POST NotifyEvent → compose (RLS de l'appelant) + Web Push (VAPID) ; GET → { configured }
   trips/
     page.tsx             → list all trips
-    new/page.tsx         → assistant de création (CreateWizard, type=trip | group)
+    new/page.tsx         → assistant de création unique (CreateWizard)
     [tripId]/
       layout.tsx         → trip nav + context (wraps TripClientProviders)
       page.tsx           → trip dashboard
-      budget/page.tsx    → 3 onglets : Dépenses · Soldes (Régler, récap partageable, export CSV) · Historique (journal d'activité)
+      budget/page.tsx    → 2 onglets : Dépenses · Soldes (Régler, récap partageable, export CSV). Le journal d'activité est dans le menu « … » du voyage (TripActionsSheet)
       menus/page.tsx     → meal planning
       lists/page.tsx     → Listes « À apporter » / « À faire » (?item=<id>, ?list=todo)
       planning/page.tsx  → itinerary builder (étapes + trajets)
@@ -77,7 +78,7 @@ components/
   menus/      MealEditDialog (une page : plats saisis au clavier, puces catégorie · qui mange · qui gère)
   planning/   ItineraryItemForm:   full-screen dialog: title/date/type/location/participants
               JourneyForm:         full-screen dialog: from→to, mode, routing/duration, participants
-  shared/     OfflineSync (monté à la racine : rejoue la file hors-ligne, pastille « Hors ligne · n en attente »), AvatarPicker (photo Google + 16 avatars), AvatarUpload, ClientOnly (rendu client après hydratation),
+  shared/     OfflineSync (monté à la racine : rejoue la file hors-ligne, pastille « Hors ligne · n en attente »), AvatarPicker (photo Google + grille d'avatars Voyou), AvatarUpload, ClientOnly (rendu client après hydratation),
               ConfirmDeleteDialog, DateRangePicker, DateField / TimeField (DateTimeFields : libellé FR + sélecteur natif),
               DayHeader, DayTabs, EmptyState, SegmentedControl, Skeleton (Spinner = squelette de page),
               VoyouLoader (visage « oyo » qui saute + phrases de voyage, CSS pur, dans PageSkeleton après 1,5 s),
@@ -89,7 +90,7 @@ components/
               MapAppPicker:        MapAppPickerProvider + useOpenLocation() context hook
               ParticipantAvatar, ParticipantPicker (LA sélection multiple de participants : puces avatar,
               « Tout le monde » optionnel, payeurs, étapes, trajets, repas), ParticipantStack, SectionLabel, Spinner
-  trips/      BudgetEditDialog, GettingStarted, CreateWizard (assistant unique voyage + groupe), IdentityPicker,
+  trips/      BudgetEditDialog, GettingStarted, CreateWizard (assistant unique), ModulePicker (« Au programme » : planning, menus, listes ; création et réglages), IdentityPicker,
               OnboardingModal (bienvenue + « Ta tête dans la bande » : prénom + avatar), ShareModal,
               TripSearch, DayAgendaCard (journée utile du tableau de bord : étape en cours / à suivre + reste du jour),
               TripActionsSheet (« … » d'une carte voyage), IdentityDialog (« Qui es-tu ? »), LazyOnboarding,
@@ -142,7 +143,7 @@ useRecurring(id, on)    → { items, create, remove, applyDue }            // ap
 lib/
   supabase/client.ts    → createBrowserClient(): use in hooks/client components
   supabase/server.ts    → createServerClient() with cookies: use in server components/API routes
-  supabase/schema.sql   → schéma de base + RLS, intégrant 021 à 023 (pas 024). ⚠️ Il NE contient PAS 016, 018, 019 et ses `join_trip` /
+  supabase/schema.sql   → schéma de base + RLS, intégrant 021 à 023 (pas 024 ni 025). ⚠️ Il NE contient PAS 016, 018, 019 et ses `join_trip` /
                           `create_trip_with_owner` sont antérieurs aux migrations 018 / 021 : projet neuf = schema.sql puis
                           016, 018, 019, 021 (voir docs/GUIDE-SUPABASE-VERCEL.md). Ne jamais le rejouer sur une base existante.
   supabase/migrations/  → 001..021_*.sql (008: RGPD, 009: multi-payer, 010: trip type,
@@ -152,13 +153,13 @@ lib/
                           020: multi-dish meals, 021: guest accounts + transfer,
                           022: friendships + push_subscriptions + checklist_items,
                           023: trip_activity (journal) + recurring_expenses + delete_my_account,
-                          024: meals.link + itinerary_items.meal_id : lien d'un repas, repas dans le planning ; projet neuf = après 023)
+                          024: meals.link + itinerary_items.meal_id : lien d'un repas, repas dans le planning ; 025: trips.modules : espaces au choix, fin de voyage/groupe ; projets neufs = après 023)
   auth/guest.ts         → continueAsGuest(), startUpgrade(provider), signInToExisting(provider), signInWithProvider(),
                           claimGuestTransfer(), syncProfileFromProvider(provider)
   auth/providers.ts     → AuthProvider (google|facebook), AccountMethod (+ email), enabledProviders(), FACEBOOK_ENABLED, EMAIL_ENABLED, linkedMethods(), loginChoicesLabel()
   auth/email.ts         → sendLoginCode / verifyLoginCode / startEmailUpgrade / verifyUpgradeCode / sendExistingAccountCode / verifyExistingAccountCode, mapAuthError()
   auth/redirect.ts      → safeRedirectPath(), errorRedirectUrl() (garde ?provider= au retour d'erreur vers /auth/link)
-  avatars.ts            → AVATAR_PRESETS, presetUrl(), isImageAvatar(), defaultPreset(), profileAvatar()
+  avatars.ts            → AVATAR_PRESETS (86 avatars « Voyou », hommes et femmes, tous teints et couleurs de cheveux, générés par scripts/generate-avatars.mjs), isImageAvatar(), defaultPreset() (avatar tiré d'une graine), profileAvatar()
   avatar-sync.ts        → syncMyParticipantAvatars() (avatar du profil → participants liés)
   data/swr.tsx          → DataProvider (SWRConfig + cache localStorage persistant), clearDataCache()
   notifications/        → events.ts (NotifyEvent, NOTIFICATION_KINDS, isKindEnabled), notify.ts (fire-and-forget),
@@ -170,12 +171,12 @@ lib/
   meals/courses.ts      → COURSES (icônes Lucide), COURSE_ORDER
   forms/enter-next.ts   → handleEnter(e, onLast), focusNextField() : Entrée passe au champ de texte suivant (conteneur `data-enter-chain`), valide au dernier
   motion.ts, haptics.ts → courbes/springs Framer, haptic()
-  trips/create-wizard.ts → logique pure de l'assistant de création : stepsFor(), validateStep(), firstIssue(), buildPayload(),
+  trips/create-wizard.ts → logique pure de l'assistant de création (3 étapes : quoi · quand · avec qui) : stepsFor(), validateStep(), firstIssue(), buildPayload(), defaultModules(), effectiveModules(), hasPeriod(),
                           participantsOf() (créateur toujours 1er), addPerson() (doublons), datePresets(), suggestName()
   trip-emojis.ts        → THEME_EMOJIS, POPULAR_FLAGS, flagEmoji(codePays), tripEmojiChoices(paysDétecté) : emojis d'un voyage (jamais d'avion, empreinte carbone)
   trip-sections.ts      → visibleSections(features, counts, active), sectionOf(pathname, base), canSearch(total), contentWidth(pathname, base) : onglets, loupe et largeur selon le contenu
   place.ts              → shortDestination("Rome, Roma Capitale, Latium, Italie") = "Rome · Italie"
-  trip-features.ts      → tripFeatures(trip), isVoyage(t), isGroup(t), TRIP_TYPE_LABELS
+  trip-features.ts      → tripFeatures(trip), TRIP_MODULES, ALL_MODULES, hasPeriod(), tripHref(), parseModules()
   budget/splits.ts      → computeShares(equal|percentage|fixed), buildDefaultSplits()
   budget/debts.ts       → computeBalances(), simplifyDebts() (greedy O(n log n))
   budget/categories.ts  → courses|restaurant|activities|transport|accommodation|other
@@ -210,9 +211,9 @@ lib/
 profiles          id, name, avatar_url (Google), custom_avatar_url (choix : preset "/avatars/x.svg",
                   photo importée ou photo Google), email, iban, phone,
                   gdpr_consented_at, gdpr_consent_version, gdpr_consent_proof
-trips             id, name, type ('trip'|'group'), destination?, emoji, icon_url?,
+trips             id, name, type (ancien champ, plus lu), destination?, emoji, icon_url?, modules text[] ('planning'|'menus'|'lists'),
                   currency, start_date?, end_date?, total_budget, share_code(UNIQUE), owner_id
-                  // destination/start_date/end_date nullable for type='group'
+                  // destination/start_date/end_date facultatifs ; modules vide = budget seul
 participants      id, trip_id, name, color, avatar? (URL/chemin d'image = avatar du membre lié, sinon emoji)
 trip_members      trip_id + user_id (composite PK), participant_id, role: owner|contributor
 expenses          id, trip_id, title, amount, currency, exchange_rate, amount_in_trip_currency,
@@ -266,8 +267,7 @@ DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip(
   d'orbes, de dégradés décoratifs (`gradient-primary` = aplat) ni d'emoji comme icône.
 - **Illustrations** : `TripCover` (aplats doux : ciel, sable, sauge, argile, nuit, or), choisie par
   `seed` = id. Même palette pour l'écran de connexion et les avatars.
-- **Avatars** : `public/avatars/*.svg` générés par `scripts/generate-avatars.mjs` (garder `lib/avatars.ts`
-  en phase). Priorité d'affichage : choix (`custom_avatar_url`) > photo Google > initiale.
+- **Avatars** : choisis dans `AvatarPicker` : photo Google en option, puis la grille des 86 avatars « Voyou » (`public/avatars/*.svg`, générés par `scripts/generate-avatars.mjs`, garder `lib/avatars.ts` en phase). Décision du propriétaire : pas de créateur d'avatar, pas de génération au hasard, pas de collection externe. Priorité d'affichage : choix (`custom_avatar_url`) > photo Google > initiale.
 - **Motion** : `lib/motion.ts` (`EASE_OUT`, `EASE_SHEET`, `spring`, `fadeUp`, `stagger`). Indicateurs
   glissants via `layoutId` (TripNav, SegmentedControl, DayTabs). Respect de `prefers-reduced-motion`
   (MotionConfig + CSS). `pressable` pour le retour tactile.
@@ -289,8 +289,8 @@ DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip(
 
 - **Navigation voyage** : barre d'onglets flottante (matière translucide = seule zone « verre » autorisée),
   qui se compacte au défilement ; toucher l'onglet actif ou le titre de l'en-tête remonte en haut.
-  **Onglets selon le contenu** (`visibleSections()`) : Résumé et Budget toujours ; Planning, Menus et Listes n'apparaissent que
-  lorsqu'ils contiennent quelque chose (ou quand on est dessus : l'onglet courant ne disparaît jamais). La première création passe par
+  **Onglets selon les espaces et le contenu** (`visibleSections()`) : Résumé et Budget toujours ; Planning, Menus et Listes n'apparaissent que
+  si l'espace est activé (`modules`) ET qu'ils contiennent quelque chose (ou quand on est dessus : l'onglet courant ne disparaît jamais). La première création passe par
   « Premiers pas » et le « + » (feuille de choix). Libellés plus grands quand il y a peu d'onglets. La loupe de l'en-tête
   n'apparaît qu'à partir de 5 éléments (`SEARCH_MIN_ITEMS`).
 - **Ordinateur** (une seule app responsive, pas deux versions ; point de bascule `lg` = 1024 px) : le menu latéral à gauche (`TripNav`,
@@ -327,19 +327,19 @@ DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip(
   `planning?date=YYYY-MM-DD&item=<id>`, `menus?date=YYYY-MM-DD`, `lists?item=<id>`.
 - **Retours** : `useToast()` (`ToastProvider` à la racine) après chaque création / modification / suppression,
   `haptic()` sur les gestes. Feuilles du bas fermables en glissant la poignée.
-- **Création** : un seul assistant (`CreateWizard`), 3 étapes (voyage : Où · Quand · Avec qui ; groupe : Nom · Quand · Avec qui),
+- **Création** : un seul assistant (`CreateWizard`), 3 étapes : Quoi (nom, lieu facultatif, emoji) · Quand (sans date / un jour / une période, puis « Au programme » : planning, menus, listes, proposés selon la période) · Avec qui,
   aperçu en direct de la carte, barre d'action fixe. Le bouton n'est JAMAIS grisé sans explication : un toucher sur un champ
   incomplet affiche le message (`role="alert"`, secousse, haptique). Une seule source de vérité pour les participants : le créateur
   (prénom du profil) est dérivé, jamais recopié dans un état de formulaire. À la validation finale `firstIssue()` renvoie à l'étape
   fautive au lieu d'échouer en silence. Toute évolution passe par `lib/trips/create-wizard.ts` + son test.
-  Emoji du voyage : le drapeau du pays choisi (`countryCode` de `LocationPickerSheet`) est proposé en premier et présélectionné tant que
+  Le « + », « Premiers pas » et la recherche n'offrent que les espaces activés. Emoji du voyage : le drapeau du pays choisi (`countryCode` de `LocationPickerSheet`) est proposé en premier et présélectionné tant que
   l'utilisateur n'a pas choisi lui-même ; puis thèmes (train, plage…) et drapeaux courants. Pas d'avion (empreinte carbone).
 - **Trajets** : le mode « Avion » reste disponible dans `JourneyForm` (calcul de trajet, avertissement CO₂) ; seul l'emoji d'un voyage évite l'avion.
 - **Payeur** : toujours la photo de profil du participant (`ParticipantAvatar`), jamais un point de couleur. **Heure d'ajout** d'une dépense :
   `· 14:32` sur la carte (`createdAt`, heure locale), « Ajoutée le 8 juin à 10:00 » dans la fiche.
 - **Identité du voyage** : l'emoji ou le drapeau choisi s'affiche devant le titre (tableau de bord, cartes de la liste). Destination
   toujours abrégée (`shortDestination()`). Participants = avatars + prénoms (« Toi, Léa, Marc +2 ») ; la pastille « Qui es-tu ? »
-  n'apparaît que si on n'est pas encore relié à un participant (toucher les avatars rouvre le choix). Illustration d'en-tête basse (h-28).
+  n'apparaît que si on n'est pas encore relié à un participant (toucher les avatars rouvre le choix). Pas d'illustration par défaut : la couverture est une photo facultative (modifier le voyage › « Photo de couverture »), sans photo la liste montre l'emoji sur une tuile et le Résumé n'a pas de bandeau.
 - **Tableau de bord** : `GettingStarted` (n'affiche que les étapes restantes) puis budget, solde, `DayAgendaCard`
   (aujourd'hui, ou demain une fois la journée finie), repas du jour. Une carte vide n'est pas affichée si
   « Premiers pas » invite déjà à la remplir. Solde : une seule tuile large si un seul sens est non nul.
@@ -377,7 +377,7 @@ DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip(
 - **Promesse** : Voyou = « les voyages entre potes, sans embrouilles » → qui paie, qui fait quoi, quand.
   Un nouvel espace doit résoudre une embrouille de groupe ; pas de chat, pas d'album photo (WhatsApp/Photos le font).
 - **Listes** : un seul espace, deux listes (« À apporter », « À faire »), assignation à des participants,
-  coche directe, suggestions dans l'état vide. `tripFeatures().hasLists` (voyages et groupes).
+  coche directe, suggestions dans l'état vide. `tripFeatures().hasLists` (espace activable).
 - **Ta bande** : jamais saisie à la main. Elle se remplit en voyageant (trigger) ou par lien `/friends/add?code=`.
   À la création (CreateWizard, `?with=<id>`) ou dans l'édition du voyage, `FriendPicker` +
   `addFriendsToTrip()` (RPC `add_friends_to_trip`) : participant + membre lié, sans code de partage.

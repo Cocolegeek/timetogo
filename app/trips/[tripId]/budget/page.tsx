@@ -6,7 +6,6 @@ import { m as motion, AnimatePresence } from "framer-motion";
 import dynamic from "next/dynamic";
 const ExpenseForm = dynamic(() => import("@/components/budget/ExpenseForm").then(m => ({ default: m.ExpenseForm })), { ssr: false });
 const RecurringSheet = dynamic(() => import("@/components/budget/RecurringSheet"), { ssr: false });
-import { ActivityList } from "@/components/budget/ActivityList";
 import { ExpenseList } from "@/components/budget/ExpenseList";
 import { Spinner } from "@/components/shared/Spinner";
 import { BalancesView } from "@/components/budget/BalancesView";
@@ -14,7 +13,6 @@ import { ExpenseDetailSheet } from "@/components/budget/ExpenseDetailSheet";
 import { useTrip } from "@/hooks/useTrip";
 import { useBudget } from "@/hooks/useBudget";
 import { useDebts } from "@/hooks/useDebts";
-import { useActivity } from "@/hooks/useActivity";
 import { useRecurring } from "@/hooks/useRecurring";
 import { Download, Repeat, Share2 } from "lucide-react";
 import { buildExpensesCsv } from "@/lib/export/expenses-csv";
@@ -35,8 +33,8 @@ import { CATEGORIES, CATEGORY_ORDER } from "@/lib/budget/categories";
 import { cn } from "@/lib/utils";
 import type { Expense, Payer, RecurrenceFrequency, Settlement } from "@/types";
 
-type BudgetTab = "expenses" | "balances" | "history";
-const TAB_ORDER: BudgetTab[] = ["expenses", "balances", "history"];
+type BudgetTab = "expenses" | "balances";
+const TAB_ORDER: BudgetTab[] = ["expenses", "balances"];
 
 interface BudgetPageProps {
   params: Promise<{ tripId: string }>;
@@ -66,7 +64,6 @@ export default function BudgetPage({ params }: BudgetPageProps) {
   const features = trip ? tripFeatures(trip) : null;
   const hasRecurring = features?.hasRecurring ?? false;
   const { items: recurring, create: createRecurring, remove: removeRecurring, applyDue } = useRecurring(tripId, hasRecurring);
-  const { entries: activity } = useActivity(tripId, activeTab === "history");
   const [recurringOpen, setRecurringOpen] = useState(false);
   const { remove: removeRecurringUndoable, pending: pendingRecurring } = useUndoableDelete(removeRecurring);
   const visibleRecurring = useMemo(() => recurring.filter((r) => !pendingRecurring.has(r.id)), [recurring, pendingRecurring]);
@@ -297,7 +294,6 @@ export default function BudgetPage({ params }: BudgetPageProps) {
           options={[
             { value: "expenses", label: "Dépenses" },
             { value: "balances", label: "Soldes", badge: pendingCount },
-            { value: "history", label: "Historique" },
           ]}
         />
       </div>
@@ -356,8 +352,6 @@ export default function BudgetPage({ params }: BudgetPageProps) {
               onQuickEdit={handleQuickEdit}
             />
             </>
-          ) : activeTab === "history" ? (
-            <ActivityList entries={activity} currency={currency} />
           ) : (
             <>
               <BalancesView

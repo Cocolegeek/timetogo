@@ -3,7 +3,7 @@
 import { EmojiIcon } from "@/components/shared/EmojiIcon";
 import { TRIP_CURRENCIES } from "@/lib/currencies";
 import { useState, useEffect } from "react";
-import { Loader2, Plus, X, Pencil, Check, Infinity, CalendarDays, CalendarRange } from "lucide-react";
+import { Loader2, Plus, X, Pencil, Check, Infinity, CalendarDays, CalendarRange, ImagePlus } from "lucide-react";
 import { m as motion, AnimatePresence } from "framer-motion";
 import {
   Sheet,
@@ -14,15 +14,14 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { LocationPickerSheet } from "@/components/shared/LocationPickerSheet";
-import { DateRangePicker } from "@/components/shared/DateRangePicker";
 import { DateField } from "@/components/shared/DateTimeFields";
 import { AvatarUpload } from "@/components/shared/AvatarUpload";
 import { useUserId } from "@/hooks/useUserId";
 import { tripEmojiChoices } from "@/lib/trip-emojis";
 import { cn } from "@/lib/utils";
 import { ParticipantAvatar } from "@/components/shared/ParticipantAvatar";
-import { isVoyage, tripFeatures } from "@/lib/trip-features";
-import type { Trip, Participant } from "@/types";
+import { ModulePicker } from "@/components/trips/ModulePicker";
+import type { Trip, TripModule, Participant } from "@/types";
 import { PARTICIPANT_COLORS } from "@/lib/participant-colors";
 import { FriendPicker } from "@/components/trips/FriendPicker";
 import { useToast } from "@/components/shared/Toaster";
@@ -46,6 +45,7 @@ interface TripEditDialogProps {
     startDate?: string | null;
     endDate?: string | null;
     iconUrl?: string | null;
+    modules?: TripModule[];
   }) => Promise<void>;
   onSaveIcon: (iconUrl: string | null) => Promise<void>;
   onAddParticipant: (data: { name: string; color: string }) => Promise<unknown>;
@@ -71,22 +71,22 @@ export function TripEditDialog({
   type GroupDateMode = "permanent" | "date_fixe" | "creneau";
 
   function detectGroupDateMode(t: typeof trip): GroupDateMode {
-    if (isVoyage(t) || !t.startDate) return "permanent";
+    if (!t.startDate) return "permanent";
     if (!t.endDate || t.startDate === t.endDate) return "date_fixe";
     return "creneau";
   }
 
-  const features = tripFeatures(trip);
   const userId = useUserId();
   const [activeTab, setActiveTab] = useState<NavTab>("Général");
   const [name, setName] = useState(trip.name);
-  const [destination, setDestination] = useState(isVoyage(trip) ? trip.destination : "");
+  const [destination, setDestination] = useState(trip.destination ?? "");
   const [emoji, setEmoji] = useState(trip.emoji);
   const [currency, setCurrency] = useState(trip.currency);
-  const [startDate, setStartDate] = useState(isVoyage(trip) ? trip.startDate : (trip.startDate ?? ""));
-  const [endDate, setEndDate] = useState(isVoyage(trip) ? trip.endDate : (trip.endDate ?? trip.startDate ?? ""));
+  const [startDate, setStartDate] = useState(trip.startDate ?? "");
+  const [endDate, setEndDate] = useState(trip.endDate ?? trip.startDate ?? "");
+  const [modules, setModules] = useState<TripModule[]>(trip.modules);
   const [groupDateMode, setGroupDateMode] = useState<GroupDateMode>(detectGroupDateMode(trip));
-  const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
+  const [emojiPickerOpen, setEmojiPickerOpen] = useState(true);
   const [newParticipantName, setNewParticipantName] = useState("");
   const [editingParticipantId, setEditingParticipantId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
@@ -96,22 +96,23 @@ export function TripEditDialog({
     if (open) {
       setActiveTab("Général");
       setName(trip.name);
-      setDestination(isVoyage(trip) ? trip.destination : "");
+      setDestination(trip.destination ?? "");
       setEmoji(trip.emoji);
       setCurrency(trip.currency);
-      setStartDate(isVoyage(trip) ? trip.startDate : (trip.startDate ?? ""));
-      setEndDate(isVoyage(trip) ? trip.endDate : (trip.endDate ?? trip.startDate ?? ""));
+      setStartDate(trip.startDate ?? "");
+      setEndDate(trip.endDate ?? trip.startDate ?? "");
       setGroupDateMode(detectGroupDateMode(trip));
-      setEmojiPickerOpen(false);
+      setModules(trip.modules);
+      setEmojiPickerOpen(true);
       setEditingParticipantId(null);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, trip]);
 
-  const voyageDirty = isVoyage(trip)
-    ? destination !== trip.destination || startDate !== trip.startDate || endDate !== trip.endDate
-    : false;
-  const groupDateDirty = !isVoyage(trip) && (() => {
+  const period = groupDateMode === "date_fixe" ? !!startDate : groupDateMode === "creneau" ? !!startDate && !!endDate && endDate >= startDate : false;
+  const savedModules = modules.filter((m) => period || m === "lists");
+  const sameModules = (a: TripModule[], b: TripModule[]) => a.length === b.length && a.every((m) => b.includes(m));
+  const dateDirty = (() => {
     const origMode = detectGroupDateMode(trip);
     if (origMode !== groupDateMode) return true;
     if (groupDateMode === "date_fixe") return startDate !== (trip.startDate ?? "");
@@ -122,48 +123,40 @@ export function TripEditDialog({
     name !== trip.name ||
     emoji !== trip.emoji ||
     currency !== trip.currency ||
-    voyageDirty ||
-    groupDateDirty;
+    destination.trim() !== (trip.destination ?? "") ||
+    !sameModules(savedModules, trip.modules) ||
+    dateDirty;
 
-  const groupDateValid = !isVoyage(trip)
-    ? groupDateMode === "permanent" ||
-      (groupDateMode === "date_fixe" && !!startDate) ||
-      (groupDateMode === "creneau" && !!startDate && !!endDate && endDate >= startDate)
-    : true;
-  const formValid =
-    name.trim().length > 0 &&
-    (features.hasDestination ? destination.trim().length > 0 : true) &&
-    (features.hasDates ? !!startDate && !!endDate : true) &&
-    groupDateValid;
+  const groupDateValid =
+    groupDateMode === "permanent" ||
+    (groupDateMode === "date_fixe" && !!startDate) ||
+    (groupDateMode === "creneau" && !!startDate && !!endDate && endDate >= startDate);
+  const formValid = name.trim().length > 0 && groupDateValid;
 
   const handleSaveTrip = async () => {
     if (!formValid || !dirty) return;
     setSaving(true);
     try {
-      let saveStartDate: string | null | undefined;
-      let saveEndDate: string | null | undefined;
-      if (features.hasDates) {
-        saveStartDate = startDate;
-        saveEndDate = endDate;
-      } else if (!isVoyage(trip)) {
-        if (groupDateMode === "permanent") {
-          saveStartDate = null;
-          saveEndDate = null;
-        } else if (groupDateMode === "date_fixe") {
-          saveStartDate = startDate || null;
-          saveEndDate = startDate || null;
-        } else {
-          saveStartDate = startDate || null;
-          saveEndDate = endDate || null;
-        }
+      let saveStartDate: string | null;
+      let saveEndDate: string | null;
+      if (groupDateMode === "permanent") {
+        saveStartDate = null;
+        saveEndDate = null;
+      } else if (groupDateMode === "date_fixe") {
+        saveStartDate = startDate || null;
+        saveEndDate = startDate || null;
+      } else {
+        saveStartDate = startDate || null;
+        saveEndDate = endDate || null;
       }
       await onSaveTrip({
         name: name.trim(),
-        destination: features.hasDestination ? destination.trim() : "",
+        destination: destination.trim(),
         emoji,
         currency,
         startDate: saveStartDate,
         endDate: saveEndDate,
+        modules: savedModules,
       });
     } finally {
       setSaving(false);
@@ -212,7 +205,7 @@ export function TripEditDialog({
         {/* Header */}
         <div className="shrink-0 px-5 pt-7 pr-16 pb-3">
           <SheetTitle>
-            {isVoyage(trip) ? "Modifier le voyage" : "Modifier le budget"}
+            Modifier
           </SheetTitle>
         </div>
 
@@ -249,27 +242,30 @@ export function TripEditDialog({
           {activeTab === "Général" && (
             <>
               {userId && (
-                <div className="flex flex-col items-center gap-2">
+                <div className="flex items-center gap-4 rounded-[1.25rem] bg-secondary p-4">
                   <AvatarUpload
                     bucket="trip-icons"
                     path={`${userId}/${trip.id}.webp`}
                     currentUrl={trip.iconUrl ?? null}
-                    size={88}
-                    ringClass="ring-2 ring-foreground/40"
-                    placeholder={<span className="text-4xl"><EmojiIcon emoji={emoji} /></span>}
-                    dialogTitle="Recadrer l'icône du voyage"
+                    size={72}
+                    ringClass="ring-2 ring-foreground/25"
+                    placeholder={<ImagePlus size={26} className="text-muted-foreground" />}
+                    dialogTitle="Recadrer la photo de couverture"
                     onUploaded={(url) => onSaveIcon(url)}
                     onRemoved={() => onSaveIcon(null)}
                   />
-                  <p className="text-xs text-muted-foreground">
-                    {trip.iconUrl ? "Tap pour changer" : "Ou choisis un emoji ↓"}
-                  </p>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[0.95rem] font-semibold">Photo de couverture</p>
+                    <p className="text-sm text-muted-foreground">
+                      {trip.iconUrl ? "Touche la photo pour la changer ou la retirer." : "Facultatif. Sans photo, rien ne prend de place."}
+                    </p>
+                  </div>
                 </div>
               )}
 
               <div className="space-y-1.5">
                 <Label className="px-1 text-sm font-semibold text-foreground">
-                  {isVoyage(trip) ? "Nom du voyage" : "Nom du budget"}
+                  Nom
                 </Label>
                 <div className="flex items-stretch gap-2 h-12 rounded-2xl border border-input bg-card transition-[border-color,box-shadow] focus-within:border-primary/60 focus-within:ring-4 focus-within:ring-primary/12 overflow-hidden">
                   <button
@@ -321,85 +317,71 @@ export function TripEditDialog({
                 </AnimatePresence>
               </div>
 
-              {features.hasDestination && (
-                <div className="space-y-1.5">
-                  <Label className="px-1 text-sm font-semibold text-foreground">Destination</Label>
-                  <LocationPickerSheet
-                    value={destination}
-                    onChange={setDestination}
-                    placeholder="Rome, Italie"
+              <div className="space-y-1.5">
+                <Label className="px-1 text-sm font-semibold text-foreground">Lieu</Label>
+                <LocationPickerSheet value={destination} onChange={setDestination} placeholder="Ajouter un lieu" />
+              </div>
 
-                  />
+              <div className="space-y-2">
+                <Label className="px-1 text-sm font-semibold text-foreground">Période</Label>
+                <div className="flex gap-2">
+                  {(
+                    [
+                      { mode: "permanent" as GroupDateMode, label: "Sans date", icon: Infinity },
+                      { mode: "date_fixe" as GroupDateMode, label: "Un jour", icon: CalendarDays },
+                      { mode: "creneau" as GroupDateMode, label: "Période", icon: CalendarRange },
+                    ] as const
+                  ).map(({ mode, label, icon: Icon }) => (
+                    <button
+                      key={mode}
+                      type="button"
+                      onClick={() => {
+                        setGroupDateMode(mode);
+                        setStartDate("");
+                        setEndDate("");
+                      }}
+                      className={cn(
+                        "flex-1 flex flex-col items-center gap-1 py-2.5 px-2 rounded-xl text-xs font-medium transition-all active:scale-95",
+                        groupDateMode === mode
+                          ? "bg-primary/10 text-primary ring-1 ring-primary/40"
+                          : "bg-secondary text-muted-foreground hover:bg-foreground/[0.08]"
+                      )}
+                    >
+                      <Icon size={16} />
+                      {label}
+                    </button>
+                  ))}
                 </div>
-              )}
-
-              {!isVoyage(trip) && (
-                <div className="space-y-2">
-                  <Label className="px-1 text-sm font-semibold text-foreground">Période</Label>
-                  <div className="flex gap-2">
-                    {(
-                      [
-                        { mode: "permanent" as GroupDateMode, label: "Permanent", icon: Infinity },
-                        { mode: "date_fixe" as GroupDateMode, label: "Date fixe", icon: CalendarDays },
-                        { mode: "creneau" as GroupDateMode, label: "Créneau", icon: CalendarRange },
-                      ] as const
-                    ).map(({ mode, label, icon: Icon }) => (
-                      <button
-                        key={mode}
-                        type="button"
-                        onClick={() => {
-                          setGroupDateMode(mode);
-                          setStartDate("");
-                          setEndDate("");
-                        }}
-                        className={cn(
-                          "flex-1 flex flex-col items-center gap-1 py-2.5 px-2 rounded-xl text-xs font-medium transition-all active:scale-95",
-                          groupDateMode === mode
-                            ? "bg-primary/10 text-primary ring-1 ring-primary/40"
-                            : "bg-secondary text-muted-foreground hover:bg-foreground/[0.08]"
-                        )}
-                      >
-                        <Icon size={16} />
-                        {label}
-                      </button>
-                    ))}
-                  </div>
-                  <AnimatePresence initial={false}>
-                    {groupDateMode !== "permanent" && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.15 }}
-                        className="overflow-hidden"
-                      >
-                        <div className={cn("pt-1", groupDateMode === "creneau" ? "grid grid-cols-2 gap-2" : "")}>
-                          <div className="space-y-1">
-                            <Label className="text-xs text-muted-foreground">
-                              {groupDateMode === "creneau" ? "Début" : "Date"}
-                            </Label>
-                            <DateField value={startDate} onChange={setStartDate} label={groupDateMode === "creneau" ? "Début" : "Date"} />
-                          </div>
-                          {groupDateMode === "creneau" && (
-                            <div className="space-y-1">
-                              <Label className="text-xs text-muted-foreground">Fin</Label>
-                              <DateField value={endDate} onChange={setEndDate} label="Fin" min={startDate || undefined} />
-                            </div>
-                          )}
+                <AnimatePresence initial={false}>
+                  {groupDateMode !== "permanent" && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.15 }}
+                      className="overflow-hidden"
+                    >
+                      <div className={cn("pt-1", groupDateMode === "creneau" ? "grid grid-cols-2 gap-2" : "")}>
+                        <div className="space-y-1">
+                          <Label className="text-xs text-muted-foreground">
+                            {groupDateMode === "creneau" ? "Début" : "Date"}
+                          </Label>
+                          <DateField value={startDate} onChange={setStartDate} label={groupDateMode === "creneau" ? "Début" : "Date"} />
                         </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              )}
+                        {groupDateMode === "creneau" && (
+                          <div className="space-y-1">
+                            <Label className="text-xs text-muted-foreground">Fin</Label>
+                            <DateField value={endDate} onChange={setEndDate} label="Fin" min={startDate || undefined} />
+                          </div>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
 
-              {features.hasDates && startDate && endDate && (
-                <DateRangePicker
-                  startDate={startDate}
-                  endDate={endDate}
-                  onChange={(s, e) => { setStartDate(s); setEndDate(e); }}
-                />
-              )}
+
+              <ModulePicker value={modules} canPlan={period} onChange={setModules} />
 
               <div className="space-y-2">
                 <Label className="px-1 text-sm font-semibold text-foreground">

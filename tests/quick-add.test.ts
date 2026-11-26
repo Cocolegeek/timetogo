@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { ALL_MODULES as ALL } from "../lib/trip-features.ts";
 import { contextKind, leadKind, orderActions } from "../lib/quick-add.ts";
 import { guessCategory } from "../lib/budget/guess-category.ts";
 import { recentTitles } from "../lib/budget/recent-titles.ts";
@@ -7,24 +8,24 @@ import { recentTitles } from "../lib/budget/recent-titles.ts";
 const B = "/trips/abc";
 
 test("le + agit selon l'écran : budget, planning, menus, listes ; accueil = pas d'action directe", () => {
-  assert.equal(contextKind(`${B}/budget`, B, "trip"), "expense");
-  assert.equal(contextKind(`${B}/planning`, B, "trip"), "step");
-  assert.equal(contextKind(`${B}/menus`, B, "trip"), "meal");
-  assert.equal(contextKind(`${B}/lists`, B, "trip"), "item");
-  assert.equal(contextKind(B, B, "trip"), null);
-  assert.equal(contextKind("/settings", B, "trip"), null);
+  assert.equal(contextKind(`${B}/budget`, B, ALL), "expense");
+  assert.equal(contextKind(`${B}/planning`, B, ALL), "step");
+  assert.equal(contextKind(`${B}/menus`, B, ALL), "meal");
+  assert.equal(contextKind(`${B}/lists`, B, ALL), "item");
+  assert.equal(contextKind(B, B, ALL), null);
+  assert.equal(contextKind("/settings", B, ALL), null);
 });
 
 test("un budget de groupe n'a ni planning ni menus : le + y propose le choix", () => {
-  assert.equal(contextKind(`${B}/budget`, B, "group"), "expense");
-  assert.equal(contextKind(`${B}/lists`, B, "group"), "item");
-  assert.equal(contextKind(`${B}/planning`, B, "group"), null);
-  assert.equal(contextKind(`${B}/menus`, B, "group"), null);
+  assert.equal(contextKind(`${B}/budget`, B, ["lists"]), "expense");
+  assert.equal(contextKind(`${B}/lists`, B, ["lists"]), "item");
+  assert.equal(contextKind(`${B}/planning`, B, ["lists"]), null);
+  assert.equal(contextKind(`${B}/menus`, B, ["lists"]), null);
 });
 
 test("un autre voyage ne déclenche rien (préfixe exact)", () => {
-  assert.equal(contextKind("/trips/abcd/budget", B, "trip"), null);
-  assert.equal(contextKind(`${B}/budgetary`, B, "trip"), null);
+  assert.equal(contextKind("/trips/abcd/budget", B, ALL), null);
+  assert.equal(contextKind(`${B}/budgetary`, B, ALL), null);
 });
 
 test("choix en tête : l'action de l'écran, sinon la dépense ; ordre des autres inchangé", () => {
