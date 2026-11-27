@@ -7,7 +7,7 @@
 - **Next.js 16 / React 19**: App Router, TypeScript, no Pages Router
 - **Supabase**: PostgreSQL + RLS + Google OAuth + comptes invités (anonymous sign-in) via `@supabase/ssr`
 - **UI**: shadcn/ui (style: base-nova, primitives restylés) + Tailwind CSS 4 + Framer Motion + Lucide
-- **Forms**: react-hook-form + Zod v4
+- **Forms**: états locaux (useState) + validation maison, voir `components/forms/`
 - **State**: Custom hooks + local useState (no Redux/Zustand)
 
 ## Un seul type d'espace : le budget, plus des espaces au choix
@@ -67,7 +67,7 @@ components/
               ParticipantPaymentSheet: bottom sheet: copy IBAN/tél, share via navigator.share
   auth/       GoogleIcon, GuestUpgradeCard (carte « mode invité » + bouton Sauvegarder avec Google),
               GuestSignOutDialog (un invité qui se déconnecte perd ses données : on propose de sauvegarder)
-  layout/     AppHeader, GlassCard (= carte pleine, plus de verre), MeshGradientBackground (= fond uni),
+  layout/     AppHeader, MeshGradientBackground (= fond uni),
               PageHeader (grand titre), SectionThemeController, TripAppHeader (retour · recherche · partage · modifier),
               TripNav (barre du bas sur téléphone, menu latéral `aside` dès `lg`), TripMain (largeur du contenu), TripClientProviders, UserMenu (avatar = lien direct vers /settings), VoyouLogo (LogoMark = visage « oyo » en SVG inline + mot-symbole)
   motion/     MotionProvider (LazyMotion strict + MotionConfig ; features domMax chargées après le 1er rendu),
@@ -100,8 +100,8 @@ components/
   trips/      FriendPicker (rangée « Ta bande » : un pote choisi = membre lié, le voyage apparaît chez lui),
               MyListCard (tableau de bord : « On compte sur toi » / « n choses sans personne »)
   ui/         switch (interrupteur iOS) +
-              shadcn primitives (button, card, dialog, dropdown-menu, input, label,
-              progress, select, separator, sheet, tabs, textarea, badge)
+              shadcn primitives (button, dialog, input, label,
+              select, sheet, tabs, textarea)
 ```
 
 ## Hooks (all `"use client"`, call `createClient()` internally)
@@ -184,14 +184,12 @@ lib/
                           (reimbursement exists in CATEGORIES but NOT in CATEGORY_ORDER, hidden from UI)
   budget/currency.ts    → toTripAmount(), convertPayers() (somme des payeurs = total au centime), parseRate()
   budget/recurrence.ts  → nextRecurrence() (jumeau TS de next_recurrence() en SQL), anchorDayOf()
-  budget/schemas.ts     → Zod schemas for expenses
   currencies.ts         → CURRENCIES (dépenses), TRIP_CURRENCIES (devise d'un voyage), roundMoney()
   export/               → expenses-csv.ts (Excel FR : « ; », virgule, BOM), recap.ts (texte à partager),
                           download.ts (downloadFile, shareText), my-data.ts (export RGPD + suppression des fichiers)
   offline/outbox.ts     → file de modifications sans réseau (localStorage `voyou-outbox-v1`) : enqueue(), flushOutbox(),
                           isOfflineError(). Insert = upsert sur id client (idempotent) ; update/delete d'une ligne encore en
                           attente fusionnés. Vidée par clearDataCache() (déconnexion).
-  budget/budget-color.ts → getBudgetColor(pct), getBudgetTextColor(pct)
   format-currency.ts    → formatCurrency(amount, currency), currencySymbol(currency)
   format-date.ts        → formatDateRange, formatDuration, friendlyDay (Aujourd'hui, Demain), formatClock (14:32), formatAddedAt (8 juin à 10:00)
   image-crop.ts         → getCroppedImg() for AvatarUpload / ImageCropDialog
@@ -458,7 +456,7 @@ All `<input type="number">` and amount text inputs must have `onFocus={(e) => e.
 - **Client/Server split**: hooks and interactive components → `"use client"`. Pages/layouts default to RSC.
 - **No bare SQL**: always use Supabase query builder (`supabase.from().select().eq()...`)
 - **Mutations**: call hook method → hook auto-refetches. Never mutate local state directly.
-- **Forms**: react-hook-form + Zod in dialogs/modals. Multi-step → pattern CreateWizard (logique pure dans `lib/trips/`, testée).
+- **Forms**: useState + validation maison dans les dialogues. Multi-step → pattern CreateWizard (logique pure dans `lib/trips/`, testée).
 - **Styling**: Tailwind utility classes + CSS custom properties for theme. `cn()` for conditional classes.
 - **Icons**: Lucide only (never emoji as icon in code, except the emoji pickers of CreateWizard / TripEditDialog).
 - **No comments** unless WHY is non-obvious.
