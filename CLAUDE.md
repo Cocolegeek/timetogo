@@ -247,9 +247,12 @@ DB rows are snake_case; UI types (types/index.ts) are camelCase. Use `rowToTrip(
 ## Design system (enforced, do not regress)
 
 - **Monochrome** : pas de couleur dominante. `primary` = encre (noir en clair, blanc en sombre) pour
-  boutons, onglets actifs, sélections. La couleur est réservée au sens (vert « on te doit », rouge
-  « tu dois », teintes de catégories / types d'étape / créneaux) et aux illustrations. Le logo garde
-  sa couleur, c'est la seule touche de marque. Ne pas réintroduire d'accent violet/bleu/orange.
+  boutons, onglets actifs, sélections. La couleur est réservée au sens, et seulement sur le **texte** posé sur une carte
+  blanche : `text-positive` (« on te doit ») et `text-negative` (« tu dois »), tokens de `globals.css`. Jamais de texte
+  coloré sur un fond de même teinte (vert foncé sur vert clair) : les tuiles de solde sont `bg-card shadow-card`.
+  Pastilles d'icônes (catégories, types d'étape, créneaux de repas, ajouts rapides, modes de trajet) : toujours neutres,
+  `bg-secondary text-foreground`, jamais un arc-en-ciel de tuiles. Le logo garde sa couleur, c'est la seule touche de marque.
+  Ne pas réintroduire d'accent violet/bleu/orange.
 - **Logo** : petit visage « oyo » (deux yeux en anneaux + nez/sourire en « y ») encre `#15171C` sur
   jaune soleil `#FFC83D`. Source unique : `scripts/generate-logo.mjs` (SVG + PNG PWA / maskable /
   apple-touch / favicon) et `LogoMark` (même tracé). Changer l'un = changer l'autre + `opengraph-image.tsx`.

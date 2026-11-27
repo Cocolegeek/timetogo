@@ -15,9 +15,9 @@ import { EASE_OUT, EASE_SHEET, fadeUp, stagger } from "@/lib/motion";
 const STORAGE_KEY = "voyou-welcomed-v1";
 
 const FEATURES = [
-  { icon: Map, label: "Planifie l'itinéraire jour par jour", tile: "bg-sky-500/12 text-sky-400" },
-  { icon: Wallet, label: "Partage les dépenses, sans prise de tête", tile: "bg-foreground/[0.07] text-foreground" },
-  { icon: UtensilsCrossed, label: "Organise les repas et les courses", tile: "bg-emerald-500/12 text-emerald-400" },
+  { icon: Map, label: "Planifie l'itinéraire jour par jour", tile: "bg-secondary text-foreground" },
+  { icon: Wallet, label: "Partage les dépenses, sans prise de tête", tile: "bg-secondary text-foreground" },
+  { icon: UtensilsCrossed, label: "Organise les repas et les courses", tile: "bg-secondary text-foreground" },
 ];
 
 function readWelcomed(): boolean {

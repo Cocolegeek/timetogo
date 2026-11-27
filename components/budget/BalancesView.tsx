@@ -73,16 +73,13 @@ export function BalancesView({
       {myId && myBalance && (
         <StaggerItem>
           <div
-            className={cn(
-              "rounded-[1.75rem] p-5",
-              meSettled ? "bg-emerald-500/12" : net > 0 ? "bg-emerald-500/12" : "bg-rose-500/12"
-            )}
+            className="rounded-[1.75rem] bg-card p-5 shadow-card"
           >
             {meSettled ? (
               <IAmSettledEmpty />
             ) : (
               <>
-                <p className={cn("text-sm font-semibold", net > 0 ? "text-emerald-300" : "text-rose-300")}>
+                <p className="text-sm font-medium text-muted-foreground">
                   {net > 0 ? "En tout, on te doit" : "En tout, tu dois"}
                 </p>
                 <NumberTicker
@@ -90,7 +87,7 @@ export function BalancesView({
                   format={formatMoney}
                   className={cn(
                     "tabular mt-1 block font-display text-[2.75rem] leading-none font-extrabold tracking-[-0.035em]",
-                    net > 0 ? "text-emerald-200" : "text-rose-200"
+                    net > 0 ? "text-positive" : "text-negative"
                   )}
                 />
                 <p className="mt-2 text-sm text-muted-foreground">
@@ -236,7 +233,7 @@ export function BalancesView({
                           <span
                             className={cn(
                               "tabular shrink-0 text-sm font-semibold",
-                              isCreditor ? "text-emerald-400" : isDebtor ? "text-rose-400" : "text-muted-foreground"
+                              isCreditor ? "text-positive" : isDebtor ? "text-negative" : "text-muted-foreground"
                             )}
                           >
                             {isCreditor ? "+" : isDebtor ? "−" : ""}
@@ -325,7 +322,7 @@ function BalanceRow({
           <span
             className={cn(
               "tabular shrink-0 font-display text-[1.0625rem] font-bold",
-              tone === "positive" ? "text-emerald-400" : "text-rose-400"
+              tone === "positive" ? "text-positive" : "text-negative"
             )}
           >
             {amount}
@@ -574,7 +571,7 @@ function CopyRow({
         onClick={handleCopy}
         className="flex h-9 min-w-16 items-center justify-center rounded-full px-3 text-sm font-semibold text-primary transition-colors hover:bg-primary/10"
       >
-        {copied ? <Check size={14} className="text-emerald-400" /> : "Copier"}
+        {copied ? <Check size={14} className="text-positive" /> : "Copier"}
       </button>
     </div>
   );

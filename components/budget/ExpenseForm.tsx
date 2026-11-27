@@ -546,7 +546,7 @@ export function ExpenseForm({
           className={cn(
             "text-center text-sm font-medium",
             Math.abs(payerTotal - amount) < 0.01
-              ? "text-emerald-400"
+              ? "text-positive"
               : "text-muted-foreground"
           )}
         >
@@ -1010,7 +1010,7 @@ function SplitTotalFeedback({
       <div
         className={cn(
           "flex items-center justify-center gap-1.5 text-center text-sm font-medium",
-          ok ? "text-emerald-400" : "text-muted-foreground"
+          ok ? "text-positive" : "text-muted-foreground"
         )}
       >
         {ok ? (
@@ -1034,7 +1034,7 @@ function SplitTotalFeedback({
     <div
       className={cn(
         "flex items-center justify-center gap-1.5 text-center text-sm font-medium",
-        ok ? "text-emerald-400" : "text-muted-foreground"
+        ok ? "text-positive" : "text-muted-foreground"
       )}
     >
       {ok ? (

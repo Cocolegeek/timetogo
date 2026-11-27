@@ -213,8 +213,8 @@ export default function PlanningPage({ params }: PlanningPageProps) {
             <DialogDescription className="sr-only">Une étape sur place ou un déplacement entre deux lieux.</DialogDescription>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <PickerOption icon={CalendarPlus} tile="bg-emerald-500/12 text-emerald-400" label="Étape" hint="Activité, resto, logement" onClick={openEventForm} />
-            <PickerOption icon={Route} tile="bg-sky-500/12 text-sky-400" label="Trajet" hint="D'un lieu à l'autre" onClick={openJourneyForm} />
+            <PickerOption icon={CalendarPlus} tile="bg-secondary text-foreground" label="Étape" hint="Activité, resto, logement" onClick={openEventForm} />
+            <PickerOption icon={Route} tile="bg-secondary text-foreground" label="Trajet" hint="D'un lieu à l'autre" onClick={openJourneyForm} />
           </div>
         </DialogContent>
       </Dialog>
@@ -379,10 +379,10 @@ function ItineraryCard({
         onDragEnd={handleDragEnd}
         className={cn(
           "relative flex touch-pan-y items-start gap-3 rounded-[1.25rem] p-3.5 select-none",
-          isJourney ? "bg-[color-mix(in_oklch,var(--color-sky-500)_10%,var(--card))] ring-1 ring-sky-500/15 ring-inset" : "bg-card"
+          "bg-card"
         )}
       >
-        <span className={cn("flex size-11 shrink-0 items-center justify-center rounded-2xl", isJourney ? "bg-sky-500/15 text-sky-400" : cfg.tile)}>
+        <span className={cn("flex size-11 shrink-0 items-center justify-center rounded-2xl", cfg.tile)}>
           <Icon size={20} />
         </span>
 
@@ -423,7 +423,7 @@ function ItineraryCard({
               }
               className={cn(
                 "flex size-11 items-center justify-center rounded-full transition-colors",
-                isJourney ? "bg-sky-500/12 text-sky-400 hover:bg-sky-500/20" : "bg-secondary text-foreground hover:bg-foreground/[0.08]"
+                "bg-secondary text-foreground hover:bg-foreground/[0.08]"
               )}
               aria-label={isJourney ? "Voir l'itinéraire" : `Ouvrir ${item.location} dans une app de cartes`}
             >

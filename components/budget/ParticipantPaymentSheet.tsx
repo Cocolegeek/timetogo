@@ -164,7 +164,7 @@ function CopyRow({
         className="flex size-10 shrink-0 items-center justify-center rounded-full text-primary transition-colors hover:bg-primary/10"
         aria-label={`Copier ${label}`}
       >
-        {copied ? <Check size={15} className="text-emerald-400" /> : <Copy size={15} />}
+        {copied ? <Check size={15} className="text-positive" /> : <Copy size={15} />}
       </button>
     </div>
   );

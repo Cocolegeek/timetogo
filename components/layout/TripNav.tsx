@@ -55,10 +55,10 @@ const QUICK_ADD: {
   module: TripModule | null;
 }[] = [
   { kind: "expense", label: "Dépense", icon: Wallet, tile: "bg-primary text-primary-foreground", href: "/budget", module: null },
-  { kind: "step", label: "Étape", icon: CalendarPlus, tile: "bg-emerald-500 text-white", href: "/planning", module: "planning" },
-  { kind: "journey", label: "Trajet", icon: Route, tile: "bg-sky-500 text-white", href: "/planning", module: "planning" },
-  { kind: "meal", label: "Repas", icon: UtensilsCrossed, tile: "bg-rose-500 text-white", href: "/menus", module: "menus" },
-  { kind: "item", label: "Liste", icon: ListChecks, tile: "bg-amber-500 text-white", href: "/lists", module: "lists" },
+  { kind: "step", label: "Étape", icon: CalendarPlus, tile: "bg-secondary text-foreground", href: "/planning", module: "planning" },
+  { kind: "journey", label: "Trajet", icon: Route, tile: "bg-secondary text-foreground", href: "/planning", module: "planning" },
+  { kind: "meal", label: "Repas", icon: UtensilsCrossed, tile: "bg-secondary text-foreground", href: "/menus", module: "menus" },
+  { kind: "item", label: "Liste", icon: ListChecks, tile: "bg-secondary text-foreground", href: "/lists", module: "lists" },
 ];
 
 /** Glass material for the floating navigation layer only (never on content). */

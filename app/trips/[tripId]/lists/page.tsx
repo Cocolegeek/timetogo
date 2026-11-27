@@ -189,7 +189,7 @@ export default function ListsPage({ params }: { params: Promise<{ tripId: string
                   </AnimatePresence>
                 </ul>
               ) : (
-                <p className="flex items-center justify-center gap-2 py-4 text-[0.95rem] font-semibold text-emerald-400">
+                <p className="flex items-center justify-center gap-2 py-4 text-[0.95rem] font-semibold text-positive">
                   <Check size={18} strokeWidth={2.6} />
                   Tout est fait
                 </p>

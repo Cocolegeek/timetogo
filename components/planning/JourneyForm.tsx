@@ -21,15 +21,13 @@ const MODES: {
   id: JourneyMode;
   label: string;
   Icon: React.ComponentType<{ size?: number; className?: string }>;
-  color: string;
-  bg: string;
   autoRoute: boolean;
 }[] = [
-  { id: "car",     label: "Voiture",     Icon: Car,            color: "text-sky-300",    bg: "bg-sky-500/15 ring-sky-500/40",    autoRoute: true  },
-  { id: "foot",    label: "À pied",      Icon: PersonStanding, color: "text-emerald-300",bg: "bg-emerald-500/15 ring-emerald-500/40", autoRoute: true  },
-  { id: "bike",    label: "Vélo",        Icon: Bike,           color: "text-lime-300",   bg: "bg-lime-500/15 ring-lime-500/40",  autoRoute: true  },
-  { id: "transit", label: "Transport",   Icon: Bus,            color: "text-violet-300", bg: "bg-violet-500/15 ring-violet-500/40", autoRoute: false },
-  { id: "plane",   label: "Avion",       Icon: Plane,          color: "text-amber-300",  bg: "bg-amber-500/15 ring-amber-500/40", autoRoute: false },
+  { id: "car",     label: "Voiture",     Icon: Car,            autoRoute: true  },
+  { id: "foot",    label: "À pied",      Icon: PersonStanding, autoRoute: true  },
+  { id: "bike",    label: "Vélo",        Icon: Bike,           autoRoute: true  },
+  { id: "transit", label: "Transport",   Icon: Bus,            autoRoute: false },
+  { id: "plane",   label: "Avion",       Icon: Plane,          autoRoute: false },
 ];
 
 interface JourneyFormProps {

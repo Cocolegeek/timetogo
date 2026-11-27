@@ -9,9 +9,9 @@ import type { ActivityAction, ActivityEntity, ActivityEntry } from "@/types";
 
 const ACTION_ICON: Record<ActivityAction, LucideIcon> = { created: Plus, updated: Pencil, deleted: Trash2 };
 const ACTION_TONE: Record<ActivityAction, string> = {
-  created: "bg-emerald-500/12 text-emerald-500",
-  updated: "bg-foreground/[0.07] text-foreground",
-  deleted: "bg-red-500/12 text-red-400",
+  created: "bg-secondary text-foreground",
+  updated: "bg-secondary text-foreground",
+  deleted: "bg-secondary text-negative",
 };
 const ENTITY_ICON: Record<ActivityEntity, LucideIcon> = { expense: Receipt, settlement: ArrowRightLeft, step: Map };
 

@@ -181,7 +181,7 @@ export function TripCard({ trip, onEdit, onDelete, onShare, variant = "row" }: T
               className={cn(
                 "mt-1 text-[0.8125rem] font-semibold",
                 status.kind === "ongoing"
-                  ? "text-emerald-400"
+                  ? "text-positive"
                   : status.kind === "upcoming"
                     ? "text-primary"
                     : "text-muted-foreground"

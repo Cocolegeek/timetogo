@@ -17,17 +17,17 @@ import type { ItineraryType, JourneyMode } from "@/types";
 export interface ItineraryTypeConfig {
   label: string;
   icon: LucideIcon;
-  /** Tinted tile: background + icon colour. */
+  /** Neutral tile: background + icon colour. */
   tile: string;
 }
 
 export const ITINERARY_TYPES: Record<ItineraryType, ItineraryTypeConfig> = {
-  accommodation: { label: "Hébergement", icon: Bed, tile: "bg-violet-500/12 text-violet-400" },
-  activity: { label: "Activité", icon: Sparkles, tile: "bg-emerald-500/12 text-emerald-400" },
-  food: { label: "Resto", icon: UtensilsCrossed, tile: "bg-rose-500/12 text-rose-400" },
-  other: { label: "Autre", icon: MapPin, tile: "bg-foreground/[0.07] text-muted-foreground" },
-  transport: { label: "Transport", icon: TrainFront, tile: "bg-sky-500/12 text-sky-400" },
-  journey: { label: "Trajet", icon: Route, tile: "bg-sky-500/12 text-sky-400" },
+  accommodation: { label: "Hébergement", icon: Bed, tile: "bg-secondary text-foreground" },
+  activity: { label: "Activité", icon: Sparkles, tile: "bg-secondary text-foreground" },
+  food: { label: "Resto", icon: UtensilsCrossed, tile: "bg-secondary text-foreground" },
+  other: { label: "Autre", icon: MapPin, tile: "bg-secondary text-foreground" },
+  transport: { label: "Transport", icon: TrainFront, tile: "bg-secondary text-foreground" },
+  journey: { label: "Trajet", icon: Route, tile: "bg-secondary text-foreground" },
 };
 
 export const JOURNEY_MODES: Record<JourneyMode, { label: string; icon: LucideIcon }> = {
