@@ -65,7 +65,7 @@ export function MyListCard({ tripId, myId }: { tripId: string; myId: string | nu
                 }}
                 className="-ml-2 flex size-11 shrink-0 items-center justify-center rounded-full outline-none"
               >
-                <span className="flex size-[26px] items-center justify-center rounded-full border-2 border-foreground/25 text-transparent transition-colors hover:border-emerald-500 hover:text-emerald-500">
+                <span className="flex size-[26px] items-center justify-center rounded-full border-2 border-foreground/25 text-transparent transition-colors hover:border-emerald-500 hover:text-positive">
                   <Check size={15} strokeWidth={3} />
                 </span>
               </button>

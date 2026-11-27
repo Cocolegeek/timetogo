@@ -27,6 +27,8 @@ html, body {
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-positive: var(--positive);
+  --color-negative: var(--negative);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -70,6 +72,8 @@ html, body {
   --accent-foreground: oklch(0.22 0.005 280);
 
   --destructive: oklch(0.55 0.21 27);
+  --positive: oklch(0.5 0.13 155);
+  --negative: oklch(0.54 0.2 25);
   --border: oklch(0.2 0.005 280 / 9%);
   --input: oklch(0.2 0.005 280 / 12%);
   --ring: oklch(0.2 0.006 280 / 40%);
@@ -109,24 +113,26 @@ html, body {
 }
 
 .dark {
-  --background: oklch(0.155 0.004 280);
+  --background: #141318;
   --foreground: oklch(0.965 0.005 280);
 
-  --card: oklch(0.205 0.005 280);
+  --card: #1d1c22;
   --card-foreground: oklch(0.96 0.006 280);
-  --popover: oklch(0.225 0.005 280);
+  --popover: #25242b;
   --popover-foreground: oklch(0.96 0.006 280);
 
   --primary: oklch(0.965 0.005 280);
   --primary-foreground: oklch(0.17 0.006 280);
-  --secondary: oklch(0.255 0.005 280);
+  --secondary: #28272e;
   --secondary-foreground: oklch(0.90 0.006 280);
-  --muted: oklch(0.255 0.005 280);
+  --muted: #28272e;
   --muted-foreground: oklch(0.72 0.006 280);
-  --accent: oklch(0.255 0.005 280);
+  --accent: #28272e;
   --accent-foreground: oklch(0.96 0.006 280);
 
   --destructive: oklch(0.65 0.20 27);
+  --positive: oklch(0.78 0.15 155);
+  --negative: oklch(0.73 0.16 22);
   --border: oklch(1 0 0 / 9%);
   --input: oklch(1 0 0 / 13%);
   --ring: oklch(1 0 0 / 45%);
@@ -146,13 +152,13 @@ html, body {
   --sidebar-border: oklch(1 0 0 / 11%);
   --sidebar-ring: var(--ring);
 
-  --glass-bg: oklch(0.205 0.005 280);
-  --glass-strong-bg: oklch(0.225 0.005 280);
-  --glass-subtle-bg: oklch(0.255 0.005 280);
+  --glass-bg: #1d1c22;
+  --glass-strong-bg: #25242b;
+  --glass-subtle-bg: #28272e;
   --glass-border: oklch(1 0 0 / 6%);
   --glass-border-strong: oklch(1 0 0 / 9%);
   --glass-border-subtle: transparent;
-  --mesh-bg: oklch(0.155 0.004 280);
+  --mesh-bg: #141318;
 
   --shadow-card: 0 0 0 1px oklch(1 0 0 / 5%), 0 6px 20px -10px oklch(0 0 0 / 60%);
   --shadow-raised: 0 0 0 1px oklch(1 0 0 / 6%), 0 18px 40px -18px oklch(0 0 0 / 70%);

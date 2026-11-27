@@ -15,19 +15,19 @@ export const CATEGORY_CONFIG: Record<MealCategory, CategoryConfig> = {
     category: "home",
     label: "À la maison",
     badgeClass: "bg-foreground/[0.07] text-muted-foreground",
-    stripClass: "bg-slate-500",
+    stripClass: "bg-foreground/25",
   },
   picnic: {
     category: "picnic",
     label: "Pique-nique",
-    badgeClass: "bg-emerald-500/12 text-emerald-400",
-    stripClass: "bg-emerald-500",
+    badgeClass: "bg-foreground/[0.07] text-muted-foreground",
+    stripClass: "bg-foreground/25",
   },
   restaurant: {
     category: "restaurant",
     label: "Resto",
-    badgeClass: "bg-rose-500/12 text-rose-400",
-    stripClass: "bg-red-500",
+    badgeClass: "bg-foreground/[0.07] text-muted-foreground",
+    stripClass: "bg-foreground/25",
   },
 };
 

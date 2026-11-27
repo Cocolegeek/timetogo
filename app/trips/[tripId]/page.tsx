@@ -270,13 +270,13 @@ export default function TripDashboardPage({ params }: TripDashboardProps) {
           {iOweTotal < 0.01 && owedTotal < 0.01 ? (
             <Link
               href={`/trips/${tripId}/budget?tab=balances`}
-              className="pressable flex items-center gap-4 rounded-[1.5rem] bg-emerald-500/12 p-4"
+              className="pressable flex items-center gap-4 rounded-[1.5rem] bg-card p-4 shadow-card"
             >
-              <span className="flex size-11 items-center justify-center rounded-2xl bg-emerald-500 text-white">
+              <span className="flex size-11 items-center justify-center rounded-2xl bg-secondary text-positive">
                 <Check size={22} strokeWidth={2.6} />
               </span>
               <span>
-                <span className="block font-semibold text-emerald-300">Tu es à jour</span>
+                <span className="block font-semibold">Tu es à jour</span>
                 <span className="block text-sm text-muted-foreground">Personne ne te doit rien, tu ne dois rien.</span>
               </span>
             </Link>
@@ -430,17 +430,16 @@ function BalanceTile({
     <Link
       href={href}
       className={cn(
-        "pressable flex items-center gap-3 rounded-[1.5rem] p-4",
-        tone === "owe" ? "bg-rose-500/12" : "bg-emerald-500/12"
+        "pressable flex items-center gap-3 rounded-[1.5rem] bg-card p-4 shadow-card"
       )}
     >
       <span className="min-w-0 flex-1">
-        <span className={cn("block text-sm font-semibold", tone === "owe" ? "text-rose-300" : "text-emerald-300")}>{label}</span>
+        <span className="block text-sm font-medium text-muted-foreground">{label}</span>
         <span
           className={cn(
             "tabular mt-1 block font-display leading-tight font-extrabold tracking-tight",
             wide ? "text-[2rem]" : "text-[1.75rem]",
-            tone === "owe" ? "text-rose-200" : "text-emerald-200"
+            tone === "owe" ? "text-negative" : "text-positive"
           )}
         >
           {amount}
