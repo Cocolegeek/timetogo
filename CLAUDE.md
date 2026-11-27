@@ -7,7 +7,7 @@
 - **Next.js 16 / React 19**: App Router, TypeScript, no Pages Router
 - **Supabase**: PostgreSQL + RLS + Google OAuth + comptes invités (anonymous sign-in) via `@supabase/ssr`
 - **UI**: shadcn/ui (style: base-nova, primitives restylés) + Tailwind CSS 4 + Framer Motion + Lucide
-- **Forms**: react-hook-form + Zod v4
+- **Forms**: états locaux (useState) + validation maison, voir `components/forms/`
 - **State**: Custom hooks + local useState (no Redux/Zustand)
 
 ## Un seul type d'espace : le budget, plus des espaces au choix
@@ -456,7 +456,7 @@ All `<input type="number">` and amount text inputs must have `onFocus={(e) => e.
 - **Client/Server split**: hooks and interactive components → `"use client"`. Pages/layouts default to RSC.
 - **No bare SQL**: always use Supabase query builder (`supabase.from().select().eq()...`)
 - **Mutations**: call hook method → hook auto-refetches. Never mutate local state directly.
-- **Forms**: react-hook-form + Zod in dialogs/modals. Multi-step → pattern CreateWizard (logique pure dans `lib/trips/`, testée).
+- **Forms**: useState + validation maison dans les dialogues. Multi-step → pattern CreateWizard (logique pure dans `lib/trips/`, testée).
 - **Styling**: Tailwind utility classes + CSS custom properties for theme. `cn()` for conditional classes.
 - **Icons**: Lucide only (never emoji as icon in code, except the emoji pickers of CreateWizard / TripEditDialog).
 - **No comments** unless WHY is non-obvious.
