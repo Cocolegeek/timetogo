@@ -67,7 +67,7 @@ components/
               ParticipantPaymentSheet: bottom sheet: copy IBAN/tél, share via navigator.share
   auth/       GoogleIcon, GuestUpgradeCard (carte « mode invité » + bouton Sauvegarder avec Google),
               GuestSignOutDialog (un invité qui se déconnecte perd ses données : on propose de sauvegarder)
-  layout/     AppHeader, GlassCard (= carte pleine, plus de verre), MeshGradientBackground (= fond uni),
+  layout/     AppHeader, MeshGradientBackground (= fond uni),
               PageHeader (grand titre), SectionThemeController, TripAppHeader (retour · recherche · partage · modifier),
               TripNav (barre du bas sur téléphone, menu latéral `aside` dès `lg`), TripMain (largeur du contenu), TripClientProviders, UserMenu (avatar = lien direct vers /settings), VoyouLogo (LogoMark = visage « oyo » en SVG inline + mot-symbole)
   motion/     MotionProvider (LazyMotion strict + MotionConfig ; features domMax chargées après le 1er rendu),
@@ -100,8 +100,8 @@ components/
   trips/      FriendPicker (rangée « Ta bande » : un pote choisi = membre lié, le voyage apparaît chez lui),
               MyListCard (tableau de bord : « On compte sur toi » / « n choses sans personne »)
   ui/         switch (interrupteur iOS) +
-              shadcn primitives (button, card, dialog, dropdown-menu, input, label,
-              progress, select, separator, sheet, tabs, textarea, badge)
+              shadcn primitives (button, dialog, input, label,
+              select, sheet, tabs, textarea)
 ```
 
 ## Hooks (all `"use client"`, call `createClient()` internally)
@@ -184,14 +184,12 @@ lib/
                           (reimbursement exists in CATEGORIES but NOT in CATEGORY_ORDER, hidden from UI)
   budget/currency.ts    → toTripAmount(), convertPayers() (somme des payeurs = total au centime), parseRate()
   budget/recurrence.ts  → nextRecurrence() (jumeau TS de next_recurrence() en SQL), anchorDayOf()
-  budget/schemas.ts     → Zod schemas for expenses
   currencies.ts         → CURRENCIES (dépenses), TRIP_CURRENCIES (devise d'un voyage), roundMoney()
   export/               → expenses-csv.ts (Excel FR : « ; », virgule, BOM), recap.ts (texte à partager),
                           download.ts (downloadFile, shareText), my-data.ts (export RGPD + suppression des fichiers)
   offline/outbox.ts     → file de modifications sans réseau (localStorage `voyou-outbox-v1`) : enqueue(), flushOutbox(),
                           isOfflineError(). Insert = upsert sur id client (idempotent) ; update/delete d'une ligne encore en
                           attente fusionnés. Vidée par clearDataCache() (déconnexion).
-  budget/budget-color.ts → getBudgetColor(pct), getBudgetTextColor(pct)
   format-currency.ts    → formatCurrency(amount, currency), currencySymbol(currency)
   format-date.ts        → formatDateRange, formatDuration, friendlyDay (Aujourd'hui, Demain), formatClock (14:32), formatAddedAt (8 juin à 10:00)
   image-crop.ts         → getCroppedImg() for AvatarUpload / ImageCropDialog
