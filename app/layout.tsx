@@ -89,11 +89,29 @@ const themeScript = `
       var t = null;
       try { t = localStorage.getItem('voyou-theme'); } catch (e) {}
       var mq = window.matchMedia('(prefers-color-scheme: dark)');
+      var root = document.documentElement;
+      var paintBar = function () {
+        var color = root.classList.contains('dark') ? '#141318' : '#F6F6F9';
+        var metas = document.querySelectorAll('meta[name="theme-color"]');
+        if (!metas.length) {
+          var m = document.createElement('meta');
+          m.name = 'theme-color';
+          document.head.appendChild(m);
+          metas = [m];
+        }
+        for (var i = 0; i < metas.length; i++) {
+          metas[i].removeAttribute('media');
+          metas[i].setAttribute('content', color);
+        }
+      };
       var apply = function () {
         var dark = t === 'dark' || (t !== 'light' && mq.matches);
-        document.documentElement.classList.toggle('dark', dark);
+        root.classList.toggle('dark', dark);
+        paintBar();
       };
       apply();
+      new MutationObserver(paintBar).observe(root, { attributes: true, attributeFilter: ['class'] });
+      document.addEventListener('DOMContentLoaded', paintBar);
       if (t !== 'light' && t !== 'dark') mq.addEventListener('change', apply);
       try { if (localStorage.getItem('voyou-motion') === 'reduced') document.documentElement.classList.add('reduce-motion'); } catch (e) {}
     } catch (e) {}
